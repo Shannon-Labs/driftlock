@@ -57,7 +57,46 @@ Dev notes
 - Keep the UI minimal for MVP; expand once the pipeline is flowing.
 
 Next steps
-- Implement cbad-core metrics and FFI.
-- Integrate cbad-core via `driftlock_cbad` in the Collector and route logs/metrics.
-- Expand api-server with storage (Postgres) and SSE/WebSockets for live anomalies.
-- Build minimal Next.js UI to visualize anomalies and artifacts.
+- **Phase 1 Priority**: Implement cbad-core metrics and FFI (see [ROADMAP.md](ROADMAP.md))
+- Integrate cbad-core via `driftlock_cbad` in the Collector and route logs/metrics
+- Expand api-server with storage (Postgres) and SSE/WebSockets for live anomalies
+- Build minimal Next.js UI to visualize anomalies and artifacts
+
+## 📋 Enterprise Features
+
+Driftlock includes enterprise-ready compliance and governance features:
+
+### Regulatory Compliance
+- **DORA Compliance**: Digital Operational Resilience Act evidence bundles
+- **NIS2 Compliance**: EU cybersecurity incident reporting templates  
+- **Runtime AI Monitoring**: AI Act compliance for LLM/ML systems
+- **Audit Trails**: Cryptographically signed evidence packages
+
+### Documentation Framework
+- **[ALGORITHMS.md](docs/ALGORITHMS.md)**: Mathematical foundations and CBAD principles
+- **[CODING_STANDARDS.md](docs/CODING_STANDARDS.md)**: Development guidelines and quality standards
+- **[BUILD.md](docs/BUILD.md)**: Comprehensive build and deployment instructions
+- **[CONTRIBUTING.md](docs/CONTRIBUTING.md)**: Contributor guidelines and workflows
+
+### Advanced Tooling
+- **Benchmarking**: Performance validation and regression testing
+- **CI/CD Pipeline**: Automated quality gates and validation
+- **Decision Logging**: Architectural decision tracking for audit compliance
+
+See the [docs/](docs/) directory for complete enterprise documentation.
+- **NIS2 Compliance**: EU cybersecurity incident reporting templates  
+- **Runtime AI Monitoring**: AI Act compliance for LLM/ML systems
+- **Audit Trails**: Cryptographically signed evidence packages
+
+### Documentation Framework
+- **[ALGORITHMS.md](docs/ALGORITHMS.md)**: Mathematical foundations and CBAD principles
+- **[CODING_STANDARDS.md](docs/CODING_STANDARDS.md)**: Development guidelines and quality standards
+- **[BUILD.md](docs/BUILD.md)**: Comprehensive build and deployment instructions
+- **[CONTRIBUTING.md](docs/CONTRIBUTING.md)**: Contributor guidelines and workflows
+
+### Advanced Tooling
+- **Benchmarking**: Performance validation and regression testing
+- **CI/CD Pipeline**: Automated quality gates and validation
+- **Decision Logging**: Architectural decision tracking for audit compliance
+
+See the [docs/](docs/) directory for complete enterprise documentation.
