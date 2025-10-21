@@ -1,0 +1,22 @@
+dist:
+  module: github.com/your-org/driftlock
+  name: driftlock-collector
+  description: Custom Collector with driftlock_cbad processor
+  version: 0.0.1
+  output_path: ./dist
+
+processors:
+  - gomod: github.com/your-org/driftlock/collector-processor/driftlockcbad v0.0.0
+
+receivers:
+  - gomod: go.opentelemetry.io/collector/receiver/otlpreceiver v0.112.0
+
+exporters:
+  - gomod: go.opentelemetry.io/collector/exporter/otlphttpexporter v0.112.0
+  - gomod: go.opentelemetry.io/collector/exporter/debugexporter v0.112.0
+
+extensions:
+  - gomod: go.opentelemetry.io/collector/extension/zpagesextension v0.112.0
+
+replaces: []
+

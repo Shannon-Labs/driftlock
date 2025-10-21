@@ -1,0 +1,27 @@
+receivers:
+  otlp:
+    protocols:
+      http:
+
+processors:
+  # Placeholder – wire driftlock_cbad in a custom build of the Collector.
+  # driftlock_cbad:
+  #   window_size: 1024
+  #   hop_size: 256
+  #   threshold: 0.9
+
+exporters:
+  debug:
+    verbosity: detailed
+
+service:
+  pipelines:
+    logs:
+      receivers: [otlp]
+      processors: [] # add driftlock_cbad once available
+      exporters: [debug]
+    metrics:
+      receivers: [otlp]
+      processors: [] # add driftlock_cbad once available
+      exporters: [debug]
+

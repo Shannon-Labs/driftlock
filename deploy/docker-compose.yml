@@ -1,0 +1,22 @@
+version: "3.9"
+services:
+  collector:
+    image: otel/opentelemetry-collector-contrib:0.112.0
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes:
+      - ./collector-config.yaml:/etc/otelcol/config.yaml:ro
+    ports:
+      - "4318:4318"
+  api:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    environment:
+      - PORT=8080
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://collector:4318
+      - OTEL_SERVICE_NAME=driftlock-api
+    ports:
+      - "8080:8080"
+    depends_on:
+      - collector
+
