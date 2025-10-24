@@ -1,0 +1,10 @@
+/Volumes/VIXinSSD/driftlock/cbad-core/target/debug/deps/getrandom-168d292333cf481b.d: /Users/hunterbown/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/getrandom-0.2.16/src/lib.rs /Users/hunterbown/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/getrandom-0.2.16/src/error.rs /Users/hunterbown/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/getrandom-0.2.16/src/util.rs /Users/hunterbown/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/getrandom-0.2.16/src/error_impls.rs /Users/hunterbown/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/getrandom-0.2.16/src/util_libc.rs /Users/hunterbown/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/getrandom-0.2.16/src/getentropy.rs
+
+/Volumes/VIXinSSD/driftlock/cbad-core/target/debug/deps/libgetrandom-168d292333cf481b.rmeta: /Users/hunterbown/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/getrandom-0.2.16/src/lib.rs /Users/hunterbown/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/getrandom-0.2.16/src/error.rs /Users/hunterbown/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/getrandom-0.2.16/src/util.rs /Users/hunterbown/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/getrandom-0.2.16/src/error_impls.rs /Users/hunterbown/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/getrandom-0.2.16/src/util_libc.rs /Users/hunterbown/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/getrandom-0.2.16/src/getentropy.rs
+
+/Users/hunterbown/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/getrandom-0.2.16/src/lib.rs:
+/Users/hunterbown/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/getrandom-0.2.16/src/error.rs:
+/Users/hunterbown/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/getrandom-0.2.16/src/util.rs:
+/Users/hunterbown/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/getrandom-0.2.16/src/error_impls.rs:
+/Users/hunterbown/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/getrandom-0.2.16/src/util_libc.rs:
+/Users/hunterbown/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/getrandom-0.2.16/src/getentropy.rs:

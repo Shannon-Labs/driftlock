@@ -23,7 +23,7 @@ impl ZstdAdapter {
 }
 
 impl CompressionAdapter for ZstdAdapter {
-    fn compress(&self, data: &[u8]) -> Result<Vec<u8>> {
+    fn compress(&self, _data: &[u8]) -> Result<Vec<u8>> {
         // TODO: Replace with actual zstd compression
         // For now, return error to indicate not implemented
         Err(CompressionError::UnsupportedAlgorithm(
@@ -31,7 +31,7 @@ impl CompressionAdapter for ZstdAdapter {
         ))
     }
 
-    fn decompress(&self, data: &[u8]) -> Result<Vec<u8>> {
+    fn decompress(&self, _data: &[u8]) -> Result<Vec<u8>> {
         // TODO: Replace with actual zstd decompression
         Err(CompressionError::UnsupportedAlgorithm(
             "Zstd adapter not yet implemented - use OpenZL".to_string(),
@@ -60,14 +60,14 @@ impl Lz4Adapter {
 }
 
 impl CompressionAdapter for Lz4Adapter {
-    fn compress(&self, data: &[u8]) -> Result<Vec<u8>> {
+    fn compress(&self, _data: &[u8]) -> Result<Vec<u8>> {
         // TODO: Replace with actual lz4 compression
         Err(CompressionError::UnsupportedAlgorithm(
             "Lz4 adapter not yet implemented - use OpenZL".to_string(),
         ))
     }
 
-    fn decompress(&self, data: &[u8]) -> Result<Vec<u8>> {
+    fn decompress(&self, _data: &[u8]) -> Result<Vec<u8>> {
         // TODO: Replace with actual lz4 decompression
         Err(CompressionError::UnsupportedAlgorithm(
             "Lz4 adapter not yet implemented - use OpenZL".to_string(),
@@ -96,14 +96,14 @@ impl GzipAdapter {
 }
 
 impl CompressionAdapter for GzipAdapter {
-    fn compress(&self, data: &[u8]) -> Result<Vec<u8>> {
+    fn compress(&self, _data: &[u8]) -> Result<Vec<u8>> {
         // TODO: Replace with actual gzip compression
         Err(CompressionError::UnsupportedAlgorithm(
             "Gzip adapter not yet implemented - use OpenZL".to_string(),
         ))
     }
 
-    fn decompress(&self, data: &[u8]) -> Result<Vec<u8>> {
+    fn decompress(&self, _data: &[u8]) -> Result<Vec<u8>> {
         // TODO: Replace with actual gzip decompression
         Err(CompressionError::UnsupportedAlgorithm(
             "Gzip adapter not yet implemented - use OpenZL".to_string(),
