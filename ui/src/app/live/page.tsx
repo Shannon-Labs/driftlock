@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { apiClient } from '@/lib/api';
 import { Anomaly } from '@/lib/types';
 import Link from 'next/link';
@@ -13,22 +13,25 @@ export default function LiveFeedPage() {
   const eventSourceRef = useRef<EventSource | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
-  useEffect(() => {
-    // Connect to SSE stream
-    connectToStream();
-
-    // Load today's count
-    loadTodayCount();
-
-    // Cleanup on unmount
-    return () => {
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close();
-      }
-    };
+  const showToast = useCallback((anomaly: Anomaly) => {
+    // In a real implementation, this would use a toast library
+    console.log('New anomaly detected:', anomaly);
   }, []);
 
-  const connectToStream = () => {
+  const simulateLiveEvents = useCallback(() => {
+    // Simulate new anomalies every 10 seconds for development
+    const interval = setInterval(() => {
+      const mockAnomaly = generateMockAnomaly();
+      setAnomalies((prev) => [mockAnomaly, ...prev.slice(0, 49)]);
+      setTodayCount((prev) => prev + 1);
+      setLastUpdate(new Date());
+      showToast(mockAnomaly);
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [showToast]);
+
+  const connectToStream = useCallback(() => {
     try {
       const eventSource = apiClient.createAnomalyStream();
       eventSourceRef.current = eventSource;
@@ -64,22 +67,9 @@ export default function LiveFeedPage() {
       // For development, simulate events
       simulateLiveEvents();
     }
-  };
+  }, [simulateLiveEvents, showToast]);
 
-  const simulateLiveEvents = () => {
-    // Simulate new anomalies every 10 seconds for development
-    const interval = setInterval(() => {
-      const mockAnomaly = generateMockAnomaly();
-      setAnomalies((prev) => [mockAnomaly, ...prev.slice(0, 49)]);
-      setTodayCount((prev) => prev + 1);
-      setLastUpdate(new Date());
-      showToast(mockAnomaly);
-    }, 10000);
-
-    return () => clearInterval(interval);
-  };
-
-  const loadTodayCount = async () => {
+  const loadTodayCount = useCallback(async () => {
     try {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -93,12 +83,22 @@ export default function LiveFeedPage() {
       console.error('Failed to load count:', err);
       setTodayCount(0);
     }
-  };
+  }, []);
 
-  const showToast = (anomaly: Anomaly) => {
-    // In a real implementation, this would use a toast library
-    console.log('New anomaly detected:', anomaly);
-  };
+  useEffect(() => {
+    // Connect to SSE stream
+    connectToStream();
+
+    // Load today's count
+    loadTodayCount();
+
+    // Cleanup on unmount
+    return () => {
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+      }
+    };
+  }, [connectToStream, loadTodayCount]);
 
   const formatTime = (timestamp: string) => {
     return new Date(timestamp).toLocaleTimeString();
