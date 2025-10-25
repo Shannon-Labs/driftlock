@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sync"
 
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/plog"
@@ -17,6 +18,8 @@ type cbadProcessor struct {
 	baselineReady bool
 	baseline      []logSample
 	window        []logSample
+	detector      *Detector    // New streaming detector
+	detectorMu    sync.RWMutex // Protect detector access
 }
 
 type logSample struct {

@@ -1,7 +1,9 @@
 // CBAD Core - Compression-Based Anomaly Detection primitives
 // Powered by OpenZL format-aware compression
 
+pub mod anomaly;
 pub mod compression;
+pub mod ffi;
 pub mod metrics;
 pub mod performance;
 pub mod window;

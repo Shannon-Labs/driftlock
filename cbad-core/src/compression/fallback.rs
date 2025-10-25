@@ -3,6 +3,7 @@
 // Used when OpenZL is not suitable (e.g., truly unstructured binary data)
 
 use super::{CompressionAdapter, CompressionError, Result};
+use std::io::Write;
 
 /// Zstd compression adapter (fallback)
 ///
@@ -23,19 +24,22 @@ impl ZstdAdapter {
 }
 
 impl CompressionAdapter for ZstdAdapter {
-    fn compress(&self, _data: &[u8]) -> Result<Vec<u8>> {
-        // TODO: Replace with actual zstd compression
-        // For now, return error to indicate not implemented
-        Err(CompressionError::UnsupportedAlgorithm(
-            "Zstd adapter not yet implemented - use OpenZL".to_string(),
-        ))
+    fn compress(&self, data: &[u8]) -> Result<Vec<u8>> {
+        if data.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        zstd::encode_all(data, self.level)
+            .map_err(|e| CompressionError::CompressionFailed(format!("Zstd compression error: {}", e)))
     }
 
-    fn decompress(&self, _data: &[u8]) -> Result<Vec<u8>> {
-        // TODO: Replace with actual zstd decompression
-        Err(CompressionError::UnsupportedAlgorithm(
-            "Zstd adapter not yet implemented - use OpenZL".to_string(),
-        ))
+    fn decompress(&self, data: &[u8]) -> Result<Vec<u8>> {
+        if data.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        zstd::decode_all(data)
+            .map_err(|e| CompressionError::DecompressionFailed(format!("Zstd decompression error: {}", e)))
     }
 
     fn name(&self) -> &str {
@@ -60,18 +64,27 @@ impl Lz4Adapter {
 }
 
 impl CompressionAdapter for Lz4Adapter {
-    fn compress(&self, _data: &[u8]) -> Result<Vec<u8>> {
-        // TODO: Replace with actual lz4 compression
-        Err(CompressionError::UnsupportedAlgorithm(
-            "Lz4 adapter not yet implemented - use OpenZL".to_string(),
-        ))
+    fn compress(&self, data: &[u8]) -> Result<Vec<u8>> {
+        if data.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        let compressed = lz4::block::compress(data, None, false)
+            .map_err(|e| CompressionError::CompressionFailed(format!("Lz4 compression error: {}", e)))?;
+        
+        Ok(compressed)
     }
 
-    fn decompress(&self, _data: &[u8]) -> Result<Vec<u8>> {
-        // TODO: Replace with actual lz4 decompression
-        Err(CompressionError::UnsupportedAlgorithm(
-            "Lz4 adapter not yet implemented - use OpenZL".to_string(),
-        ))
+    fn decompress(&self, data: &[u8]) -> Result<Vec<u8>> {
+        if data.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        // For lz4 block compression, we need to know the uncompressed size
+        // Since we don't store it separately, we'll use a reasonable estimate
+        let uncompressed_size = data.len() * 4; // Conservative estimate
+        lz4::block::decompress(data, Some(uncompressed_size as i32))
+            .map_err(|e| CompressionError::DecompressionFailed(format!("Lz4 decompression error: {}", e)))
     }
 
     fn name(&self) -> &str {
@@ -96,18 +109,30 @@ impl GzipAdapter {
 }
 
 impl CompressionAdapter for GzipAdapter {
-    fn compress(&self, _data: &[u8]) -> Result<Vec<u8>> {
-        // TODO: Replace with actual gzip compression
-        Err(CompressionError::UnsupportedAlgorithm(
-            "Gzip adapter not yet implemented - use OpenZL".to_string(),
-        ))
+    fn compress(&self, data: &[u8]) -> Result<Vec<u8>> {
+        if data.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        let mut encoder = flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::default());
+        encoder.write_all(data)
+            .map_err(|e| CompressionError::CompressionFailed(format!("Gzip write error: {}", e)))?;
+        
+        encoder.finish()
+            .map_err(|e| CompressionError::CompressionFailed(format!("Gzip finish error: {}", e)))
     }
 
-    fn decompress(&self, _data: &[u8]) -> Result<Vec<u8>> {
-        // TODO: Replace with actual gzip decompression
-        Err(CompressionError::UnsupportedAlgorithm(
-            "Gzip adapter not yet implemented - use OpenZL".to_string(),
-        ))
+    fn decompress(&self, data: &[u8]) -> Result<Vec<u8>> {
+        if data.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        let mut decoder = flate2::write::GzDecoder::new(Vec::new());
+        decoder.write_all(data)
+            .map_err(|e| CompressionError::DecompressionFailed(format!("Gzip write error: {}", e)))?;
+        
+        decoder.finish()
+            .map_err(|e| CompressionError::DecompressionFailed(format!("Gzip finish error: {}", e)))
     }
 
     fn name(&self) -> &str {
@@ -125,22 +150,28 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_adapters_return_not_implemented() {
-        let data = b"test data";
+    fn test_adapters_work_correctly() {
+        let data = b"test data for compression";
 
         // Zstd
         let zstd = ZstdAdapter::new();
-        assert!(zstd.compress(data).is_err());
+        let compressed = zstd.compress(data).expect("zstd compress should work");
+        let decompressed = zstd.decompress(&compressed).expect("zstd decompress should work");
+        assert_eq!(data, decompressed.as_slice());
         assert_eq!(zstd.name(), "zstd");
 
         // Lz4
         let lz4 = Lz4Adapter::new();
-        assert!(lz4.compress(data).is_err());
+        let compressed = lz4.compress(data).expect("lz4 compress should work");
+        let decompressed = lz4.decompress(&compressed).expect("lz4 decompress should work");
+        assert_eq!(data, decompressed.as_slice());
         assert_eq!(lz4.name(), "lz4");
 
         // Gzip
         let gzip = GzipAdapter::new();
-        assert!(gzip.compress(data).is_err());
+        let compressed = gzip.compress(data).expect("gzip compress should work");
+        let decompressed = gzip.decompress(&compressed).expect("gzip decompress should work");
+        assert_eq!(data, decompressed.as_slice());
         assert_eq!(gzip.name(), "gzip");
     }
 

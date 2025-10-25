@@ -16,12 +16,13 @@
 //! - Hop: How much to advance the window after each analysis
 //! - Capacity: Maximum number of events to retain (bounded memory)
 
+use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, SystemTime};
 
 /// Configuration for the sliding window system
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WindowConfig {
     /// Size of the baseline window (number of events)
     pub baseline_size: usize,
@@ -51,7 +52,7 @@ impl Default for WindowConfig {
 }
 
 /// Privacy redaction configuration for sensitive data
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrivacyConfig {
     /// Fields to always redact (e.g., "password", "ssn", "token")
     pub redact_fields: Vec<String>,
