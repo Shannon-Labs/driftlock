@@ -71,16 +71,20 @@ func main() {
 	authenticator := auth.NewAuthenticator()
 
 	// Add default API key for development (CHANGE IN PRODUCTION!)
-	devKey := "dev-key-12345" // This should come from environment in production
-	authenticator.AddAPIKey(
-		auth.HashAPIKey(devKey),
-		auth.APIKeyInfo{
-			Name:   "development",
-			Role:   "admin",
-			Scopes: []string{"read:anomalies", "write:anomalies", "admin:config"},
-		},
-	)
-	log.Printf("Authentication initialized (WARNING: using development API key)")
+    devKey := os.Getenv("DRIFTLOCK_DEV_API_KEY")
+    if devKey != "" {
+	    authenticator.AddAPIKey(
+		    auth.HashAPIKey(devKey),
+		    auth.APIKeyInfo{
+			    Name:   "development",
+			    Role:   "admin",
+			    Scopes: []string{"read:anomalies", "write:anomalies", "admin:config"},
+		    },
+	    )
+	    log.Printf("Authentication initialized (WARNING: using development API key)")
+    } else {
+        log.Printf("Authentication initialized (no development API key provided)")
+    }
 
 	// Initialize exporter
 	exporter := export.NewExporter(true) // Enable signature
