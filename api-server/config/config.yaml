@@ -1,0 +1,63 @@
+# Driftlock API Server Configuration
+# This file provides default configuration values
+# Environment variables will override these settings
+
+server:
+  host: 0.0.0.0
+  port: 8080
+  read_timeout: 30s
+  write_timeout: 30s
+
+database:
+  host: postgres
+  port: 5432
+  database: driftlock
+  user: postgres
+  password: ${DB_PASSWORD}
+  max_connections: 100
+  ssl_mode: require
+
+cbad:
+  # Normalized Compression Distance threshold (0-1)
+  # Higher values = less sensitive (fewer anomalies detected)
+  ncd_threshold: 0.3
+
+  # Statistical significance threshold (0-1)
+  # Lower values = more strict (only highly significant anomalies)
+  p_value_threshold: 0.05
+
+  # Baseline window size (number of events)
+  baseline_size: 100
+
+  # Detection window size (number of events)
+  window_size: 50
+
+  # Hop size for sliding window (number of events)
+  hop_size: 10
+
+auth:
+  # Authentication type: "apikey" or "oidc"
+  type: apikey
+
+  # OIDC configuration (if type = "oidc")
+  issuer: ""
+  client_id: ""
+
+observability:
+  # Prometheus metrics port
+  prometheus_port: 9090
+
+  # Log level: debug, info, warn, error
+  log_level: info
+
+  # OpenTelemetry trace sampling rate (0.0 - 1.0)
+  trace_sampling: 0.1
+
+# Stream-specific overrides (optional)
+streams:
+  logs:
+    ncd_threshold: 0.25  # More sensitive for logs
+  metrics:
+    ncd_threshold: 0.35  # Less sensitive for metrics
+  traces:
+    ncd_threshold: 0.30
