@@ -22,6 +22,7 @@ const (
 // Authenticator handles authentication
 type Authenticator struct {
 	apiKeys map[string]APIKeyInfo
+	mu      sync.RWMutex
 }
 
 // APIKeyInfo stores information about an API key
