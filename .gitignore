@@ -16,3 +16,6 @@ dist/
 .idea/
 .vscode/
 
+# Rust build artifacts
+cbad-core/target/
+.qoder/
