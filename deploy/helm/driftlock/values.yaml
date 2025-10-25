@@ -1,0 +1,241 @@
+# Default values for Driftlock
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Global settings
+global:
+  imagePullSecrets: []
+  storageClass: ""
+
+# API Server configuration
+apiServer:
+  enabled: true
+  replicaCount: 3
+
+  image:
+    repository: driftlock/api-server
+    pullPolicy: IfNotPresent
+    tag: "latest"
+
+  service:
+    type: ClusterIP
+    port: 8080
+    metricsPort: 9090
+
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 2000m
+      memory: 4Gi
+
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+  config:
+    database:
+      maxConnections: 100
+      sslMode: require
+    cbad:
+      ncdThreshold: 0.3
+      pValueThreshold: 0.05
+      baselineSize: 100
+      windowSize: 50
+      hopSize: 10
+    auth:
+      type: apikey
+    observability:
+      prometheusPort: 9090
+      logLevel: info
+      traceSampling: 0.1
+
+  env: []
+  envFrom: []
+
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+  podAnnotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9090"
+    prometheus.io/path: "/metrics"
+
+# UI configuration
+ui:
+  enabled: true
+  replicaCount: 2
+
+  image:
+    repository: driftlock/ui
+    pullPolicy: IfNotPresent
+    tag: "latest"
+
+  service:
+    type: ClusterIP
+    port: 3000
+
+  ingress:
+    enabled: true
+    className: "nginx"
+    annotations:
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    hosts:
+      - host: driftlock.company.com
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: driftlock-tls
+        hosts:
+          - driftlock.company.com
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  autoscaling:
+    enabled: false
+
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# OpenTelemetry Collector configuration
+collector:
+  enabled: true
+  replicaCount: 2
+
+  image:
+    repository: driftlock/collector
+    pullPolicy: IfNotPresent
+    tag: "latest"
+
+  service:
+    type: ClusterIP
+    ports:
+      otlpGrpc: 4317
+      otlpHttp: 4318
+      metrics: 8888
+      healthCheck: 13133
+
+  resources:
+    requests:
+      cpu: 1000m
+      memory: 2Gi
+    limits:
+      cpu: 4000m
+      memory: 8Gi
+
+  config:
+    processors:
+      driftlock_cbad:
+        enabled: true
+        ncd_threshold: 0.3
+        p_value_threshold: 0.05
+        api_endpoint: "http://driftlock-api-server:8080"
+
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# PostgreSQL configuration (from Bitnami chart)
+postgresql:
+  enabled: true
+  auth:
+    username: driftlock
+    password: "" # Set via --set or secrets
+    database: driftlock
+
+  primary:
+    persistence:
+      enabled: true
+      size: 100Gi
+      storageClass: ""
+
+    resources:
+      requests:
+        cpu: 500m
+        memory: 2Gi
+      limits:
+        cpu: 2000m
+        memory: 4Gi
+
+  readReplicas:
+    replicaCount: 2
+    persistence:
+      enabled: true
+      size: 100Gi
+    resources:
+      requests:
+        cpu: 500m
+        memory: 2Gi
+      limits:
+        cpu: 2000m
+        memory: 4Gi
+
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+
+# Redis configuration (optional, for SSE pub/sub)
+redis:
+  enabled: false
+  auth:
+    enabled: true
+    password: ""
+
+  master:
+    persistence:
+      enabled: true
+      size: 10Gi
+
+  replica:
+    replicaCount: 2
+    persistence:
+      enabled: true
+      size: 10Gi
+
+# Prometheus monitoring
+monitoring:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    interval: 30s
+    scrapeTimeout: 10s
+
+# Security settings
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 65534
+  fsGroup: 65534
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+
+podSecurityContext:
+  seccompProfile:
+    type: RuntimeDefault
+
+# Network policies
+networkPolicy:
+  enabled: false
+
+# Service Account
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""

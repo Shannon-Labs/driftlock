@@ -1,0 +1,226 @@
+{
+  "dashboard": {
+    "title": "Driftlock - API Performance",
+    "tags": ["driftlock", "api", "performance"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 1,
+    "refresh": "10s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "API Request Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "sum(rate(driftlock_api_request_duration_seconds_count[5m])) by (endpoint)",
+            "legendFormat": "{{endpoint}}",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 0
+        },
+        "yaxes": [
+          {
+            "format": "reqps",
+            "label": "Requests/sec"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "API Latency (p50, p95, p99)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, sum(rate(driftlock_api_request_duration_seconds_bucket[5m])) by (le, endpoint))",
+            "legendFormat": "p50 - {{endpoint}}",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(driftlock_api_request_duration_seconds_bucket[5m])) by (le, endpoint))",
+            "legendFormat": "p95 - {{endpoint}}",
+            "refId": "B"
+          },
+          {
+            "expr": "histogram_quantile(0.99, sum(rate(driftlock_api_request_duration_seconds_bucket[5m])) by (le, endpoint))",
+            "legendFormat": "p99 - {{endpoint}}",
+            "refId": "C"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 0
+        },
+        "yaxes": [
+          {
+            "format": "s",
+            "label": "Duration"
+          }
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {
+                "params": [0.1],
+                "type": "gt"
+              },
+              "query": {
+                "params": ["B", "5m", "now"]
+              },
+              "type": "query"
+            }
+          ],
+          "name": "High API Latency",
+          "message": "API p95 latency > 100ms"
+        }
+      },
+      {
+        "id": 3,
+        "title": "Error Rate (4xx, 5xx)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "sum(rate(driftlock_api_request_duration_seconds_count{status=~\"4..\"}[5m]))",
+            "legendFormat": "4xx Errors",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(rate(driftlock_api_request_duration_seconds_count{status=~\"5..\"}[5m]))",
+            "legendFormat": "5xx Errors",
+            "refId": "B"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 8
+        },
+        "yaxes": [
+          {
+            "format": "errors/s",
+            "label": "Error Rate"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Active SSE Connections",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "driftlock_active_sse_connections",
+            "legendFormat": "Active Connections",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 8
+        },
+        "yaxes": [
+          {
+            "format": "short",
+            "label": "Connections"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Database Connection Pool",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "driftlock_database_connections{state=\"open\"}",
+            "legendFormat": "Open",
+            "refId": "A"
+          },
+          {
+            "expr": "driftlock_database_connections{state=\"in_use\"}",
+            "legendFormat": "In Use",
+            "refId": "B"
+          },
+          {
+            "expr": "driftlock_database_connections{state=\"idle\"}",
+            "legendFormat": "Idle",
+            "refId": "C"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 16
+        },
+        "yaxes": [
+          {
+            "format": "short",
+            "label": "Connections"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "CBAD Computation Duration",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(driftlock_cbad_computation_duration_seconds_bucket[5m])) by (le))",
+            "legendFormat": "p95",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.99, sum(rate(driftlock_cbad_computation_duration_seconds_bucket[5m])) by (le))",
+            "legendFormat": "p99",
+            "refId": "B"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 16
+        },
+        "yaxes": [
+          {
+            "format": "s",
+            "label": "Duration"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Database Query Duration by Type",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(driftlock_database_query_duration_seconds_bucket[5m])) by (le, query_type))",
+            "legendFormat": "{{query_type}} - p95",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 24
+        },
+        "yaxes": [
+          {
+            "format": "s",
+            "label": "Duration"
+          }
+        ]
+      }
+    ]
+  }
+}
