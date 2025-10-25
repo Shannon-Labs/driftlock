@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { apiClient } from '@/lib/api';
 import { Anomaly, AnomalyFilters } from '@/lib/types';
 import AnomalyTable from '@/components/AnomalyTable';
@@ -23,11 +23,7 @@ export default function AnomaliesPage() {
 
   const [searchInput, setSearchInput] = useState('');
 
-  useEffect(() => {
-    loadAnomalies();
-  }, [page, filters]);
-
-  const loadAnomalies = async () => {
+  const loadAnomalies = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -44,7 +40,11 @@ export default function AnomaliesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters, page]);
+
+  useEffect(() => {
+    loadAnomalies();
+  }, [loadAnomalies]);
 
   const handleSearch = () => {
     setFilters({ ...filters, searchQuery: searchInput });

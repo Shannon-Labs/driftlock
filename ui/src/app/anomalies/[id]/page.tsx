@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/api';
 import { Anomaly } from '@/lib/types';
@@ -18,11 +18,7 @@ export default function AnomalyDetailPage() {
   const [showBaselineData, setShowBaselineData] = useState(false);
   const [showWindowData, setShowWindowData] = useState(false);
 
-  useEffect(() => {
-    loadAnomaly();
-  }, [id]);
-
-  const loadAnomaly = async () => {
+  const loadAnomaly = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -35,7 +31,11 @@ export default function AnomalyDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    loadAnomaly();
+  }, [loadAnomaly]);
 
   const handleStatusUpdate = async (status: 'acknowledged' | 'dismissed') => {
     if (!anomaly) return;
