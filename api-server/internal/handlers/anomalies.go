@@ -15,12 +15,12 @@ import (
 
 // AnomaliesHandler handles anomaly-related HTTP requests
 type AnomaliesHandler struct {
-	storage  *storage.Storage
+	storage  storage.AnomalyStorage
 	streamer *stream.Streamer
 }
 
 // NewAnomaliesHandler creates a new anomalies handler
-func NewAnomaliesHandler(storage *storage.Storage, streamer *stream.Streamer) *AnomaliesHandler {
+func NewAnomaliesHandler(storage storage.AnomalyStorage, streamer *stream.Streamer) *AnomaliesHandler {
 	return &AnomaliesHandler{
 		storage:  storage,
 		streamer: streamer,
