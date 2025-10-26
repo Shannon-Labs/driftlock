@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 
+	"driftlock/productized/api/database"
 	"driftlock/productized/api/models"
 	"driftlock/productized/api/utils"
 )
@@ -139,12 +139,18 @@ func AddTenantToContext() gin.HandlerFunc {
 			return
 		}
 
-		// In a real implementation, you would lookup the user's tenant
-		// For now, we'll create a mock tenant ID based on user ID
+		db := database.GetDB()
 		userIDUint := userID.(uint)
-		tenantID := userIDUint // In real app, would be different relation
 
-		c.Set("tenant_id", tenantID)
+		// Look up the user's tenant (assumes user is the owner)
+		var tenant models.Tenant
+		if err := db.Where("owner_id = ?", userIDUint).First(&tenant).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Tenant not found for user"})
+			c.Abort()
+			return
+		}
+
+		c.Set("tenant_id", tenant.ID)
 		c.Next()
 	}
 }
