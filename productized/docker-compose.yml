@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  # DriftLock API
+  driftlock-api:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - DATABASE_URL=postgres://driftlock:driftlock@db:5432/driftlock?sslmode=disable
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+      - SESSION_SECRET=your-super-secret-session-key-change-in-production
+      - KAFKA_BROKERS=kafka:9092
+      - DEBUG=true
+      - SERVER_ADDRESS=:8080
+    depends_on:
+      - db
+      - kafka
+    networks:
+      - driftlock-network
+
+  # PostgreSQL database
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=driftlock
+      - POSTGRES_USER=driftlock
+      - POSTGRES_PASSWORD=driftlock
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - driftlock-network
+
+  # Kafka and Zookeeper for event streaming
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - driftlock-network
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - driftlock-network
+
+  # Redis for caching and session storage
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - driftlock-network
+
+  # Adminer for database management
+  adminer:
+    image: adminer
+    ports:
+      - "8081:8080"
+    environment:
+      - ADMINER_DEFAULT_DB_DRIVER=pgsql
+      - ADMINER_DEFAULT_DB_HOST=db
+      - ADMINER_DEFAULT_DB_NAME=driftlock
+      - ADMINER_DEFAULT_DB_USER=driftlock
+      - ADMINER_DEFAULT_DB_PASS=driftlock
+    networks:
+      - driftlock-network
+
+networks:
+  driftlock-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

@@ -1,0 +1,2 @@
+2025/10/26 15:27:41 web: anomaly dashboard listening on :8090
+2025/10/26 15:27:41 detector: consuming otlp-events, publishing anomalies to anomaly-events
