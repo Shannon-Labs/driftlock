@@ -1,0 +1,54 @@
+# Cloudflare Pages Production Deployment Configuration
+
+# Build configuration
+[build]
+  command = "npm run build"
+  output = "build"
+
+# Production environment
+[env.production]
+  NODE_VERSION = "18"
+  REACT_APP_API_URL = "https://api.driftlock.com"
+  REACT_APP_STRIPE_PUBLIC_KEY = "pk_live_..."
+  REACT_APP_CLOUDFLARE_SITE_KEY = "your_cloudflare_site_key"
+
+# Environment-specific variables
+[env.staging]
+  NODE_VERSION = "18"
+  REACT_APP_API_URL = "https://staging-api.driftlock.com"
+  REACT_APP_STRIPE_PUBLIC_KEY = "pk_test_..."
+  REACT_APP_CLOUDFLARE_SITE_KEY = "your_staging_cloudflare_site_key"
+
+# Security headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    Strict-Transport-Security = "max-age=63072000; includeSubDomains; preload"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=()"
+
+# API proxy
+[[redirects]]
+  from = "/api/*"
+  to = "https://api.driftlock.com/:splat"
+  status = 200
+  force = true
+
+# OAuth routes
+[[redirects]]
+  from = "/oauth/*"
+  to = "https://api.driftlock.com/:splat"
+  status = 200
+  force = true
+
+# SPA fallback
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  conditions = [
+    { type = "RequestFile", match = "none" }
+  ]

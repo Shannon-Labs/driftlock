@@ -1,0 +1,47 @@
+# Cloudflare Pages Configuration
+
+# Environment variables for production
+[env.production]
+  CLOUDFLARE_PAGES = true
+  NODE_VERSION = "18"
+  NPM_FLAGS = "--version"
+
+# Build configuration for the frontend
+[build]
+  command = "npm run build"
+  output = "dist"
+  upload = "dist"
+
+# Environment variables for development
+[env.development]
+  NODE_VERSION = "18"
+  NPM_FLAGS = "--version"
+
+# Custom headers for security
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+
+# Custom redirects
+[[redirects]]
+  from = "/api/*"
+  to = "https://api.driftlock.com/:splat"
+  status = 200
+  force = true
+
+# Rate limiting configuration
+[[rules]]
+  id = "rate_limiting"
+  description = "Rate limit requests to prevent abuse"
+  expressions = [
+    "http.request.uri.path matches \"^/api/\"",
+  ]
+  ratelimit = {
+    window = 60,
+    requests = 100,
+    mitigate = { action = "block" }
+  }

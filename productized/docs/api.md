@@ -1,95 +1,275 @@
 # DriftLock API Documentation
 
-## Overview
-DriftLock is an anomaly detection platform that monitors your systems, applications, and infrastructure for unusual behavior patterns. Our platform uses advanced algorithms to detect anomalies in logs, metrics, and traces, alerting you before issues impact your users.
-
-## API Base URL
-`https://api.driftlock.com/v1`
+This document provides detailed information about the DriftLock API endpoints, authentication, and usage examples.
 
 ## Authentication
-DriftLock uses JWT (JSON Web Tokens) for authentication. To access the API, you must include an Authorization header in your requests:
+
+All API endpoints require authentication using JWT tokens. To authenticate:
+
+1. Register a new account or log in to get an authentication token
+2. Include the token in the `Authorization` header as a Bearer token
+
+```http
+Authorization: Bearer <your-jwt-token>
+```
+
+## API Base URL
 
 ```
-Authorization: Bearer YOUR_JWT_TOKEN
+https://api.driftlock.com/api/v1
 ```
 
-### Getting a JWT Token
-To obtain an access token, send a POST request to the authentication endpoint:
+## Endpoints
 
-```
-POST /api/v1/auth/login
-Content-Type: application/json
+### Authentication
 
+#### POST /auth/register
+Register a new user account
+
+**Request:**
+```json
 {
-  "email": "your-email@example.com",
-  "password": "your-password"
+  "name": "John Doe",
+  "email": "john@example.com",
+  "password": "securepassword"
 }
 ```
 
-Response:
-```
+**Response:**
+```json
 {
+  "token": "jwt-token",
   "user": {
     "id": 1,
-    "email": "your-email@example.com",
-    "name": "Your Name",
-    "role": "user"
-  },
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    "name": "John Doe",
+    "email": "john@example.com"
+  }
 }
 ```
 
-## API Endpoints
+#### POST /auth/login
+Authenticate a user and get a token
 
-### Users
-- `GET /api/v1/user` - Get current user profile
-- `PUT /api/v1/user` - Update user profile
+**Request:**
+```json
+{
+  "email": "john@example.com",
+  "password": "securepassword"
+}
+```
+
+**Response:**
+```json
+{
+  "token": "jwt-token",
+  "user": {
+    "id": 1,
+    "name": "John Doe",
+    "email": "john@example.com"
+  }
+}
+```
+
+### User Management
+
+#### GET /user
+Get current user profile
+
+**Response:**
+```json
+{
+  "id": 1,
+  "name": "John Doe",
+  "email": "john@example.com",
+  "created_at": "2023-01-01T00:00:00Z"
+}
+```
+
+#### PUT /user
+Update current user profile
+
+**Request:**
+```json
+{
+  "name": "John Smith",
+  "email": "johnsmith@example.com"
+}
+```
+
+**Response:**
+```json
+{
+  "id": 1,
+  "name": "John Smith",
+  "email": "johnsmith@example.com"
+}
+```
 
 ### Anomalies
-- `GET /api/v1/anomalies` - Get list of anomalies
-- `GET /api/v1/anomalies/{id}` - Get specific anomaly
-- `PUT /api/v1/anomalies/{id}/resolve` - Mark anomaly as resolved
-- `DELETE /api/v1/anomalies/{id}` - Delete anomaly
+
+#### GET /anomalies
+Get list of anomalies
+
+**Query Parameters:**
+- `page` (optional): Page number (default: 1)
+- `limit` (optional): Items per page (default: 20)
+- `status` (optional): "active", "resolved", "all" (default: "active")
+- `severity` (optional): "low", "medium", "high", "critical"
+
+#### GET /anomalies/:id
+Get a specific anomaly by ID
+
+#### PUT /anomalies/:id/resolve
+Mark an anomaly as resolved
+
+**Request:**
+```json
+{
+  "resolution": "Anomaly resolved - was caused by scheduled maintenance"
+}
+```
+
+#### DELETE /anomalies/:id
+Delete an anomaly (admin only)
 
 ### Events
-- `POST /api/v1/events/ingest` - Ingest events for anomaly detection
-- `GET /api/v1/events` - Get list of events
+
+#### GET /events
+Get list of events
+
+**Query Parameters:**
+- `page` (optional)
+- `limit` (optional)
+- `from` (optional): Start timestamp
+- `to` (optional): End timestamp
+
+#### POST /events/ingest
+Ingest a new event
+
+**Request:**
+```json
+{
+  "timestamp": "2023-01-01T10:00:00Z",
+  "type": "log",
+  "source": "api-server-1",
+  "data": {
+    "level": "error",
+    "message": "Database connection failed",
+    "details": {
+      "host": "db.example.com",
+      "error": "timeout"
+    }
+  }
+}
+```
 
 ### Dashboard
-- `GET /api/v1/dashboard/stats` - Get dashboard statistics
-- `GET /api/v1/dashboard/recent` - Get recent anomalies
 
-## Response Format
-All API responses follow the same structure:
+#### GET /dashboard/stats
+Get dashboard statistics
 
-```
+**Response:**
+```json
 {
-  "data": { ... },
-  "message": "Success message",
-  "timestamp": "2023-07-21T14:30:00Z"
+  "total_anomalies": 42,
+  "active_anomalies": 5,
+  "events_processed": 12500,
+  "avg_severity": "medium"
 }
 ```
 
-For errors:
+#### GET /dashboard/recent
+Get recent anomalies
+
+### Billing
+
+#### GET /billing/plans
+Get available subscription plans
+
+**Response:**
+```json
+[
+  {
+    "id": "price_free",
+    "name": "Free Plan",
+    "description": "Basic plan with limited features",
+    "price": 0,
+    "currency": "usd",
+    "interval": "month",
+    "features": [...]
+  }
+]
 ```
+
+#### POST /billing/checkout
+Create a checkout session for a plan
+
+**Request:**
+```json
+{
+  "plan_id": "price_pro"
+}
+```
+
+**Response:**
+```json
+{
+  "session_id": "cs_test_...",
+  "url": "https://checkout.stripe.com/pay/..."
+}
+```
+
+#### GET /billing/subscription
+Get current user's subscription
+
+#### DELETE /billing/subscription
+Cancel current subscription
+
+#### GET /billing/usage
+Get current usage
+
+### Email
+
+#### POST /email/test
+Send a test email
+
+**Request:**
+```json
+{
+  "to": "test@example.com",
+  "subject": "Test Email",
+  "body": "This is a test email"
+}
+```
+
+### Onboarding
+
+#### GET /onboarding/progress
+Get current onboarding progress
+
+#### POST /onboarding/step/complete
+Mark an onboarding step as complete
+
+**Request:**
+```json
+{
+  "step_name": "connect_data_source"
+}
+```
+
+## Error Handling
+
+All API errors return a JSON response with the following structure:
+
+```json
 {
   "error": "Error message",
-  "code": "ERROR_CODE",
-  "timestamp": "2023-07-21T14:30:00Z"
+  "code": "error_code"
 }
 ```
 
-## Status Codes
-- `200` - Success
-- `201` - Created
-- `400` - Bad Request
-- `401` - Unauthorized
-- `403` - Forbidden
-- `404` - Not Found
-- `500` - Internal Server Error
-
 ## Rate Limiting
-The API implements rate limiting to ensure fair usage. Standard accounts are limited to 1000 requests per hour. Enterprise accounts may have higher limits.
 
-## Support
-For API support, contact our team at api-support@driftlock.com
+The API implements rate limiting:
+- 100 requests per minute per IP for unauthenticated endpoints
+- 1000 requests per minute per user for authenticated endpoints
