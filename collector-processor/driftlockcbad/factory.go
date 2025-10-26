@@ -2,12 +2,19 @@ package driftlockcbad
 
 import (
 	"context"
+	"crypto/tls"
+	"fmt"
+	"time"
 
+	"github.com/go-redis/redis/v8"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/consumer"
 	"go.opentelemetry.io/collector/pdata/plog"
 	"go.opentelemetry.io/collector/pdata/pmetric"
 	"go.opentelemetry.io/collector/processor"
+	"go.uber.org/zap"
+
+	"github.com/your-org/driftlock/collector-processor/driftlockcbad/kafka"
 )
 
 var (
@@ -33,15 +40,99 @@ func createDefaultConfig() component.Config {
 	}
 }
 
-func createLogsProcessor(_ context.Context, set processor.Settings, cfg component.Config, next consumer.Logs) (processor.Logs, error) {
+func createLogsProcessor(ctx context.Context, set processor.Settings, cfg component.Config, next consumer.Logs) (processor.Logs, error) {
 	c := cfg.(*Config)
 	p := &cbadProcessor{cfg: *c, logger: set.Logger}
+
+	// Initialize Redis client for distributed state if enabled
+	if c.Redis.Enabled {
+		redisClient := redis.NewClient(&redis.Options{
+			Addr:     c.Redis.Addr,
+			Password: c.Redis.Password,
+			DB:       c.Redis.DB,
+		})
+		p.redisClient = redisClient
+		set.Logger.Info("Redis client initialized for distributed state", 
+			zap.String("addr", c.Redis.Addr))
+	} else {
+		set.Logger.Info("Redis disabled, using local state only")
+	}
+
+	// Initialize Kafka publisher if enabled
+	if c.Kafka.Enabled {
+		kafkaConfig := kafka.PublisherConfig{
+			Brokers:  c.Kafka.Brokers,
+			ClientID: c.Kafka.ClientID,
+			EventsTopic: c.Kafka.EventsTopic,
+			BatchSize: c.Kafka.BatchSize,
+			BatchTimeout: time.Duration(c.Kafka.BatchTimeoutMs) * time.Millisecond,
+		}
+
+		// Configure TLS if enabled
+		if c.Kafka.TLSEnabled {
+			kafkaConfig.TLSConfig = &tls.Config{}
+		}
+
+		kafkaPublisher, err := kafka.NewPublisher(kafkaConfig, set.Logger)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create Kafka publisher: %w", err)
+		}
+		p.kafkaPublisher = kafkaPublisher
+		set.Logger.Info("Kafka publisher initialized for OTLP events", 
+			zap.String("topic", c.Kafka.EventsTopic), 
+			zap.Strings("brokers", c.Kafka.Brokers))
+	} else {
+		set.Logger.Info("Kafka publisher disabled for OTLP events")
+	}
+
 	return &logProcessor{processor: p, nextConsumer: next}, nil
 }
 
-func createMetricsProcessor(_ context.Context, set processor.Settings, cfg component.Config, next consumer.Metrics) (processor.Metrics, error) {
+func createMetricsProcessor(ctx context.Context, set processor.Settings, cfg component.Config, next consumer.Metrics) (processor.Metrics, error) {
 	c := cfg.(*Config)
 	p := &cbadProcessor{cfg: *c, logger: set.Logger}
+
+	// Initialize Redis client for distributed state if enabled
+	if c.Redis.Enabled {
+		redisClient := redis.NewClient(&redis.Options{
+			Addr:     c.Redis.Addr,
+			Password: c.Redis.Password,
+			DB:       c.Redis.DB,
+		})
+		p.redisClient = redisClient
+		set.Logger.Info("Redis client initialized for distributed state", 
+			zap.String("addr", c.Redis.Addr))
+	} else {
+		set.Logger.Info("Redis disabled, using local state only")
+	}
+
+	// Initialize Kafka publisher if enabled (reuse the same publisher for logs and metrics)
+	if c.Kafka.Enabled {
+		// The publisher should already be created in the logs processor
+		// For now, we'll create a new one, but in production you might want to share
+		kafkaConfig := kafka.PublisherConfig{
+			Brokers:  c.Kafka.Brokers,
+			ClientID: c.Kafka.ClientID,
+			EventsTopic: c.Kafka.EventsTopic,
+			BatchSize: c.Kafka.BatchSize,
+			BatchTimeout: time.Duration(c.Kafka.BatchTimeoutMs) * time.Millisecond,
+		}
+
+		// Configure TLS if enabled
+		if c.Kafka.TLSEnabled {
+			kafkaConfig.TLSConfig = &tls.Config{}
+		}
+
+		kafkaPublisher, err := kafka.NewPublisher(kafkaConfig, set.Logger)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create Kafka publisher: %w", err)
+		}
+		p.kafkaPublisher = kafkaPublisher
+		set.Logger.Info("Kafka publisher initialized for OTLP metrics", 
+			zap.String("topic", c.Kafka.EventsTopic), 
+			zap.Strings("brokers", c.Kafka.Brokers))
+	}
+
 	return &metricProcessor{processor: p, nextConsumer: next}, nil
 }
 
@@ -63,6 +154,18 @@ func (lp *logProcessor) Start(ctx context.Context, host component.Host) error {
 
 // Shutdown stops the processor
 func (lp *logProcessor) Shutdown(ctx context.Context) error {
+	// Close the Kafka publisher if it exists
+	if lp.processor.kafkaPublisher != nil {
+		if err := lp.processor.kafkaPublisher.Close(); err != nil {
+			return err
+		}
+	}
+	
+	// Close the Redis client if it exists
+	if lp.processor.redisClient != nil {
+		return lp.processor.redisClient.Close()
+	}
+	
 	return nil
 }
 
@@ -96,6 +199,18 @@ func (mp *metricProcessor) Start(ctx context.Context, host component.Host) error
 
 // Shutdown stops the processor
 func (mp *metricProcessor) Shutdown(ctx context.Context) error {
+	// Close the Kafka publisher if it exists
+	if mp.processor.kafkaPublisher != nil {
+		if err := mp.processor.kafkaPublisher.Close(); err != nil {
+			return err
+		}
+	}
+	
+	// Close the Redis client if it exists
+	if mp.processor.redisClient != nil {
+		return mp.processor.redisClient.Close()
+	}
+	
 	return nil
 }
 

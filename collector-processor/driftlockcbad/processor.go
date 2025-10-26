@@ -6,20 +6,25 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/go-redis/redis/v8"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/plog"
 	"go.opentelemetry.io/collector/pdata/pmetric"
 	"go.uber.org/zap"
+
+	"github.com/your-org/driftlock/collector-processor/driftlockcbad/kafka"
 )
 
 type cbadProcessor struct {
-	cfg           Config
-	logger        *zap.Logger
-	baselineReady bool
-	baseline      []logSample
-	window        []logSample
-	detector      *Detector    // New streaming detector
-	detectorMu    sync.RWMutex // Protect detector access
+	cfg            Config
+	logger         *zap.Logger
+	baselineReady  bool
+	baseline       []logSample
+	window         []logSample
+	detector       *Detector    // New streaming detector
+	detectorMu     sync.RWMutex // Protect detector access
+	kafkaPublisher *kafka.Publisher
+	redisClient    *redis.Client // For distributed state management
 }
 
 type logSample struct {
@@ -46,6 +51,13 @@ func (p *cbadProcessor) processLogs(ctx context.Context, logs plog.Logs) (plog.L
 	logs.ResourceLogs().RemoveIf(func(rl plog.ResourceLogs) bool {
 		rl.ScopeLogs().RemoveIf(func(sl plog.ScopeLogs) bool {
 			sl.LogRecords().RemoveIf(func(lr plog.LogRecord) bool {
+				// Publish the log record to Kafka if publisher is available
+				if p.kafkaPublisher != nil {
+					if err := p.kafkaPublisher.PublishLog(ctx, lr); err != nil {
+						p.logger.Error("Failed to publish log to Kafka", zap.Error(err))
+					}
+				}
+
 				logData := p.logRecordToBytes(lr)
 				metrics, err := ComputeMetricsQuick(baseline, logData)
 				if err != nil {

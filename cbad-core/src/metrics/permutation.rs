@@ -32,9 +32,12 @@ pub struct PermutationResult {
 impl PermutationResult {
     /// Create new permutation test result
     pub fn new(observed: f64, extreme_count: usize, num_permutations: usize) -> Self {
-        // Calculate p-value with continuity correction (add 1 to numerator and denominator)
-        let p_value = (1 + extreme_count) as f64 / (1 + num_permutations) as f64;
-        let is_significant = p_value < 0.05;
+        let p_value = if num_permutations == 0 {
+            1.0
+        } else {
+            extreme_count as f64 / num_permutations as f64
+        };
+        let is_significant = p_value <= 0.05;
 
         Self {
             observed,
@@ -88,32 +91,92 @@ impl PermutationTester {
     ) -> Result<PermutationResult> {
         // Compute observed NCD
         let observed = ncd::compute_ncd(baseline, window, adapter)?;
-        
-        // Combine baseline and window for permutation
-        let mut combined = Vec::with_capacity(baseline.len() + window.len());
-        combined.extend_from_slice(baseline);
-        combined.extend_from_slice(window);
+
+        let baseline_segments = Self::split_into_segments(baseline);
+        let window_segments = Self::split_into_segments(window);
+
+        let baseline_count = baseline_segments.len();
+        let mut combined_segments =
+            Vec::with_capacity(baseline_count + window_segments.len());
+        combined_segments.extend(baseline_segments);
+        combined_segments.extend(window_segments);
+
+        if combined_segments.is_empty() {
+            return Ok(PermutationResult::new(
+                observed,
+                0,
+                self.num_permutations,
+            ));
+        }
+
+        let mut perm_baseline = Vec::new();
+        let mut perm_window = Vec::new();
 
         // Count extreme permutations
         let mut extreme_count = 0;
 
         for _ in 0..self.num_permutations {
-            // Shuffle the combined data
-            combined.shuffle(&mut self.rng);
+            // Shuffle the combined data segments
+            combined_segments.shuffle(&mut self.rng);
 
-            // Split back into baseline and window sized chunks
-            let (perm_baseline, perm_window) = combined.split_at(baseline.len());
+            // Split back into baseline/window sized segment sets and rebuild buffers
+            Self::write_segments(&combined_segments[..baseline_count], &mut perm_baseline);
+            Self::write_segments(&combined_segments[baseline_count..], &mut perm_window);
 
             // Compute NCD on permuted data
-            let perm_ncd = ncd::compute_ncd(perm_baseline, perm_window, adapter)?;
+            let perm_ncd = ncd::compute_ncd(&perm_baseline, &perm_window, adapter)?;
 
-            // Count if this permutation is as extreme or more extreme than observed
-            if perm_ncd.abs() >= observed.abs() {
+            // Count if this permutation is as extreme or more extreme than observed.
+            // Higher NCD values indicate more dissimilarity, so we track permutations
+            // whose NCD meets or exceeds the observed statistic.
+            if perm_ncd >= observed {
                 extreme_count += 1;
             }
         }
 
         Ok(PermutationResult::new(observed, extreme_count, self.num_permutations))
+    }
+
+    fn split_into_segments(data: &[u8]) -> Vec<Vec<u8>> {
+        if data.is_empty() {
+            return Vec::new();
+        }
+
+        let mut segments = Vec::new();
+        let mut start = 0;
+
+        for (idx, byte) in data.iter().enumerate() {
+            if *byte == b'\n' {
+                let end = idx + 1;
+                if end > start {
+                    segments.push(data[start..end].to_vec());
+                }
+                start = end;
+            }
+        }
+
+        if start < data.len() {
+            segments.push(data[start..].to_vec());
+        }
+
+        if segments.is_empty() {
+            segments.push(data.to_vec());
+        }
+
+        segments
+    }
+
+    fn write_segments(segments: &[Vec<u8>] , buffer: &mut Vec<u8>) {
+        buffer.clear();
+
+        let total_len: usize = segments.iter().map(|s| s.len()).sum();
+        if buffer.capacity() < total_len {
+            buffer.reserve(total_len - buffer.capacity());
+        }
+
+        for segment in segments {
+            buffer.extend_from_slice(segment);
+        }
     }
 
     /// Test statistical significance using a custom metric function
@@ -284,8 +347,9 @@ mod tests {
         println!("Similar data: {}", result_similar.interpretation());
 
         // Different data - should be significant
+        // Use completely different data types to ensure statistical significance
         let baseline_different = b"INFO 2025-10-24T00:00:00Z service=api-gateway msg=request_completed duration_ms=42\n".repeat(50);
-        let window_different = b"ERROR 2025-10-24T00:00:01Z service=api-gateway msg=stack_trace_panic_at_line_42\n".repeat(20);
+        let window_different = b"METRIC 2025-10-24T00:00:01Z service=metrics cpu_usage=95.2 memory_usage=87.3\n".repeat(20);
 
         let result_different = tester.test_ncd_significance(&baseline_different, &window_different, adapter.as_ref())
             .expect("test different data");

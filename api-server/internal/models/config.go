@@ -65,6 +65,7 @@ type APIKeyCreate struct {
 	Role               string   `json:"role" validate:"required,oneof=admin analyst viewer"`
 	Scopes             []string `json:"scopes,omitempty"`
 	ExpiresAt          *time.Time `json:"expires_at,omitempty"`
+	CreatedBy          *string  `json:"created_by,omitempty"`
 	RateLimitPerMinute int      `json:"rate_limit_per_minute,omitempty"`
 }
 

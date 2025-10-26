@@ -167,11 +167,23 @@ func (m *mockStorage) UpdateAnomalyStatus(ctx context.Context, id uuid.UUID, upd
 // Verify mockStorage implements the storage interface methods
 var _ storage.AnomalyStorage = (*mockStorage)(nil)
 
+type stubEventPublisher struct {
+	called  bool
+	anomaly *models.Anomaly
+	err     error
+}
+
+func (s *stubEventPublisher) AnomalyCreated(_ context.Context, anomaly *models.Anomaly) error {
+	s.called = true
+	s.anomaly = anomaly
+	return s.err
+}
+
 // TestCreateAnomaly tests the CreateAnomaly handler
 func TestCreateAnomaly_Success(t *testing.T) {
 	mockStore := newMockStorage()
 	mockStream := stream.NewStreamer(10)
-	handler := NewAnomaliesHandler(mockStore, mockStream)
+	handler := NewAnomaliesHandler(mockStore, mockStream, nil)
 
 	createReq := &models.AnomalyCreate{
 		Timestamp:           time.Now(),
@@ -210,10 +222,45 @@ func TestCreateAnomaly_Success(t *testing.T) {
 	assert.True(t, response.IsStatisticallySignificant)
 }
 
+func TestCreateAnomaly_PublishesEvent(t *testing.T) {
+	mockStore := newMockStorage()
+	publisher := &stubEventPublisher{}
+	handler := NewAnomaliesHandler(mockStore, nil, publisher)
+
+	createReq := &models.AnomalyCreate{
+		Timestamp:           time.Now(),
+		StreamType:          models.StreamTypeLogs,
+		NCDScore:            0.5,
+		PValue:              0.01,
+		GlassBoxExplanation: "test",
+		CompressionBaseline: 10,
+		CompressionWindow:   20,
+		CompressionCombined: 30,
+		ConfidenceLevel:     0.9,
+	}
+
+	body, err := json.Marshal(createReq)
+	require.NoError(t, err)
+
+	req := httptest.NewRequest(http.MethodPost, "/v1/anomalies", bytes.NewReader(body))
+	w := httptest.NewRecorder()
+
+	handler.CreateAnomaly(w, req)
+
+	assert.Equal(t, http.StatusCreated, w.Code)
+	assert.True(t, publisher.called, "expected anomaly-created event to be published")
+	if publisher.anomaly == nil {
+		t.Fatal("expected anomaly payload in event publisher")
+	}
+	if publisher.anomaly.ID == uuid.Nil {
+		t.Fatal("expected anomaly to have ID populated")
+	}
+}
+
 func TestCreateAnomaly_InvalidPayload(t *testing.T) {
 	mockStore := newMockStorage()
 	mockStream := stream.NewStreamer(10)
-	handler := NewAnomaliesHandler(mockStore, mockStream)
+	handler := NewAnomaliesHandler(mockStore, mockStream, nil)
 
 	req := httptest.NewRequest("POST", "/v1/anomalies", bytes.NewReader([]byte("invalid json")))
 	w := httptest.NewRecorder()
@@ -226,7 +273,7 @@ func TestCreateAnomaly_InvalidPayload(t *testing.T) {
 func TestGetAnomaly_Success(t *testing.T) {
 	mockStore := newMockStorage()
 	mockStream := stream.NewStreamer(10)
-	handler := NewAnomaliesHandler(mockStore, mockStream)
+	handler := NewAnomaliesHandler(mockStore, mockStream, nil)
 
 	// Create a test anomaly
 	id := uuid.New()
@@ -262,7 +309,7 @@ func TestGetAnomaly_Success(t *testing.T) {
 func TestGetAnomaly_InvalidID(t *testing.T) {
 	mockStore := newMockStorage()
 	mockStream := stream.NewStreamer(10)
-	handler := NewAnomaliesHandler(mockStore, mockStream)
+	handler := NewAnomaliesHandler(mockStore, mockStream, nil)
 
 	req := httptest.NewRequest("GET", "/v1/anomalies/invalid-id", nil)
 	w := httptest.NewRecorder()
@@ -275,7 +322,7 @@ func TestGetAnomaly_InvalidID(t *testing.T) {
 func TestGetAnomaly_NotFound(t *testing.T) {
 	mockStore := newMockStorage()
 	mockStream := stream.NewStreamer(10)
-	handler := NewAnomaliesHandler(mockStore, mockStream)
+	handler := NewAnomaliesHandler(mockStore, mockStream, nil)
 
 	nonExistentID := uuid.New()
 	req := httptest.NewRequest("GET", "/v1/anomalies/"+nonExistentID.String(), nil)
@@ -289,7 +336,7 @@ func TestGetAnomaly_NotFound(t *testing.T) {
 func TestListAnomalies_Success(t *testing.T) {
 	mockStore := newMockStorage()
 	mockStream := stream.NewStreamer(10)
-	handler := NewAnomaliesHandler(mockStore, mockStream)
+	handler := NewAnomaliesHandler(mockStore, mockStream, nil)
 
 	// Create test anomalies
 	now := time.Now()
@@ -327,7 +374,7 @@ func TestListAnomalies_Success(t *testing.T) {
 func TestListAnomalies_WithFilters(t *testing.T) {
 	mockStore := newMockStorage()
 	mockStream := stream.NewStreamer(10)
-	handler := NewAnomaliesHandler(mockStore, mockStream)
+	handler := NewAnomaliesHandler(mockStore, mockStream, nil)
 
 	// Create mixed anomalies
 	now := time.Now()
@@ -370,7 +417,7 @@ func TestListAnomalies_WithFilters(t *testing.T) {
 func TestListAnomalies_Pagination(t *testing.T) {
 	mockStore := newMockStorage()
 	mockStream := stream.NewStreamer(10)
-	handler := NewAnomaliesHandler(mockStore, mockStream)
+	handler := NewAnomaliesHandler(mockStore, mockStream, nil)
 
 	// Create 10 anomalies
 	now := time.Now()
@@ -405,7 +452,7 @@ func TestListAnomalies_Pagination(t *testing.T) {
 func TestUpdateAnomalyStatus_Success(t *testing.T) {
 	mockStore := newMockStorage()
 	mockStream := stream.NewStreamer(10)
-	handler := NewAnomaliesHandler(mockStore, mockStream)
+	handler := NewAnomaliesHandler(mockStore, mockStream, nil)
 
 	// Create test anomaly
 	id := uuid.New()
@@ -443,7 +490,7 @@ func TestUpdateAnomalyStatus_Success(t *testing.T) {
 func TestUpdateAnomalyStatus_InvalidID(t *testing.T) {
 	mockStore := newMockStorage()
 	mockStream := stream.NewStreamer(10)
-	handler := NewAnomaliesHandler(mockStore, mockStream)
+	handler := NewAnomaliesHandler(mockStore, mockStream, nil)
 
 	updateReq := &models.AnomalyUpdate{
 		Status: models.StatusAcknowledged,
@@ -462,7 +509,7 @@ func TestUpdateAnomalyStatus_InvalidID(t *testing.T) {
 func TestUpdateAnomalyStatus_InvalidPayload(t *testing.T) {
 	mockStore := newMockStorage()
 	mockStream := stream.NewStreamer(10)
-	handler := NewAnomaliesHandler(mockStore, mockStream)
+	handler := NewAnomaliesHandler(mockStore, mockStream, nil)
 
 	id := uuid.New()
 	req := httptest.NewRequest("PATCH", "/v1/anomalies/"+id.String()+"/status", bytes.NewReader([]byte("invalid")))

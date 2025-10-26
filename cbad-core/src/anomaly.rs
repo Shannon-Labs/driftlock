@@ -74,11 +74,17 @@ impl AnomalyResult {
         let confidence_level = 1.0 - metrics.p_value;
         
         let summary = if metrics.is_anomaly {
-            format!("Anomaly detected with {:.1}% confidence: {}", 
-                    confidence_level * 100.0, 
-                    if is_statistically_significant { "statistically significant" } else { "not statistically significant" })
+            format!(
+                "Anomaly detected with {:.1}% confidence: {}",
+                confidence_level * 100.0,
+                if is_statistically_significant {
+                    "statistically significant"
+                } else {
+                    "not statistically significant"
+                }
+            )
         } else {
-            format!("No anomaly detected: data patterns remain consistent")
+            "No anomaly detected: data patterns remain consistent".to_string()
         };
 
         Self {
@@ -189,7 +195,7 @@ impl AnomalyDetector {
     pub fn reset(&self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         // We need to access the inner window to reset it
         // Since ThreadSafeSlidingWindow doesn't expose reset, we'll create a new one
-        let new_window = ThreadSafeSlidingWindow::new(self.config.window_config.clone());
+        let _ = ThreadSafeSlidingWindow::new(self.config.window_config.clone());
         
         // This is a bit of a hack - we can't easily replace the window in a thread-safe way
         // For now, we'll document that reset should be done by creating a new detector
@@ -208,7 +214,6 @@ pub struct WindowStats {
 
 /// Synthetic anomaly generator for testing
 pub mod synthetic {
-    use super::*;
     use rand::prelude::*;
     
     /// Types of synthetic anomalies
@@ -256,7 +261,7 @@ pub mod synthetic {
         match anomaly_type {
             AnomalyType::VolumeSpike => {
                 // Generate many more events than normal
-                for i in 0..count * 5 {
+                for _ in 0..count * 5 {
                     let log_line = format!(
                         "ERROR {} service=api-gateway msg=high_latency duration_ms={}\n",
                         "2025-10-24T12:00:00Z", 
@@ -267,7 +272,7 @@ pub mod synthetic {
             },
             AnomalyType::RandomNoise => {
                 // Add random noise to normal patterns
-                for i in 0..count {
+                for _ in 0..count {
                     let noise: String = (0..50).map(|_| {
                         rng.sample(rand::distributions::Alphanumeric) as char
                     }).collect();
@@ -282,7 +287,7 @@ pub mod synthetic {
             },
             AnomalyType::PatternBreak => {
                 // Completely different log format
-                for i in 0..count {
+                for _ in 0..count {
                     let stack_trace = format!(
                         "thread 'main' panicked at 'index out of bounds: the len is {} but the index is {}', src/main.rs:{}:5",
                         rng.gen_range(10..100), rng.gen_range(100..200), rng.gen_range(1..50)
@@ -363,7 +368,6 @@ pub mod synthetic {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::compression::create_adapter;
     
     #[test]
     fn test_anomaly_detector_creation() {
@@ -371,7 +375,7 @@ mod tests {
         let detector = AnomalyDetector::new(config.clone()).expect("create detector");
         
         // Should be able to create detector successfully
-        assert!(detector.is_ready().unwrap() == false); // No data yet
+        assert!(!detector.is_ready().unwrap()); // No data yet
     }
     
     #[test]

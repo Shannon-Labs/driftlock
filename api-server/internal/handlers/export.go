@@ -3,20 +3,28 @@ package handlers
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/google/uuid"
-	"github.com/your-org/driftlock/api-server/internal/export"
+	"github.com/your-org/driftlock/api-server/internal/models"
 	"github.com/your-org/driftlock/api-server/internal/storage"
 )
 
+// Exporter defines the interface for export operations
+type Exporter interface {
+	ExportAnomaly(anomaly *models.Anomaly, exportedBy string) (*models.EvidenceBundle, error)
+	ExportJSON(bundle *models.EvidenceBundle) ([]byte, error)
+	VerifySignature(bundle *models.EvidenceBundle) (bool, error)
+}
+
 // ExportHandler handles evidence bundle exports
 type ExportHandler struct {
-	storage  *storage.Storage
-	exporter *export.Exporter
+	storage  storage.AnomalyStorage
+	exporter Exporter
 }
 
 // NewExportHandler creates a new export handler
-func NewExportHandler(storage *storage.Storage, exporter *export.Exporter) *ExportHandler {
+func NewExportHandler(storage storage.AnomalyStorage, exporter Exporter) *ExportHandler {
 	return &ExportHandler{
 		storage:  storage,
 		exporter: exporter,
@@ -31,11 +39,19 @@ func (h *ExportHandler) ExportAnomaly(w http.ResponseWriter, r *http.Request) {
 	pathPrefix := "/v1/anomalies/"
 	pathSuffix := "/export"
 	path := r.URL.Path
-	if len(path) < len(pathPrefix)+len(pathSuffix)+36 {
+
+	if !strings.HasPrefix(path, pathPrefix) || !strings.HasSuffix(path, pathSuffix) {
 		http.Error(w, "Invalid URL", http.StatusBadRequest)
 		return
 	}
-	idStr := path[len(pathPrefix) : len(path)-len(pathSuffix)]
+
+	idStr := strings.TrimSuffix(strings.TrimPrefix(path, pathPrefix), pathSuffix)
+	idStr = strings.Trim(idStr, "/")
+
+	if idStr == "" {
+		http.Error(w, "Invalid anomaly ID", http.StatusBadRequest)
+		return
+	}
 
 	id, err := uuid.Parse(idStr)
 	if err != nil {

@@ -4,16 +4,21 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
-// Config holds the application configuration
+// Config holds application configuration
 type Config struct {
-	Server    ServerConfig
-	Database  DatabaseConfig
-	CBAD      CBADConfig
-	Auth      AuthConfig
+	Server        ServerConfig
+	Database      DatabaseConfig
+	CBAD          CBADConfig
+	Auth          AuthConfig
 	Observability ObservabilityConfig
+	Streaming     StreamingConfig
+	Cache         CacheConfig
+	Storage       StorageConfig
+	Tenant        TenantConfig
 }
 
 // ServerConfig holds server settings
@@ -58,6 +63,74 @@ type ObservabilityConfig struct {
 	TraceSampling  float64
 }
 
+// RedisConfig holds Redis settings for distributed state management
+type RedisConfig struct {
+	Enabled  bool
+	Addr     string
+	Password string
+	DB       int
+	Prefix   string
+}
+
+// StreamingConfig holds stream processing settings
+type StreamingConfig struct {
+	Kafka KafkaConfig
+}
+
+// CompressionConfig holds storage compression configuration
+type CompressionConfig struct {
+	Enabled      bool
+	Algorithm    string // openzl, zstd, lz4, gzip
+	Level        int
+	MinSizeBytes int // Only compress if data exceeds this size
+}
+
+// TieredStorageConfig holds hot/warm/cold storage configuration
+type TieredStorageConfig struct {
+	Enabled           bool
+	HotRetentionDays  int
+	WarmRetentionDays int
+	ArchiveInterval   string // Duration string like "24h"
+	Compression       CompressionConfig
+}
+
+// StorageConfig holds storage configuration
+type StorageConfig struct {
+	Tiered TieredStorageConfig
+}
+
+// CacheConfig holds cache settings
+type CacheConfig struct {
+	Redis RedisConfig
+}
+
+// KafkaConfig holds Apache Kafka settings
+type KafkaConfig struct {
+	Enabled        bool
+	Brokers        []string
+	ClientID       string
+	GroupID        string
+	EventsTopic    string
+	AnomaliesTopic string
+	TLSEnabled     bool
+}
+
+// TenantConfig holds multi-tenant settings
+type TenantConfig struct {
+	Enabled        bool
+	IsolationMode  string // "schema" or "database"
+	DefaultTenant  string
+	ResourceQuotas TenantResourceQuotas
+}
+
+// TenantResourceQuotas holds per-tenant resource limits
+type TenantResourceQuotas struct {
+	MaxAnomaliesPerDay   int
+	MaxEventsPerDay      int
+	MaxStorageGB         int
+	MaxAPIRequestsPerMin int
+}
+
 // Load loads configuration from environment variables
 func Load() (*Config, error) {
 	config := &Config{
@@ -92,6 +165,51 @@ func Load() (*Config, error) {
 			PrometheusPort: getEnvInt("PROMETHEUS_PORT", 9090),
 			LogLevel:       getEnv("LOG_LEVEL", "info"),
 			TraceSampling:  getEnvFloat("TRACE_SAMPLING", 0.1),
+		},
+		Streaming: StreamingConfig{
+			Kafka: KafkaConfig{
+				Enabled:        getEnvBool("KAFKA_ENABLED", false),
+				Brokers:        getEnvStringSlice("KAFKA_BROKERS", []string{"localhost:9092"}),
+				ClientID:       getEnv("KAFKA_CLIENT_ID", "driftlock-api"),
+				GroupID:        getEnv("KAFKA_GROUP_ID", "driftlock-api"),
+				EventsTopic:    getEnv("KAFKA_EVENTS_TOPIC", "otlp-events"),
+				AnomaliesTopic: getEnv("KAFKA_ANOMALIES_TOPIC", "anomaly-events"),
+				TLSEnabled:     getEnvBool("KAFKA_TLS_ENABLED", false),
+			},
+		},
+		Cache: CacheConfig{
+			Redis: RedisConfig{
+				Enabled:  getEnvBool("REDIS_ENABLED", false),
+				Addr:     getEnv("REDIS_ADDR", "localhost:6379"),
+				Password: getEnv("REDIS_PASSWORD", ""),
+				DB:       getEnvInt("REDIS_DB", 0),
+				Prefix:   getEnv("REDIS_PREFIX", "driftlock"),
+			},
+		},
+		Storage: StorageConfig{
+			Tiered: TieredStorageConfig{
+				Enabled:           getEnvBool("TIERED_STORAGE_ENABLED", false),
+				HotRetentionDays:  getEnvInt("HOT_RETENTION_DAYS", 7),
+				WarmRetentionDays: getEnvInt("WARM_RETENTION_DAYS", 83),
+				ArchiveInterval:   getEnv("ARCHIVE_INTERVAL", "24h"),
+				Compression: CompressionConfig{
+					Enabled:      getEnvBool("COMPRESSION_ENABLED", true),
+					Algorithm:    getEnv("COMPRESSION_ALGORITHM", "zstd"),
+					Level:        getEnvInt("COMPRESSION_LEVEL", 3),
+					MinSizeBytes: getEnvInt("COMPRESSION_MIN_SIZE", 1024),
+				},
+			},
+		},
+		Tenant: TenantConfig{
+			Enabled:       getEnvBool("TENANT_ENABLED", false),
+			IsolationMode: getEnv("TENANT_ISOLATION_MODE", "schema"),
+			DefaultTenant: getEnv("TENANT_DEFAULT_TENANT", "default"),
+			ResourceQuotas: TenantResourceQuotas{
+				MaxAnomaliesPerDay:   getEnvInt("TENANT_MAX_ANOMALIES_PER_DAY", 1000),
+				MaxEventsPerDay:      getEnvInt("TENANT_MAX_EVENTS_PER_DAY", 10000),
+				MaxStorageGB:         getEnvInt("TENANT_MAX_STORAGE_GB", 100),
+				MaxAPIRequestsPerMin: getEnvInt("TENANT_MAX_API_REQUESTS_PER_MIN", 100),
+			},
 		},
 	}
 
@@ -145,4 +263,30 @@ func getEnvDuration(key string, defaultValue time.Duration) time.Duration {
 		}
 	}
 	return defaultValue
+}
+
+func getEnvBool(key string, defaultValue bool) bool {
+	if value := os.Getenv(key); value != "" {
+		if boolValue, err := strconv.ParseBool(value); err == nil {
+			return boolValue
+		}
+	}
+	return defaultValue
+}
+
+func getEnvStringSlice(key string, defaultValue []string) []string {
+	if value := os.Getenv(key); value != "" {
+		parts := strings.Split(value, ",")
+		var trimmed []string
+		for _, part := range parts {
+			part = strings.TrimSpace(part)
+			if part != "" {
+				trimmed = append(trimmed, part)
+			}
+		}
+		if len(trimmed) > 0 {
+			return trimmed
+		}
+	}
+	return append([]string(nil), defaultValue...)
 }

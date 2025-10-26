@@ -11,11 +11,11 @@ import (
 
 // ConfigHandler handles configuration-related HTTP requests
 type ConfigHandler struct {
-	storage *storage.Storage
+	storage storage.ConfigStorage
 }
 
 // NewConfigHandler creates a new configuration handler
-func NewConfigHandler(storage *storage.Storage) *ConfigHandler {
+func NewConfigHandler(storage storage.ConfigStorage) *ConfigHandler {
 	return &ConfigHandler{storage: storage}
 }
 

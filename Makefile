@@ -26,7 +26,7 @@ api:
 	go build -o bin/driftlock-api ./api-server/cmd/driftlock-api
 
 collector: cbad-core-lib
-	go build -tags driftlock_cbad_cgo -o bin/driftlock-collector ./collector-processor/...
+	go build -tags driftlock_cbad_cgo -o bin/driftlock-collector ./collector-processor/cmd/driftlock-collector
 
 tools:
 	go build -o bin/synthetic ./tools/synthetic

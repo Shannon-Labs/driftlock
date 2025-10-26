@@ -58,14 +58,19 @@ fn main() {
     println!("\n🔄 Sliding Window System Demo");
     println!("----------------------------");
     
-    let mut window_config = WindowConfig::default();
-    window_config.baseline_size = 10;  // 10 events for baseline
-    window_config.window_size = 5;    // 5 events for detection window
-    window_config.max_capacity = 100;  // Max 100 events in memory
+    let window_config = WindowConfig {
+        baseline_size: 10, // 10 events for baseline
+        window_size: 5,    // 5 events for detection window
+        max_capacity: 100, // Max 100 events in memory
+        ..Default::default()
+    };
     
     let mut sliding_window = SlidingWindow::new(window_config);
-    println!("✅ Sliding window initialized with baseline_size={}, window_size={}", 
-             sliding_window.config().baseline_size, sliding_window.config().window_size);
+    println!(
+        "✅ Sliding window initialized with baseline_size={}, window_size={}",
+        sliding_window.config().baseline_size,
+        sliding_window.config().window_size
+    );
     
     // Add baseline events to the window
     for i in 0..15 {
@@ -79,7 +84,7 @@ fn main() {
         };
         
         let event = DataEvent::new(event_data.as_bytes().to_vec());
-        sliding_window.add_event(event);
+        let _ = sliding_window.add_event(event);
     }
     
     println!("📊 Added {} events to sliding window", sliding_window.total_events());
@@ -115,10 +120,12 @@ fn main() {
     
     use cbad_core::performance::{PerformanceValidator, BenchmarkConfig, DataType};
     
-    let mut perf_config = BenchmarkConfig::default();
-    perf_config.duration = 2;  // Run for 2 seconds to get a quick sample
-    perf_config.data_type = DataType::OtlpLogs;
-    perf_config.data_size = 512;  // 512 bytes per event
+    let perf_config = BenchmarkConfig {
+        duration: 2,          // Run for 2 seconds to get a quick sample
+        data_type: DataType::OtlpLogs,
+        data_size: 512,       // 512 bytes per event
+        ..Default::default()
+    };
     
     let duration = perf_config.duration; // Store the duration before moving perf_config
     let validator = PerformanceValidator::new(perf_config);

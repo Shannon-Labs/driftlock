@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -84,7 +85,9 @@ func (a *Authenticator) Middleware(next http.Handler) http.Handler {
 
 		// Add authentication info to context
 		ctx := context.WithValue(r.Context(), UsernameContextKey, info.Name)
+		ctx = context.WithValue(ctx, string(UsernameContextKey), info.Name)
 		ctx = context.WithValue(ctx, RoleContextKey, info.Role)
+		ctx = context.WithValue(ctx, string(RoleContextKey), info.Role)
 
 		// Call next handler with authenticated context
 		next.ServeHTTP(w, r.WithContext(ctx))
@@ -106,7 +109,9 @@ func (a *Authenticator) OptionalMiddleware(next http.Handler) http.Handler {
 					a.apiKeys[keyHash] = info
 
 					ctx := context.WithValue(r.Context(), UsernameContextKey, info.Name)
+					ctx = context.WithValue(ctx, string(UsernameContextKey), info.Name)
 					ctx = context.WithValue(ctx, RoleContextKey, info.Role)
+					ctx = context.WithValue(ctx, string(RoleContextKey), info.Role)
 					r = r.WithContext(ctx)
 				}
 			}
@@ -154,6 +159,11 @@ func GetUsernameFromContext(ctx context.Context) string {
 	if username, ok := ctx.Value(UsernameContextKey).(string); ok {
 		return username
 	}
+
+	if username, ok := ctx.Value(string(UsernameContextKey)).(string); ok {
+		return username
+	}
+
 	return "anonymous"
 }
 
@@ -162,5 +172,10 @@ func GetRoleFromContext(ctx context.Context) string {
 	if role, ok := ctx.Value(RoleContextKey).(string); ok {
 		return role
 	}
+
+	if role, ok := ctx.Value(string(RoleContextKey)).(string); ok {
+		return role
+	}
+
 	return "viewer"
 }

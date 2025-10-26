@@ -34,7 +34,7 @@ func main() {
         }
     }()
 
-    e := engine.New()
+    e := engine.New(nil) // Use minimal engine for simple version
     mux := api.NewMux(e)
 
     srv := &http.Server{

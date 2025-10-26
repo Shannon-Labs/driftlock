@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -11,19 +13,22 @@ import (
 	"github.com/your-org/driftlock/api-server/internal/models"
 	"github.com/your-org/driftlock/api-server/internal/storage"
 	"github.com/your-org/driftlock/api-server/internal/stream"
+	"github.com/your-org/driftlock/api-server/internal/streaming"
 )
 
 // AnomaliesHandler handles anomaly-related HTTP requests
 type AnomaliesHandler struct {
 	storage  storage.AnomalyStorage
 	streamer *stream.Streamer
+	events   streaming.EventPublisher
 }
 
 // NewAnomaliesHandler creates a new anomalies handler
-func NewAnomaliesHandler(storage storage.AnomalyStorage, streamer *stream.Streamer) *AnomaliesHandler {
+func NewAnomaliesHandler(storage storage.AnomalyStorage, streamer *stream.Streamer, events streaming.EventPublisher) *AnomaliesHandler {
 	return &AnomaliesHandler{
 		storage:  storage,
 		streamer: streamer,
+		events:   events,
 	}
 }
 
@@ -181,6 +186,13 @@ func (h *AnomaliesHandler) CreateAnomaly(w http.ResponseWriter, r *http.Request)
 		h.streamer.BroadcastAnomaly(anomaly)
 	}
 
+	// Emit anomaly-created event
+	if h.events != nil {
+		if err := h.events.AnomalyCreated(ctx, anomaly); err != nil {
+			log.Printf("anomalies: failed to publish anomaly-created event: %v", err)
+		}
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(anomaly)
@@ -197,8 +209,14 @@ func parseIntParam(r *http.Request, param string, defaultValue int) int {
 	return defaultValue
 }
 
-func getUsernameFromContext(ctx interface{}) string {
-	// This will be set by auth middleware
-	// For now, return a default value
+func getUsernameFromContext(ctx context.Context) string {
+	if ctx == nil {
+		return "system"
+	}
+
+	if username, ok := ctx.Value("username").(string); ok && username != "" {
+		return username
+	}
+
 	return "system"
 }

@@ -56,6 +56,7 @@ func NewMux(e *engine.Engine) http.Handler {
         w.Header().Set("Content-Type", "application/json")
         _ = json.NewEncoder(w).Encode(map[string]any{
             "status":  "ok",
+            "processed_bytes": len(body),
             "latency": took.String(),
         })
     }), "events"))

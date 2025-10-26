@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "driftlock.fullname" . }}-config
+  labels:
+    {{- include "driftlock.labels" . | nindent 4 }}
+data:
+  LOG_LEVEL: {{ .Values.api.logLevel }}
+  ENVIRONMENT: {{ .Values.api.environment }}
+  API_READ_TIMEOUT: {{ .Values.api.readTimeout }}
+  API_WRITE_TIMEOUT: {{ .Values.api.writeTimeout }}
+  API_IDLE_TIMEOUT: {{ .Values.api.idleTimeout }}
+  # Database connection settings
+  DB_MAX_OPEN_CONNS: "25"
+  DB_MAX_IDLE_CONNS: "10"
+  DB_CONN_MAX_LIFETIME: "1h"
+  # OTel collector settings
+  OTEL_COLLECTOR_ENDPOINT: "otel-collector:4317"
+  # Feature flags
+  ENABLE_SSE_STREAMING: {{ .Values.api.features.enableSSEStreaming | quote }}
+  ENABLE_EVIDENCE_EXPORT: {{ .Values.api.features.enableEvidenceExport | quote }}
+  # Rate limiting
+  GLOBAL_RATE_LIMIT_RPS: {{ .Values.api.rateLimit.globalRPS | quote }}
+  GLOBAL_RATE_LIMIT_BURST: {{ .Values.api.rateLimit.globalBurst | quote }}
+  {{- if .Values.kafka.enabled }}
+  # Kafka configuration
+  KAFKA_TOPIC_ANOMALIES: "driftlock-anomalies"
+  KAFKA_TOPIC_EVENTS: "driftlock-events"
+  KAFKA_CONSUMER_GROUP: "driftlock-api"
+  {{- end }}
+  {{- if .Values.redis.enabled }}
+  # Redis configuration
+  REDIS_DB: "0"
+  REDIS_POOL_SIZE: "10"
+  {{- end }}
+  {{- if .Values.clickhouse.enabled }}
+  # ClickHouse configuration
+  CLICKHOUSE_DB: "driftlock"
+  CLICKHOUSE_TABLE_ANOMALIES: "anomalies"
+  CLICKHOUSE_TABLE_EVENTS: "events"
+  {{- end }}

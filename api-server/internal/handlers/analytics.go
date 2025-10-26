@@ -12,11 +12,11 @@ import (
 
 // AnalyticsHandler handles analytics and statistics endpoints
 type AnalyticsHandler struct {
-	storage *storage.Storage
+	storage storage.AnomalyStorage
 }
 
 // NewAnalyticsHandler creates a new analytics handler
-func NewAnalyticsHandler(storage *storage.Storage) *AnalyticsHandler {
+func NewAnalyticsHandler(storage storage.AnomalyStorage) *AnalyticsHandler {
 	return &AnalyticsHandler{storage: storage}
 }
 

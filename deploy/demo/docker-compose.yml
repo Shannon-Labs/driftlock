@@ -1,0 +1,182 @@
+version: "3.9"
+
+services:
+  # Demo API Server
+  api:
+    image: driftlock/api:demo
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    environment:
+      - PORT=8080
+      - ENVIRONMENT=demo
+      - LOG_LEVEL=info
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/driftdb_demo
+      - REDIS_URL=redis://redis:6379
+      - KAFKA_BROKERS=kafka:9092
+      - CLICKHOUSE_URL=clickhouse://default:@clickhouse:9000/driftdb_demo
+      - DEMO_MODE=true
+      - TENANT_ENABLED=true
+      - TENANT_DEFAULT_TENANT=demo
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+      - clickhouse
+    networks:
+      - driftlock-demo
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=driftdb_demo
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - driftlock-demo
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - driftlock-demo
+
+  # Kafka Message Queue
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
+      - zookeeper_logs:/var/lib/zookeeper/log
+    networks:
+      - driftlock-demo
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "9101:9101"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 100
+      KAFKA_JMX_PORT: 9101
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_DELETE_TOPIC_ENABLE: "true"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    networks:
+      - driftlock-demo
+
+  # ClickHouse Analytics
+  clickhouse:
+    image: clickhouse/clickhouse-server:23.3
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - clickhouse_logs:/var/log/clickhouse-server
+    environment:
+      CLICKHOUSE_DB: driftdb_demo
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+    networks:
+      - driftlock-demo
+
+  # Prometheus Monitoring
+  prometheus:
+    image: prom/prometheus:v2.40.0
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=15d'
+      - '--web.enable-lifecycle'
+    networks:
+      - driftlock-demo
+
+  # Grafana Dashboards
+  grafana:
+    image: grafana/grafana:10.0.0
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    networks:
+      - driftlock-demo
+
+  # OTel Collector
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.88.0
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otelcol/config.yaml
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+      - "8888:8888"
+      - "8889:8889"
+    depends_on:
+      - kafka
+    networks:
+      - driftlock-demo
+
+  # Synthetic Data Generator
+  data-generator:
+    image: driftlock/data-generator:demo
+    build:
+      context: ../../tools/synthetic
+      dockerfile: Dockerfile
+    environment:
+      - API_URL=http://api:8080
+      - EVENTS_PER_SECOND=10
+      - ANOMALY_RATE=0.05
+      - TENANT_ID=demo
+    depends_on:
+      - api
+    networks:
+      - driftlock-demo
+
+volumes:
+  postgres_data:
+  redis_data:
+  kafka_data:
+  zookeeper_data:
+  zookeeper_logs:
+  clickhouse_data:
+  clickhouse_logs:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  driftlock-demo:
+    driver: bridge

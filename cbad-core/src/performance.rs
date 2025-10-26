@@ -127,14 +127,12 @@ impl PerformanceValidator {
 
     /// Run all benchmarks and return results
     pub fn run_all_benchmarks(&self) -> Vec<BenchmarkResult> {
-        let mut results = Vec::new();
-        
-        results.push(self.benchmark_compression_throughput());
-        results.push(self.benchmark_metrics_calculation());
-        results.push(self.benchmark_window_system());
-        results.push(self.benchmark_end_to_end_detection());
-        
-        results
+        vec![
+            self.benchmark_compression_throughput(),
+            self.benchmark_metrics_calculation(),
+            self.benchmark_window_system(),
+            self.benchmark_end_to_end_detection(),
+        ]
     }
 
     /// Benchmark compression throughput
@@ -226,11 +224,13 @@ impl PerformanceValidator {
     fn benchmark_window_system(&self) -> BenchmarkResult {
         let mut result = BenchmarkResult::new("Sliding Window System");
         
-        let mut config = WindowConfig::default();
-        config.baseline_size = 1000;
-        config.window_size = 100;
-        config.hop_size = 50;
-        config.max_capacity = 10000;
+        let config = WindowConfig {
+            baseline_size: 1000,
+            window_size: 100,
+            hop_size: 50,
+            max_capacity: 10000,
+            ..Default::default()
+        };
         
         let mut window = SlidingWindow::new(config);
         let test_data = self.generate_test_data(self.config.data_size);
@@ -278,11 +278,13 @@ impl PerformanceValidator {
         let mut result = BenchmarkResult::new("End-to-End Anomaly Detection");
         
         // Create window system
-        let mut config = WindowConfig::default();
-        config.baseline_size = 1000;
-        config.window_size = 100;
-        config.hop_size = 50;
-        config.max_capacity = 10000;
+        let config = WindowConfig {
+            baseline_size: 1000,
+            window_size: 100,
+            hop_size: 50,
+            max_capacity: 10000,
+            ..Default::default()
+        };
         
         let mut window = SlidingWindow::new(config);
         let adapter = create_adapter(CompressionAlgorithm::OpenZL).expect("create adapter");
@@ -478,6 +480,12 @@ pub struct ValidationReport {
     pub failures: Vec<(String, String)>, // (metric, description)
     /// All benchmark results
     pub results: Vec<BenchmarkResult>,
+}
+
+impl Default for ValidationReport {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl ValidationReport {

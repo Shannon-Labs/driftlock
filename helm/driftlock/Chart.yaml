@@ -1,0 +1,53 @@
+apiVersion: v2
+name: driftlock
+description: A Helm chart for Driftlock anomaly detection platform
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+
+maintainers:
+  - name: Driftlock Team
+    email: team@driftlock.example.com
+    url: https://driftlock.example.com
+
+keywords:
+  - anomaly-detection
+  - observability
+  - security
+  - compliance
+
+home: https://driftlock.example.com
+sources:
+  - https://github.com/your-org/driftlock
+
+dependencies:
+  - name: postgresql
+    version: "12.x.x"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: postgresql.enabled
+    alias: postgresql
+  - name: redis
+    version: "18.x.x"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: redis.enabled
+    alias: redis
+  - name: kafka
+    version: "26.x.x"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: kafka.enabled
+    alias: kafka
+  - name: clickhouse
+    version: "3.x.x"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: clickhouse.enabled
+    alias: clickhouse
+  - name: prometheus
+    version: "25.x.x"
+    repository: "https://prometheus-community.github.io/helm-charts"
+    condition: prometheus.enabled
+    alias: prometheus
+  - name: grafana
+    version: "10.x.x"
+    repository: "https://grafana.github.io/helm-charts"
+    condition: grafana.enabled
+    alias: grafana

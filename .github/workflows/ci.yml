@@ -1,0 +1,90 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: testdb
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.22'
+        cache: true
+
+    - name: Install dependencies
+      run: |
+        go mod download
+
+    - name: Run linters
+      uses: golangci/golangci-lint-action@v6
+      with:
+        version: latest
+        args: --timeout=5m
+        working-directory: api-server
+
+    - name: Run tests with coverage
+      run: |
+        go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+      env:
+        DATABASE_URL: postgres://postgres:password@localhost:5432/testdb?sslmode=disable
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage.out
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.22'
+        cache: true
+
+    - name: Build API server
+      run: |
+        cd api-server
+        go build -o driftlock-api cmd/driftlock-api/main.go
+
+    - name: Build collector-processor
+      run: |
+        cd collector-processor
+        go build -o driftlock-collector cmd/driftlock-collector/main.go
+
+    - name: Run security scan
+      uses: securecodewarrior/github-action-owasp-dependency-check@v3
+      with:
+        path: '.'
+        format: 'JSON'
+        out: 'dependency-check-report'
+        args: |
+          --failOnCVSS 7
+          --enableRetired
+          --enableExperimental

@@ -9,6 +9,7 @@ import (
 // APIError represents a structured API error response
 type APIError struct {
 	Code       int               `json:"code"`
+	HTTPStatus int               `json:"-"`  // For compatibility with tests
 	Message    string            `json:"message"`
 	Details    string            `json:"details,omitempty"`
 	FieldErrors map[string]string `json:"field_errors,omitempty"`
@@ -21,6 +22,18 @@ func (e *APIError) Error() string {
 		return fmt.Sprintf("[%d] %s: %s", e.Code, e.Message, e.Details)
 	}
 	return fmt.Sprintf("[%d] %s", e.Code, e.Message)
+}
+
+// SetHTTPStatus sets the HTTP status code
+func (e *APIError) SetHTTPStatus(statusCode int) *APIError {
+	e.Code = statusCode
+	e.HTTPStatus = statusCode
+	return e
+}
+
+// GetHTTPStatus returns the HTTP status code
+func (e *APIError) GetHTTPStatus() int {
+	return e.HTTPStatus
 }
 
 // WithDetails adds details to an API error
@@ -48,98 +61,114 @@ func (e *APIError) WithRequestID(requestID string) *APIError {
 var (
 	// 4xx Client Errors
 	ErrBadRequest = &APIError{
-		Code:    http.StatusBadRequest,
-		Message: "Bad request",
+		Code:       http.StatusBadRequest,
+		HTTPStatus: http.StatusBadRequest,
+		Message:    "Bad request",
 	}
 
 	ErrInvalidJSON = &APIError{
-		Code:    http.StatusBadRequest,
-		Message: "Invalid JSON payload",
+		Code:       http.StatusBadRequest,
+		HTTPStatus: http.StatusBadRequest,
+		Message:    "Invalid JSON payload",
 	}
 
 	ErrValidationFailed = &APIError{
-		Code:    http.StatusBadRequest,
-		Message: "Validation failed",
+		Code:       http.StatusBadRequest,
+		HTTPStatus: http.StatusBadRequest,
+		Message:    "Validation failed",
 	}
 
 	ErrUnauthorized = &APIError{
-		Code:    http.StatusUnauthorized,
-		Message: "Unauthorized",
-		Details: "Valid API key or authentication token required",
+		Code:       http.StatusUnauthorized,
+		HTTPStatus: http.StatusUnauthorized,
+		Message:    "Unauthorized",
+		Details:    "Valid API key or authentication token required",
 	}
 
 	ErrForbidden = &APIError{
-		Code:    http.StatusForbidden,
-		Message: "Forbidden",
-		Details: "You don't have permission to access this resource",
+		Code:       http.StatusForbidden,
+		HTTPStatus: http.StatusForbidden,
+		Message:    "Forbidden",
+		Details:    "You don't have permission to access this resource",
 	}
 
 	ErrNotFound = &APIError{
-		Code:    http.StatusNotFound,
-		Message: "Resource not found",
+		Code:       http.StatusNotFound,
+		HTTPStatus: http.StatusNotFound,
+		Message:    "Resource not found",
 	}
 
 	ErrMethodNotAllowed = &APIError{
-		Code:    http.StatusMethodNotAllowed,
-		Message: "Method not allowed",
+		Code:       http.StatusMethodNotAllowed,
+		HTTPStatus: http.StatusMethodNotAllowed,
+		Message:    "Method not allowed",
 	}
 
 	ErrConflict = &APIError{
-		Code:    http.StatusConflict,
-		Message: "Resource conflict",
+		Code:       http.StatusConflict,
+		HTTPStatus: http.StatusConflict,
+		Message:    "Resource conflict",
 	}
 
 	ErrPayloadTooLarge = &APIError{
-		Code:    http.StatusRequestEntityTooLarge,
-		Message: "Payload too large",
-		Details: "Request body exceeds maximum allowed size",
+		Code:       http.StatusRequestEntityTooLarge,
+		HTTPStatus: http.StatusRequestEntityTooLarge,
+		Message:    "Payload too large",
+		Details:    "Request body exceeds maximum allowed size",
 	}
 
 	ErrTooManyRequests = &APIError{
-		Code:    http.StatusTooManyRequests,
-		Message: "Rate limit exceeded",
-		Details: "Too many requests, please try again later",
+		Code:       http.StatusTooManyRequests,
+		HTTPStatus: http.StatusTooManyRequests,
+		Message:    "Rate limit exceeded",
+		Details:    "Too many requests, please try again later",
 	}
 
 	// 5xx Server Errors
 	ErrInternalServer = &APIError{
-		Code:    http.StatusInternalServerError,
-		Message: "Internal server error",
-		Details: "An unexpected error occurred",
+		Code:       http.StatusInternalServerError,
+		HTTPStatus: http.StatusInternalServerError,
+		Message:    "Internal server error",
+		Details:    "An unexpected error occurred",
 	}
 
 	ErrNotImplemented = &APIError{
-		Code:    http.StatusNotImplemented,
-		Message: "Not implemented",
+		Code:       http.StatusNotImplemented,
+		HTTPStatus: http.StatusNotImplemented,
+		Message:    "Not implemented",
 	}
 
 	ErrServiceUnavailable = &APIError{
-		Code:    http.StatusServiceUnavailable,
-		Message: "Service unavailable",
-		Details: "The service is temporarily unavailable",
+		Code:       http.StatusServiceUnavailable,
+		HTTPStatus: http.StatusServiceUnavailable,
+		Message:    "Service unavailable",
+		Details:    "The service is temporarily unavailable",
 	}
 
 	ErrGatewayTimeout = &APIError{
-		Code:    http.StatusGatewayTimeout,
-		Message: "Gateway timeout",
-		Details: "Upstream service did not respond in time",
+		Code:       http.StatusGatewayTimeout,
+		HTTPStatus: http.StatusGatewayTimeout,
+		Message:    "Gateway timeout",
+		Details:    "Upstream service did not respond in time",
 	}
 )
 
 // New creates a new API error with a custom message
 func New(code int, message string) *APIError {
 	return &APIError{
-		Code:    code,
-		Message: message,
+		Code:       code,
+		HTTPStatus: code,
+		Message:    message,
 	}
 }
 
 // Wrap wraps a standard error into an APIError
 func Wrap(err error, code int, message string) *APIError {
 	return &APIError{
-		Code:    code,
-		Message: message,
-		Details: err.Error(),
+		Code:       code,
+		HTTPStatus: code,
+		Message:    message,
+		Details:    err.Error(),
 	}
 }
 

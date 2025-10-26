@@ -252,14 +252,25 @@ mod tests {
     #[test]
     fn test_metrics_computation() {
         let adapter = create_test_adapter();
-        
+
+        let baseline_log = r#"{"timestamp":"2025-10-24T00:00:00Z","severity":"INFO","service":"api-gateway","message":"Request completed","attributes":{"method":"GET","path":"/api/users","status":200,"duration_ms":42}}"#;
+        let anomalous_log = r#"{"timestamp":"2025-10-24T00:00:01Z","severity":"ERROR","service":"api-gateway","message":"Panic occurred","attributes":{"stack_trace":"0x3fa8d1b2c9e47f56::panic::trace::[ns=923847923847923847923847]::random_payload=9fjK2L1pQwZ8xT4rB7nC6Mv0HdYG5s2tR1uQ3w8yAaEeIiOo","binary_blob":"Q29tcHJlc3NlZEJsb2I6ZGV0ZXJtaW5pc3RpY1Nob3J0c0FuZFJhbmRvbVVuaWNvZGVEYXRh"}}"#;
+
         // Create test data - baseline with regular pattern
-        let baseline = b"INFO 2025-10-24T00:00:00Z service=api-gateway msg=request_completed duration_ms=42\n".to_vec();
-        baseline.repeat(100).as_slice();
-        
-        // Window with anomalous data (stack trace)
-        let window = b"ERROR 2025-10-24T00:00:01Z service=api-gateway msg=panic stack_trace=\"thread 'main' panicked at 'index out of bounds', src/main.rs:42:13\"\n".to_vec();
-        window.repeat(10).as_slice();
+        let baseline_entry = {
+            let mut entry = baseline_log.to_owned();
+            entry.push('\n');
+            entry.into_bytes()
+        };
+        let baseline = baseline_entry.repeat(200);
+
+        // Window with anomalous data (stack trace + binary blob)
+        let window_entry = {
+            let mut entry = anomalous_log.to_owned();
+            entry.push('\n');
+            entry.into_bytes()
+        };
+        let window = window_entry.repeat(200);
 
         let metrics = compute_metrics(
             &baseline,
@@ -277,23 +288,35 @@ mod tests {
         assert!(metrics.ncd >= 0.0 && metrics.ncd <= 1.0);
         assert!(metrics.p_value >= 0.0 && metrics.p_value <= 1.0);
         
+        println!("{}", metrics.explanation);
+        println!("ncd={:.3} p_value={:.3}", metrics.ncd, metrics.p_value);
+
         // Should detect anomaly due to very different patterns
         assert!(metrics.is_anomaly);
         assert!(metrics.p_value < 0.05);
-        
-        println!("{}", metrics.explanation);
     }
 
     #[test]
     fn test_similar_data_not_anomaly() {
         let adapter = create_test_adapter();
-        
-        let baseline = b"INFO 2025-10-24T00:00:00Z service=api-gateway msg=request_completed duration_ms=42\n".to_vec();
-        baseline.repeat(100).as_slice();
-        
+
+        let baseline_log = r#"{"timestamp":"2025-10-24T00:00:00Z","severity":"INFO","service":"api-gateway","message":"Request completed","attributes":{"method":"GET","path":"/api/users","status":200,"duration_ms":42}}"#;
+        let similar_log = r#"{"timestamp":"2025-10-24T00:00:01Z","severity":"INFO","service":"api-gateway","message":"Request completed","attributes":{"method":"GET","path":"/api/users","status":200,"duration_ms":45}}"#;
+
+        let baseline_entry = {
+            let mut entry = baseline_log.to_owned();
+            entry.push('\n');
+            entry.into_bytes()
+        };
+        let baseline = baseline_entry.repeat(200);
+
         // Similar pattern - should not be anomaly
-        let window = b"INFO 2025-10-24T00:00:01Z service=api-gateway msg=request_completed duration_ms=43\n".to_vec();
-        window.repeat(10).as_slice();
+        let window_entry = {
+            let mut entry = similar_log.to_owned();
+            entry.push('\n');
+            entry.into_bytes()
+        };
+        let window = window_entry.repeat(200);
 
         let metrics = compute_metrics(
             &baseline,

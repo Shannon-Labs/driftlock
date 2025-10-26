@@ -3,6 +3,8 @@ module github.com/hmbown/driftlock/collector-processor/driftlockcbad
 go 1.24.1
 
 require (
+	github.com/go-redis/redis/v8 v8.11.5
+	github.com/segmentio/kafka-go v0.4.48
 	go.opentelemetry.io/collector/component v1.44.0
 	go.opentelemetry.io/collector/consumer v1.44.0
 	go.opentelemetry.io/collector/pdata v1.44.0

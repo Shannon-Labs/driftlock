@@ -13,6 +13,12 @@ pub struct ZstdAdapter {
     level: i32,
 }
 
+impl Default for ZstdAdapter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ZstdAdapter {
     pub fn new() -> Self {
         Self { level: 3 } // Default compression level
@@ -56,6 +62,12 @@ impl CompressionAdapter for ZstdAdapter {
 ///
 /// TODO: Implement actual lz4 compression using the `lz4` crate
 pub struct Lz4Adapter;
+
+impl Default for Lz4Adapter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl Lz4Adapter {
     pub fn new() -> Self {
@@ -101,6 +113,12 @@ impl CompressionAdapter for Lz4Adapter {
 ///
 /// TODO: Implement actual gzip compression using the `flate2` crate
 pub struct GzipAdapter;
+
+impl Default for GzipAdapter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl GzipAdapter {
     pub fn new() -> Self {

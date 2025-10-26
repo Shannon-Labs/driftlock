@@ -71,20 +71,20 @@ func Default() *Logger {
 // WithContext adds context values to the logger
 func (l *Logger) WithContext(ctx context.Context) *Logger {
 	// Extract common context values if present
-	attrs := []slog.Attr{}
+	var args []interface{}
 
 	// Add request ID if present
 	if reqID := ctx.Value("request_id"); reqID != nil {
-		attrs = append(attrs, slog.String("request_id", reqID.(string)))
+		args = append(args, "request_id", reqID.(string))
 	}
 
 	// Add user ID if present
 	if userID := ctx.Value("user_id"); userID != nil {
-		attrs = append(attrs, slog.String("user_id", userID.(string)))
+		args = append(args, "user_id", userID.(string))
 	}
 
-	if len(attrs) > 0 {
-		return &Logger{Logger: l.With(attrs...)}
+	if len(args) > 0 {
+		return &Logger{Logger: l.With(args...)}
 	}
 
 	return l
@@ -92,37 +92,45 @@ func (l *Logger) WithContext(ctx context.Context) *Logger {
 
 // HTTP logs HTTP request/response information
 func (l *Logger) HTTP(method, path string, status int, duration time.Duration, attrs ...slog.Attr) {
-	baseAttrs := []slog.Attr{
-		slog.String("method", method),
-		slog.String("path", path),
-		slog.Int("status", status),
-		slog.String("duration", duration.String()),
-		slog.Int64("duration_ms", duration.Milliseconds()),
+	args := []interface{}{
+		"method", method,
+		"path", path,
+		"status", status,
+		"duration", duration.String(),
+		"duration_ms", duration.Milliseconds(),
 	}
 
-	allAttrs := append(baseAttrs, attrs...)
+	// Convert attrs to args
+	for _, attr := range attrs {
+		args = append(args, attr.Key, attr.Value)
+	}
 
 	if status >= 500 {
-		l.Error("HTTP request", allAttrs...)
+		l.Logger.Error("HTTP request", args...)
 	} else if status >= 400 {
-		l.Warn("HTTP request", allAttrs...)
+		l.Logger.Warn("HTTP request", args...)
 	} else {
-		l.Info("HTTP request", allAttrs...)
+		l.Logger.Info("HTTP request", args...)
 	}
 }
 
 // Database logs database operations
 func (l *Logger) Database(operation string, duration time.Duration, err error, attrs ...slog.Attr) {
-	baseAttrs := []slog.Attr{
-		slog.String("operation", operation),
-		slog.String("duration", duration.String()),
+	args := []interface{}{
+		"operation", operation,
+		"duration", duration.String(),
+	}
+
+	// Convert attrs to args
+	for _, attr := range attrs {
+		args = append(args, attr.Key, attr.Value)
 	}
 
 	if err != nil {
-		baseAttrs = append(baseAttrs, slog.String("error", err.Error()))
-		l.Error("Database operation failed", append(baseAttrs, attrs...)...)
+		args = append(args, "error", err.Error())
+		l.Logger.Error("Database operation failed", args...)
 	} else {
-		l.Debug("Database operation", append(baseAttrs, attrs...)...)
+		l.Logger.Debug("Database operation", args...)
 	}
 }
 
@@ -139,19 +147,29 @@ func (l *Logger) Anomaly(id, streamType string, ncdScore, pValue float64, signif
 
 // Security logs security-related events
 func (l *Logger) Security(event string, attrs ...slog.Attr) {
-	l.Warn("Security event",
-		append([]slog.Attr{slog.String("event", event)}, attrs...)...,
-	)
+	args := []interface{}{"event", event}
+	
+	// Convert attrs to args
+	for _, attr := range attrs {
+		args = append(args, attr.Key, attr.Value)
+	}
+	
+	l.Logger.Warn("Security event", args...)
 }
 
 // Startup logs application startup information
 func (l *Logger) Startup(version, port string, attrs ...slog.Attr) {
-	l.Info("Application starting",
-		append([]slog.Attr{
-			slog.String("version", version),
-			slog.String("port", port),
-		}, attrs...)...,
-	)
+	args := []interface{}{
+		"version", version,
+		"port", port,
+	}
+	
+	// Convert attrs to args
+	for _, attr := range attrs {
+		args = append(args, attr.Key, attr.Value)
+	}
+	
+	l.Logger.Info("Application starting", args...)
 }
 
 // Shutdown logs application shutdown
@@ -179,22 +197,38 @@ func Global() *Logger {
 
 // Info logs an info message
 func Info(msg string, attrs ...slog.Attr) {
-	Global().Info(msg, attrs...)
+	args := make([]interface{}, 0, len(attrs)*2)
+	for _, attr := range attrs {
+		args = append(args, attr.Key, attr.Value)
+	}
+	Global().Logger.Info(msg, args...)
 }
 
 // Debug logs a debug message
 func Debug(msg string, attrs ...slog.Attr) {
-	Global().Debug(msg, attrs...)
+	args := make([]interface{}, 0, len(attrs)*2)
+	for _, attr := range attrs {
+		args = append(args, attr.Key, attr.Value)
+	}
+	Global().Logger.Debug(msg, args...)
 }
 
 // Warn logs a warning message
 func Warn(msg string, attrs ...slog.Attr) {
-	Global().Warn(msg, attrs...)
+	args := make([]interface{}, 0, len(attrs)*2)
+	for _, attr := range attrs {
+		args = append(args, attr.Key, attr.Value)
+	}
+	Global().Logger.Warn(msg, args...)
 }
 
 // Error logs an error message
 func Error(msg string, attrs ...slog.Attr) {
-	Global().Error(msg, attrs...)
+	args := make([]interface{}, 0, len(attrs)*2)
+	for _, attr := range attrs {
+		args = append(args, attr.Key, attr.Value)
+	}
+	Global().Logger.Error(msg, args...)
 }
 
 // HTTP logs HTTP request information

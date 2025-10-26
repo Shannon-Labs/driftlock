@@ -2,7 +2,9 @@ package middleware
 
 import (
 	"context"
+	"net"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -82,14 +84,6 @@ func Logging(logger *logging.Logger) func(http.Handler) http.Handler {
 
 			// Log request details
 			duration := time.Since(start)
-
-			// Use the logger's HTTP method with additional attributes
-			attrs := []interface{}{
-				"request_id", requestID,
-				"client_ip", getClientIP(r),
-				"user_agent", r.UserAgent(),
-				"bytes_written", wrapped.written,
-			}
 
 			logger.Info("HTTP request",
 				"method", r.Method,
@@ -191,4 +185,31 @@ func Timeout(timeout time.Duration) func(http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 		})
 	}
+}
+
+// getClientIP extracts the real client IP from headers or connection
+func getClientIP(r *http.Request) string {
+	// Check X-Forwarded-For header
+	forwarded := r.Header.Get("X-Forwarded-For")
+	if forwarded != "" {
+		// Take the first IP in the list
+		ip := strings.Split(forwarded, ",")[0]
+		ip = strings.TrimSpace(ip)
+		if ip != "" {
+			return ip
+		}
+	}
+
+	// Check X-Real-IP header
+	realIP := r.Header.Get("X-Real-IP")
+	if realIP != "" {
+		return realIP
+	}
+
+	// Use the remote addr from the connection
+	ip, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		return r.RemoteAddr
+	}
+	return ip
 }

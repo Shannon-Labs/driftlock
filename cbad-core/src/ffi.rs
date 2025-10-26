@@ -4,8 +4,8 @@
 //! Go-based applications to use the complete CBAD anomaly detection
 //! engine with streaming capabilities and proper error handling.
 
-use crate::anomaly::{AnomalyConfig, AnomalyDetector, AnomalyResult};
-use crate::compression::{create_adapter, CompressionAlgorithm};
+use crate::anomaly::{AnomalyConfig, AnomalyDetector};
+use crate::compression::CompressionAlgorithm;
 use crate::window::{DataEvent, WindowConfig};
 use std::ffi::{CStr, CString};
 use std::os::raw::{c_char, c_int};
@@ -266,6 +266,10 @@ pub unsafe extern "C" fn cbad_detector_get_stats(
 
 /// Legacy function for backward compatibility (keeps existing Go code working)
 /// This function is deprecated - use the new detector-based API instead
+/// # Safety
+/// - `baseline_ptr` and `window_ptr` must be valid for reads of `baseline_len` and `window_len` bytes respectively.
+/// - The pointers must remain valid for the duration of the call.
+/// - This function shares semantics with `cbad_compute_metrics` and inherits its safety requirements.
 #[no_mangle]
 pub unsafe extern "C" fn cbad_compute_metrics_legacy(
     baseline_ptr: *const u8,

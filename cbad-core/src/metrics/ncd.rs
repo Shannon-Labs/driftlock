@@ -297,7 +297,10 @@ mod tests {
                     .expect("compute NCD");
                 
                 println!("NCD for test case: {:.4}", ncd);
-                assert!(ncd >= 0.0 && ncd <= 1.0, "NCD must be in range [0.0, 1.0]");
+                assert!(
+                    (0.0..=1.0).contains(&ncd),
+                    "NCD must be in range [0.0, 1.0]"
+                );
             }
         }
     }
@@ -341,20 +344,20 @@ mod tests {
         }
 
         // Matrix should be symmetric
-        for i in 0..matrix.len() {
-            for j in i+1..matrix.len() {
-                assert!((matrix[i][j] - matrix[j][i]).abs() < 0.01, 
-                        "Matrix should be symmetric");
+        for (i, row) in matrix.iter().enumerate() {
+            for (j, value) in row.iter().enumerate().skip(i + 1) {
+                assert!(
+                    (value - matrix[j][i]).abs() < 0.01,
+                    "Matrix should be symmetric"
+                );
             }
+
+            // Diagonal should be 0 (sequence with itself)
+            assert!(row[i] < 0.01, "Diagonal should be ~0");
         }
 
         // Identical sequences should have NCD ≈ 0
         assert!(matrix[0][1] < 0.1, "Identical sequences should have low NCD");
-        
-        // Diagonal should be 0 (sequence with itself)
-        for i in 0..matrix.len() {
-            assert!(matrix[i][i] < 0.01, "Diagonal should be ~0");
-        }
     }
 
     #[test]
@@ -395,8 +398,11 @@ mod tests {
     fn test_quick_anomaly_check() {
         let adapter = create_test_adapter();
 
-        let baseline = b"INFO 2025-10-24T00:00:00Z service=api-gateway msg=request_completed\n".repeat(50);
-        let window = b"ERROR 2025-10-24T00:00:01Z service=api-gateway msg=panic\n".repeat(20);
+        let baseline_log = r#"{"timestamp":"2025-10-24T00:00:00Z","severity":"INFO","service":"api-gateway","message":"Request completed","attributes":{"method":"GET","path":"/api/users","status":200,"duration_ms":42}}"#;
+        let anomalous_log = r#"{"timestamp":"2025-10-24T00:00:01Z","severity":"ERROR","service":"api-gateway","message":"Panic occurred","attributes":{"stack_trace":"thread 'main' panicked at 'index out of bounds', src/main.rs:42:13","error":"runtime panic"}}"#;
+
+        let baseline = baseline_log.as_bytes().repeat(50);
+        let window = anomalous_log.as_bytes().repeat(20);
 
         // Test with low threshold (should not detect)
         let is_anomaly_low = is_anomaly_ncd(&baseline, &window, adapter.as_ref(), 0.9)

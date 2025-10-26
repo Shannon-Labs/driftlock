@@ -21,6 +21,7 @@ use std::collections::VecDeque;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, SystemTime};
 
+type WindowResult<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 /// Configuration for the sliding window system
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WindowConfig {
@@ -407,49 +408,49 @@ impl ThreadSafeSlidingWindow {
     }
 
     /// Add an event to the sliding window system
-    pub fn add_event(&self, event: DataEvent) -> Result<bool, Box<dyn std::error::Error + Send + Sync>> {
+    pub fn add_event(&self, event: DataEvent) -> WindowResult<bool> {
         let mut window = self.inner.lock().map_err(|e| e.to_string())?;
         Ok(window.add_event(event))
     }
 
     /// Get the current baseline window for analysis
-    pub fn get_baseline(&self) -> Result<Option<Vec<u8>>, Box<dyn std::error::Error + Send + Sync>> {
+    pub fn get_baseline(&self) -> WindowResult<Option<Vec<u8>>> {
         let window = self.inner.lock().map_err(|e| e.to_string())?;
         Ok(window.get_baseline())
     }
 
     /// Get the current analysis window
-    pub fn get_window(&self) -> Result<Option<Vec<u8>>, Box<dyn std::error::Error + Send + Sync>> {
+    pub fn get_window(&self) -> WindowResult<Option<Vec<u8>>> {
         let window = self.inner.lock().map_err(|e| e.to_string())?;
         Ok(window.get_window())
     }
 
     /// Get both baseline and current window for CBAD analysis
-    pub fn get_baseline_and_window(&self) -> Result<Option<(Vec<u8>, Vec<u8>)>, Box<dyn std::error::Error + Send + Sync>> {
+    pub fn get_baseline_and_window(&self) -> WindowResult<Option<(Vec<u8>, Vec<u8>)>> {
         let window = self.inner.lock().map_err(|e| e.to_string())?;
         Ok(window.get_baseline_and_window())
     }
 
     /// Check if the system has enough data for analysis
-    pub fn is_ready(&self) -> Result<bool, Box<dyn std::error::Error + Send + Sync>> {
+    pub fn is_ready(&self) -> WindowResult<bool> {
         let window = self.inner.lock().map_err(|e| e.to_string())?;
         Ok(window.is_ready())
     }
 
     /// Get the total number of events processed
-    pub fn total_events(&self) -> Result<u64, Box<dyn std::error::Error + Send + Sync>> {
+    pub fn total_events(&self) -> WindowResult<u64> {
         let window = self.inner.lock().map_err(|e| e.to_string())?;
         Ok(window.total_events())
     }
 
     /// Get the current memory usage (number of events stored)
-    pub fn memory_usage(&self) -> Result<usize, Box<dyn std::error::Error + Send + Sync>> {
+    pub fn memory_usage(&self) -> WindowResult<usize> {
         let window = self.inner.lock().map_err(|e| e.to_string())?;
         Ok(window.memory_usage())
     }
 
     /// Get window configuration
-    pub fn config(&self) -> Result<WindowConfig, Box<dyn std::error::Error + Send + Sync>> {
+    pub fn config(&self) -> WindowResult<WindowConfig> {
         let window = self.inner.lock().map_err(|e| e.to_string())?;
         Ok(window.config().clone())
     }
@@ -472,10 +473,12 @@ mod tests {
 
     #[test]
     fn test_add_events_and_readiness() {
-        let mut config = WindowConfig::default();
-        config.baseline_size = 5;
-        config.window_size = 3;
-        config.max_capacity = 20;
+        let config = WindowConfig {
+            baseline_size: 5,
+            window_size: 3,
+            max_capacity: 20,
+            ..Default::default()
+        };
         
         let mut window = SlidingWindow::new(config);
 
@@ -502,10 +505,12 @@ mod tests {
 
     #[test]
     fn test_get_baseline_and_window() {
-        let mut config = WindowConfig::default();
-        config.baseline_size = 3;
-        config.window_size = 2;
-        config.max_capacity = 20;
+        let config = WindowConfig {
+            baseline_size: 3,
+            window_size: 2,
+            max_capacity: 20,
+            ..Default::default()
+        };
         
         let mut window = SlidingWindow::new(config);
 
@@ -525,13 +530,19 @@ mod tests {
         assert!(_window.is_some());
 
         // Verify sizes
-        assert_eq!(baseline.unwrap().len(), format!("data_0data_1data_2").as_bytes().len());
+        let baseline_len = ["data_0", "data_1", "data_2"]
+            .iter()
+            .map(|s| s.len())
+            .sum::<usize>();
+        assert_eq!(baseline.unwrap().len(), baseline_len);
     }
 
     #[test]
     fn test_memory_bounding() {
-        let mut config = WindowConfig::default();
-        config.max_capacity = 5;
+        let config = WindowConfig {
+            max_capacity: 5,
+            ..Default::default()
+        };
         
         let mut window = SlidingWindow::new(config);
 
@@ -566,7 +577,7 @@ mod tests {
         let event = DataEvent::new(b"main_event".to_vec());
         window.add_event(event).unwrap();
 
-        let (events, ready) = handle.join().unwrap();
+        let (events, _) = handle.join().unwrap();
         assert!(events >= 1);
         
         let total = window.total_events().unwrap();
@@ -594,8 +605,10 @@ mod tests {
 
     #[test]
     fn test_time_window_config() {
-        let mut config = WindowConfig::default();
-        config.time_window = Some(Duration::from_secs(60)); // 1 minute window
+        let config = WindowConfig {
+            time_window: Some(Duration::from_secs(60)), // 1 minute window
+            ..Default::default()
+        };
         
         let window = SlidingWindow::new(config);
         

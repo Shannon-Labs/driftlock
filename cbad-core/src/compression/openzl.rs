@@ -10,6 +10,7 @@ struct ZL_CCtx {
     _private: [u8; 0],
 }
 
+#[allow(dead_code)]
 #[repr(C)]
 struct ZL_DCtx {
     _private: [u8; 0],
@@ -25,6 +26,7 @@ struct ZL_Report {
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[allow(dead_code)]
 enum ZL_ErrorCode {
     NoError = 0,
     Generic = 1,
@@ -83,6 +85,7 @@ enum ZL_ErrorCode {
 // Compression parameters
 #[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[allow(dead_code)]
 enum ZL_CParam {
     StickyParameters = 1,
     CompressionLevel = 2,
@@ -130,7 +133,7 @@ extern "C" {
 }
 
 // Inline function implementations (since they're not available as symbols)
-fn ZL_compressBound(total_src_size: usize) -> usize {
+fn zl_compress_bound(total_src_size: usize) -> usize {
     // From zl_compress.h: #define ZL_COMPRESSBOUND(s) (((s) * 2) + 512 + 8)
     (total_src_size * 2) + 512 + 8
 }
@@ -334,7 +337,7 @@ impl CompressionAdapter for OpenZLAdapter {
     }
 
     fn compress_bound(&self, src_size: usize) -> usize {
-        ZL_compressBound(src_size)
+        zl_compress_bound(src_size)
     }
 
     fn is_deterministic(&self) -> bool {

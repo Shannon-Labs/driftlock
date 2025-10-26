@@ -204,8 +204,11 @@ mod tests {
 
     #[test]
     fn test_entropy_comparison() {
-        let baseline = b"INFO 2025-10-24T00:00:00Z service=api-gateway msg=request_completed duration_ms=42\n".repeat(100);
-        let window = b"ERROR 2025-10-24T00:00:01Z service=api-gateway msg=panic stack_trace=\"thread 'main' panicked\"\n".repeat(20);
+        let baseline_log = r#"{"timestamp":"2025-10-24T00:00:00Z","severity":"INFO","service":"api-gateway","message":"Request completed","attributes":{"method":"GET","path":"/api/users","status":200,"duration_ms":42}}"#;
+        let high_entropy_log = r#"{"timestamp":"2025-10-24T00:00:01Z","severity":"ERROR","service":"api-gateway","message":"Panic occurred","attributes":{"stack_trace":"0x3fa8d1b2c9e47f56::panic::trace::[ns=923847923847923847923847]::random_payload=9fjK2L1pQwZ8xT4rB7nC6Mv0HdYG5s2tR1uQ3w8yAaEeIiOo","binary_blob":"Q29tcHJlc3NlZEJsb2I6ZGV0ZXJtaW5pc3RpY1Nob3J0c0FuZFJhbmRvbVVuaWNvZGVEYXRh"}}"#;
+
+        let baseline = baseline_log.as_bytes().repeat(100);
+        let window = high_entropy_log.as_bytes().repeat(20);
 
         let (baseline_entropy, window_entropy, entropy_change) = compare_entropy(&baseline, &window)
             .expect("compare entropy");

@@ -16,7 +16,7 @@ import (
 func BenchmarkCreateAnomaly(b *testing.B) {
 	mockStore := newMockStorage()
 	mockStream := stream.NewStreamer(1000)
-	handler := NewAnomaliesHandler(mockStore, mockStream)
+	handler := NewAnomaliesHandler(mockStore, mockStream, nil)
 
 	createReq := &models.AnomalyCreate{
 		Timestamp:           time.Now(),
@@ -50,7 +50,7 @@ func BenchmarkCreateAnomaly(b *testing.B) {
 func BenchmarkGetAnomaly(b *testing.B) {
 	mockStore := newMockStorage()
 	mockStream := stream.NewStreamer(1000)
-	handler := NewAnomaliesHandler(mockStore, mockStream)
+	handler := NewAnomaliesHandler(mockStore, mockStream, nil)
 
 	// Pre-populate with test anomaly
 	id := uuid.New()
@@ -81,7 +81,7 @@ func BenchmarkGetAnomaly(b *testing.B) {
 func BenchmarkListAnomalies(b *testing.B) {
 	mockStore := newMockStorage()
 	mockStream := stream.NewStreamer(1000)
-	handler := NewAnomaliesHandler(mockStore, mockStream)
+	handler := NewAnomaliesHandler(mockStore, mockStream, nil)
 
 	// Pre-populate with test anomalies
 	now := time.Now()
@@ -114,7 +114,7 @@ func BenchmarkListAnomalies(b *testing.B) {
 func BenchmarkListAnomalies_WithFilters(b *testing.B) {
 	mockStore := newMockStorage()
 	mockStream := stream.NewStreamer(1000)
-	handler := NewAnomaliesHandler(mockStore, mockStream)
+	handler := NewAnomaliesHandler(mockStore, mockStream, nil)
 
 	// Pre-populate with mixed anomalies
 	now := time.Now()
@@ -151,7 +151,7 @@ func BenchmarkListAnomalies_WithFilters(b *testing.B) {
 func BenchmarkUpdateAnomalyStatus(b *testing.B) {
 	mockStore := newMockStorage()
 	mockStream := stream.NewStreamer(1000)
-	handler := NewAnomaliesHandler(mockStore, mockStream)
+	handler := NewAnomaliesHandler(mockStore, mockStream, nil)
 
 	// Pre-populate with test anomaly
 	id := uuid.New()
@@ -186,7 +186,7 @@ func BenchmarkUpdateAnomalyStatus(b *testing.B) {
 func BenchmarkListAnomalies_Parallel(b *testing.B) {
 	mockStore := newMockStorage()
 	mockStream := stream.NewStreamer(1000)
-	handler := NewAnomaliesHandler(mockStore, mockStream)
+	handler := NewAnomaliesHandler(mockStore, mockStream, nil)
 
 	// Pre-populate
 	now := time.Now()

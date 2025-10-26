@@ -10,17 +10,22 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/lib/pq"
+	"github.com/your-org/driftlock/api-server/internal/compression"
 	"github.com/your-org/driftlock/api-server/internal/models"
 )
 
 // Storage provides database operations for Driftlock
 type Storage struct {
-	db *sql.DB
+	db           *sql.DB
+	compression  *compression.CompressionManager
 }
 
 // New creates a new Storage instance
 func New(db *sql.DB) *Storage {
-	return &Storage{db: db}
+	return &Storage{
+		db: db,
+		compression: compression.NewCompressionManager(nil), // Use default compression strategy
+	}
 }
 
 // NewPostgres creates a new PostgreSQL connection
