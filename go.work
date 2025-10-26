@@ -6,4 +6,5 @@ use (
 	./collector-processor
 	./collector-processor/driftlockcbad
 	./pkg/version
+	./productized
 )

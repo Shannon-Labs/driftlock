@@ -12,6 +12,8 @@ replace github.com/Hmbown/driftlock/pkg/version => ./pkg/version
 
 replace github.com/Hmbown/driftlock/llm-receivers => ./llm-receivers
 
+replace github.com/Hmbown/driftlock/productized => ./productized
+
 require (
 	github.com/Hmbown/driftlock/collector-processor/driftlockcbad v0.0.0-00010101000000-000000000000
 	github.com/gorilla/websocket v1.5.1

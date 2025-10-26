@@ -1,0 +1,5 @@
+productized/cmd/server/main.go:14:2: package driftlock/productized/api/config is not in std (/usr/local/go/src/driftlock/productized/api/config)
+productized/cmd/server/main.go:15:2: package driftlock/productized/api/database is not in std (/usr/local/go/src/driftlock/productized/api/database)
+productized/cmd/server/main.go:16:2: package driftlock/productized/api/middleware is not in std (/usr/local/go/src/driftlock/productized/api/middleware)
+productized/cmd/server/main.go:17:2: package driftlock/productized/api/monitoring is not in std (/usr/local/go/src/driftlock/productized/api/monitoring)
+productized/cmd/server/main.go:18:2: package driftlock/productized/api/routes is not in std (/usr/local/go/src/driftlock/productized/api/routes)

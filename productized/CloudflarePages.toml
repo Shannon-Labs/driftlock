@@ -1,0 +1,60 @@
+# Cloudflare Pages Configuration for DriftLock Frontend
+
+# Build configuration for the React frontend
+[build]
+  command = "npm run build"
+  output = "build"
+  upload = "build"
+
+# Root environment variables
+[env]
+  NODE_VERSION = "18"
+
+# Production environment
+[env.production]
+  NODE_VERSION = "18"
+  REACT_APP_API_URL = "https://api.driftlock.com"
+  REACT_APP_STRIPE_PUBLIC_KEY = "pk_live_..."
+
+# Preview/Development environment
+[env.preview]
+  NODE_VERSION = "18"
+  REACT_APP_API_URL = "https://staging-api.driftlock.com"
+  REACT_APP_STRIPE_PUBLIC_KEY = "pk_test_..."
+
+# Production environment specific
+[env.production]
+  CLOUDFLARE_PAGES = true
+
+# Custom security headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=()"
+
+# API redirects to backend
+[[redirects]]
+  from = "/api/*"
+  to = "https://api.driftlock.com/:splat"
+  status = 200
+  force = true
+
+# OAuth redirects to backend
+[[redirects]]
+  from = "/oauth/*"
+  to = "https://api.driftlock.com/:splat"
+  status = 200
+  force = true
+
+# Catch-all for SPA routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  conditions = [
+    { type = "RequestFile", match = "none" }
+  ]
