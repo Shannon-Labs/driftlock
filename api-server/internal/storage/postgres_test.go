@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
-	"github.com/your-org/driftlock/api-server/internal/models"
+	"github.com/Hmbown/driftlock/api-server/internal/models"
 )
 
 // setupTestDB creates a temporary PostgreSQL container for testing

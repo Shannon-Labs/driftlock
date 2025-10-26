@@ -1,4 +1,4 @@
-module github.com/your-org/driftlock/api-server
+module github.com/Hmbown/driftlock/api-server
 
 go 1.24.1
 
@@ -16,8 +16,8 @@ require (
 	github.com/segmentio/kafka-go v0.4.48
 	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go v0.39.0
-	github.com/your-org/driftlock/collector-processor/driftlockcbad v0.0.0
-	github.com/your-org/driftlock/pkg/version v0.0.0
+	github.com/Hmbown/driftlock/collector-processor/driftlockcbad v0.0.0
+	github.com/Hmbown/driftlock/pkg/version v0.0.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.53.0
 	go.opentelemetry.io/otel v1.38.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.26.0
@@ -106,6 +106,6 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/your-org/driftlock/collector-processor/driftlockcbad => ../collector-processor/driftlockcbad
+replace github.com/Hmbown/driftlock/collector-processor/driftlockcbad => ../collector-processor/driftlockcbad
 
-replace github.com/your-org/driftlock/pkg/version => ../pkg/version
+replace github.com/Hmbown/driftlock/pkg/version => ../pkg/version

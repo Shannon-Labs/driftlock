@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/your-org/driftlock/api-server/internal/logging"
+	"github.com/Hmbown/driftlock/api-server/internal/logging"
 )
 
 // RequestIDKey is the context key for request IDs

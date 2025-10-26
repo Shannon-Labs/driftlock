@@ -6,10 +6,10 @@ import (
 	"log"
 	"time"
 
-	"github.com/your-org/driftlock/api-server/internal/models"
-	"github.com/your-org/driftlock/api-server/internal/storage"
-	"github.com/your-org/driftlock/api-server/internal/stream"
-	"github.com/your-org/driftlock/collector-processor/driftlockcbad"
+	"github.com/Hmbown/driftlock/api-server/internal/models"
+	"github.com/Hmbown/driftlock/api-server/internal/storage"
+	"github.com/Hmbown/driftlock/api-server/internal/stream"
+	"github.com/Hmbown/driftlock/collector-processor/driftlockcbad"
 )
 
 // Detector integrates CBAD core with the API server

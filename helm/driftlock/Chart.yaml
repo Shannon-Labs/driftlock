@@ -18,7 +18,7 @@ keywords:
 
 home: https://driftlock.example.com
 sources:
-  - https://github.com/your-org/driftlock
+  - https://github.com/Hmbown/driftlock
 
 dependencies:
   - name: postgresql

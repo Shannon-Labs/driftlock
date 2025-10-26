@@ -9,9 +9,9 @@ import (
     "syscall"
     "time"
 
-    "github.com/your-org/driftlock/api-server/internal/api"
-    "github.com/your-org/driftlock/api-server/internal/engine"
-    "github.com/your-org/driftlock/api-server/internal/telemetry"
+    "github.com/Hmbown/driftlock/api-server/internal/api"
+    "github.com/Hmbown/driftlock/api-server/internal/engine"
+    "github.com/Hmbown/driftlock/api-server/internal/telemetry"
 )
 
 func main() {

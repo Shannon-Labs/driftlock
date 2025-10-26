@@ -49,7 +49,7 @@ This document outlines all bugs fixed and known limitations in the Driftlock pro
 
 ### 4. **Missing Go Workspace Modules**
 - **Issue**: API server and pkg/version not included in go.work workspace
-- **Error**: `main module does not contain package github.com/your-org/driftlock/api-server/cmd/driftlock-api`
+- **Error**: `main module does not contain package github.com/Hmbown/driftlock/api-server/cmd/driftlock-api`
 - **Fix**: Added missing modules to `go.work`
   - Added `./api-server`
   - Added `./pkg/version`

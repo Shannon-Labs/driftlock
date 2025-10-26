@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/your-org/driftlock/api-server/internal/models"
-	"github.com/your-org/driftlock/api-server/internal/storage"
+	"github.com/Hmbown/driftlock/api-server/internal/models"
+	"github.com/Hmbown/driftlock/api-server/internal/storage"
 )
 
 // Exporter defines the interface for export operations

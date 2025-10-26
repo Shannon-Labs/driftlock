@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/your-org/driftlock/api-server/internal/models"
-	"github.com/your-org/driftlock/api-server/internal/storage"
+	"github.com/Hmbown/driftlock/api-server/internal/models"
+	"github.com/Hmbown/driftlock/api-server/internal/storage"
 )
 
 // ConfigHandler handles configuration-related HTTP requests

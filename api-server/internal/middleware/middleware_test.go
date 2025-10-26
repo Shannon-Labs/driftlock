@@ -15,8 +15,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/your-org/driftlock/api-server/internal/errors"
-	"github.com/your-org/driftlock/api-server/internal/logging"
+	"github.com/Hmbown/driftlock/api-server/internal/errors"
+	"github.com/Hmbown/driftlock/api-server/internal/logging"
 )
 
 func TestRequestID(t *testing.T) {

@@ -1,5 +1,5 @@
 # Dockerfile for OpenTelemetry Collector with CBAD processor
-FROM golang:1.22-alpine AS builder
+FROM golang:1.24-alpine AS builder
 
 WORKDIR /build
 
@@ -7,41 +7,17 @@ WORKDIR /build
 RUN apk add --no-cache git gcc musl-dev
 
 # Install ocb (OpenTelemetry Collector Builder)
-RUN go install go.opentelemetry.io/collector/cmd/builder@latest
+RUN go install go.opentelemetry.io/collector/cmd/builder@v0.112.0
 
 # Copy collector processor source
 COPY collector-processor ./collector-processor
 COPY cbad-core ./cbad-core
 COPY go.mod go.sum go.work go.work.sum ./
 
-# Create builder manifest
-RUN cat > /build/otelcol-builder.yaml <<EOF
-dist:
-  name: driftlock-collector
-  description: OpenTelemetry Collector with Driftlock CBAD processor
-  output_path: /build/dist
-
-extensions:
-  - gomod: go.opentelemetry.io/collector/extension/ballastextension v0.90.0
-  - gomod: go.opentelemetry.io/collector/extension/zpagesextension v0.90.0
-
-exporters:
-  - gomod: go.opentelemetry.io/collector/exporter/otlpexporter v0.90.0
-  - gomod: go.opentelemetry.io/collector/exporter/otlphttpexporter v0.90.0
-
-processors:
-  - gomod: go.opentelemetry.io/collector/processor/batchprocessor v0.90.0
-  - gomod: github.com/your-org/driftlock/collector-processor/driftlockcbad v0.1.0
-    path: /build/collector-processor/driftlockcbad
-
-receivers:
-  - gomod: go.opentelemetry.io/collector/receiver/otlpreceiver v0.90.0
-
-connectors: []
-EOF
+COPY collector-processor/manifest.yaml ./manifest.yaml
 
 # Build collector
-RUN /root/go/bin/builder --config=/build/otelcol-builder.yaml
+RUN /go/bin/builder --config=manifest.yaml
 
 # Final stage
 FROM alpine:latest
@@ -51,6 +27,7 @@ RUN apk add --no-cache ca-certificates
 WORKDIR /app
 
 COPY --from=builder /build/dist/driftlock-collector /app/driftlock-collector
+COPY deploy/collector-config/config.yaml /etc/otelcol/config.yaml
 
 # Create default config
 RUN mkdir -p /etc/otelcol

@@ -12,8 +12,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/your-org/driftlock/api-server/internal/errors"
-	"github.com/your-org/driftlock/api-server/internal/models"
+	"github.com/Hmbown/driftlock/api-server/internal/errors"
+	"github.com/Hmbown/driftlock/api-server/internal/models"
 )
 
 func TestNew(t *testing.T) {

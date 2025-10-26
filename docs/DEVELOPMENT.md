@@ -66,7 +66,7 @@ Driftlock is an explainable, deterministic anomaly detection toolkit designed fo
 ### Prerequisites
 - Go 1.22+
 - Rust 1.70+
-- Docker and Docker Compose
+- Docker and Docker Compose (or Colima for macOS)
 - PostgreSQL 13+ (or Docker for testing)
 - Node.js 18+ (for UI development)
 
@@ -74,7 +74,7 @@ Driftlock is an explainable, deterministic anomaly detection toolkit designed fo
 
 1. **Clone the repository:**
 ```bash
-git clone https://github.com/your-org/driftlock.git
+git clone https://github.com/Hmbown/driftlock.git
 cd driftlock
 ```
 
@@ -182,8 +182,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	
 	// Internal
-	"github.com/your-org/driftlock/api-server/internal/models"
-	"github.com/your-org/driftlock/api-server/internal/storage"
+	"github.com/Hmbown/driftlock/api-server/internal/models"
+	"github.com/Hmbown/driftlock/api-server/internal/storage"
 )
 ```
 

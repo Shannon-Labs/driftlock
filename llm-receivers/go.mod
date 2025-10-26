@@ -1,4 +1,4 @@
-module github.com/your-org/driftlock/llm-receivers
+module github.com/Hmbown/driftlock/llm-receivers
 
 go 1.22
 

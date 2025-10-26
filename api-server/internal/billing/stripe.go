@@ -10,7 +10,7 @@ import (
 
 	"github.com/stripe/stripe-go/v76"
 	"github.com/stripe/stripe-go/v76/client"
-	"github.com/your-org/driftlock/api-server/internal/models"
+	"github.com/Hmbown/driftlock/api-server/internal/models"
 )
 
 // StripeService handles all Stripe-related operations

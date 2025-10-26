@@ -70,7 +70,7 @@ data:
           "targets": [
             {
               "expr": "rate(http_requests_total[5m])",
-              "legendFormat": "{{method}} {{status}}",
+              "legendFormat": "{{`{{method}}`}} {{`{{status}}`}}",
               "refId": "A"
             }
           ],

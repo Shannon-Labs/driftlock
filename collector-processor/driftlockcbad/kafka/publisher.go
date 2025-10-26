@@ -73,7 +73,6 @@ func NewPublisher(cfg PublisherConfig, logger *zap.Logger) (*Publisher, error) {
 	// Create the writer with default settings
 	writerConfig := segment.WriterConfig{
 		Brokers:      cfg.Brokers,
-		Topic:        cfg.EventsTopic,
 		Dialer:       dialer,
 		BatchSize:    cfg.BatchSize,
 		BatchTimeout: cfg.BatchTimeout,
@@ -93,11 +92,11 @@ func NewPublisher(cfg PublisherConfig, logger *zap.Logger) (*Publisher, error) {
 // PublishLog publishes an OTLP log record to Kafka.
 func (p *Publisher) PublishLog(ctx context.Context, lr plog.LogRecord) error {
 	logData := map[string]interface{}{
-		"timestamp": lr.Timestamp().AsTime().Format(time.RFC3339Nano),
-		"severity":  lr.SeverityText(),
-		"body":      lr.Body().AsString(),
+		"timestamp":       lr.Timestamp().AsTime().Format(time.RFC3339Nano),
+		"severity":        lr.SeverityText(),
+		"body":            lr.Body().AsString(),
 		"severity_number": int(lr.SeverityNumber()),
-		"flags":     uint32(lr.Flags()),
+		"flags":           uint32(lr.Flags()),
 	}
 
 	// Add attributes

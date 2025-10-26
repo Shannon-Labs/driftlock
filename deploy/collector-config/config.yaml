@@ -1,0 +1,36 @@
+receivers:
+  otlp:
+    protocols:
+      http:
+
+processors:
+  driftlock_cbad:
+    window_size: 1024
+    hop_size: 256
+    threshold: 0.9
+    determinism: true
+    kafka:
+      enabled: true
+      brokers: ["kafka:29092"]
+      client_id: "driftlock-collector"
+      events_topic: "otlp-events"
+      tls_enabled: false
+      batch_size: 100
+      batch_timeout_ms: 5
+    redis:
+      enabled: false
+
+exporters:
+  debug:
+    verbosity: detailed
+
+service:
+  pipelines:
+    logs:
+      receivers: [otlp]
+      processors: [driftlock_cbad]
+      exporters: [debug]
+    metrics:
+      receivers: [otlp]
+      processors: [driftlock_cbad]
+      exporters: [debug]

@@ -5,7 +5,7 @@ import (
 	"database/sql"
 
 	"github.com/google/uuid"
-	"github.com/your-org/driftlock/api-server/internal/models"
+	"github.com/Hmbown/driftlock/api-server/internal/models"
 )
 
 // AnomalyStorage defines the interface for anomaly storage operations

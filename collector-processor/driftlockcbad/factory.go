@@ -14,7 +14,7 @@ import (
 	"go.opentelemetry.io/collector/processor"
 	"go.uber.org/zap"
 
-	"github.com/your-org/driftlock/collector-processor/driftlockcbad/kafka"
+	"github.com/Hmbown/driftlock/collector-processor/driftlockcbad/kafka"
 )
 
 var (

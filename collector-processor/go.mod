@@ -1,4 +1,4 @@
-module github.com/your-org/driftlock/collector-processor
+module github.com/Hmbown/driftlock/collector-processor
 
 go 1.24.0
 

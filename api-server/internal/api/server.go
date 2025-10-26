@@ -7,8 +7,8 @@ import (
     "net/http"
     "time"
 
-    "github.com/your-org/driftlock/api-server/internal/engine"
-    "github.com/your-org/driftlock/pkg/version"
+    "github.com/Hmbown/driftlock/api-server/internal/engine"
+    "github.com/Hmbown/driftlock/pkg/version"
     "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 

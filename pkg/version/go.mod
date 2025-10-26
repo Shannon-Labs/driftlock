@@ -1,3 +1,3 @@
-module github.com/your-org/driftlock/pkg/version
+module github.com/Hmbown/driftlock/pkg/version
 
 go 1.22

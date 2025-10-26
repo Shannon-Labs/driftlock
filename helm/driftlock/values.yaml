@@ -275,7 +275,7 @@ serviceMonitor:
 
 # PrometheusRule configuration for alerting
 prometheusRule:
-  enabled: true
+  enabled: false
   labels: {}
 
 # PodSecurityPolicy configuration

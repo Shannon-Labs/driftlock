@@ -10,10 +10,10 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/your-org/driftlock/api-server/internal/models"
-	"github.com/your-org/driftlock/api-server/internal/storage"
-	"github.com/your-org/driftlock/api-server/internal/stream"
-	"github.com/your-org/driftlock/api-server/internal/streaming"
+	"github.com/Hmbown/driftlock/api-server/internal/models"
+	"github.com/Hmbown/driftlock/api-server/internal/storage"
+	"github.com/Hmbown/driftlock/api-server/internal/stream"
+	"github.com/Hmbown/driftlock/api-server/internal/streaming"
 )
 
 // AnomaliesHandler handles anomaly-related HTTP requests
