@@ -1,0 +1,44 @@
+name = "driftlock-api"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+# Build configuration
+[build]
+command = "echo 'No build step required'"
+
+# Environment variables
+[vars]
+SUPABASE_URL = "https://nfkdeeunyvnntvpvwpwh.supabase.co"
+SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ma2RlZXVueXZubnR2cHZ3cHdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg1ODU2NDUsImV4cCI6MjA3NDE2MTY0NX0.nRjQZJG5h66OgvQs8z9dmpQKw3nNHTTjhiRwdt48YGo"
+CORS_ORIGIN = "*"
+
+# Production environment
+[env.production]
+name = "driftlock-api"
+
+[env.production.vars]
+SUPABASE_URL = "https://nfkdeeunyvnntvpvwpwh.supabase.co"
+SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ma2RlZXVueXZubnR2cHZ3cHdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg1ODU2NDUsImV4cCI6MjA3NDE2MTY0NX0.nRjQZJG5h66OgvQs8z9dmpQKw3nNHTTjhiRwdt48YGo"
+CORS_ORIGIN = "https://driftlock.com"
+
+# Routes for custom domain (uncomment when ready)
+# [[env.production.routes]]
+# pattern = "api.driftlock.com/*"
+# zone_name = "driftlock.com"
+
+# Staging environment
+[env.staging]
+name = "driftlock-api-staging"
+
+[env.staging.vars]
+SUPABASE_URL = "https://nfkdeeunyvnntvpvwpwh.supabase.co"
+SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ma2RlZXVueXZubnR2cHZ3cHdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg1ODU2NDUsImV4cCI6MjA3NDE2MTY0NX0.nRjQZJG5h66OgvQs8z9dmpQKw3nNHTTjhiRwdt48YGo"
+CORS_ORIGIN = "*"
+
+# Secrets to set via: wrangler secret put SECRET_NAME
+# - SUPABASE_SERVICE_ROLE_KEY
+# - STRIPE_WEBHOOK_SECRET
+# - JWT_SECRET
+
+[observability]
+enabled = true
