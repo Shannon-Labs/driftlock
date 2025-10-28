@@ -12,8 +12,6 @@ import (
 	"syscall"
 	"time"
 
-	_ "github.com/lib/pq" // PostgreSQL driver
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/Hmbown/driftlock/api-server/internal/auth"
 	"github.com/Hmbown/driftlock/api-server/internal/cbad"
 	"github.com/Hmbown/driftlock/api-server/internal/config"
@@ -25,9 +23,11 @@ import (
 	"github.com/Hmbown/driftlock/api-server/internal/storage/redis"
 	"github.com/Hmbown/driftlock/api-server/internal/stream"
 	"github.com/Hmbown/driftlock/api-server/internal/streaming"
-	"github.com/Hmbown/driftlock/api-server/internal/telemetry"
 	"github.com/Hmbown/driftlock/api-server/internal/streaming/kafka"
+	"github.com/Hmbown/driftlock/api-server/internal/supabase"
 	"github.com/Hmbown/driftlock/pkg/version"
+	_ "github.com/lib/pq" // PostgreSQL driver
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
@@ -79,13 +79,13 @@ func main() {
 			WarmRetentionDays: cfg.Storage.Tiered.WarmRetentionDays,
 			ArchiveInterval:   archiveInterval,
 		})
-		
+
 		// Start the archive worker in the background
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 		tieredStorage.StartArchiveWorker(ctx)
-		
-		log.Printf("Tiered storage initialized with hot/warm/cold tiers: hot=%d days, warm=%d days", 
+
+		log.Printf("Tiered storage initialized with hot/warm/cold tiers: hot=%d days, warm=%d days",
 			cfg.Storage.Tiered.HotRetentionDays, cfg.Storage.Tiered.WarmRetentionDays)
 	} else {
 		log.Printf("Using single storage backend (no tiering)")
@@ -139,31 +139,56 @@ func main() {
 	// Initialize exporter
 	exporter := export.NewExporter(true) // Enable signature
 
+	// Initialize Supabase client for web-frontend integration
+	var supabaseClient *supabase.Client
+	if cfg.Supabase.ProjectID != "" {
+		log.Printf("Initializing Supabase client for project: %s", cfg.Supabase.ProjectID)
+		supabaseCfg := supabase.Config{
+			ProjectID:      cfg.Supabase.ProjectID,
+			AnonKey:        cfg.Supabase.AnonKey,
+			ServiceRoleKey: cfg.Supabase.ServiceRoleKey,
+			BaseURL:        cfg.Supabase.BaseURL,
+			RedisAddr:      cfg.Cache.Redis.Addr,
+			RedisPassword:  cfg.Cache.Redis.Password,
+			RedisDB:        cfg.Cache.Redis.DB,
+		}
+
+		var err error
+		supabaseClient, err = supabase.NewClient(supabaseCfg)
+		if err != nil {
+			log.Printf("Failed to initialize Supabase client: %v", err)
+		} else {
+			log.Printf("Supabase client initialized")
+		}
+	} else {
+		log.Printf("Supabase configuration not provided, skipping Supabase integration")
+	}
+
 	// Initialize event publisher (Kafka or in-memory based on config)
 	var eventPublisher streaming.EventPublisher
 	var kafkaProducer *kafka.Producer // Keep track for proper cleanup
 
 	if cfg.Streaming.Kafka.Enabled {
 		log.Printf("Initializing Kafka event publisher with brokers: %v", cfg.Streaming.Kafka.Brokers)
-		
+
 		// Create Kafka producer configuration
 		producerConfig := kafka.ProducerConfig{
 			Brokers:  cfg.Streaming.Kafka.Brokers,
 			ClientID: cfg.Streaming.Kafka.ClientID,
 		}
-		
+
 		// Configure TLS if enabled
 		if cfg.Streaming.Kafka.TLSEnabled {
 			producerConfig.TLSConfig = &tls.Config{}
 		}
-		
+
 		// Create Kafka producer
 		var err error
 		kafkaProducer, err = kafka.NewProducer(producerConfig)
 		if err != nil {
 			log.Fatalf("Failed to initialize Kafka producer: %v", err)
 		}
-		
+
 		// Create Kafka event publisher
 		eventPublisher = streaming.NewKafkaEventPublisher(kafkaProducer, cfg.Streaming.Kafka.AnomaliesTopic)
 		log.Printf("Kafka event publisher initialized for topic: %s", cfg.Streaming.Kafka.AnomaliesTopic)
@@ -175,7 +200,7 @@ func main() {
 	}
 
 	// Create handlers
-	anomaliesHandler := handlers.NewAnomaliesHandler(db, streamer, eventPublisher)
+	anomaliesHandler := handlers.NewAnomaliesHandlerWithSupabase(db, streamer, eventPublisher, supabaseClient)
 	configHandler := handlers.NewConfigHandler(db)
 	analyticsHandler := handlers.NewAnalyticsHandler(db)
 	exportHandler := handlers.NewExportHandler(db, exporter)
@@ -233,9 +258,9 @@ func main() {
 		took := time.Since(start)
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(map[string]any{
-			"status":  "ok",
+			"status":          "ok",
 			"processed_bytes": len(body),
-			"latency": took.String(),
+			"latency":         took.String(),
 		})
 	}), "events"))
 

@@ -9,11 +9,12 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/Hmbown/driftlock/api-server/internal/models"
 	"github.com/Hmbown/driftlock/api-server/internal/storage"
 	"github.com/Hmbown/driftlock/api-server/internal/stream"
 	"github.com/Hmbown/driftlock/api-server/internal/streaming"
+	"github.com/Hmbown/driftlock/api-server/internal/supabase"
+	"github.com/google/uuid"
 )
 
 // AnomaliesHandler handles anomaly-related HTTP requests
@@ -21,6 +22,7 @@ type AnomaliesHandler struct {
 	storage  storage.AnomalyStorage
 	streamer *stream.Streamer
 	events   streaming.EventPublisher
+	supabase *supabase.Client
 }
 
 // NewAnomaliesHandler creates a new anomalies handler
@@ -29,6 +31,16 @@ func NewAnomaliesHandler(storage storage.AnomalyStorage, streamer *stream.Stream
 		storage:  storage,
 		streamer: streamer,
 		events:   events,
+	}
+}
+
+// NewAnomaliesHandlerWithSupabase creates a new anomalies handler with Supabase integration
+func NewAnomaliesHandlerWithSupabase(storage storage.AnomalyStorage, streamer *stream.Streamer, events streaming.EventPublisher, supabaseClient *supabase.Client) *AnomaliesHandler {
+	return &AnomaliesHandler{
+		storage:  storage,
+		streamer: streamer,
+		events:   events,
+		supabase: supabaseClient,
 	}
 }
 
@@ -179,6 +191,27 @@ func (h *AnomaliesHandler) CreateAnomaly(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to create anomaly: %v", err), http.StatusInternalServerError)
 		return
+	}
+
+	// Also create in Supabase if client is available
+	if h.supabase != nil {
+		supabaseAnomaly := map[string]interface{}{
+			"id":          anomaly.ID.String(),
+			"title":       create.Title,
+			"description": create.Description,
+			"severity":    create.Severity,
+			"status":      "open",
+			"created_at":  time.Now().Format(time.RFC3339),
+			"metadata":    create.Metadata,
+			"ncd_score":   anomaly.NCDScore,
+			"p_value":     anomaly.PValue,
+		}
+
+		if err := h.supabase.CreateAnomaly(ctx, supabaseAnomaly); err != nil {
+			log.Printf("anomalies: failed to create anomaly in Supabase: %v", err)
+		} else {
+			log.Printf("anomalies: created anomaly in Supabase: %s", anomaly.ID.String())
+		}
 	}
 
 	// Broadcast to SSE clients

@@ -19,6 +19,7 @@ type Config struct {
 	Cache         CacheConfig
 	Storage       StorageConfig
 	Tenant        TenantConfig
+	Supabase      SupabaseConfig
 }
 
 // ServerConfig holds server settings
@@ -131,6 +132,15 @@ type TenantResourceQuotas struct {
 	MaxAPIRequestsPerMin int
 }
 
+// SupabaseConfig holds Supabase settings
+type SupabaseConfig struct {
+	ProjectID      string
+	AnonKey        string
+	ServiceRoleKey string
+	BaseURL        string
+	WebhookURL     string
+}
+
 // Load loads configuration from environment variables
 func Load() (*Config, error) {
 	config := &Config{
@@ -210,6 +220,13 @@ func Load() (*Config, error) {
 				MaxStorageGB:         getEnvInt("TENANT_MAX_STORAGE_GB", 100),
 				MaxAPIRequestsPerMin: getEnvInt("TENANT_MAX_API_REQUESTS_PER_MIN", 100),
 			},
+		},
+		Supabase: SupabaseConfig{
+			ProjectID:      getEnv("SUPABASE_PROJECT_ID", ""),
+			AnonKey:        getEnv("SUPABASE_ANON_KEY", ""),
+			ServiceRoleKey: getEnv("SUPABASE_SERVICE_ROLE_KEY", ""),
+			BaseURL:        getEnv("SUPABASE_BASE_URL", ""),
+			WebhookURL:     getEnv("SUPABASE_WEBHOOK_URL", ""),
 		},
 	}
 

@@ -2,151 +2,92 @@ Driftlock
 
 A compression-based anomaly detection (CBAD) platform for OpenTelemetry data, powered by Meta's OpenZL format-aware compression framework. Driftlock provides explainable anomaly detection for regulated industries through advanced compression analysis of logs, metrics, traces, and LLM I/O.
 
-This repository emphasizes a Go-based API server, an OpenTelemetry Collector processor, and a Rust CBAD core with OpenZL integration, with OpenTelemetry hooks and a minimal UI path.
+## Architecture
 
-What's here (Phase 0/1 skeleton)
-- api-server: Go service with health, readiness, version, and basic event ingestion endpoints, OTEL-enabled.
-- cbad-core: Rust crate for Compression-Based Anomaly Detection (CBAD) primitives, featuring OpenZL format-aware compression alongside zstd/lz4/gzip adapters.
-- collector-processor: OTel Collector processor skeleton `driftlock_cbad` (wires in later with cbad-core).
-- llm-receivers: Collector receiver skeletons for LLM prompts/responses/tool calls.
-- exporters: Placeholders for evidence bundle exporters (JSON + PDF).
-- deploy: Docker Compose with an OTel Collector and API container.
-- tools/synthetic: Small Go generator to POST synthetic events to the API.
-- ui: Placeholder Next.js app directory (intentionally minimal for now).
-- web: Minimal static HTML stub to sanity-check the API.
-- deps/openzl: Meta's OpenZL format-aware compression framework (git submodule).
+Driftlock consists of two main services:
 
-Quick start (API)
-- Prereqs: Go 1.22+, Docker (optional), an OTEL collector or backend (optional).
-- Local run with OTEL disabled:
-  - `make run`
-  - Visit http://localhost:8080/healthz
-- With OTEL enabled, set for example:
-  - `export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318`
-  - `export OTEL_SERVICE_NAME=driftlock-api`
-  - `make run`
+1. **Go API Server** (`api-server/`): Core anomaly detection pipeline
+   - Processes events and detects anomalies using CBAD algorithm
+   - Exposes REST API for anomaly management
+   - Integrates with Supabase for web-frontend data synchronization
 
-Endpoints
-- `GET /healthz` – liveness
-- `GET /readyz` – readiness (immediate for now)
-- `GET /v1/version` – build/version info
-- `POST /v1/events` – ingest JSON event payloads (stub feeding engine)
+2. **React Web Frontend** (`web-frontend/`): Customer dashboard and billing
+   - Built with React/TypeScript and shadcn-ui
+   - Uses Supabase as backend (PostgreSQL + Edge Functions)
+   - Handles user authentication, billing, and anomaly visualization
 
-Configuration (env)
-- `PORT` (default: 8080)
-- `OTEL_EXPORTER_OTLP_ENDPOINT` (e.g., http://localhost:4318) – enables OTEL when set
-- `OTEL_SERVICE_NAME` (default: driftlock-api)
-- `OTEL_ENV` (default: dev)
-- `DRIFTLOCK_VERSION` (optional build-time/version string)
+## Quick Start
 
-Project layout
-- `api-server/cmd/driftlock-api/` – service entrypoint
-- `api-server/internal/api/` – HTTP mux and handlers
-- `api-server/internal/engine/` – processing core skeleton
-- `api-server/internal/telemetry/` – OpenTelemetry setup
-- `pkg/version/` – version string plumbed to the API
-- `collector-processor/` – OTel processor skeleton `driftlock_cbad`
-- `cbad-core/` – Rust CBAD primitives with OpenZL integration
-- `llm-receivers/` – Collector receiver skeleton for LLM I/O
-- `exporters/` – Evidence bundle exporters (placeholders)
-- `deploy/` – Docker Compose and Collector config
-- `tools/synthetic/` – synthetic event generator
-- `ui/` – minimal Next.js placeholder
-- `web/` – minimal static page stub
-- `deps/openzl/` – OpenZL compression framework (git submodule)
+### Prerequisites
 
-Dev notes
-- Run `go mod tidy` after first `make run` or `make build` to fetch modules.
-- Dockerfile builds the API service binary; adjust base image/labels as needed.
-- Keep the UI minimal for MVP; expand once the pipeline is flowing.
+- Docker and Docker Compose
+- Node.js 18+ (for local development)
+- Supabase account with project created
 
-## OpenZL Integration: Format-Aware Compression for Anomaly Detection
+### Environment Setup
 
-Driftlock uses Meta's OpenZL as its primary compression engine, providing a significant competitive advantage over traditional anomaly detection systems.
+1. Copy environment template:
+   ```bash
+   cp .env.example .env
+   ```
 
-### What is OpenZL?
+2. Update Supabase configuration in `.env`:
+   ```bash
+   SUPABASE_PROJECT_ID=your_actual_project_id
+   SUPABASE_ANON_KEY=your_actual_anon_key
+   SUPABASE_SERVICE_ROLE_KEY=your_actual_service_role_key
+   SUPABASE_BASE_URL=https://your_project_id.supabase.co
+   SUPABASE_WEBHOOK_URL=https://your_project_id.supabase.co/functions/v1/webhook
+   ```
 
-OpenZL is a format-aware compression framework that understands the structure of your data (JSON logs, timeseries metrics, nested traces) rather than treating it as opaque byte streams. Unlike generic compressors (zstd, gzip), OpenZL:
+### Running with Docker Compose
 
-- Parses data structure and applies intelligent transforms (struct-of-arrays, delta encoding, tokenization)
-- Learns optimal compression strategies offline via training on representative data
-- Embeds the decode recipe in each compressed frame (no out-of-band coordination needed)
-- Provides both better compression ratios AND faster speeds on structured data
+1. Start all services:
+   ```bash
+   ./start.sh
+   ```
 
-**Performance on structured data:**
-- 1.5-2x better compression ratios than zstd
-- 20-40% faster compression/decompression speeds
-- Deterministic output with fixed compression plans
+2. Services will be available at:
+   - Web Frontend: http://localhost:3000
+   - Go API: http://localhost:8080
+   - API Documentation: http://localhost:8080/healthz
 
-### Why OpenZL for Anomaly Detection?
+### Local Development
 
-Format-aware compression provides more sensitive anomaly signals than generic compression:
+#### Web Frontend
+```bash
+cd web-frontend
+npm install
+npm run dev
+```
 
-**Better Baselines:** OpenZL learns the "normal" structure of your telemetry during training. When data deviates from this learned structure, compression ratios drop dramatically, signaling anomalies.
+#### Go API Server
+```bash
+cd api-server
+go run ./cmd/api-server
+```
 
-**Granular Insights:** Instead of "this blob compressed poorly," you get "the 'message' field had unusually low compression due to unexpected content length" or "new field 'stack_trace' not in trained schema."
+## Integration Details
 
-**Structured Explanations:** Field-level compression metrics enable precise root cause analysis. For example, detecting that error logs have a 10x larger message field than baseline logs.
+### Data Flow
 
-**Example Scenario:**
+1. **Event Ingestion**: Events are sent to Go API `/v1/events` endpoint
+2. **Anomaly Detection**: Go API processes events using CBAD algorithm
+3. **Data Synchronization**: Anomalies are stored in both PostgreSQL and Supabase
+4. **Real-time Updates**: Web frontend receives updates via Supabase subscriptions
+5. **Billing**: Usage is tracked in Supabase for subscription management
 
-Normal log: `{"level": "info", "msg": "request completed", "duration_ms": 42}`
+### API Integration
 
-Anomalous log: `{"level": "error", "msg": "SEGFAULT...", "stack_trace": "...500 lines..."}`
+The Go API server integrates with Supabase through:
 
-- Generic compressor (zstd): Modest compression ratio change
-- OpenZL: Dramatic compression failure due to structure violation + field-level attribution
+- **Anomaly Synchronization**: Anomalies created in Go API are also stored in supabase
+- **Status Updates**: Anomaly status changes are synchronized between systems
+- **Usage Tracking**: API usage is tracked in supabase for billing
+- **Webhook Notifications**: Go API can trigger Supabase Edge Functions
 
-### Competitive Differentiation
+## Documentation
 
-**Unique Market Position:** Driftlock is the only anomaly detection platform using format-aware compression for OTLP telemetry analysis.
-
-**Key Advantages:**
-- Glass-box compression: Explainable WHY compression failed (critical for DORA, NIS2, AI Act compliance)
-- Deterministic training: Fixed seed produces reproducible compression plans for audit trails
-- No black-box ML: Compression theory (Kolmogorov complexity) provides mathematical foundation
-- Novel IP: Format-aware CBAD is defensible differentiation
-
-**Enterprise Value:** "We use Meta's advanced OpenZL compression framework, optimized for your specific OTLP data formats, providing explainable anomaly detection that meets regulatory compliance requirements."
-
-### Technical Architecture
-
-Driftlock implements a multi-algorithm compression adapter pattern:
-
-- **Primary Engine:** OpenZL with pre-trained plans for OTLP logs, metrics, and traces
-- **Fallback Options:** zstd, lz4, gzip for unstructured data or baseline comparisons
-- **Training:** Compression plans trained offline on representative OTLP schemas
-- **Integration:** Rust FFI bindings to OpenZL C/C++ library via static linking
-
-See [docs/OPENZL_ANALYSIS.md](docs/OPENZL_ANALYSIS.md) for detailed technical analysis, benchmarks, and integration roadmap.
-
-Next steps
-- **Phase 1 Priority**: Implement OpenZL compression adapter in cbad-core with Rust FFI bindings (see [ROADMAP.md](ROADMAP.md))
-- Train OpenZL compression plans for OTLP logs, metrics, and traces
-- Benchmark OpenZL vs zstd/lz4 on representative OTLP datasets
-- Integrate cbad-core via `driftlock_cbad` in the Collector and route telemetry
-- Expand api-server with storage (Postgres) and SSE/WebSockets for live anomalies
-- Build minimal Next.js UI to visualize anomalies and compression metrics
-
-## 📋 Enterprise Features
-
-Driftlock includes enterprise-ready compliance and governance features:
-
-### Regulatory Compliance
-- **DORA Compliance**: Digital Operational Resilience Act evidence bundles
-- **NIS2 Compliance**: EU cybersecurity incident reporting templates  
-- **Runtime AI Monitoring**: AI Act compliance for LLM/ML systems
-- **Audit Trails**: Cryptographically signed evidence packages
-
-### Documentation Framework
-- **[ALGORITHMS.md](docs/ALGORITHMS.md)**: Mathematical foundations and CBAD principles
-- **[CODING_STANDARDS.md](docs/CODING_STANDARDS.md)**: Development guidelines and quality standards
-- **[BUILD.md](docs/BUILD.md)**: Comprehensive build and deployment instructions
-- **[CONTRIBUTING.md](docs/CONTRIBUTING.md)**: Contributor guidelines and workflows
-
-### Advanced Tooling
-- **Benchmarking**: Performance validation and regression testing
-- **CI/CD Pipeline**: Automated quality gates and validation
-- **Decision Logging**: Architectural decision tracking for audit compliance
-
-See the [docs/](docs/) directory for complete enterprise documentation.
+- [Integration Guide](INTEGRATION_README.md) - Detailed setup and integration instructions
+- [API Documentation](docs/API.md) - REST API reference
+- [Architecture](docs/ARCHITECTURE.md) - System design and components

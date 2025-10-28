@@ -1,0 +1,83 @@
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    container_name: driftlock-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - driftlock-network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: driftlock-kafka
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_HOST://kafka:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+    ports:
+      - "9092:9092"
+    networks:
+      - driftlock-network
+
+  collector:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.collector
+    command: ["--config=/etc/otelcol/config.yaml"]
+    ports:
+      - "4318:4318"
+    depends_on:
+      - kafka
+    networks:
+      - driftlock-network
+
+  api:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.api-server
+    container_name: driftlock-api
+    environment:
+      - PORT=8080
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://collector:4318
+      - OTEL_SERVICE_NAME=driftlock-api
+      # Supabase configuration
+      - SUPABASE_PROJECT_ID=${SUPABASE_PROJECT_ID}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - SUPABASE_BASE_URL=${SUPABASE_BASE_URL}
+      - SUPABASE_WEBHOOK_URL=${SUPABASE_WEBHOOK_URL}
+    ports:
+      - "8080:8080"
+    depends_on:
+      - collector
+    networks:
+      - driftlock-network
+
+  web-frontend:
+    build:
+      context: web-frontend
+      dockerfile: ../deploy/docker/Dockerfile.web
+    container_name: driftlock-web-frontend
+    environment:
+      - VITE_SUPABASE_PROJECT_ID=${SUPABASE_PROJECT_ID}
+      - VITE_SUPABASE_PUBLISHABLE_KEY=${SUPABASE_ANON_KEY}
+      - VITE_SUPABASE_URL=${SUPABASE_BASE_URL}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+    networks:
+      - driftlock-network
+
+networks:
+  driftlock-network:
+    driver: bridge
