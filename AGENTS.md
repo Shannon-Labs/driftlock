@@ -29,3 +29,9 @@
 ## Security & Configuration Tips
 - Start from `.env.example`, but inject secrets per environment via shell exports or your secret manager—never commit live credentials.
 - When enabling OTEL or Docker, enforce TLS endpoints and rebuild with `docker build -t driftlock:api .` after upgrades, scanning images in your registry.
+
+## Next AI Handoff
+- Read `NEXT_AI_HANDOFF.md` for the current state, next steps, and precise commands.
+- Local run: `make migrate`, then `make run`; endpoints in `README.md`.
+- Cloudflare deploy: follow `README_CLOUDFLARE.md` and `CLOUDFLARE_DEPLOYMENT.md`.
+- For ingestion auth: set `DEFAULT_API_KEY` and `DEFAULT_ORG_ID` in `.env`; see `README.md`.

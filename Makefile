@@ -31,6 +31,9 @@ collector: cbad-core-lib
 tools:
 	go build -o bin/synthetic ./tools/synthetic
 
+migrate:
+	go run ./tools/migrate -dir api-server/internal/storage/migrations
+
 # CBAD core static library
 cbad-core-lib:
 	cd cbad-core && cargo build --$(CBAD_CORE_PROFILE) --lib

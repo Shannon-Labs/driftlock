@@ -1,13 +1,15 @@
 package auth
 
 import (
-	"context"
-	"crypto/sha256"
-	"encoding/hex"
-	"net/http"
-	"strings"
-	"sync"
-	"time"
+    "context"
+    "crypto/sha256"
+    "encoding/hex"
+    "net/http"
+    "strings"
+    "sync"
+    "time"
+
+    "github.com/Hmbown/driftlock/api-server/internal/ctxutil"
 )
 
 // ContextKey is a type for context keys
@@ -28,10 +30,12 @@ type Authenticator struct {
 
 // APIKeyInfo stores information about an API key
 type APIKeyInfo struct {
-	Name     string
-	Role     string
-	Scopes   []string
-	LastUsed time.Time
+    Name     string
+    Role     string
+    Scopes   []string
+    LastUsed time.Time
+    // Optional: associated organization ID for metering and scoping
+    OrganizationID string
 }
 
 // NewAuthenticator creates a new authenticator
@@ -83,11 +87,16 @@ func (a *Authenticator) Middleware(next http.Handler) http.Handler {
 		info.LastUsed = time.Now()
 		a.apiKeys[keyHash] = info
 
-		// Add authentication info to context
-		ctx := context.WithValue(r.Context(), UsernameContextKey, info.Name)
-		ctx = context.WithValue(ctx, string(UsernameContextKey), info.Name)
-		ctx = context.WithValue(ctx, RoleContextKey, info.Role)
-		ctx = context.WithValue(ctx, string(RoleContextKey), info.Role)
+        // Add authentication info to context
+        ctx := context.WithValue(r.Context(), UsernameContextKey, info.Name)
+        ctx = context.WithValue(ctx, string(UsernameContextKey), info.Name)
+        ctx = context.WithValue(ctx, RoleContextKey, info.Role)
+        ctx = context.WithValue(ctx, string(RoleContextKey), info.Role)
+
+        // If API key ties to an organization, propagate into event context
+        if info.OrganizationID != "" {
+            ctx = ctxutil.WithEventContext(ctx, info.OrganizationID, "")
+        }
 
 		// Call next handler with authenticated context
 		next.ServeHTTP(w, r.WithContext(ctx))
@@ -104,17 +113,20 @@ func (a *Authenticator) OptionalMiddleware(next http.Handler) http.Handler {
 				apiKey := parts[1]
 				keyHash := HashAPIKey(apiKey)
 
-				if info, ok := a.apiKeys[keyHash]; ok {
-					info.LastUsed = time.Now()
-					a.apiKeys[keyHash] = info
+            if info, ok := a.apiKeys[keyHash]; ok {
+                info.LastUsed = time.Now()
+                a.apiKeys[keyHash] = info
 
-					ctx := context.WithValue(r.Context(), UsernameContextKey, info.Name)
-					ctx = context.WithValue(ctx, string(UsernameContextKey), info.Name)
-					ctx = context.WithValue(ctx, RoleContextKey, info.Role)
-					ctx = context.WithValue(ctx, string(RoleContextKey), info.Role)
-					r = r.WithContext(ctx)
-				}
-			}
+                ctx := context.WithValue(r.Context(), UsernameContextKey, info.Name)
+                ctx = context.WithValue(ctx, string(UsernameContextKey), info.Name)
+                ctx = context.WithValue(ctx, RoleContextKey, info.Role)
+                ctx = context.WithValue(ctx, string(RoleContextKey), info.Role)
+                if info.OrganizationID != "" {
+                    ctx = ctxutil.WithEventContext(ctx, info.OrganizationID, "")
+                }
+                r = r.WithContext(ctx)
+            }
+        }
 		}
 
 		next.ServeHTTP(w, r)

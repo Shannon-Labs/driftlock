@@ -1,13 +1,14 @@
 package handlers
 
 import (
-	"context"
-	"encoding/json"
-	"fmt"
-	"log"
-	"net/http"
-	"strconv"
-	"time"
+    "context"
+    "encoding/json"
+    "fmt"
+    "log"
+    "net/http"
+    "os"
+    "strconv"
+    "time"
 
 	"github.com/Hmbown/driftlock/api-server/internal/models"
 	"github.com/Hmbown/driftlock/api-server/internal/storage"
@@ -197,9 +198,8 @@ func (h *AnomaliesHandler) CreateAnomaly(w http.ResponseWriter, r *http.Request)
 	if h.supabase != nil {
 		supabaseAnomaly := map[string]interface{}{
 			"id":          anomaly.ID.String(),
-			"title":       create.Title,
-			"description": create.Description,
-			"severity":    create.Severity,
+			"event_type":  string(create.StreamType),
+			"severity":    anomaly.GetSeverity(),
 			"status":      "open",
 			"created_at":  time.Now().Format(time.RFC3339),
 			"metadata":    create.Metadata,
@@ -211,6 +211,17 @@ func (h *AnomaliesHandler) CreateAnomaly(w http.ResponseWriter, r *http.Request)
 			log.Printf("anomalies: failed to create anomaly in Supabase: %v", err)
 		} else {
 			log.Printf("anomalies: created anomaly in Supabase: %s", anomaly.ID.String())
+		}
+
+		// Best-effort usage metering (only when anomaly is detected)
+		orgID := os.Getenv("TENANT_DEFAULT_TENANT")
+		if orgID == "" {
+			orgID = os.Getenv("SUPABASE_PROJECT_ID")
+		}
+		if orgID != "" {
+			if err := h.supabase.MeterUsage(ctx, orgID, true, 1); err != nil {
+				log.Printf("anomalies: failed to meter usage: %v", err)
+			}
 		}
 	}
 

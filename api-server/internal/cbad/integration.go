@@ -1,26 +1,29 @@
 package cbad
 
 import (
-	"context"
-	"fmt"
-	"log"
-	"time"
+    "context"
+    "fmt"
+    "log"
+    "time"
 
-	"github.com/Hmbown/driftlock/api-server/internal/models"
-	"github.com/Hmbown/driftlock/api-server/internal/storage"
-	"github.com/Hmbown/driftlock/api-server/internal/stream"
-	"github.com/Hmbown/driftlock/collector-processor/driftlockcbad"
+    "github.com/Hmbown/driftlock/api-server/internal/ctxutil"
+    "github.com/Hmbown/driftlock/api-server/internal/models"
+    "github.com/Hmbown/driftlock/api-server/internal/storage"
+    "github.com/Hmbown/driftlock/api-server/internal/stream"
+    "github.com/Hmbown/driftlock/api-server/internal/supabase"
+    "github.com/Hmbown/driftlock/collector-processor/driftlockcbad"
 )
 
 // Detector integrates CBAD core with the API server
 type Detector struct {
-	storage  *storage.Storage
-	streamer *stream.Streamer
-	config   *models.DetectionConfig
+    storage  *storage.Storage
+    streamer *stream.Streamer
+    config   *models.DetectionConfig
+    supabase *supabase.Client
 }
 
 // NewDetector creates a new CBAD detector
-func NewDetector(storage *storage.Storage, streamer *stream.Streamer) (*Detector, error) {
+func NewDetector(storage *storage.Storage, streamer *stream.Streamer, sb *supabase.Client) (*Detector, error) {
 	// Validate CBAD library
 	if err := driftlockcbad.ValidateLibrary(); err != nil {
 		return nil, fmt.Errorf("CBAD library validation failed: %w", err)
@@ -37,11 +40,12 @@ func NewDetector(storage *storage.Storage, streamer *stream.Streamer) (*Detector
 
 	log.Printf("CBAD detector initialized with config: NCD=%.2f, p-value=%.3f", config.NCDThreshold, config.PValueThreshold)
 
-	return &Detector{
-		storage:  storage,
-		streamer: streamer,
-		config:   config,
-	}, nil
+    return &Detector{
+        storage:  storage,
+        streamer: streamer,
+        config:   config,
+        supabase: sb,
+    }, nil
 }
 
 // ProcessTelemetry analyzes telemetry data for anomalies
@@ -93,9 +97,34 @@ func (d *Detector) ProcessTelemetry(ctx context.Context, baseline []byte, window
 		d.streamer.BroadcastAnomaly(anomaly)
 	}
 
-	log.Printf("Anomaly detected: ID=%s, stream=%s, NCD=%.3f, p=%.4f", anomaly.ID, streamType, metrics.NCD, metrics.PValue)
+    log.Printf("Anomaly detected: ID=%s, stream=%s, NCD=%.3f, p=%.4f", anomaly.ID, streamType, metrics.NCD, metrics.PValue)
 
-	return nil
+    // Sync to Supabase and meter usage if configured
+    if d.supabase != nil {
+        orgID := ctxutil.GetOrganizationID(ctx)
+        eventType := ctxutil.GetEventType(ctx)
+        if eventType == "" {
+            eventType = string(streamType)
+        }
+        supaAnom := map[string]interface{}{
+            "organization_id": orgID,
+            "event_type":      eventType,
+            "severity":        anomaly.GetSeverity(),
+            "metadata":        anomaly.Metadata,
+            "anomaly_score":   anomaly.NCDScore,
+            "created_at":      time.Now().Format(time.RFC3339),
+        }
+        if err := d.supabase.CreateAnomaly(ctx, supaAnom); err != nil {
+            log.Printf("supabase sync failed: %v", err)
+        }
+        if orgID != "" {
+            if err := d.supabase.MeterUsage(ctx, orgID, true, 1); err != nil {
+                log.Printf("meter-usage failed: %v", err)
+            }
+        }
+    }
+
+    return nil
 }
 
 // ReloadConfig reloads the detection configuration

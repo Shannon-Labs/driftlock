@@ -28,7 +28,7 @@ docker-compose -f docker-compose.yml up -d
 cd web-frontend && npm run dev
 
 # API Server (http://localhost:8080)
-cd api-server && go run ./cmd/api-server
+cd api-server && go run ./cmd/driftlock-api
 ```
 
 ## System Architecture
@@ -124,7 +124,7 @@ cd api-server && go run ./cmd/api-server
 ```
 driftlock/
 ├── api-server/                      # Go API server
-│   ├── cmd/api-server/             # Entry point
+│   ├── cmd/driftlock-api/          # Entry point
 │   ├── internal/
 │   │   ├── supabase/              # Supabase client
 │   │   ├── handlers/              # HTTP handlers
@@ -216,12 +216,14 @@ driftlock/
 
 #### Go API Server (`http://localhost:8080`)
 ```
-GET  /healthz              # Health check
-GET  /v1/version           # Version info
-POST /v1/events            # Ingest events
-GET  /v1/anomalies         # Get anomalies
-PUT  /v1/anomalies/{id}    # Update anomaly
-GET  /metrics              # Prometheus metrics
+GET  /healthz                      # Health check
+GET  /v1/version                   # Version info
+POST /v1/events                    # Ingest events
+GET  /v1/anomalies                 # Get anomalies
+GET  /v1/anomalies/{id}            # Get single anomaly
+PATCH /v1/anomalies/{id}/status    # Update anomaly status
+GET  /v1/stream/anomalies          # SSE stream
+GET  /readyz                       # Readiness (DB ping; Supabase best-effort)
 ```
 
 #### Cloudflare Worker API

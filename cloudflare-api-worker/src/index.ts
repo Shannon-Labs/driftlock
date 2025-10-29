@@ -35,6 +35,37 @@ app.use('*', async (c, next) => {
   c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Stripe-Signature')
 })
 
+// Security headers
+app.use('*', async (c, next) => {
+  await next()
+  c.header('X-Content-Type-Options', 'nosniff')
+  c.header('X-Frame-Options', 'DENY')
+  c.header('X-XSS-Protection', '1; mode=block')
+  c.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
+  // Adjust CSP as appropriate for your app frontends
+  c.header('Content-Security-Policy', "default-src 'self'")
+})
+
+// Simple in-memory rate limit (best-effort per isolate)
+const rlBuckets = new Map<string, {count: number; reset: number}>()
+const RL_LIMIT = 100 // requests
+const RL_PERIOD_MS = 60 * 1000 // 1 minute
+
+app.use('*', async (c, next) => {
+  const ip = c.req.header('cf-connecting-ip') || 'unknown'
+  const now = Date.now()
+  const b = rlBuckets.get(ip)
+  if (!b || now > b.reset) {
+    rlBuckets.set(ip, { count: 1, reset: now + RL_PERIOD_MS })
+  } else {
+    b.count++
+    if (b.count > RL_LIMIT) {
+      return c.json({ error: 'Rate limit exceeded' }, 429)
+    }
+  }
+  await next()
+})
+
 // Handle OPTIONS for CORS preflight
 app.options('*', (c) => {
   return c.text('', 204)

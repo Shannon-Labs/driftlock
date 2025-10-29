@@ -36,8 +36,10 @@ curl -H "Authorization: Bearer YOUR_API_KEY" http://localhost:8080/v1/anomalies
 **Request**:
 ```json
 {
+  "organization_id": "org_123",          // optional if derived from API key
+  "event_type": "log",                   // log | metrics | traces | llm
   "timestamp": "2025-10-25T12:00:00Z",
-  "value": 42.5,
+  "data": {"message": "something odd"},
   "metadata": {"service": "api-gateway"}
 }
 ```
