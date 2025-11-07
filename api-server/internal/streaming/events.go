@@ -7,8 +7,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/shannon-labs/driftlock/api-server/internal/models"
-	"github.com/shannon-labs/driftlock/api-server/internal/streaming/kafka"
+	"github.com/Shannon-Labs/driftlock/api-server/internal/models"
+	"github.com/Shannon-Labs/driftlock/api-server/internal/streaming/kafka"
 )
 
 // EventPublisher publishes domain events to downstream systems.

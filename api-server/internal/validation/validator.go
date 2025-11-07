@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/shannon-labs/driftlock/api-server/internal/errors"
-	"github.com/shannon-labs/driftlock/api-server/internal/models"
+	"github.com/Shannon-Labs/driftlock/api-server/internal/errors"
+	"github.com/Shannon-Labs/driftlock/api-server/internal/models"
 )
 
 const (

@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/shannon-labs/driftlock/api-server/internal/models"
-	"github.com/shannon-labs/driftlock/api-server/internal/services"
+	"github.com/Shannon-Labs/driftlock/api-server/internal/models"
+	"github.com/Shannon-Labs/driftlock/api-server/internal/services"
 )
 
 // TenantMiddleware extracts tenant information from requests

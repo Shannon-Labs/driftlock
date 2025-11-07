@@ -1,5 +1,5 @@
 {
-  "name": "@shannon-labs/compliance-platform",
+  "name": "@Shannon-Labs/compliance-platform",
   "version": "1.0.0",
   "description": "Shannon Labs Compliance Platform for DORA, NIS2, and EU AI Act reporting",
   "private": true,

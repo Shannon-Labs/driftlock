@@ -89,7 +89,7 @@ STRIPE_WEBHOOK_SECRET="whsec_..."
 
 # Storage
 STORAGE_TYPE="s3" # or "local"
-S3_BUCKET="shannon-labs-reports"
+S3_BUCKET="Shannon-Labs-reports"
 S3_REGION="us-east-1"
 S3_ACCESS_KEY="..."
 S3_SECRET_KEY="..."
@@ -171,13 +171,13 @@ await notifyCustomer(customerId, downloadUrl);
 
 ```bash
 # Build image
-docker build -t shannon-labs/compliance-platform .
+docker build -t Shannon-Labs/compliance-platform .
 
 # Run with environment
 docker run -p 3000:3000 \
   -e DATABASE_URL="..." \
   -e STRIPE_SECRET_KEY="..." \
-  shannon-labs/compliance-platform
+  Shannon-Labs/compliance-platform
 ```
 
 ### Production Checklist

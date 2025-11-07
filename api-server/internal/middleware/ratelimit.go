@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/shannon-labs/driftlock/api-server/internal/errors"
+	"github.com/Shannon-Labs/driftlock/api-server/internal/errors"
 	"golang.org/x/time/rate"
 )
 

@@ -1,9 +1,9 @@
 # DriftLock by Shannon Labs
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Go Report Card](https://goreportcard.com/badge/github.com/shannon-labs/driftlock)](https://goreportcard.com/report/github.com/shannon-labs/driftlock)
+[![Go Report Card](https://goreportcard.com/badge/github.com/Shannon-Labs/driftlock)](https://goreportcard.com/report/github.com/Shannon-Labs/driftlock)
 [![Rust](https://img.shields.io/badge/rust-%23000000.svg?style=for-the-badge&logo=rust&logoColor=white)](https://www.rust-lang.org/)
-[![CI](https://github.com/shannon-labs/driftlock/workflows/CI/badge.svg)](https://github.com/shannon-labs/driftlock/actions)
+[![CI](https://github.com/Shannon-Labs/driftlock/workflows/CI/badge.svg)](https://github.com/Shannon-Labs/driftlock/actions)
 
 > **Explainable AI anomaly detection for regulated industries**
 
@@ -15,7 +15,7 @@ DriftLock provides compression-based anomaly detection (CBAD) with glass-box exp
 
 ```bash
 # Clone the repository
-git clone https://github.com/shannon-labs/driftlock.git
+git clone https://github.com/Shannon-Labs/driftlock.git
 cd driftlock
 
 # Start with Docker Compose (recommended)
@@ -201,8 +201,8 @@ Apache License 2.0 - see [LICENSE](LICENSE) for details.
 ## 📞 Support
 
 - **Documentation**: [docs/](docs/)
-- **Issues**: [GitHub Issues](https://github.com/shannon-labs/driftlock/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/shannon-labs/driftlock/discussions)
+- **Issues**: [GitHub Issues](https://github.com/Shannon-Labs/driftlock/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/Shannon-Labs/driftlock/discussions)
 - **Security**: security@shannonlabs.ai
 - **Enterprise**: contact@shannonlabs.ai
 

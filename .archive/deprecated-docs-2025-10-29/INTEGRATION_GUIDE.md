@@ -387,7 +387,7 @@ Error: Invalid token
 - **API Documentation**: See `docs/api.md` (to be generated)
 - **Architecture Overview**: See this guide
 - **Deployment Guide**: See `docs/deployment.md` (to be created)
-- **Issues**: https://github.com/shannon-labs/driftlock/issues
+- **Issues**: https://github.com/Shannon-Labs/driftlock/issues
 
 ---
 

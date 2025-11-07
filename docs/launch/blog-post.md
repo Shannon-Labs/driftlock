@@ -102,7 +102,7 @@ DriftLock is released under the Apache 2.0 license, making it suitable for comme
 Get started in minutes with Docker Compose:
 
 ```bash
-git clone https://github.com/shannon-labs/driftlock.git
+git clone https://github.com/Shannon-Labs/driftlock.git
 cd driftlock
 cp .env.example .env
 docker-compose up -d
@@ -152,8 +152,8 @@ DriftLock is more than just software - it's a community of organizations working
 - **Partners**: Build integrations and extensions for the platform
 
 Get involved at:
-- **GitHub**: github.com/shannon-labs/driftlock
-- **Discussions**: github.com/shannon-labs/driftlock/discussions
+- **GitHub**: github.com/Shannon-Labs/driftlock
+- **Discussions**: github.com/Shannon-Labs/driftlock/discussions
 - **Discord**: [Join our community](https://discord.gg/shannonlabs)
 - **Email**: hello@shannonlabs.ai
 
@@ -176,7 +176,7 @@ DriftLock provides the foundation for this future. Our roadmap includes:
 Whether you're a DevOps engineer implementing monitoring, a compliance officer preparing for audits, or a CTO evaluating AI platforms, DriftLock provides the tools you need to meet regulatory requirements.
 
 **Download and try DriftLock today:**
-- **GitHub**: github.com/shannon-labs/driftlock
+- **GitHub**: github.com/Shannon-Labs/driftlock
 - **Documentation**: docs.driftlock.shannonlabs.ai
 - **Quick Start**: Get running in 5 minutes
 - **Community**: Join thousands of professionals solving compliance challenges

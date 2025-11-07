@@ -1,4 +1,4 @@
-module github.com/shannon-labs/driftlock/llm-receivers
+module github.com/Shannon-Labs/driftlock/llm-receivers
 
 go 1.22
 

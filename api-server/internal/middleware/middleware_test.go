@@ -11,8 +11,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
-	"github.com/shannon-labs/driftlock/api-server/internal/errors"
-	"github.com/shannon-labs/driftlock/api-server/internal/logging"
+	"github.com/Shannon-Labs/driftlock/api-server/internal/errors"
+	"github.com/Shannon-Labs/driftlock/api-server/internal/logging"
 	"golang.org/x/time/rate"
 )
 

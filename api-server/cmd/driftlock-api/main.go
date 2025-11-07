@@ -9,15 +9,15 @@ import (
     "syscall"
     "time"
 
-    "github.com/shannon-labs/driftlock/api-server/internal/api"
-    "github.com/shannon-labs/driftlock/api-server/internal/config"
-    "github.com/shannon-labs/driftlock/api-server/internal/cbad"
-    "github.com/shannon-labs/driftlock/api-server/internal/auth"
-    "github.com/shannon-labs/driftlock/api-server/internal/engine"
-    "github.com/shannon-labs/driftlock/api-server/internal/stream"
-    "github.com/shannon-labs/driftlock/api-server/internal/storage"
-    "github.com/shannon-labs/driftlock/api-server/internal/supabase"
-    "github.com/shannon-labs/driftlock/api-server/internal/telemetry"
+    "github.com/Shannon-Labs/driftlock/api-server/internal/api"
+    "github.com/Shannon-Labs/driftlock/api-server/internal/config"
+    "github.com/Shannon-Labs/driftlock/api-server/internal/cbad"
+    "github.com/Shannon-Labs/driftlock/api-server/internal/auth"
+    "github.com/Shannon-Labs/driftlock/api-server/internal/engine"
+    "github.com/Shannon-Labs/driftlock/api-server/internal/stream"
+    "github.com/Shannon-Labs/driftlock/api-server/internal/storage"
+    "github.com/Shannon-Labs/driftlock/api-server/internal/supabase"
+    "github.com/Shannon-Labs/driftlock/api-server/internal/telemetry"
 )
 
 func main() {

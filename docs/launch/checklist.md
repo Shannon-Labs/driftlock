@@ -11,10 +11,10 @@
 - [x] Add Apache 2.0 license
 - [x] Create governance files (CONTRIBUTING.md, CODE_OF_CONDUCT.md, SECURITY.md)
 - [x] Set up GitHub Actions CI/CD
-- [x] Update module imports to github.com/shannon-labs/driftlock
+- [x] Update module imports to github.com/Shannon-Labs/driftlock
 - [x] Create comprehensive README
 - [x] Add documentation (installation, API reference, architecture)
-- [ ] Set up GitHub organization (shannon-labs)
+- [ ] Set up GitHub organization (Shannon-Labs)
 - [ ] Configure repository transfer process
 - [ ] Create release v0.1.0 tag
 - [ ] Set up GitHub Discussions
@@ -41,7 +41,7 @@
 ## 🎯 Launch Day Activities
 
 ### GitHub Release
-- [ ] Transfer repository to github.com/shannon-labs/driftlock
+- [ ] Transfer repository to github.com/Shannon-Labs/driftlock
 - [ ] Publish v0.1.0 release with comprehensive changelog
 - [ ] Set up GitHub Pages for documentation
 - [ ] Enable Discussions and Issues
@@ -222,7 +222,7 @@
 
 Built with @rustlang core + @golang API server + @reactjs dashboard
 Perfect for DORA, NIS2, and EU AI Act compliance
-🔗 github.com/shannon-labs/driftlock
+🔗 github.com/Shannon-Labs/driftlock
 
 Why it matters:
 🔍 Glass-box explainability for every anomaly
@@ -239,7 +239,7 @@ DORA, NIS2, and EU AI Act require explainable AI systems with full audit trails.
 
 That's why we built DriftLock - open source anomaly detection that's compliance-ready from day one.
 
-🔗 github.com/shannon-labs/driftlock
+🔗 github.com/Shannon-Labs/driftlock
 
 Every anomaly includes:
 ✅ Mathematical explanations
@@ -272,7 +272,7 @@ The platform includes:
 
 Best of all, it's completely open source. Organizations can self-host for free, with optional compliance reporting services for those who need regulatory documentation.
 
-🔗 github.com/shannon-labs/driftlock
+🔗 github.com/Shannon-Labs/driftlock
 
 I'm particularly interested in hearing from compliance officers, DevOps teams, and anyone working in regulated industries. How are you currently handling the explainability requirements for AI systems?
 

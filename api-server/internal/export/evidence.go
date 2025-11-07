@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/shannon-labs/driftlock/api-server/internal/models"
-	"github.com/shannon-labs/driftlock/pkg/version"
+	"github.com/Shannon-Labs/driftlock/api-server/internal/models"
+	"github.com/Shannon-Labs/driftlock/pkg/version"
 )
 
 // Exporter handles evidence bundle generation

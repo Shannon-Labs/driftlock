@@ -6,8 +6,8 @@ import (
     "fmt"
     "log"
 
-    "github.com/shannon-labs/driftlock/api-server/internal/cbad"
-    "github.com/shannon-labs/driftlock/api-server/internal/models"
+    "github.com/Shannon-Labs/driftlock/api-server/internal/cbad"
+    "github.com/Shannon-Labs/driftlock/api-server/internal/models"
     "go.opentelemetry.io/otel"
 )
 

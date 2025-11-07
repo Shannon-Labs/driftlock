@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/stripe/stripe-go/v76"
-	"github.com/shannon-labs/driftlock/api-server/internal/models"
-	"github.com/shannon-labs/driftlock/api-server/internal/services"
+	"github.com/Shannon-Labs/driftlock/api-server/internal/models"
+	"github.com/Shannon-Labs/driftlock/api-server/internal/services"
 )
 
 // BillingService orchestrates billing operations between internal models and Stripe

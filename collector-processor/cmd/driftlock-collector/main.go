@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/shannon-labs/driftlock/collector-processor/driftlockcbad"
+	"github.com/Shannon-Labs/driftlock/collector-processor/driftlockcbad"
 )
 
 func main() {

@@ -68,7 +68,7 @@ When deploying DriftLock, we recommend:
 
 ## Security Advisories
 
-We will publish security advisories for resolved vulnerabilities in our [GitHub Security Advisories](https://github.com/shannon-labs/driftlock/security/advisories).
+We will publish security advisories for resolved vulnerabilities in our [GitHub Security Advisories](https://github.com/Shannon-Labs/driftlock/security/advisories).
 
 ## Security Team
 

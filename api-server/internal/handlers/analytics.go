@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/shannon-labs/driftlock/api-server/internal/models"
-	"github.com/shannon-labs/driftlock/api-server/internal/storage"
+	"github.com/Shannon-Labs/driftlock/api-server/internal/models"
+	"github.com/Shannon-Labs/driftlock/api-server/internal/storage"
 )
 
 // AnalyticsHandler handles analytics and statistics endpoints

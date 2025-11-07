@@ -1,6 +1,6 @@
 # Shannon Labs Open Source Release: Glass-Box Anomaly Detection
 
-**Repository:** github.com/shannon-labs/glass-box-anomaly-detection  
+**Repository:** github.com/Shannon-Labs/glass-box-anomaly-detection  
 **License:** Apache 2.0 (enterprise-friendly, patent protection)  
 **Tagline:** "Explainable AI anomaly detection for regulated industries"
 
@@ -233,7 +233,7 @@ function generateComplianceReport(anomalyId) {
 ### **Compliance Platform (Separate Repo/Service):**
 
 ```
-shannon-labs-compliance/
+Shannon-Labs-compliance/
 ├── src/
 │   ├── reports/           # Report generators
 │   │   ├── dora.js       # DORA compliance reports
@@ -265,7 +265,7 @@ shannon-labs-compliance/
 # Glass-Box Anomaly Detection
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Go Report Card](https://goreportcard.com/badge/github.com/shannon-labs/glass-box-anomaly-detection)](https://goreportcard.com/report/github.com/shannon-labs/glass-box-anomaly-detection)
+[![Go Report Card](https://goreportcard.com/badge/github.com/Shannon-Labs/glass-box-anomaly-detection)](https://goreportcard.com/report/github.com/Shannon-Labs/glass-box-anomaly-detection)
 [![Rust](https://img.shields.io/badge/rust-%23000000.svg?style=for-the-badge&logo=rust&logoColor=white)](https://www.rust-lang.org/)
 
 > Explainable AI anomaly detection for regulated industries
@@ -274,7 +274,7 @@ shannon-labs-compliance/
 
 ```bash
 # Install the OpenTelemetry Collector processor
-go install github.com/shannon-labs/glass-box-anomaly-detection/collector@latest
+go install github.com/Shannon-Labs/glass-box-anomaly-detection/collector@latest
 
 # Configure your collector
 # Edit your otel-collector-config.yaml
@@ -359,7 +359,7 @@ package main
 
 import (
     "github.com/gin-gonic/gin"
-    "github.com/shannon-labs/glass-box-anomaly-detection/api/handlers"
+    "github.com/Shannon-Labs/glass-box-anomaly-detection/api/handlers"
 )
 
 func main() {
@@ -440,7 +440,7 @@ Customer → Shannon Labs Compliance Platform → Stripe → Shannon Labs LLC �
 ## Launch Strategy
 
 ### **Week 1: Repository Setup**
-- [ ] Create GitHub organization (shannon-labs)
+- [ ] Create GitHub organization (Shannon-Labs)
 - [ ] Set up repository structure
 - [ ] Add comprehensive README
 - [ ] Configure GitHub Actions for CI/CD

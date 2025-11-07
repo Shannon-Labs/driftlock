@@ -9,7 +9,7 @@ import (
     "sync"
     "time"
 
-    "github.com/shannon-labs/driftlock/api-server/internal/ctxutil"
+    "github.com/Shannon-Labs/driftlock/api-server/internal/ctxutil"
 )
 
 // ContextKey is a type for context keys

@@ -35,7 +35,7 @@ Driftlock is a production-ready anomaly detection platform that identifies devia
 #### Steps
 1. **Clone the repository and navigate to the Helm chart:**
 ```bash
-git clone https://github.com/shannon-labs/driftlock.git
+git clone https://github.com/Shannon-Labs/driftlock.git
 cd driftlock/helm/driftlock
 ```
 

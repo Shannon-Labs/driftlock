@@ -10,8 +10,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/lib/pq"
-	"github.com/shannon-labs/driftlock/api-server/internal/compression"
-	"github.com/shannon-labs/driftlock/api-server/internal/models"
+	"github.com/Shannon-Labs/driftlock/api-server/internal/compression"
+	"github.com/Shannon-Labs/driftlock/api-server/internal/models"
 )
 
 // Storage provides database operations for Driftlock

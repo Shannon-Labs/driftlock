@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/shannon-labs/driftlock/api-server/internal/models"
+	"github.com/Shannon-Labs/driftlock/api-server/internal/models"
 )
 
 // TenantService handles tenant operations

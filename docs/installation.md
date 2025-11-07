@@ -25,7 +25,7 @@ The fastest way to get DriftLock running is with Docker Compose:
 
 ```bash
 # Clone the repository
-git clone https://github.com/shannon-labs/driftlock.git
+git clone https://github.com/Shannon-Labs/driftlock.git
 cd driftlock
 
 # Copy environment template
@@ -50,7 +50,7 @@ open http://localhost:3000
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/shannon-labs/driftlock.git
+git clone https://github.com/Shannon-Labs/driftlock.git
 cd driftlock
 ```
 
@@ -241,14 +241,14 @@ kubectl port-forward -n driftlock svc/driftlock-dashboard 3000:3000
 ### 1. Add Repository
 
 ```bash
-helm repo add shannon-labs https://charts.shannonlabs.ai
+helm repo add Shannon-Labs https://charts.shannonlabs.ai
 helm repo update
 ```
 
 ### 2. Install Chart
 
 ```bash
-helm install driftlock shannon-labs/driftlock \
+helm install driftlock Shannon-Labs/driftlock \
   --namespace driftlock \
   --create-namespace \
   --set apiServer.replicas=2 \
@@ -289,7 +289,7 @@ postgresql:
 Install with custom values:
 
 ```bash
-helm install driftlock shannon-labs/driftlock \
+helm install driftlock Shannon-Labs/driftlock \
   --namespace driftlock \
   --create-namespace \
   -f values.yaml
@@ -405,8 +405,8 @@ chmod +x src/api-server/driftlock-api
 ### Getting Help
 
 - **Documentation**: [docs/](../docs/)
-- **Issues**: [GitHub Issues](https://github.com/shannon-labs/driftlock/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/shannon-labs/driftlock/discussions)
+- **Issues**: [GitHub Issues](https://github.com/Shannon-Labs/driftlock/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/Shannon-Labs/driftlock/discussions)
 - **Security**: security@shannonlabs.ai
 
 ## Next Steps

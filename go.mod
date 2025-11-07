@@ -1,24 +1,24 @@
-module github.com/shannon-labs/driftlock
+module github.com/Shannon-Labs/driftlock
 
 go 1.24.1
 
-replace github.com/shannon-labs/driftlock => .
+replace github.com/Shannon-Labs/driftlock => .
 
-replace github.com/shannon-labs/driftlock/cbad-core => ./cbad-core
+replace github.com/Shannon-Labs/driftlock/cbad-core => ./cbad-core
 
-replace github.com/shannon-labs/driftlock/collector-processor => ./collector-processor
+replace github.com/Shannon-Labs/driftlock/collector-processor => ./collector-processor
 
-replace github.com/shannon-labs/driftlock/collector-processor/driftlockcbad => ./collector-processor/driftlockcbad
+replace github.com/Shannon-Labs/driftlock/collector-processor/driftlockcbad => ./collector-processor/driftlockcbad
 
-replace github.com/shannon-labs/driftlock/pkg/version => ./pkg/version
+replace github.com/Shannon-Labs/driftlock/pkg/version => ./pkg/version
 
-replace github.com/shannon-labs/driftlock/api-server => ./api-server
+replace github.com/Shannon-Labs/driftlock/api-server => ./api-server
 
 require (
+	github.com/Shannon-Labs/driftlock/collector-processor/driftlockcbad v0.0.0
 	github.com/gorilla/websocket v1.5.1
 	github.com/lib/pq v1.10.9
 	github.com/segmentio/kafka-go v0.4.49
-	github.com/shannon-labs/driftlock/collector-processor/driftlockcbad v0.0.0
 	go.opentelemetry.io/collector/pdata v1.44.0
 	go.opentelemetry.io/otel v1.38.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.38.0

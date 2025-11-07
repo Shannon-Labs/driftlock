@@ -1,5 +1,5 @@
 {
-  "name": "@shannon-labs/driftlock-dashboard",
+  "name": "@Shannon-Labs/driftlock-dashboard",
   "private": true,
   "version": "0.1.0",
   "description": "Dashboard for DriftLock anomaly detection platform",

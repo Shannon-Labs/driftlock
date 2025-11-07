@@ -85,7 +85,7 @@ Error: go: cannot load module productized listed in go.work file:
 # Option B: Create missing module
 mkdir -p /Volumes/VIXinSSD/driftlock/productized
 cd /Volumes/VIXinSSD/driftlock/productized
-go mod init github.com/shannon-labs/driftlock/productized
+go mod init github.com/Shannon-Labs/driftlock/productized
 ```
 
 **Verification**:
@@ -221,7 +221,7 @@ func (c *Client) MeterUsage(orgID string, hasAnomaly bool, count int) error {
 Modify `/Volumes/VIXinSSD/driftlock/api-server/internal/handlers/anomalies.go`:
 ```go
 import (
-    "github.com/shannon-labs/driftlock/api-server/internal/supabase"
+    "github.com/Shannon-Labs/driftlock/api-server/internal/supabase"
 )
 
 var supabaseClient = supabase.NewClient()
@@ -929,7 +929,7 @@ Create these files to track your work:
 - Supabase Dashboard: https://supabase.com/dashboard/project/nfkdeeunyvnntvpvwpwh
 - Stripe Dashboard: https://dashboard.stripe.com
 - Cloudflare Dashboard: https://dash.cloudflare.com
-- GitHub Repo: https://github.com/shannon-labs/driftlock
+- GitHub Repo: https://github.com/Shannon-Labs/driftlock
 
 ---
 

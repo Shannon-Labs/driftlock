@@ -1,3 +1,3 @@
-module github.com/shannon-labs/driftlock/pkg/version
+module github.com/Shannon-Labs/driftlock/pkg/version
 
 go 1.22

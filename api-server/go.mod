@@ -1,4 +1,4 @@
-module github.com/shannon-labs/driftlock/api-server
+module github.com/Shannon-Labs/driftlock/api-server
 
 go 1.24.1
 
@@ -12,8 +12,8 @@ require (
 	github.com/pierrec/lz4/v4 v4.1.15
 	github.com/prometheus/client_golang v1.19.0
 	github.com/segmentio/kafka-go v0.4.49
-	github.com/shannon-labs/driftlock/collector-processor/driftlockcbad v0.0.0
-	github.com/shannon-labs/driftlock/pkg/version v0.0.0
+	github.com/Shannon-Labs/driftlock/collector-processor/driftlockcbad v0.0.0
+	github.com/Shannon-Labs/driftlock/pkg/version v0.0.0
 	github.com/stretchr/testify v1.11.1
 	github.com/stripe/stripe-go/v76 v76.25.0
 	github.com/testcontainers/testcontainers-go v0.39.0
@@ -106,6 +106,6 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/shannon-labs/driftlock/collector-processor/driftlockcbad => ../collector-processor/driftlockcbad
+replace github.com/Shannon-Labs/driftlock/collector-processor/driftlockcbad => ../collector-processor/driftlockcbad
 
-replace github.com/shannon-labs/driftlock/pkg/version => ../pkg/version
+replace github.com/Shannon-Labs/driftlock/pkg/version => ../pkg/version
