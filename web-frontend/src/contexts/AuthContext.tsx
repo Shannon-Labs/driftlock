@@ -1,49 +1,50 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
+import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { apiClient } from '@/lib/api';
 
 interface AuthContextType {
-  user: User | null;
-  session: Session | null;
+  apiKey: string | null;
+  isAuthenticated: boolean;
   loading: boolean;
-  signOut: () => Promise<void>;
+  setApiKey: (key: string | null) => void;
+  signOut: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [apiKey, setApiKeyState] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-      }
-    );
-
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    // Load API key from localStorage on mount
+    const storedKey = localStorage.getItem('driftlock_api_key');
+    if (storedKey) {
+      setApiKeyState(storedKey);
+      apiClient.setApiKey(storedKey);
+    }
+    setLoading(false);
   }, []);
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setSession(null);
+  const setApiKey = (key: string | null) => {
+    setApiKeyState(key);
+    apiClient.setApiKey(key);
+  };
+
+  const signOut = () => {
+    setApiKey(null);
+    apiClient.setApiKey(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signOut }}>
+    <AuthContext.Provider
+      value={{
+        apiKey,
+        isAuthenticated: !!apiKey,
+        loading,
+        setApiKey,
+        signOut,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

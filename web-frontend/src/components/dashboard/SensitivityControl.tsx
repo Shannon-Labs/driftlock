@@ -4,7 +4,7 @@ import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Info } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
 export const SensitivityControl = ({ organizationId }: { organizationId: string }) => {
@@ -19,19 +19,14 @@ export const SensitivityControl = ({ organizationId }: { organizationId: string 
 
   const fetchSensitivity = async () => {
     try {
-      const { data, error } = await supabase
-        .from('org_settings')
-        .select('anomaly_sensitivity')
-        .eq('organization_id', organizationId)
-        .single();
-
-      if (error && error.code !== 'PGRST116') throw error;
-      
-      if (data) {
-        setSensitivity(data.anomaly_sensitivity || 0.5);
-      }
+      // Fetch current config from API
+      const config = await apiClient.get<{ ncd_threshold: number; p_value_threshold: number }>('/v1/config');
+      // Use p_value_threshold as sensitivity indicator (inverted: lower = more sensitive)
+      setSensitivity(1 - (config.p_value_threshold || 0.05));
     } catch (error) {
       console.error('Error fetching sensitivity:', error);
+      // Default to medium sensitivity if API call fails
+      setSensitivity(0.5);
     } finally {
       setLoading(false);
     }
@@ -40,14 +35,11 @@ export const SensitivityControl = ({ organizationId }: { organizationId: string 
   const handleSave = async () => {
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('org_settings')
-        .upsert({
-          organization_id: organizationId,
-          anomaly_sensitivity: sensitivity,
-        });
-
-      if (error) throw error;
+      // Update config via API (p_value_threshold = 1 - sensitivity)
+      const pValueThreshold = 1 - sensitivity;
+      await apiClient.patch('/v1/config', {
+        p_value_threshold: pValueThreshold,
+      });
 
       toast({
         title: "Settings saved",

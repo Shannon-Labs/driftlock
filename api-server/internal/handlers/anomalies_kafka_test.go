@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/Shannon-Labs/driftlock/api-server/internal/models"
-	"github.com/Shannon-Labs/driftlock/api-server/internal/storage"
 	"github.com/Shannon-Labs/driftlock/api-server/internal/stream"
 	"github.com/Shannon-Labs/driftlock/api-server/internal/streaming"
 	"github.com/Shannon-Labs/driftlock/api-server/internal/streaming/kafka"
@@ -22,8 +21,8 @@ func TestAPIWithoutKafka(t *testing.T) {
 	os.Setenv("KAFKA_ENABLED", "false")
 	defer os.Unsetenv("KAFKA_ENABLED")
 
-	// Create an in-memory database for testing
-	db := storage.NewInMemory()
+	// Create a mock storage for testing
+	db := newMockStorage()
 	
 	// Create a test streamer
 	streamer := stream.NewStreamer(100)
@@ -32,22 +31,25 @@ func TestAPIWithoutKafka(t *testing.T) {
 	broker := kafka.NewInMemoryBroker()
 	publisher := streaming.NewInMemoryPublisher(broker, "anomaly-events")
 
-	// Create the anomalies handler
-	anomaliesHandler := handlers.NewAnomaliesHandler(db, streamer, publisher)
+	// Create the anomalies handler (without Supabase)
+	anomaliesHandler := NewAnomaliesHandler(db, streamer, publisher)
 
 	// Create a test HTTP request to create an anomaly
 	anomalyData := `{
 		"stream_type": "logs",
-		"message": "Test anomaly",
-		"severity": "high",
 		"ncd_score": 0.85,
 		"p_value": 0.01,
-		"anomaly_explanation": "This is a test anomaly",
+		"glass_box_explanation": "This is a test anomaly",
+		"compression_baseline": 0.5,
+		"compression_window": 0.6,
+		"compression_combined": 0.55,
+		"confidence_level": 0.95,
 		"timestamp": "2025-10-25T10:00:00Z"
 	}`
 
 	req := httptest.NewRequest("POST", "/v1/anomalies", strings.NewReader(anomalyData))
 	req.Header.Set("Content-Type", "application/json")
+	req = req.WithContext(context.Background())
 	
 	// Create a response recorder
 	rr := httptest.NewRecorder()
@@ -76,8 +78,12 @@ func TestAPIWithoutKafka(t *testing.T) {
 		t.Fatalf("Failed to unmarshal response: %v", err)
 	}
 
-	if createdAnomaly.Message != "Test anomaly" {
-		t.Errorf("Expected anomaly message 'Test anomaly', got '%s'", createdAnomaly.Message)
+	if createdAnomaly.GlassBoxExplanation != "This is a test anomaly" {
+		t.Errorf("Expected anomaly explanation 'This is a test anomaly', got '%s'", createdAnomaly.GlassBoxExplanation)
+	}
+
+	if createdAnomaly.StreamType != models.StreamTypeLogs {
+		t.Errorf("Expected stream type 'logs', got '%s'", createdAnomaly.StreamType)
 	}
 
 	// Verify that no Kafka errors occurred (since Kafka is disabled)

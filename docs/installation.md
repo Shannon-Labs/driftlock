@@ -25,17 +25,20 @@ The fastest way to get DriftLock running is with Docker Compose:
 
 ```bash
 # Clone the repository
-git clone https://github.com/Shannon-Labs/driftlock.git
+git clone https://github.com/shannon-labs/driftlock.git
 cd driftlock
 
-# Copy environment template
+# Copy environment template and configure
 cp .env.example .env
+# Edit .env to set your API key: DRIFTLOCK_DEV_API_KEY=your-secret-key
 
 # Start all services
-docker-compose up -d
+docker compose up -d
 
 # Access the dashboard
 open http://localhost:3000
+
+# Log in with your API key
 ```
 
 ### Services Started
@@ -44,6 +47,9 @@ open http://localhost:3000
 - **Dashboard**: http://localhost:3000
 - **PostgreSQL**: localhost:5432
 - **Redis**: localhost:6379 (optional)
+- **Kafka**: localhost:9092 (optional, for streaming)
+
+**Note**: DriftLock now runs standalone without external dependencies like Supabase. All functionality is available through the REST API and dashboard.
 
 ## Local Development Setup
 
@@ -72,30 +78,43 @@ DB_HOST=localhost
 DB_PORT=5432
 DB_DATABASE=driftlock
 DB_USER=postgres
-DB_PASSWORD=your_password
+DB_PASSWORD=your_secure_password_here
 
 # API Configuration
 PORT=8080
 LOG_LEVEL=info
 
-# Supabase (optional)
-SUPABASE_PROJECT_ID=your_project_id
-SUPABASE_ANON_KEY=your_anon_key
+# Authentication (required for dashboard access)
+AUTH_TYPE=apikey
+DEFAULT_API_KEY=your_api_key_here_for_dashboard_access
+DEFAULT_ORG_ID=default
+
+# Development API Key
+DRIFTLOCK_DEV_API_KEY=dev_api_key_change_me
+
+# Optional: Supabase (only needed for advanced compliance features)
+# Leave empty for standalone OSS deployment
+SUPABASE_PROJECT_ID=
+SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+SUPABASE_BASE_URL=
 ```
+
+**Note**: For OSS deployments, the `DEFAULT_API_KEY` or `DRIFTLOCK_DEV_API_KEY` is required to access the dashboard.
 
 ### 3. Install Dependencies
 
 #### Rust Dependencies
 
 ```bash
-cd src/anomaly-detection
+cd cbad-core
 cargo build --release
 ```
 
 #### Go Dependencies
 
 ```bash
-cd src/api-server
+cd api-server
 go mod download
 go build -o driftlock-api ./cmd/api-server
 ```
@@ -103,7 +122,7 @@ go build -o driftlock-api ./cmd/api-server
 #### Node.js Dependencies
 
 ```bash
-cd src/dashboard
+cd web-frontend
 npm install
 ```
 
@@ -112,7 +131,7 @@ npm install
 #### Using Docker (Recommended)
 
 ```bash
-docker-compose up -d postgres
+docker compose up -d postgres
 ```
 
 #### Local PostgreSQL
@@ -129,11 +148,11 @@ make migrate
 
 ```bash
 # Start API Server
-cd src/api-server
-./driftlock-api &
+cd api-server
+go run ./cmd/api-server &
 
 # Start Dashboard
-cd src/dashboard
+cd ../web-frontend
 npm run dev &
 
 # Or use the convenience script
@@ -216,16 +235,16 @@ kubectl create namespace driftlock
 
 ```bash
 # Deploy database
-kubectl apply -f deployments/kubernetes/postgres.yaml
+kubectl apply -f k8s/postgres.yaml
 
 # Deploy API server
-kubectl apply -f deployments/kubernetes/api-server.yaml
+kubectl apply -f k8s/api-server.yaml
 
 # Deploy dashboard
-kubectl apply -f deployments/kubernetes/dashboard.yaml
+kubectl apply -f k8s/dashboard.yaml
 
 # Deploy OpenTelemetry Collector
-kubectl apply -f deployments/kubernetes/otel-collector.yaml
+kubectl apply -f k8s/otel-collector.yaml
 ```
 
 ### 3. Verify Deployment
@@ -241,14 +260,14 @@ kubectl port-forward -n driftlock svc/driftlock-dashboard 3000:3000
 ### 1. Add Repository
 
 ```bash
-helm repo add Shannon-Labs https://charts.shannonlabs.ai
+helm repo add shannon-labs https://charts.shannonlabs.ai
 helm repo update
 ```
 
 ### 2. Install Chart
 
 ```bash
-helm install driftlock Shannon-Labs/driftlock \
+helm install driftlock shannon-labs/driftlock \
   --namespace driftlock \
   --create-namespace \
   --set apiServer.replicas=2 \
@@ -370,10 +389,10 @@ kill -9 <PID>
 
 ```bash
 # Check PostgreSQL status
-docker-compose ps postgres
+docker compose ps postgres
 
 # View logs
-docker-compose logs postgres
+docker compose logs postgres
 
 # Test connection
 psql -h localhost -U postgres -d driftlock
@@ -387,9 +406,9 @@ make clean
 make build
 
 # Update dependencies
-cd src/api-server && go mod tidy
-cd src/dashboard && npm install
-cd src/anomaly-detection && cargo update
+cd api-server && go mod tidy
+cd web-frontend && npm install
+cd cbad-core && cargo update
 ```
 
 #### Permission Issues
@@ -399,14 +418,14 @@ cd src/anomaly-detection && cargo update
 sudo chown -R $USER:$USER .
 
 # Fix Go module permissions
-chmod +x src/api-server/driftlock-api
+chmod +x api-server/driftlock-api
 ```
 
 ### Getting Help
 
 - **Documentation**: [docs/](../docs/)
-- **Issues**: [GitHub Issues](https://github.com/Shannon-Labs/driftlock/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/Shannon-Labs/driftlock/discussions)
+- **Issues**: [GitHub Issues](https://github.com/shannon-labs/driftlock/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/shannon-labs/driftlock/discussions)
 - **Security**: security@shannonlabs.ai
 
 ## Next Steps

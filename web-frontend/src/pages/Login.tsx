@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,23 +9,34 @@ import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 
 export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [apiKey, setApiKey] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { setApiKey: setAuthApiKey } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      // Validate API key format (basic check)
+      if (!apiKey || apiKey.length < 10) {
+        throw new Error('Please enter a valid API key');
+      }
+
+      // Test the API key by making a simple request
+      const response = await fetch('http://localhost:8080/v1/version', {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+        },
       });
 
-      if (error) throw error;
+      if (!response.ok && response.status === 401) {
+        throw new Error('Invalid API key');
+      }
 
+      // Set the API key in auth context
+      setAuthApiKey(apiKey);
       toast.success('Successfully logged in!');
       navigate('/dashboard');
     } catch (error: any) {
@@ -44,34 +55,25 @@ export default function Login() {
           </div>
           <CardTitle className="text-2xl text-center">Welcome back</CardTitle>
           <CardDescription className="text-center">
-            Sign in to your Driftlock account
+            Sign in with your API key
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="apiKey">API Key</Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={loading}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
+                id="apiKey"
                 type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your API key"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
                 required
                 disabled={loading}
               />
+              <p className="text-xs text-muted-foreground">
+                Get your API key from the DriftLock API server configuration
+              </p>
             </div>
             <Button
               type="submit"
@@ -90,14 +92,10 @@ export default function Login() {
           </form>
 
           <div className="mt-6 text-center space-y-2">
-            <Link to="/reset-password" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-              Forgot password?
-            </Link>
             <div className="text-sm text-muted-foreground">
-              Don't have an account?{' '}
-              <Link to="/signup" className="text-primary hover:underline">
-                Sign up
-              </Link>
+              For OSS deployments, configure your API key via the{' '}
+              <code className="text-xs bg-muted px-1 py-0.5 rounded">DRIFTLOCK_DEV_API_KEY</code>{' '}
+              environment variable
             </div>
           </div>
         </CardContent>

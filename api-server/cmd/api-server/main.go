@@ -202,7 +202,12 @@ func main() {
 	}
 
 	// Create handlers
-	anomaliesHandler := handlers.NewAnomaliesHandlerWithSupabase(db, streamer, eventPublisher, supabaseClient)
+	var anomaliesHandler *handlers.AnomaliesHandler
+	if supabaseClient != nil {
+		anomaliesHandler = handlers.NewAnomaliesHandlerWithSupabase(db, streamer, eventPublisher, supabaseClient)
+	} else {
+		anomaliesHandler = handlers.NewAnomaliesHandler(db, streamer, eventPublisher)
+	}
 	configHandler := handlers.NewConfigHandler(db)
 	analyticsHandler := handlers.NewAnalyticsHandler(db)
 	exportHandler := handlers.NewExportHandler(db, exporter)

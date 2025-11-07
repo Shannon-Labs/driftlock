@@ -1,31 +1,40 @@
-# DriftLock by Shannon Labs
+# DriftLock
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Go Report Card](https://goreportcard.com/badge/github.com/Shannon-Labs/driftlock)](https://goreportcard.com/report/github.com/Shannon-Labs/driftlock)
+[![Go Report Card](https://goreportcard.com/badge/github.com/shannon-labs/driftlock)](https://goreportcard.com/report/github.com/shannon-labs/driftlock)
 [![Rust](https://img.shields.io/badge/rust-%23000000.svg?style=for-the-badge&logo=rust&logoColor=white)](https://www.rust-lang.org/)
-[![CI](https://github.com/Shannon-Labs/driftlock/workflows/CI/badge.svg)](https://github.com/Shannon-Labs/driftlock/actions)
+[![CI](https://github.com/shannon-labs/driftlock/workflows/CI/badge.svg)](https://github.com/shannon-labs/driftlock/actions)
 
 > **Explainable AI anomaly detection for regulated industries**
 
 DriftLock provides compression-based anomaly detection (CBAD) with glass-box explainability, designed specifically for compliance with DORA, NIS2, and EU AI Act regulations.
 
-## 🚀 Quick Start
+**Now available as a standalone open source release!** DriftLock runs without external dependencies - just PostgreSQL and your API key.
 
-### Installation
+## 🚀 Quick Start
 
 ```bash
 # Clone the repository
-git clone https://github.com/Shannon-Labs/driftlock.git
+git clone https://github.com/shannon-labs/driftlock.git
 cd driftlock
 
-# Start with Docker Compose (recommended)
-docker-compose up -d
+# Copy the sample environment (never commit secrets)
+cp .env.example .env
 
-# Access the dashboard
+# Set your API key for dashboard access (optional, for development)
+echo "DRIFTLOCK_DEV_API_KEY=your-secret-key-here" >> .env
+
+# Launch Postgres + API + dashboard
+docker compose up -d
+
+# Web dashboard & API
 open http://localhost:3000
+curl  http://localhost:8080/healthz
 ```
 
-### Using the OpenTelemetry Collector
+> Detailed installation options (Docker, bare metal, Kubernetes) live in [docs/installation.md](docs/installation.md).
+
+### Wire DriftLock into OpenTelemetry
 
 Add the DriftLock processor to your OpenTelemetry configuration:
 
@@ -67,11 +76,35 @@ service:
                                                         │
                                                         ▼
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│ Compliance      │◀───│   API Server     │◀───│  Explanations   │
-│ Reports         │    │    (Go)          │    │   & Audit Trail │
-│ (Shannon Labs)  │    │                  │    │                 │
+│ Dashboard & API │◀───│   API Server     │◀───│  Explanations   │
+│ Access          │    │    (Go)          │    │   & Audit Trail │
+│ (API Key Auth)  │    │                  │    │                 │
 └─────────────────┘    └──────────────────┘    └─────────────────┘
 ```
+
+## 🆕 What's New in v0.1.0 (OSS Release)
+
+### Standalone Operation
+- ✅ **No External Dependencies**: Runs without Supabase or proprietary services
+- ✅ **API Key Authentication**: Simple, secure access control
+- ✅ **Simplified Deployment**: Just PostgreSQL and your API key
+- ✅ **Full Functionality**: All features available in OSS version
+
+### Migration from Previous Versions
+If you're upgrading from a previous version:
+
+1. **Configuration**: Update your `.env` file to use API keys instead of Supabase
+2. **Dashboard**: Log in with your API key instead of email/password  
+3. **API**: All endpoints remain compatible - no changes needed
+4. **Data**: Your existing anomalies and configurations are preserved
+
+### New Features
+- **Self-Hosted**: Deploy anywhere - cloud, on-premise, or edge
+- **Simplified Auth**: API key-based authentication for easy integration
+- **Reduced Complexity**: Fewer moving parts, easier to maintain
+- **Open Source**: Fully transparent, community-driven development
+
+## 🏢 Enterprise Features (Optional)
 
 ## 🏢 Enterprise Features
 
@@ -84,18 +117,18 @@ Need compliance reports? Check out **[Shannon Labs Compliance Platform](https://
 ## 📖 Documentation
 
 - [Installation Guide](docs/installation.md)
-- [Architecture Overview](docs/architecture.md)
-- [API Reference](docs/api-reference.md)
-- [Compliance Integration](docs/compliance.md)
+- [Architecture Overview](docs/ARCHITECTURE.md)
+- [API Reference](docs/API.md)
+- [Compliance Integration](docs/COMPLIANCE_DORA.md)
 - [Examples](examples/)
-- [Troubleshooting](docs/troubleshooting.md)
+- [Security Guidance](SECURITY.md)
 
 ## 🛠️ Development
 
 ### Prerequisites
 
-- Go 1.24+
-- Rust 1.70+
+- Go 1.22+
+- Rust stable (1.75+ recommended)
 - Node.js 18+
 - Docker & Docker Compose
 
@@ -105,13 +138,13 @@ Need compliance reports? Check out **[Shannon Labs Compliance Platform](https://
 # Install dependencies
 make setup
 
-# Run tests
+# Run component tests
 make test
 
-# Run all services locally
+# Start everything locally (Postgres, API, dashboard)
 make dev
 
-# Build components
+# Build production artifacts
 make build
 ```
 
@@ -119,29 +152,26 @@ make build
 
 ```
 driftlock/
-├── src/
-│   ├── anomaly-detection/    # Rust CBAD core
-│   ├── api-server/          # Go REST API
-│   ├── dashboard/           # React web UI
-│   └── otel-collector/      # OpenTelemetry processor
-├── docs/                    # Documentation
-├── examples/                # Usage examples
-├── deployments/             # Docker, K8s, Helm
-└── scripts/                 # Build & utility scripts
+├── api-server/        # Go HTTP API + ingest pipeline
+├── cbad-core/         # Rust compression-based anomaly detector
+├── web-frontend/      # React dashboard & marketing site
+├── docs/              # Product + process documentation
+├── deploy/ & k8s/     # Docker Compose, Helm, Kubernetes manifests
+└── tools/, scripts/   # Developer utilities
 ```
 
 ## 🧪 Testing
 
 ```bash
-# Run all tests
+# Quick sweep
 make test
 
-# Run specific component tests
-cd src/anomaly-detection && cargo test
-cd src/api-server && go test ./...
-cd src/dashboard && npm test
+# Individual components
+cd cbad-core && cargo test
+cd api-server && go test ./...
+cd web-frontend && npm run build
 
-# Integration tests
+# Integration smoke test (requires Postgres)
 make test-integration
 ```
 
@@ -150,20 +180,20 @@ make test-integration
 ### Docker
 
 ```bash
-docker build -t driftlock/api-server ./src/api-server
-docker build -t driftlock/dashboard ./src/dashboard
+# API server
+docker build -t driftlock/api-server .
+
+# Dashboard (serve the static build)
+pnpm --dir web-frontend build
+docker build -f deploy/docker/Dockerfile.web -t driftlock/web-frontend .
 ```
 
-### Kubernetes
+### Kubernetes / Helm
 
-```bash
-kubectl apply -f deployments/kubernetes/
 ```
-
-### Helm
-
-```bash
-helm install driftlock ./deployments/helm/driftlock
+kubectl apply -f k8s/
+# or
+helm install driftlock ./helm/driftlock
 ```
 
 ## 📊 Compliance & Security
@@ -176,7 +206,7 @@ helm install driftlock ./deployments/helm/driftlock
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines and local setup steps.
 
 ### Ways to Contribute
 

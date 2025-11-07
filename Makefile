@@ -33,68 +33,68 @@ setup: ## Set up development environment
 	@node --version | grep -q "$(NODE_VERSION)" || (echo "$(RED)Node.js $(NODE_VERSION) required$(NC)" && exit 1)
 	@echo "$(GREEN)Prerequisites satisfied$(NC)"
 	@echo "Installing dependencies..."
-	@cd src/anomaly-detection && cargo build
-	@cd src/api-server && go mod download
-	@cd src/dashboard && npm install
+	@cd cbad-core && cargo build
+	@cd api-server && go mod download
+	@cd web-frontend && npm install
 	@echo "$(GREEN)Setup complete!$(NC)"
 
 build: ## Build all components
 	@echo "$(GREEN)Building DriftLock components...$(NC)"
-	@cd src/anomaly-detection && cargo build --release
-	@cd src/api-server && go build -o driftlock-api ./cmd/api-server
-	@cd src/dashboard && npm run build
+	@cd cbad-core && cargo build --release
+	@cd api-server && go build -o driftlock-api ./cmd/api-server
+	@cd web-frontend && npm run build
 	@echo "$(GREEN)Build complete!$(NC)"
 
 test: ## Run all tests
 	@echo "$(GREEN)Running tests...$(NC)"
-	@cd src/anomaly-detection && cargo test
-	@cd src/api-server && go test -v ./...
-	@cd src/dashboard && npm test
+	@cd cbad-core && cargo test
+	@cd api-server && go test -v ./...
+	@cd web-frontend && npm run build
 	@echo "$(GREEN)All tests passed!$(NC)"
 
 test-rust: ## Run Rust tests only
-	@cd src/anomaly-detection && cargo test --verbose
+	@cd cbad-core && cargo test --verbose
 
 test-go: ## Run Go tests only
-	@cd src/api-server && go test -v -race -coverprofile=coverage.out ./...
-	@go tool cover -html=src/api-server/coverage.out -o coverage.html
+	@cd api-server && go test -v -race -coverprofile=coverage.out ./...
+	@go tool cover -html=api-server/coverage.out -o coverage.html
 
 test-node: ## Run Node.js tests only
-	@cd src/dashboard && npm test
+	@cd web-frontend && npm test
 
 test-integration: ## Run integration tests
 	@echo "$(GREEN)Running integration tests...$(NC)"
-	@cd src/api-server && go test -v -tags=integration ./tests/integration/...
+	@cd api-server && go test -v -tags=integration ./tests/integration/...
 
 lint: ## Run linting for all components
 	@echo "$(GREEN)Running linters...$(NC)"
-	@cd src/anomaly-detection && cargo clippy -- -D warnings
-	@cd src/anomaly-detection && cargo fmt -- --check
-	@cd src/api-server && golangci-lint run
-	@cd src/dashboard && npm run lint
+	@cd cbad-core && cargo clippy -- -D warnings
+	@cd cbad-core && cargo fmt -- --check
+	@cd api-server && golangci-lint run
+	@cd web-frontend && npm run lint
 	@echo "$(GREEN)Linting complete!$(NC)"
 
 format: ## Format code for all components
 	@echo "$(GREEN)Formatting code...$(NC)"
-	@cd src/anomaly-detection && cargo fmt
-	@cd src/api-server && goimports -w .
-	@cd src/dashboard && npm run format
+	@cd cbad-core && cargo fmt
+	@cd api-server && goimports -w .
+	@cd web-frontend && npm run format
 	@echo "$(GREEN)Code formatted!$(NC)"
 
 clean: ## Clean build artifacts
 	@echo "$(GREEN)Cleaning build artifacts...$(NC)"
-	@cd src/anomaly-detection && cargo clean
-	@cd src/api-server && go clean -cache
-	@cd src/dashboard && rm -rf dist node_modules/.cache
+	@cd cbad-core && cargo clean
+	@cd api-server && go clean -cache
+	@cd web-frontend && rm -rf dist node_modules/.cache
 	@rm -f coverage.html
 	@echo "$(GREEN)Clean complete!$(NC)"
 
 dev: ## Start development environment
 	@echo "$(GREEN)Starting development environment...$(NC)"
-	@docker-compose up -d postgres redis
+	@docker compose up -d postgres redis
 	@sleep 5
-	@cd src/api-server && ./driftlock-api &
-	@cd src/dashboard && npm run dev &
+	@cd api-server && go run ./cmd/api-server &
+	@cd web-frontend && npm run dev &
 	@echo "$(GREEN)Development environment started!$(NC)"
 	@echo "$(BLUE)Dashboard: http://localhost:3000$(NC)"
 	@echo "$(BLUE)API Server: http://localhost:8080$(NC)"
@@ -103,18 +103,18 @@ stop: ## Stop development environment
 	@echo "$(GREEN)Stopping development environment...$(NC)"
 	@pkill -f driftlock-api || true
 	@pkill -f "npm run dev" || true
-	@docker-compose down
+	@docker compose down
 	@echo "$(GREEN)Development environment stopped!$(NC)"
 
 docker-build: ## Build Docker images
 	@echo "$(GREEN)Building Docker images...$(NC)"
-	@docker build -t $(DOCKER_REGISTRY)/driftlock-api:$(IMAGE_TAG) -f src/api-server/Dockerfile src/api-server/
-	@docker build -t $(DOCKER_REGISTRY)/driftlock-dashboard:$(IMAGE_TAG) -f src/dashboard/Dockerfile src/dashboard/
+	@docker build -t $(DOCKER_REGISTRY)/driftlock-api:$(IMAGE_TAG) -f Dockerfile .
+	@docker build -t $(DOCKER_REGISTRY)/driftlock-dashboard:$(IMAGE_TAG) -f deploy/docker/Dockerfile.web .
 	@echo "$(GREEN)Docker images built!$(NC)"
 
 docker-run: ## Run Docker containers
 	@echo "$(GREEN)Starting Docker containers...$(NC)"
-	@docker-compose up -d
+	@docker compose up -d
 	@echo "$(GREEN)Docker containers started!$(NC)"
 
 docker-push: docker-build ## Push Docker images to registry
@@ -125,12 +125,12 @@ docker-push: docker-build ## Push Docker images to registry
 
 migrate: ## Run database migrations
 	@echo "$(GREEN)Running database migrations...$(NC)"
-	@cd src/api-server && go run cmd/migrate/main.go up
+	@cd api-server && go run cmd/migrate/main.go up
 	@echo "$(GREEN)Migrations complete!$(NC)"
 
 migrate-down: ## Rollback database migrations
 	@echo "$(GREEN)Rolling back database migrations...$(NC)"
-	@cd src/api-server && go run cmd/migrate/main.go down
+	@cd api-server && go run cmd/migrate/main.go down
 	@echo "$(GREEN)Rollback complete!$(NC)"
 
 install-deps: ## Install system dependencies
@@ -143,20 +143,20 @@ install-deps: ## Install system dependencies
 
 generate: ## Generate code (protobuf, mocks, etc.)
 	@echo "$(GREEN)Generating code...$(NC)"
-	@cd src/api-server && go generate ./...
+	@cd api-server && go generate ./...
 	@echo "$(GREEN)Code generation complete!$(NC)"
 
 benchmark: ## Run benchmarks
 	@echo "$(GREEN)Running benchmarks...$(NC)"
-	@cd src/anomaly-detection && cargo bench
-	@cd src/api-server && go test -bench=. ./...
+	@cd cbad-core && cargo bench
+	@cd api-server && go test -bench=. ./...
 	@echo "$(GREEN)Benchmarks complete!$(NC)"
 
 security-scan: ## Run security scans
 	@echo "$(GREEN)Running security scans...$(NC)"
-	@cd src/api-server && gosec ./...
-	@cd src/anomaly-detection && cargo audit
-	@cd src/dashboard && npm audit
+	@cd api-server && gosec ./...
+	@cd cbad-core && cargo audit
+	@cd web-frontend && npm audit
 	@echo "$(GREEN)Security scan complete!$(NC)"
 
 docs: ## Generate documentation

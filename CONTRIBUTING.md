@@ -10,9 +10,9 @@ This project follows the [Code of Conduct](CODE_OF_CONDUCT.md). Please read and 
 
 ### Prerequisites
 
-- Go 1.24+ (for API server)
-- Rust 1.70+ (for anomaly detection core)
-- Node.js 18+ (for dashboard)
+- Go 1.22+ (for the API server)
+- Rust 1.75+ (for the anomaly detection core)
+- Node.js 18+ (for the dashboard)
 - Docker and Docker Compose
 - Git
 
@@ -20,22 +20,22 @@ This project follows the [Code of Conduct](CODE_OF_CONDUCT.md). Please read and 
 
 1. **Fork and clone the repository**
    ```bash
-   git clone https://github.com/Shannon-Labs/driftlock.git
+   git clone https://github.com/shannon-labs/driftlock.git
    cd driftlock
    ```
 
 2. **Install dependencies**
    ```bash
    # Rust dependencies
-   cd src/anomaly-detection
+   cd cbad-core
    cargo build
 
    # Go dependencies
-   cd ../../src/api-server
+   cd ../api-server
    go mod download
 
    # Node.js dependencies
-   cd ../../src/dashboard
+   cd ../web-frontend
    npm install
    ```
 
@@ -47,7 +47,7 @@ This project follows the [Code of Conduct](CODE_OF_CONDUCT.md). Please read and 
 
 4. **Run the development environment**
    ```bash
-   docker-compose up -d
+   docker compose up -d
    ```
 
 ## How to Contribute
@@ -74,13 +74,13 @@ This project follows the [Code of Conduct](CODE_OF_CONDUCT.md). Please read and 
 3. **Test your changes**
    ```bash
    # Run Rust tests
-   cd src/anomaly-detection && cargo test
+   cd cbad-core && cargo test
 
    # Run Go tests
    cd ../api-server && go test ./...
 
    # Run Node.js tests
-   cd ../dashboard && npm test
+   cd ../web-frontend && npm run build
    ```
 
 4. **Commit your changes**
@@ -143,9 +143,9 @@ This project follows the [Code of Conduct](CODE_OF_CONDUCT.md). Please read and 
 make test
 
 # Run specific component tests
-cd src/anomaly-detection && cargo test
-cd src/api-server && go test ./...
-cd src/dashboard && npm test
+cd cbad-core && cargo test
+cd api-server && go test ./...
+cd web-frontend && npm run build
 ```
 
 ### Test Coverage
@@ -157,8 +157,8 @@ cd src/dashboard && npm test
 ## Getting Help
 
 - Check [documentation](docs/)
-- Search [existing issues](https://github.com/Shannon-Labs/driftlock/issues)
-- Start a [discussion](https://github.com/Shannon-Labs/driftlock/discussions)
+- Search [existing issues](https://github.com/shannon-labs/driftlock/issues)
+- Start a [discussion](https://github.com/shannon-labs/driftlock/discussions)
 - Contact maintainers at [Shannon-Labs@example.com]
 
 ## Security
