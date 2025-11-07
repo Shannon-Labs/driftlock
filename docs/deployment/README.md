@@ -16,7 +16,7 @@ Driftlock can be deployed in multiple environments:
 
 ```bash
 # Clone the repository
-git clone https://github.com/Hmbown/driftlock.git
+git clone https://github.com/shannon-labs/driftlock.git
 cd driftlock
 
 # Start all services

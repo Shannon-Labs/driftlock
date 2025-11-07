@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	driftlockkafka "github.com/Hmbown/driftlock/collector-processor/driftlockcbad/kafka"
+	driftlockkafka "github.com/shannon-labs/driftlock/collector-processor/driftlockcbad/kafka"
 	"go.opentelemetry.io/collector/pdata/plog"
 	"go.opentelemetry.io/collector/pdata/pmetric"
 	"go.uber.org/zap"

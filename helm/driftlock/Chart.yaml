@@ -6,9 +6,9 @@ version: 0.1.0
 appVersion: "1.0.0"
 
 maintainers:
-  - name: Driftlock Team
-    email: team@driftlock.example.com
-    url: https://driftlock.example.com
+  - name: Shannon Labs Team
+    email: team@shannonlabs.ai
+    url: https://shannonlabs.ai
 
 keywords:
   - anomaly-detection
@@ -16,9 +16,9 @@ keywords:
   - security
   - compliance
 
-home: https://driftlock.example.com
+home: https://shannonlabs.ai
 sources:
-  - https://github.com/Hmbown/driftlock
+  - https://github.com/shannon-labs/driftlock
 
 dependencies:
   - name: postgresql

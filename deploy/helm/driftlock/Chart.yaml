@@ -10,10 +10,10 @@ keywords:
   - cbad
   - compliance
   - observability
-home: https://github.com/Hmbown/driftlock
+home: https://github.com/shannon-labs/driftlock
 maintainers:
-  - name: Driftlock Team
-    email: team@driftlock.io
+  - name: Shannon Labs Team
+    email: team@shannonlabs.ai
 dependencies:
   - name: postgresql
     version: 12.x.x

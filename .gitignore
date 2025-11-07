@@ -8,14 +8,57 @@ dist/
 *.test
 *.out
 
+# Large compiled binaries (should never be committed)
+anomaly-pipeline
+driftlock-api*
+synthetic
+
 # Env
 .env
+.env.local
+.env.*.local
 
 # Editor/OS
 .DS_Store
 .idea/
 .vscode/
+*.swp
+*.swo
 
 # Rust build artifacts
-cbad-core/target/
-.qoder/
+**/target/
+Cargo.lock
+
+# Node.js
+**/node_modules/
+**/dist/
+.npm
+.eslintcache
+.nyc_output
+
+# Logs
+*.log
+logs/
+*.out.*
+
+# Coverage
+coverage/
+.coverage
+*.lcov
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+
+# Cloudflare
+.wrangler/
+
+# Build artifacts
+build/
+.cache/

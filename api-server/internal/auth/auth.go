@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/Hmbown/driftlock/api-server/internal/errors"
-	"github.com/Hmbown/driftlock/api-server/internal/models"
-	"github.com/Hmbown/driftlock/api-server/internal/storage"
+	"github.com/shannon-labs/driftlock/api-server/internal/errors"
+	"github.com/shannon-labs/driftlock/api-server/internal/models"
+	"github.com/shannon-labs/driftlock/api-server/internal/storage"
 	"golang.org/x/crypto/bcrypt"
 )
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -12,20 +13,21 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/Hmbown/driftlock/api-server/internal/auth"
-	"github.com/Hmbown/driftlock/api-server/internal/cbad"
-	"github.com/Hmbown/driftlock/api-server/internal/config"
-	"github.com/Hmbown/driftlock/api-server/internal/engine"
-	"github.com/Hmbown/driftlock/api-server/internal/export"
-	"github.com/Hmbown/driftlock/api-server/internal/handlers"
-	"github.com/Hmbown/driftlock/api-server/internal/metrics"
-	"github.com/Hmbown/driftlock/api-server/internal/storage"
-	"github.com/Hmbown/driftlock/api-server/internal/storage/redis"
-	"github.com/Hmbown/driftlock/api-server/internal/stream"
-	"github.com/Hmbown/driftlock/api-server/internal/streaming"
-	"github.com/Hmbown/driftlock/api-server/internal/streaming/kafka"
-	"github.com/Hmbown/driftlock/api-server/internal/supabase"
-	"github.com/Hmbown/driftlock/pkg/version"
+	"github.com/shannon-labs/driftlock/api-server/internal/auth"
+	"github.com/shannon-labs/driftlock/api-server/internal/cbad"
+	"github.com/shannon-labs/driftlock/api-server/internal/config"
+	"github.com/shannon-labs/driftlock/api-server/internal/engine"
+	"github.com/shannon-labs/driftlock/api-server/internal/export"
+	"github.com/shannon-labs/driftlock/api-server/internal/handlers"
+	"github.com/shannon-labs/driftlock/api-server/internal/metrics"
+	"github.com/shannon-labs/driftlock/api-server/internal/storage"
+	"github.com/shannon-labs/driftlock/api-server/internal/storage/redis"
+	"github.com/shannon-labs/driftlock/api-server/internal/stream"
+	"github.com/shannon-labs/driftlock/api-server/internal/streaming"
+	"github.com/shannon-labs/driftlock/api-server/internal/streaming/kafka"
+	"github.com/shannon-labs/driftlock/api-server/internal/supabase"
+	"github.com/shannon-labs/driftlock/api-server/internal/telemetry"
+	"github.com/shannon-labs/driftlock/pkg/version"
 	_ "github.com/lib/pq" // PostgreSQL driver
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -110,8 +112,33 @@ func main() {
 		log.Printf("Redis disabled, using local state only")
 	}
 
+	// Initialize Supabase client for integrations that need it
+	var supabaseClient *supabase.Client
+	if cfg.Supabase.ProjectID != "" {
+		log.Printf("Initializing Supabase client for project: %s", cfg.Supabase.ProjectID)
+		supabaseCfg := supabase.Config{
+			ProjectID:      cfg.Supabase.ProjectID,
+			AnonKey:        cfg.Supabase.AnonKey,
+			ServiceRoleKey: cfg.Supabase.ServiceRoleKey,
+			BaseURL:        cfg.Supabase.BaseURL,
+			RedisAddr:      cfg.Cache.Redis.Addr,
+			RedisPassword:  cfg.Cache.Redis.Password,
+			RedisDB:        cfg.Cache.Redis.DB,
+		}
+
+		var err error
+		supabaseClient, err = supabase.NewClient(supabaseCfg)
+		if err != nil {
+			log.Printf("Failed to initialize Supabase client: %v", err)
+		} else {
+			log.Printf("Supabase client initialized")
+		}
+	} else {
+		log.Printf("Supabase configuration not provided, skipping Supabase integration")
+	}
+
 	// Initialize CBAD detector
-	cbadDetector, err := cbad.NewDetector(db, streamer)
+	cbadDetector, err := cbad.NewDetector(db, streamer, supabaseClient)
 	if err != nil {
 		log.Fatalf("Failed to initialize CBAD detector: %v", err)
 	}
@@ -138,31 +165,6 @@ func main() {
 
 	// Initialize exporter
 	exporter := export.NewExporter(true) // Enable signature
-
-	// Initialize Supabase client for web-frontend integration
-	var supabaseClient *supabase.Client
-	if cfg.Supabase.ProjectID != "" {
-		log.Printf("Initializing Supabase client for project: %s", cfg.Supabase.ProjectID)
-		supabaseCfg := supabase.Config{
-			ProjectID:      cfg.Supabase.ProjectID,
-			AnonKey:        cfg.Supabase.AnonKey,
-			ServiceRoleKey: cfg.Supabase.ServiceRoleKey,
-			BaseURL:        cfg.Supabase.BaseURL,
-			RedisAddr:      cfg.Cache.Redis.Addr,
-			RedisPassword:  cfg.Cache.Redis.Password,
-			RedisDB:        cfg.Cache.Redis.DB,
-		}
-
-		var err error
-		supabaseClient, err = supabase.NewClient(supabaseCfg)
-		if err != nil {
-			log.Printf("Failed to initialize Supabase client: %v", err)
-		} else {
-			log.Printf("Supabase client initialized")
-		}
-	} else {
-		log.Printf("Supabase configuration not provided, skipping Supabase integration")
-	}
 
 	// Initialize event publisher (Kafka or in-memory based on config)
 	var eventPublisher streaming.EventPublisher
@@ -355,15 +357,24 @@ func main() {
 			metrics.DBConnectionsTotal.WithLabelValues("driftlock_db", "in_use").Set(float64(stats.InUse))
 			metrics.DBConnectionsTotal.WithLabelValues("driftlock_db", "idle").Set(float64(stats.Idle))
 
+			response := struct {
+				SSEConnections int `json:"sse_connections"`
+				Database       struct {
+					Open  int `json:"open"`
+					InUse int `json:"in_use"`
+					Idle  int `json:"idle"`
+				} `json:"database"`
+			}{
+				SSEConnections: streamer.GetClientCount(),
+			}
+			response.Database.Open = stats.OpenConnections
+			response.Database.InUse = stats.InUse
+			response.Database.Idle = stats.Idle
+
 			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte(`{
-				"sse_connections": ` + string(rune(streamer.GetClientCount())) + `,
-				"database": {
-					"open": ` + string(rune(stats.OpenConnections)) + `,
-					"in_use": ` + string(rune(stats.InUse)) + `,
-					"idle": ` + string(rune(stats.Idle)) + `
-				}
-			}`))
+			if err := json.NewEncoder(w).Encode(response); err != nil {
+				log.Printf("performance-metrics: failed to encode response: %v", err)
+			}
 		}),
 		"performance-metrics",
 	))
@@ -373,7 +384,7 @@ func main() {
 
 	// Create HTTP server
 	srv := &http.Server{
-		Addr:         ":" + string(rune(cfg.Server.Port)),
+		Addr:         fmt.Sprintf(":%d", cfg.Server.Port),
 		Handler:      mux,
 		ReadTimeout:  cfg.Server.ReadTimeout,
 		WriteTimeout: cfg.Server.WriteTimeout,
@@ -389,7 +400,7 @@ func main() {
 
 	// Start Prometheus metrics server
 	go func() {
-		metricsAddr := ":" + string(rune(cfg.Observability.PrometheusPort))
+		metricsAddr := fmt.Sprintf(":%d", cfg.Observability.PrometheusPort)
 		log.Printf("Prometheus metrics server listening on %s", metricsAddr)
 		http.ListenAndServe(metricsAddr, metrics.RegisterMetricsHandler())
 	}()

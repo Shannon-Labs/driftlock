@@ -9,14 +9,14 @@ import (
     "strings"
     "time"
 
-    "github.com/Hmbown/driftlock/api-server/internal/ctxutil"
-    "github.com/Hmbown/driftlock/api-server/internal/engine"
-    "github.com/Hmbown/driftlock/api-server/internal/handlers"
-    "github.com/Hmbown/driftlock/api-server/internal/stream"
-    "github.com/Hmbown/driftlock/api-server/internal/streaming"
-    "github.com/Hmbown/driftlock/api-server/internal/storage"
-    "github.com/Hmbown/driftlock/api-server/internal/supabase"
-    "github.com/Hmbown/driftlock/pkg/version"
+    "github.com/shannon-labs/driftlock/api-server/internal/ctxutil"
+    "github.com/shannon-labs/driftlock/api-server/internal/engine"
+    "github.com/shannon-labs/driftlock/api-server/internal/handlers"
+    "github.com/shannon-labs/driftlock/api-server/internal/stream"
+    "github.com/shannon-labs/driftlock/api-server/internal/streaming"
+    "github.com/shannon-labs/driftlock/api-server/internal/storage"
+    "github.com/shannon-labs/driftlock/api-server/internal/supabase"
+    "github.com/shannon-labs/driftlock/pkg/version"
     "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 

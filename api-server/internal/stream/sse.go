@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Hmbown/driftlock/api-server/internal/models"
+	"github.com/shannon-labs/driftlock/api-server/internal/models"
 )
 
 // Client represents an SSE client connection

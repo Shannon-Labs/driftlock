@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
-	"github.com/Hmbown/driftlock/api-server/internal/models"
+	"github.com/shannon-labs/driftlock/api-server/internal/models"
 )
 
 // MockStorage is a mock implementation of the storage interface

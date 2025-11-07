@@ -10,11 +10,13 @@ NODE_VERSION = "18"
 VITE_SUPABASE_PROJECT_ID = "nfkdeeunyvnntvpvwpwh"
 VITE_SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ma2RlZXVueXZubnR2cHZ3cHdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg1ODU2NDUsImV4cCI6MjA3NDE2MTY0NX0.nRjQZJG5h66OgvQs8z9dmpQKw3nNHTTjhiRwdt48YGo"
 VITE_SUPABASE_URL = "https://nfkdeeunyvnntvpvwpwh.supabase.co"
+VITE_STRIPE_PUBLISHABLE_KEY = "pk_test_51234567890abcdef"
 
 [env.staging]
 VITE_SUPABASE_PROJECT_ID = "nfkdeeunyvnntvpvwpwh"
 VITE_SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ma2RlZXVueXZubnR2cHZ3cHdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg1ODU2NDUsImV4cCI6MjA3NDE2MTY0NX0.nRjQZJG5h66OgvQs8z9dmpQKw3nNHTTjhiRwdt48YGo"
 VITE_SUPABASE_URL = "https://nfkdeeunyvnntvpvwpwh.supabase.co"
+VITE_STRIPE_PUBLISHABLE_KEY = "pk_test_51234567890abcdef"
 
 # Custom domains (uncomment when ready)
 # [env.production.vars]

@@ -16,9 +16,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/Hmbown/driftlock/api-server/internal/export"
-	"github.com/Hmbown/driftlock/api-server/internal/handlers"
-	"github.com/Hmbown/driftlock/api-server/internal/models"
+	"github.com/shannon-labs/driftlock/api-server/internal/export"
+	"github.com/shannon-labs/driftlock/api-server/internal/handlers"
+	"github.com/shannon-labs/driftlock/api-server/internal/models"
 )
 
 // fakeStorage provides an in-memory implementation of storage interfaces used by the handlers.

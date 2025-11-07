@@ -1,90 +1,270 @@
-PKG=./...
-CBAD_CORE_PROFILE?=release
+# DriftLock Makefile
+# Usage: make <target>
 
-.PHONY: run build tidy test clean docker api collector tools cbad-core-lib ci-check benchmark benchmark-cbad benchmark-api benchmark-e2e
+.PHONY: help setup build test clean dev docker-build docker-run install-deps
 
+# Default target
+.DEFAULT_GOAL := help
+
+# Variables
+GO_VERSION := 1.24
+RUST_VERSION := 1.70
+NODE_VERSION := 18
+DOCKER_REGISTRY := ghcr.io/shannon-labs
+IMAGE_TAG := latest
+
+# Colors
+RED := \033[0;31m
+GREEN := \033[0;32m
+YELLOW := \033[0;33m
+BLUE := \033[0;34m
+NC := \033[0m # No Color
+
+help: ## Show this help message
+	@echo "$(BLUE)DriftLock by Shannon Labs$(NC)"
+	@echo "$(GREEN)Available targets:$(NC)"
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  $(YELLOW)%-20s$(NC) %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+
+setup: ## Set up development environment
+	@echo "$(GREEN)Setting up development environment...$(NC)"
+	@echo "Checking prerequisites..."
+	@go version | grep -q "$(GO_VERSION)" || (echo "$(RED)Go $(GO_VERSION) required$(NC)" && exit 1)
+	@rustc --version | grep -q "$(RUST_VERSION)" || (echo "$(RED)Rust $(RUST_VERSION) required$(NC)" && exit 1)
+	@node --version | grep -q "$(NODE_VERSION)" || (echo "$(RED)Node.js $(NODE_VERSION) required$(NC)" && exit 1)
+	@echo "$(GREEN)Prerequisites satisfied$(NC)"
+	@echo "Installing dependencies..."
+	@cd src/anomaly-detection && cargo build
+	@cd src/api-server && go mod download
+	@cd src/dashboard && npm install
+	@echo "$(GREEN)Setup complete!$(NC)"
+
+build: ## Build all components
+	@echo "$(GREEN)Building DriftLock components...$(NC)"
+	@cd src/anomaly-detection && cargo build --release
+	@cd src/api-server && go build -o driftlock-api ./cmd/api-server
+	@cd src/dashboard && npm run build
+	@echo "$(GREEN)Build complete!$(NC)"
+
+test: ## Run all tests
+	@echo "$(GREEN)Running tests...$(NC)"
+	@cd src/anomaly-detection && cargo test
+	@cd src/api-server && go test -v ./...
+	@cd src/dashboard && npm test
+	@echo "$(GREEN)All tests passed!$(NC)"
+
+test-rust: ## Run Rust tests only
+	@cd src/anomaly-detection && cargo test --verbose
+
+test-go: ## Run Go tests only
+	@cd src/api-server && go test -v -race -coverprofile=coverage.out ./...
+	@go tool cover -html=src/api-server/coverage.out -o coverage.html
+
+test-node: ## Run Node.js tests only
+	@cd src/dashboard && npm test
+
+test-integration: ## Run integration tests
+	@echo "$(GREEN)Running integration tests...$(NC)"
+	@cd src/api-server && go test -v -tags=integration ./tests/integration/...
+
+lint: ## Run linting for all components
+	@echo "$(GREEN)Running linters...$(NC)"
+	@cd src/anomaly-detection && cargo clippy -- -D warnings
+	@cd src/anomaly-detection && cargo fmt -- --check
+	@cd src/api-server && golangci-lint run
+	@cd src/dashboard && npm run lint
+	@echo "$(GREEN)Linting complete!$(NC)"
+
+format: ## Format code for all components
+	@echo "$(GREEN)Formatting code...$(NC)"
+	@cd src/anomaly-detection && cargo fmt
+	@cd src/api-server && goimports -w .
+	@cd src/dashboard && npm run format
+	@echo "$(GREEN)Code formatted!$(NC)"
+
+clean: ## Clean build artifacts
+	@echo "$(GREEN)Cleaning build artifacts...$(NC)"
+	@cd src/anomaly-detection && cargo clean
+	@cd src/api-server && go clean -cache
+	@cd src/dashboard && rm -rf dist node_modules/.cache
+	@rm -f coverage.html
+	@echo "$(GREEN)Clean complete!$(NC)"
+
+dev: ## Start development environment
+	@echo "$(GREEN)Starting development environment...$(NC)"
+	@docker-compose up -d postgres redis
+	@sleep 5
+	@cd src/api-server && ./driftlock-api &
+	@cd src/dashboard && npm run dev &
+	@echo "$(GREEN)Development environment started!$(NC)"
+	@echo "$(BLUE)Dashboard: http://localhost:3000$(NC)"
+	@echo "$(BLUE)API Server: http://localhost:8080$(NC)"
+
+stop: ## Stop development environment
+	@echo "$(GREEN)Stopping development environment...$(NC)"
+	@pkill -f driftlock-api || true
+	@pkill -f "npm run dev" || true
+	@docker-compose down
+	@echo "$(GREEN)Development environment stopped!$(NC)"
+
+docker-build: ## Build Docker images
+	@echo "$(GREEN)Building Docker images...$(NC)"
+	@docker build -t $(DOCKER_REGISTRY)/driftlock-api:$(IMAGE_TAG) -f src/api-server/Dockerfile src/api-server/
+	@docker build -t $(DOCKER_REGISTRY)/driftlock-dashboard:$(IMAGE_TAG) -f src/dashboard/Dockerfile src/dashboard/
+	@echo "$(GREEN)Docker images built!$(NC)"
+
+docker-run: ## Run Docker containers
+	@echo "$(GREEN)Starting Docker containers...$(NC)"
+	@docker-compose up -d
+	@echo "$(GREEN)Docker containers started!$(NC)"
+
+docker-push: docker-build ## Push Docker images to registry
+	@echo "$(GREEN)Pushing Docker images...$(NC)"
+	@docker push $(DOCKER_REGISTRY)/driftlock-api:$(IMAGE_TAG)
+	@docker push $(DOCKER_REGISTRY)/driftlock-dashboard:$(IMAGE_TAG)
+	@echo "$(GREEN)Docker images pushed!$(NC)"
+
+migrate: ## Run database migrations
+	@echo "$(GREEN)Running database migrations...$(NC)"
+	@cd src/api-server && go run cmd/migrate/main.go up
+	@echo "$(GREEN)Migrations complete!$(NC)"
+
+migrate-down: ## Rollback database migrations
+	@echo "$(GREEN)Rolling back database migrations...$(NC)"
+	@cd src/api-server && go run cmd/migrate/main.go down
+	@echo "$(GREEN)Rollback complete!$(NC)"
+
+install-deps: ## Install system dependencies
+	@echo "$(GREEN)Installing system dependencies...$(NC)"
+	@echo "This may require sudo privileges..."
+	@which go || (curl -sSL https://golang.org/dl/go$(GO_VERSION).linux-amd64.tar.gz | sudo tar -C /usr/local -xz)
+	@which rustc || curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+	@which node || curl -fsSL https://deb.nodesource.com/setup_$(NODE_VERSION).x | sudo -E bash - && sudo apt-get install -y nodejs
+	@echo "$(GREEN)Dependencies installed!$(NC)"
+
+generate: ## Generate code (protobuf, mocks, etc.)
+	@echo "$(GREEN)Generating code...$(NC)"
+	@cd src/api-server && go generate ./...
+	@echo "$(GREEN)Code generation complete!$(NC)"
+
+benchmark: ## Run benchmarks
+	@echo "$(GREEN)Running benchmarks...$(NC)"
+	@cd src/anomaly-detection && cargo bench
+	@cd src/api-server && go test -bench=. ./...
+	@echo "$(GREEN)Benchmarks complete!$(NC)"
+
+security-scan: ## Run security scans
+	@echo "$(GREEN)Running security scans...$(NC)"
+	@cd src/api-server && gosec ./...
+	@cd src/anomaly-detection && cargo audit
+	@cd src/dashboard && npm audit
+	@echo "$(GREEN)Security scan complete!$(NC)"
+
+docs: ## Generate documentation
+	@echo "$(GREEN)Generating documentation...$(NC)"
+	@cd src/anomaly-detection && cargo doc --no-deps
+	@cd src/api-server && godoc -http=:6060 &
+	@echo "$(GREEN)Documentation generated!$(NC)"
+	@echo "$(BLUE)Go docs: http://localhost:6060$(NC)"
+	@echo "$(BLUE)Rust docs: target/doc/index.html$(NC)"
+
+release: clean test lint docker-build ## Prepare release (clean, test, lint, build)
+	@echo "$(GREEN)Preparing release...$(NC)"
+	@echo "$(YELLOW)Don't forget to update version numbers and CHANGELOG.md$(NC)"
+	@echo "$(GREEN)Release ready!$(NC)"
+
+install-local: ## Install locally
+	@echo "$(GREEN)Installing DriftLock locally...$(NC)"
+	@cd src/anomaly-detection && cargo install --path .
+	@cd src/api-server && go install ./cmd/driftlock-api
+	@echo "$(GREEN)Installation complete!$(NC)"
+	@echo "$(BLUE)Run: driftlock-api$(NC)"
+
+uninstall-local: ## Uninstall local installation
+	@echo "$(GREEN)Uninstalling DriftLock...$(NC)"
+	@cargo uninstall driftlock-anomaly-detection || true
+	@rm -f $(shell go env GOPATH)/bin/driftlock-api
+	@echo "$(GREEN)Uninstall complete!$(NC)"
+
+# Legacy targets for compatibility
 run:
-	go run ./api-server/cmd/driftlock-api
+	@cd src/api-server && go run ./cmd/api-server
 
-build: api
-
-tidy:
-	go mod tidy
-
-test:
-	go test $(PKG) -v
-
-clean:
-	rm -rf bin
-	cd cbad-core && cargo clean
-
-docker:
-	docker build -t driftlock:api .
-
-# Core targets
 api:
-	go build -o bin/driftlock-api ./api-server/cmd/driftlock-api
+	@cd src/api-server && go build -o bin/driftlock-api ./cmd/api-server
 
-collector: cbad-core-lib
-	go build -tags driftlock_cbad_cgo -o bin/driftlock-collector ./collector-processor/cmd/driftlock-collector
+collector:
+	@cd src/otel-collector && go build -o bin/driftlock-collector ./cmd/driftlock-collector
 
 tools:
-	go build -o bin/synthetic ./tools/synthetic
+	@cd src/api-server && go build -o bin/synthetic ./tools/synthetic
 
-migrate:
-	go run ./tools/migrate -dir api-server/internal/storage/migrations
-
-# CBAD core static library
 cbad-core-lib:
-	cd cbad-core && cargo build --$(CBAD_CORE_PROFILE) --lib
-	@echo "CBAD core library built at cbad-core/target/$(CBAD_CORE_PROFILE)/libcbad_core.a"
+	@cd src/anomaly-detection && cargo build --release --lib
+	@echo "CBAD core library built at src/anomaly-detection/target/release/libdriftlock_anomaly_detection.a"
 
-# CI and validation
 ci-check:
 	@echo "Running full CI validation..."
-	./tools/ci/verify_cbad_build.sh
-
-# Benchmarking
-benchmark: benchmark-cbad benchmark-api benchmark-e2e
+	@make test
+	@make lint
+	@make security-scan
 
 benchmark-cbad:
-	cd cbad-core && cargo bench
+	@cd src/anomaly-detection && cargo bench
 
 benchmark-api:
-	go test -bench=. ./api-server/...
+	@cd src/api-server && go test -bench=. ./...
 
 benchmark-e2e:
 	@echo "End-to-end benchmarks not yet implemented"
 
-# Development helpers
 fmt:
-	go fmt ./...
-	cd cbad-core && cargo fmt
+	@cd src/api-server && go fmt ./...
+	@cd src/anomaly-detection && cargo fmt
 
-lint:
-	gofmt -l .
-	cd cbad-core && cargo clippy --all-targets -- -D warnings
+# CI/CD helpers
+ci-setup: ## Set up CI environment
+	@echo "$(GREEN)Setting up CI environment...$(NC)"
+	@echo "Setting up Go..."
+	@go version
+	@echo "Setting up Rust..."
+	@rustc --version
+	@echo "Setting up Node.js..."
+	@node --version
+	@echo "$(GREEN)CI environment ready!$(NC)"
 
-# Release targets
-release: clean
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/driftlock-api-linux-amd64 ./api-server/cmd/driftlock-api
-	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o bin/driftlock-api-darwin-amd64 ./api-server/cmd/driftlock-api
-	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o bin/driftlock-api-windows-amd64.exe ./api-server/cmd/driftlock-api
+ci-test: ## Run CI test suite
+	@echo "$(GREEN)Running CI tests...$(NC)"
+	@make test-rust
+	@make test-go
+	@make test-node
+	@make test-integration
+	@echo "$(GREEN)CI tests complete!$(NC)"
 
-# Help target
-help:
-	@echo "Available targets:"
-	@echo "  run          - Start API server locally"
-	@echo "  build        - Build API server binary"
-	@echo "  api          - Build API server binary"
-	@echo "  collector    - Build collector with CBAD integration"
-	@echo "  tools        - Build development tools"
-	@echo "  cbad-core-lib- Build Rust CBAD static library"
-	@echo "  test         - Run all tests"
-	@echo "  ci-check     - Run full CI validation"
-	@echo "  benchmark    - Run all benchmarks"
-	@echo "  fmt          - Format all code"
-	@echo "  lint         - Run linters"
-	@echo "  clean        - Clean build artifacts"
-	@echo "  docker       - Build Docker image"
-	@echo "  release      - Build release binaries"
+ci-build: ## Run CI build
+	@echo "$(GREEN)Running CI build...$(NC)"
+	@make build
+	@make docker-build
+	@echo "$(GREEN)CI build complete!$(NC)"
+
+# Development helpers
+watch: ## Watch for changes and rebuild
+	@echo "$(GREEN)Watching for changes...$(NC)"
+	@cd src/anomaly-detection && cargo watch -x build &
+	@cd src/api-server && go run github.com/cosmtrek/air &
+	@cd src/dashboard && npm run dev &
+	@wait
+
+logs: ## Show logs from running services
+	@echo "$(GREEN)Showing logs...$(NC)"
+	@docker-compose logs -f
+	@echo "$(BLUE)API logs: tail -f logs/api.log$(NC)"
+	@echo "$(BLUE)Dashboard logs: tail -f logs/dashboard.log$(NC)"
+
+status: ## Show status of all services
+	@echo "$(GREEN)Checking service status...$(NC)"
+	@echo "$(BLUE)Docker containers:$(NC)"
+	@docker-compose ps
+	@echo "$(BLUE)API Server:$(NC)"
+	@curl -s http://localhost:8080/healthz || echo "$(RED)API Server not responding$(NC)"
+	@echo "$(BLUE)Dashboard:$(NC)"
+	@curl -s http://localhost:3000 > /dev/null && echo "$(GREEN)Dashboard running$(NC)" || echo "$(RED)Dashboard not responding$(NC)"

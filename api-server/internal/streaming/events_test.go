@@ -7,8 +7,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/Hmbown/driftlock/api-server/internal/models"
-	"github.com/Hmbown/driftlock/api-server/internal/streaming/kafka"
+	"github.com/shannon-labs/driftlock/api-server/internal/models"
+	"github.com/shannon-labs/driftlock/api-server/internal/streaming/kafka"
 )
 
 func TestKafkaEventPublisher_AnomalyCreated(t *testing.T) {

@@ -1,12 +1,12 @@
 dist:
-  module: github.com/Hmbown/driftlock
+  module: github.com/shannon-labs/driftlock
   name: driftlock-collector
   description: Custom Collector with driftlock_cbad processor
   version: 0.0.1
   output_path: ./dist
 
 processors:
-  - gomod: github.com/Hmbown/driftlock/collector-processor/driftlockcbad v0.0.0
+  - gomod: github.com/shannon-labs/driftlock/collector-processor/driftlockcbad v0.0.0
     path: ./collector-processor/driftlockcbad
 
 receivers:
@@ -20,4 +20,4 @@ extensions:
   - gomod: go.opentelemetry.io/collector/extension/zpagesextension v0.112.0
 
 replaces:
-  - github.com/Hmbown/driftlock/collector-processor/driftlockcbad => ./collector-processor/driftlockcbad
+  - github.com/shannon-labs/driftlock/collector-processor/driftlockcbad => ./collector-processor/driftlockcbad

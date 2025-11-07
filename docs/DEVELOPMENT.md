@@ -74,7 +74,7 @@ Driftlock is an explainable, deterministic anomaly detection toolkit designed fo
 
 1. **Clone the repository:**
 ```bash
-git clone https://github.com/Hmbown/driftlock.git
+git clone https://github.com/shannon-labs/driftlock.git
 cd driftlock
 ```
 
@@ -182,8 +182,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	
 	// Internal
-	"github.com/Hmbown/driftlock/api-server/internal/models"
-	"github.com/Hmbown/driftlock/api-server/internal/storage"
+	"github.com/shannon-labs/driftlock/api-server/internal/models"
+	"github.com/shannon-labs/driftlock/api-server/internal/storage"
 )
 ```
 

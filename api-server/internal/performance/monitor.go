@@ -170,9 +170,9 @@ func (b *BatchProcessorMetrics) RecordBatch(ctx context.Context, size int, durat
 	b.batchSize.Record(ctx, int64(size), metric.WithAttributes(attrs...))
 	b.processingTime.Record(ctx, duration.Seconds(), metric.WithAttributes(attrs...))
 	
-	// Calculate and set throughput
+	// Calculate and record throughput
 	throughput := float64(size) / duration.Seconds()
-	b.throughput.Set(ctx, throughput)
+	b.throughput.Record(ctx, throughput)
 }
 
 // BenchmarkRunner runs performance benchmarks

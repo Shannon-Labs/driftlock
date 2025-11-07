@@ -11,15 +11,15 @@ type APIError struct {
 	Code       int               `json:"code"`
 	HTTPStatus int               `json:"-"`  // For compatibility with tests
 	Message    string            `json:"message"`
-	Details    string            `json:"details,omitempty"`
+	Details    interface{}       `json:"details,omitempty"`
 	FieldErrors map[string]string `json:"field_errors,omitempty"`
 	RequestID  string            `json:"request_id,omitempty"`
 }
 
 // Error implements the error interface
-func (e *APIError) Error() string {
-	if e.Details != "" {
-		return fmt.Sprintf("[%d] %s: %s", e.Code, e.Message, e.Details)
+func (e APIError) Error() string {
+	if e.Details != nil {
+		return fmt.Sprintf("[%d] %s: %v", e.Code, e.Message, e.Details)
 	}
 	return fmt.Sprintf("[%d] %s", e.Code, e.Message)
 }
@@ -195,6 +195,7 @@ func ValidationError(fieldErrors map[string]string) *APIError {
 	return &APIError{
 		Code:        http.StatusBadRequest,
 		Message:     "Validation failed",
+		Details:     fieldErrors,
 		FieldErrors: fieldErrors,
 	}
 }

@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Hmbown/driftlock/api-server/internal/errors"
+	"github.com/shannon-labs/driftlock/api-server/internal/errors"
 	"golang.org/x/time/rate"
 )
 
@@ -82,34 +82,6 @@ func (rl *RateLimiter) Middleware(next http.Handler) http.Handler {
 	})
 }
 
-// getClientIP extracts the client IP address from the request
-func getClientIP(r *http.Request) string {
-	// Check X-Forwarded-For header (used by proxies/load balancers)
-	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
-		// Take the first IP in the list
-		for i, c := range xff {
-			if c == ',' {
-				return xff[:i]
-			}
-		}
-		return xff
-	}
-
-	// Check X-Real-IP header
-	if xri := r.Header.Get("X-Real-IP"); xri != "" {
-		return xri
-	}
-
-	// Fall back to RemoteAddr
-	// Note: This includes the port, which we should strip
-	for i := len(r.RemoteAddr) - 1; i >= 0; i-- {
-		if r.RemoteAddr[i] == ':' {
-			return r.RemoteAddr[:i]
-		}
-	}
-
-	return r.RemoteAddr
-}
 
 // GlobalRateLimiter implements a global rate limit (not per-IP)
 type GlobalRateLimiter struct {

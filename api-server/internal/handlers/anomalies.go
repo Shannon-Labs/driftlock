@@ -10,11 +10,11 @@ import (
     "strconv"
     "time"
 
-	"github.com/Hmbown/driftlock/api-server/internal/models"
-	"github.com/Hmbown/driftlock/api-server/internal/storage"
-	"github.com/Hmbown/driftlock/api-server/internal/stream"
-	"github.com/Hmbown/driftlock/api-server/internal/streaming"
-	"github.com/Hmbown/driftlock/api-server/internal/supabase"
+	"github.com/shannon-labs/driftlock/api-server/internal/models"
+	"github.com/shannon-labs/driftlock/api-server/internal/storage"
+	"github.com/shannon-labs/driftlock/api-server/internal/stream"
+	"github.com/shannon-labs/driftlock/api-server/internal/streaming"
+	"github.com/shannon-labs/driftlock/api-server/internal/supabase"
 	"github.com/google/uuid"
 )
 

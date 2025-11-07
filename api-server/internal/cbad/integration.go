@@ -6,12 +6,12 @@ import (
     "log"
     "time"
 
-    "github.com/Hmbown/driftlock/api-server/internal/ctxutil"
-    "github.com/Hmbown/driftlock/api-server/internal/models"
-    "github.com/Hmbown/driftlock/api-server/internal/storage"
-    "github.com/Hmbown/driftlock/api-server/internal/stream"
-    "github.com/Hmbown/driftlock/api-server/internal/supabase"
-    "github.com/Hmbown/driftlock/collector-processor/driftlockcbad"
+    "github.com/shannon-labs/driftlock/api-server/internal/ctxutil"
+    "github.com/shannon-labs/driftlock/api-server/internal/models"
+    "github.com/shannon-labs/driftlock/api-server/internal/storage"
+    "github.com/shannon-labs/driftlock/api-server/internal/stream"
+    "github.com/shannon-labs/driftlock/api-server/internal/supabase"
+    "github.com/shannon-labs/driftlock/collector-processor/driftlockcbad"
 )
 
 // Detector integrates CBAD core with the API server

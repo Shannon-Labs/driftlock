@@ -9,11 +9,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Hmbown/driftlock/api-server/internal/models"
-	"github.com/Hmbown/driftlock/api-server/internal/storage"
-	"github.com/Hmbown/driftlock/api-server/internal/stream"
-	"github.com/Hmbown/driftlock/api-server/internal/streaming"
-	"github.com/Hmbown/driftlock/api-server/internal/streaming/kafka"
+	"github.com/shannon-labs/driftlock/api-server/internal/models"
+	"github.com/shannon-labs/driftlock/api-server/internal/storage"
+	"github.com/shannon-labs/driftlock/api-server/internal/stream"
+	"github.com/shannon-labs/driftlock/api-server/internal/streaming"
+	"github.com/shannon-labs/driftlock/api-server/internal/streaming/kafka"
 )
 
 // TestAPIWithoutKafka tests that the API server works when Kafka is disabled

@@ -9,15 +9,15 @@ import (
     "syscall"
     "time"
 
-    "github.com/Hmbown/driftlock/api-server/internal/api"
-    "github.com/Hmbown/driftlock/api-server/internal/config"
-    "github.com/Hmbown/driftlock/api-server/internal/cbad"
-    "github.com/Hmbown/driftlock/api-server/internal/auth"
-    "github.com/Hmbown/driftlock/api-server/internal/engine"
-    "github.com/Hmbown/driftlock/api-server/internal/stream"
-    "github.com/Hmbown/driftlock/api-server/internal/storage"
-    "github.com/Hmbown/driftlock/api-server/internal/supabase"
-    "github.com/Hmbown/driftlock/api-server/internal/telemetry"
+    "github.com/shannon-labs/driftlock/api-server/internal/api"
+    "github.com/shannon-labs/driftlock/api-server/internal/config"
+    "github.com/shannon-labs/driftlock/api-server/internal/cbad"
+    "github.com/shannon-labs/driftlock/api-server/internal/auth"
+    "github.com/shannon-labs/driftlock/api-server/internal/engine"
+    "github.com/shannon-labs/driftlock/api-server/internal/stream"
+    "github.com/shannon-labs/driftlock/api-server/internal/storage"
+    "github.com/shannon-labs/driftlock/api-server/internal/supabase"
+    "github.com/shannon-labs/driftlock/api-server/internal/telemetry"
 )
 
 func main() {

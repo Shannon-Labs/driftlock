@@ -42,7 +42,7 @@ COPY --from=rust-builder /build/cbad-core/target/release/libcbad_core.a /build/c
 # Build API server
 WORKDIR /build/api-server
 RUN CGO_ENABLED=1 GOOS=linux go build -a -installsuffix cgo \
-    -ldflags="-w -s -X github.com/Hmbown/driftlock/pkg/version.version=1.0.0" \
+    -ldflags="-w -s -X github.com/shannon-labs/driftlock/pkg/version.version=1.0.0" \
     -o /build/api-server-bin \
     ./cmd/api-server
 

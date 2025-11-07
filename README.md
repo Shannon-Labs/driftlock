@@ -1,153 +1,213 @@
-Driftlock
+# DriftLock by Shannon Labs
 
-A compression-based anomaly detection (CBAD) platform for OpenTelemetry data. Driftlock provides explainable anomaly detection for regulated industries through advanced compression analysis of logs, metrics, traces, and LLM I/O.
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Go Report Card](https://goreportcard.com/badge/github.com/shannon-labs/driftlock)](https://goreportcard.com/report/github.com/shannon-labs/driftlock)
+[![Rust](https://img.shields.io/badge/rust-%23000000.svg?style=for-the-badge&logo=rust&logoColor=white)](https://www.rust-lang.org/)
+[![CI](https://github.com/shannon-labs/driftlock/workflows/CI/badge.svg)](https://github.com/shannon-labs/driftlock/actions)
 
-## Architecture
+> **Explainable AI anomaly detection for regulated industries**
 
-Driftlock consists of two main services:
+DriftLock provides compression-based anomaly detection (CBAD) with glass-box explainability, designed specifically for compliance with DORA, NIS2, and EU AI Act regulations.
 
-1. **Go API Server** (`api-server/`): Core anomaly detection pipeline
-   - Processes events and detects anomalies using CBAD algorithm
-   - Exposes REST API for anomaly management
-   - Integrates with Supabase for web-frontend data synchronization and usage metering
+## 🚀 Quick Start
 
-2. **React Web Frontend** (`web-frontend/`): Customer dashboard and billing
-   - Built with React/TypeScript and shadcn-ui
-   - Uses Supabase as backend (PostgreSQL + Edge Functions)
-   - Handles user authentication, billing, and anomaly visualization
+### Installation
 
-## Quick Start
+```bash
+# Clone the repository
+git clone https://github.com/shannon-labs/driftlock.git
+cd driftlock
+
+# Start with Docker Compose (recommended)
+docker-compose up -d
+
+# Access the dashboard
+open http://localhost:3000
+```
+
+### Using the OpenTelemetry Collector
+
+Add the DriftLock processor to your OpenTelemetry configuration:
+
+```yaml
+processors:
+  driftlock/anomaly:
+    thresholds:
+      compression_ratio: 0.7
+      ncd_threshold: 0.3
+    explanation:
+      enabled: true
+      detail_level: "detailed"
+
+service:
+  pipelines:
+    logs:
+      receivers: [otlp]
+      processors: [driftlock/anomaly, batch]
+      exporters: [otlp]
+```
+
+## ✨ Features
+
+- **🔍 Glass-Box Anomaly Detection**: Every anomaly comes with human-readable explanations
+- **📊 Regulatory Compliance**: Built-in audit trails for DORA/NIS2/EU AI Act
+- **⚡ High Performance**: Rust core with Go API server
+- **🔧 OpenTelemetry Native**: Seamless integration with existing observability stacks
+- **🌐 Open Source**: Apache 2.0 licensed, enterprise-friendly
+- **📈 Real-time Monitoring**: Live dashboard with anomaly streaming
+
+## 📊 Architecture
+
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Data Sources  │───▶│ OpenTelemetry    │───▶│ DriftLock Core  │
+│ (Logs, Metrics, │    │ Collector        │    │ (Rust CBAD)     │
+│  Traces)        │    │                  │    │                 │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+                                                        │
+                                                        ▼
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│ Compliance      │◀───│   API Server     │◀───│  Explanations   │
+│ Reports         │    │    (Go)          │    │   & Audit Trail │
+│ (Shannon Labs)  │    │                  │    │                 │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+```
+
+## 🏢 Enterprise Features
+
+Need compliance reports? Check out **[Shannon Labs Compliance Platform](https://compliance.shannonlabs.ai)**
+
+- **DORA Quarterly Reports**: Audit-ready regulatory documentation ($299)
+- **NIS2 Incident Reports**: Template-based incident reporting ($199)
+- **EU AI Act Audit Trails**: Complete transparency documentation ($149)
+
+## 📖 Documentation
+
+- [Installation Guide](docs/installation.md)
+- [Architecture Overview](docs/architecture.md)
+- [API Reference](docs/api-reference.md)
+- [Compliance Integration](docs/compliance.md)
+- [Examples](examples/)
+- [Troubleshooting](docs/troubleshooting.md)
+
+## 🛠️ Development
 
 ### Prerequisites
 
-- Docker and Docker Compose
-- Node.js 18+ (for local development)
-- Supabase account with project created
-
-### Environment Setup
-
-1. Copy environment template:
-   ```bash
-   cp .env.example .env
-   ```
-
-2. Update Supabase configuration in `.env`:
-   ```bash
-   SUPABASE_PROJECT_ID=your_actual_project_id
-   SUPABASE_ANON_KEY=your_actual_anon_key
-   SUPABASE_SERVICE_ROLE_KEY=your_actual_service_role_key
-   SUPABASE_BASE_URL=https://your_project_id.supabase.co
-   SUPABASE_WEBHOOK_URL=https://your_project_id.supabase.co/functions/v1/webhook
-   ```
-
-### Database Migration (local Postgres)
-
-If you have a local Postgres or a Supabase connection string available in `.env`, you can apply the bundled SQL schema:
-
-```bash
-make migrate
-```
-
-### Running with Docker Compose
-
-1. Start all services:
-   ```bash
-   ./start.sh
-   ```
-
-2. Services will be available at:
-   - Web Frontend: http://localhost:3000
-   - Go API: http://localhost:8080
-   - API Documentation: http://localhost:8080/healthz
+- Go 1.24+
+- Rust 1.70+
+- Node.js 18+
+- Docker & Docker Compose
 
 ### Local Development
 
-#### Web Frontend
 ```bash
-cd web-frontend
-npm install
-npm run dev
+# Install dependencies
+make setup
+
+# Run tests
+make test
+
+# Run all services locally
+make dev
+
+# Build components
+make build
 ```
 
-#### Go API Server
-```bash
-# Quick run
-make run
+### Project Structure
 
-# Or run directly
-cd api-server
-go run ./cmd/driftlock-api
+```
+driftlock/
+├── src/
+│   ├── anomaly-detection/    # Rust CBAD core
+│   ├── api-server/          # Go REST API
+│   ├── dashboard/           # React web UI
+│   └── otel-collector/      # OpenTelemetry processor
+├── docs/                    # Documentation
+├── examples/                # Usage examples
+├── deployments/             # Docker, K8s, Helm
+└── scripts/                 # Build & utility scripts
 ```
 
-Health and readiness:
-
-```bash
-curl http://localhost:8080/healthz
-curl http://localhost:8080/readyz
-```
-
-Ingest an event (optionally using API key auth):
-
-```bash
-# Optional: set DEFAULT_API_KEY and DEFAULT_ORG_ID in .env to enable API key auth
-curl -X POST http://localhost:8080/v1/events \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer ${DEFAULT_API_KEY:-testkey}" \
-  -d '{
-    "organization_id": "org_123",  
-    "event_type": "log",
-    "data": {"message": "Unusual pattern detected", "level": "WARN"}
-  }'
-```
-
-SSE stream of anomalies:
+## 🧪 Testing
 
 ```bash
-curl -N http://localhost:8080/v1/stream/anomalies
+# Run all tests
+make test
+
+# Run specific component tests
+cd src/anomaly-detection && cargo test
+cd src/api-server && go test ./...
+cd src/dashboard && npm test
+
+# Integration tests
+make test-integration
 ```
 
-## Integration Details
+## 🚀 Deployment
 
-### Data Flow
+### Docker
 
-1. **Event Ingestion**: Events are sent to Go API `/v1/events` endpoint
-2. **Anomaly Detection**: Go API processes events using CBAD algorithm
-3. **Data Synchronization**: Anomalies are stored in PostgreSQL and synced to Supabase
-4. **Real-time Updates**: Web frontend receives updates via Supabase subscriptions
-5. **Billing**: Usage is tracked in Supabase for subscription management
-
-### API Endpoints (Go API)
-
-```
-GET  /healthz                         # Liveness
-GET  /readyz                          # Readiness (DB ping; Supabase best-effort)
-GET  /v1/version                      # Version
-POST /v1/events                       # Ingest events (optionally API key auth)
-
-GET  /v1/anomalies                    # List anomalies
-POST /v1/anomalies                    # Create anomaly
-GET  /v1/anomalies/{id}               # Get anomaly by ID
-PATCH /v1/anomalies/{id}/status       # Update anomaly status
-
-GET  /v1/stream/anomalies             # Server-Sent Events stream
+```bash
+docker build -t driftlock/api-server ./src/api-server
+docker build -t driftlock/dashboard ./src/dashboard
 ```
 
-Auth for ingestion (optional):
-- Set `DEFAULT_API_KEY` and `DEFAULT_ORG_ID` in `.env` to enable API key auth for `/v1/events`. The key’s organization determines metering and sync context.
+### Kubernetes
 
-### Supabase Integration
+```bash
+kubectl apply -f deployments/kubernetes/
+```
 
-The Go API server integrates with Supabase through:
+### Helm
 
-- **Anomaly Synchronization**: Anomalies created in Go API are also stored in Supabase via REST
-- **Status Updates**: Anomaly status changes are synchronized between systems
-- **Usage Tracking**: API usage is tracked via Supabase Edge Function `meter-usage`
-- **Webhook Notifications**: Go API can trigger Supabase Edge Functions
+```bash
+helm install driftlock ./deployments/helm/driftlock
+```
 
-## Documentation
+## 📊 Compliance & Security
 
-- [Integration Guide](INTEGRATION_README.md) - Detailed setup and integration instructions (legacy)
-- [API Documentation](docs/API.md) - REST API reference
-- [Architecture](docs/ARCHITECTURE.md) - System design and components
- - [CLOUDFLARE_DEPLOYMENT.md](CLOUDFLARE_DEPLOYMENT.md) - Production deployment
- - [README_CLOUDFLARE.md](README_CLOUDFLARE.md) - Cloudflare quick start
+- **Explainable AI**: Every anomaly includes mathematical explanations
+- **Audit Trails**: Complete logging for regulatory compliance
+- **Data Privacy**: GDPR-compliant data handling
+- **Security**: Built-in authentication and encryption
+- **Transparency**: Open source with clear documentation
+
+## 🤝 Contributing
+
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+### Ways to Contribute
+
+- 🐛 Report bugs
+- 💡 Suggest features
+- 📝 Improve documentation
+- 🔧 Submit pull requests
+- 🧪 Write tests
+- 🌍 Translate documentation
+
+## 📄 License
+
+Apache License 2.0 - see [LICENSE](LICENSE) for details.
+
+## 🙏 Acknowledgments
+
+- OpenTelemetry community for the observability framework
+- Compression-based anomaly detection research community
+- Regulatory compliance experts who provided insights
+- All our amazing contributors
+
+## 📞 Support
+
+- **Documentation**: [docs/](docs/)
+- **Issues**: [GitHub Issues](https://github.com/shannon-labs/driftlock/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/shannon-labs/driftlock/discussions)
+- **Security**: security@shannonlabs.ai
+- **Enterprise**: contact@shannonlabs.ai
+
+---
+
+**Built by [Shannon Labs](https://shannonlabs.ai)** - Making AI explainable and compliant.
+
+If you find DriftLock useful, please give us a ⭐ on GitHub!

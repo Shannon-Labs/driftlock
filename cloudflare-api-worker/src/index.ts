@@ -1,26 +1,38 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { Hono } from 'hono'
 
 // Environment variables interface
 export interface Env {
   SUPABASE_URL: string
-  SUPABASE_SERVICE_ROLE_KEY: string
+  SUPABASE_SERVICE_ROLE_KEY?: string
   SUPABASE_ANON_KEY: string
   STRIPE_WEBHOOK_SECRET?: string
   CORS_ORIGIN?: string
 }
 
-// Initialize Supabase client
-function createSupabaseClient(env: Env) {
-  return createClient(
-    env.SUPABASE_URL,
-    env.SUPABASE_SERVICE_ROLE_KEY,
-    {
+// Initialize Supabase client with graceful fallback to anon key for read-only calls
+function createSupabaseClient(env: Env): { client: SupabaseClient; hasServiceRole: boolean } {
+  const url = env.SUPABASE_URL?.trim()
+  const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY?.trim()
+  const anonKey = env.SUPABASE_ANON_KEY?.trim()
+
+  if (!url) {
+    throw new Error('SUPABASE_URL is not configured')
+  }
+
+  const key = serviceRoleKey || anonKey
+  if (!key) {
+    throw new Error('Supabase key (service role or anon) is not configured')
+  }
+
+  return {
+    client: createClient(url, key, {
       auth: {
         persistSession: false,
       },
-    }
-  )
+    }),
+    hasServiceRole: Boolean(serviceRoleKey),
+  }
 }
 
 // Initialize Hono app
@@ -84,7 +96,21 @@ app.get('/health', (c) => {
 // Create anomaly endpoint
 app.post('/anomalies', async (c) => {
   try {
-    const supabase = createSupabaseClient(c.env as unknown as Env)
+    let supabase: SupabaseClient
+    let hasServiceRole = false
+    try {
+      const ctx = createSupabaseClient(c.env as unknown as Env)
+      supabase = ctx.client
+      hasServiceRole = ctx.hasServiceRole
+    } catch (clientError) {
+      console.error('Supabase configuration error:', clientError)
+      return c.json({ error: 'Supabase configuration error', details: (clientError as Error).message }, 500)
+    }
+
+    if (!hasServiceRole) {
+      console.error('Supabase service role key missing; cannot create anomalies')
+      return c.json({ error: 'SUPABASE_SERVICE_ROLE_KEY is required for anomaly creation' }, 500)
+    }
     const body = await c.req.json()
 
     const { organization_id, event_type, severity, metadata, anomaly_score } = body
@@ -137,7 +163,13 @@ app.post('/anomalies', async (c) => {
 // Get anomalies endpoint
 app.get('/anomalies', async (c) => {
   try {
-    const supabase = createSupabaseClient(c.env as unknown as Env)
+    let supabase: SupabaseClient
+    try {
+      supabase = createSupabaseClient(c.env as unknown as Env).client
+    } catch (clientError) {
+      console.error('Supabase configuration error:', clientError)
+      return c.json({ error: 'Supabase configuration error', details: (clientError as Error).message }, 500)
+    }
     const orgId = c.req.query('organization_id')
     const limit = parseInt(c.req.query('limit') || '50')
     const offset = parseInt(c.req.query('offset') || '0')
@@ -176,7 +208,16 @@ app.get('/anomalies', async (c) => {
 // Track usage endpoint
 app.post('/usage', async (c) => {
   try {
-    const supabase = createSupabaseClient(c.env as unknown as Env)
+    let supabase: SupabaseClient
+    let hasServiceRole = false
+    try {
+      const ctx = createSupabaseClient(c.env as unknown as Env)
+      supabase = ctx.client
+      hasServiceRole = ctx.hasServiceRole
+    } catch (clientError) {
+      console.error('Supabase configuration error:', clientError)
+      return c.json({ error: 'Supabase configuration error', details: (clientError as Error).message }, 500)
+    }
     const body = await c.req.json()
 
     const { organization_id, count, is_anomaly } = body
@@ -187,6 +228,10 @@ app.post('/usage', async (c) => {
 
     // Only meter if anomaly is true (pay-for-anomalies model)
     if (is_anomaly) {
+      if (!hasServiceRole) {
+        console.error('Supabase service role key missing; cannot meter usage')
+        return c.json({ error: 'SUPABASE_SERVICE_ROLE_KEY is required for usage metering' }, 500)
+      }
       const { data, error } = await supabase.functions.invoke('meter-usage', {
         body: {
           organization_id,
@@ -213,7 +258,13 @@ app.post('/usage', async (c) => {
 // Get usage statistics endpoint
 app.get('/usage', async (c) => {
   try {
-    const supabase = createSupabaseClient(c.env as unknown as Env)
+    let supabase: SupabaseClient
+    try {
+      supabase = createSupabaseClient(c.env as unknown as Env).client
+    } catch (clientError) {
+      console.error('Supabase configuration error:', clientError)
+      return c.json({ error: 'Supabase configuration error', details: (clientError as Error).message }, 500)
+    }
     const orgId = c.req.query('organization_id')
 
     if (!orgId) {
@@ -263,13 +314,27 @@ app.get('/usage', async (c) => {
 // Stripe webhook endpoint
 app.post('/stripe-webhook', async (c) => {
   try {
-    const supabase = createSupabaseClient(c.env as unknown as Env)
+    let supabase: SupabaseClient
+    let hasServiceRole = false
+    try {
+      const ctx = createSupabaseClient(c.env as unknown as Env)
+      supabase = ctx.client
+      hasServiceRole = ctx.hasServiceRole
+    } catch (clientError) {
+      console.error('Supabase configuration error:', clientError)
+      return c.json({ error: 'Supabase configuration error', details: (clientError as Error).message }, 500)
+    }
     const body = await c.req.text()
     const signature = c.req.header('stripe-signature')
     const env = c.env as unknown as Env
 
     if (!signature || !env.STRIPE_WEBHOOK_SECRET) {
       return c.json({ error: 'Missing Stripe signature or webhook secret' }, 400)
+    }
+
+    if (!hasServiceRole) {
+      console.error('Supabase service role key missing; cannot process Stripe webhook')
+      return c.json({ error: 'SUPABASE_SERVICE_ROLE_KEY is required for webhook processing' }, 500)
     }
 
     // Verify webhook with Supabase edge function
@@ -295,7 +360,13 @@ app.post('/stripe-webhook', async (c) => {
 // Get subscription info endpoint
 app.get('/subscription', async (c) => {
   try {
-    const supabase = createSupabaseClient(c.env as unknown as Env)
+    let supabase: SupabaseClient
+    try {
+      supabase = createSupabaseClient(c.env as unknown as Env).client
+    } catch (clientError) {
+      console.error('Supabase configuration error:', clientError)
+      return c.json({ error: 'Supabase configuration error', details: (clientError as Error).message }, 500)
+    }
     const orgId = c.req.query('organization_id')
 
     if (!orgId) {
