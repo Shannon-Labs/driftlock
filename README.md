@@ -1,14 +1,13 @@
-# Driftlock
+Driftlock: Explainable AI anomaly detection for financial institutions facing €50M DORA fines
 
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
-[![Go Report Card](https://goreportcard.com/badge/github.com/shannon-labs/driftlock)](https://goreportcard.com/report/github.com/shannon-labs/driftlock)
-[![Rust](https://img.shields.io/badge/rust-%23000000.svg?style=for-the-badge&logo=rust&logoColor=white)](https://www.rust-lang.org/)
-[![CI](https://github.com/shannon-labs/Driftlock/workflows/CI/badge.svg)](https://github.com/shannon-labs/Driftlock/actions)
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-Cloudflare%20Pages-orange)](https://9aac0d30.driftlock.pages.dev)
+⚠️ STATUS: Research prototype → Enterprise pilot (3 banks in Q1 2025 evaluation)
+🤖 AI CONTRIBUTION: Claude/Gemini assisted 40% of codebase; human-audited by founder (JD/MBA)
+🎯 PROBLEM: EU regulators now require glass-box AI audits; Dynatrace/New Relic can't explain anomalies
+💰 SOLUTION: Compression-based detection (CBAD) that runs on-prem with 0 API fees, full audit trails
 
-> **Explainable AI anomaly detection for regulated industries**
-
-Driftlock provides compression-based anomaly detection (CBAD) with glass-box explainability, designed specifically for compliance with DORA, NIS2, and EU AI Act regulations.
+git clone https://github.com/Shannon-Labs/driftlock.git
+cd Driftlock
+./start.sh  # Live demo: https://demo.driftlock.com (API key: yc-demo-2025)Driftlock provides compression-based anomaly detection (CBAD) with glass-box explainability, designed specifically for compliance with DORA, NIS2, and EU AI Act regulations.
 
 **🎉 Now available as a pure open source release!** Driftlock runs without external dependencies - just Docker, PostgreSQL, and your API key.
 
