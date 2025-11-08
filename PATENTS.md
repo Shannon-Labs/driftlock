@@ -16,7 +16,7 @@ Driftlock's compression-based anomaly detection technology is **patent-pending**
 
 ## Licensing
 
-This software is released under the **GNU Affero General Public License v3 (AGPL-3.0)**.
+This software is released under the **Apache License 2.0**.
 
 ### Commercial Licensing
 
@@ -24,19 +24,21 @@ For commercial use, proprietary licensing is available through Shannon Labs. Con
 - **Email:** licensing@shannonlabs.ai
 - **Website:** https://shannonlabs.ai/licensing
 
-### AGPL-3.0 Compliance
+### Apache 2.0 License Terms
 
-Under AGPL-3.0, you are free to:
-- Use the software
+Under Apache 2.0, you are free to:
+- Use the software commercially
 - Modify the software
 - Distribute the software
 - Distribute modified versions
+- Use the software privately
+- Patent use
 
-**Key Requirement:** If you run this software on a network server, you must make the complete source code available to all users under AGPL-3.0 terms.
+**Key Benefits:** No copyleft requirements, making it enterprise-friendly while maintaining open-source principles.
 
 ## Patent Grant
 
-Shannon Labs grants you a perpetual, worldwide, non-exclusive, no-charge, royalty-free patent license under the pending patent applications to use, reproduce, modify, and distribute this software, provided you comply with the AGPL-3.0 license terms.
+Shannon Labs grants you a perpetual, worldwide, non-exclusive, no-charge, royalty-free patent license under the pending patent applications to use, reproduce, modify, and distribute this software, provided you comply with the Apache 2.0 license terms.
 
 ## No Additional Rights
 
@@ -48,4 +50,4 @@ Contact: legal@shannonlabs.ai
 
 ---
 
-**Important:** This software is provided under AGPL-3.0 with patent protections. Commercial use requires a separate commercial license from Shannon Labs.
+**Important:** This software is provided under Apache 2.0 with patent protections. Commercial licensing is available for enterprises requiring additional support or custom features.

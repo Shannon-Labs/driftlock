@@ -226,12 +226,12 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 
 ## 📄 License
 
-Licensed under **AGPL-3.0** with patent protections. See [LICENSE](LICENSE) and [PATENTS.md](PATENTS.md) for details.
+Licensed under **Apache 2.0** with patent protections. See [LICENSE](LICENSE) and [PATENTS.md](PATENTS.md) for details.
 
 ### Commercial Licensing
 
 For commercial use, proprietary licenses are available through Shannon Labs. This dual-licensing model allows you to:
-- Use Driftlock under AGPL-3.0 for open source projects
+- Use Driftlock under Apache 2.0 for open source and commercial projects
 - Purchase a commercial license for proprietary applications
 
 Contact: licensing@shannonlabs.ai

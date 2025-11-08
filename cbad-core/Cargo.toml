@@ -2,6 +2,9 @@
 name = "cbad_core"
 version = "0.0.1"
 edition = "2021"
+license = "Apache-2.0"
+description = "Patent-pending compression-based anomaly detection core"
+repository = "https://github.com/Shannon-Labs/driftlock"
 
 [lib]
 name = "cbad_core"
