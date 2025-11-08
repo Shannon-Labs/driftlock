@@ -1,6 +1,6 @@
 Driftlock: Explainable AI anomaly detection for financial institutions facing €50M DORA fines
 
-⚠️ STATUS: Research prototype → Enterprise pilot (3 banks in Q1 2025 evaluation)
+⚠️ STATUS: Research prototype (interviewed 12 compliance officers, 0 customers, 0 revenue)
 🤖 AI CONTRIBUTION: Claude/Gemini assisted 40% of codebase; human-audited by founder (JD/MBA)
 🎯 PROBLEM: EU regulators now require glass-box AI audits; Dynatrace/New Relic can't explain anomalies
 💰 SOLUTION: Compression-based detection (CBAD) that runs on-prem with 0 API fees, full audit trails
