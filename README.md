@@ -1,46 +1,54 @@
-# DriftLock
+# Driftlock
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Go Report Card](https://goreportcard.com/badge/github.com/shannon-labs/driftlock)](https://goreportcard.com/report/github.com/shannon-labs/driftlock)
 [![Rust](https://img.shields.io/badge/rust-%23000000.svg?style=for-the-badge&logo=rust&logoColor=white)](https://www.rust-lang.org/)
-[![CI](https://github.com/shannon-labs/driftlock/workflows/CI/badge.svg)](https://github.com/shannon-labs/driftlock/actions)
+[![CI](https://github.com/shannon-labs/Driftlock/workflows/CI/badge.svg)](https://github.com/shannon-labs/Driftlock/actions)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Cloudflare%20Pages-orange)](https://9aac0d30.driftlock.pages.dev)
 
 > **Explainable AI anomaly detection for regulated industries**
 
-DriftLock provides compression-based anomaly detection (CBAD) with glass-box explainability, designed specifically for compliance with DORA, NIS2, and EU AI Act regulations.
+Driftlock provides compression-based anomaly detection (CBAD) with glass-box explainability, designed specifically for compliance with DORA, NIS2, and EU AI Act regulations.
 
-**Now available as a standalone open source release!** DriftLock runs without external dependencies - just PostgreSQL and your API key.
+**🎉 Now available as a pure open source release!** Driftlock runs without external dependencies - just Docker, PostgreSQL, and your API key.
+
+**🌐 Live Demo:** https://9aac0d30.driftlock.pages.dev
 
 ## 🚀 Quick Start
 
 ```bash
 # Clone the repository
 git clone https://github.com/shannon-labs/driftlock.git
-cd driftlock
+cd Driftlock
 
-# Copy the sample environment (never commit secrets)
+# Copy the sample environment and configure it
 cp .env.example .env
+# Edit .env and set your API key and database password
 
-# Set your API key for dashboard access (optional, for development)
-echo "DRIFTLOCK_DEV_API_KEY=your-secret-key-here" >> .env
+# Launch everything with one command
+./start.sh
 
-# Launch Postgres + API + dashboard
-docker compose up -d
-
-# Web dashboard & API
+# Access your dashboard
 open http://localhost:3000
-curl  http://localhost:8080/healthz
+# Login with your API key from .env
+```
+
+**Or use Make commands:**
+```bash
+make quick-start  # Sets up .env and starts services
+make dev          # Start development environment
+make stop         # Stop all services
 ```
 
 > Detailed installation options (Docker, bare metal, Kubernetes) live in [docs/installation.md](docs/installation.md).
 
-### Wire DriftLock into OpenTelemetry
+### Wire Driftlock into OpenTelemetry
 
-Add the DriftLock processor to your OpenTelemetry configuration:
+Add the Driftlock processor to your OpenTelemetry configuration:
 
 ```yaml
 processors:
-  driftlock/anomaly:
+  Driftlock/anomaly:
     thresholds:
       compression_ratio: 0.7
       ncd_threshold: 0.3
@@ -52,7 +60,7 @@ service:
   pipelines:
     logs:
       receivers: [otlp]
-      processors: [driftlock/anomaly, batch]
+      processors: [Driftlock/anomaly, batch]
       exporters: [otlp]
 ```
 
@@ -62,14 +70,16 @@ service:
 - **📊 Regulatory Compliance**: Built-in audit trails for DORA/NIS2/EU AI Act
 - **⚡ High Performance**: Rust core with Go API server
 - **🔧 OpenTelemetry Native**: Seamless integration with existing observability stacks
-- **🌐 Open Source**: Apache 2.0 licensed, enterprise-friendly
+- **🌐 Pure Open Source**: Apache 2.0 licensed, self-hosted, no external dependencies
 - **📈 Real-time Monitoring**: Live dashboard with anomaly streaming
+- **🔐 Simple Authentication**: API key-based access control
+- **🐳 Docker Ready**: One-command deployment with Docker Compose
 
 ## 📊 Architecture
 
 ```
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   Data Sources  │───▶│ OpenTelemetry    │───▶│ DriftLock Core  │
+│   Data Sources  │───▶│ OpenTelemetry    │───▶│ Driftlock Core  │
 │ (Logs, Metrics, │    │ Collector        │    │ (Rust CBAD)     │
 │  Traces)        │    │                  │    │                 │
 └─────────────────┘    └──────────────────┘    └─────────────────┘
@@ -82,37 +92,34 @@ service:
 └─────────────────┘    └──────────────────┘    └─────────────────┘
 ```
 
-## 🆕 What's New in v0.1.0 (OSS Release)
+## 🏢 Compliance Consulting Services
 
-### Standalone Operation
-- ✅ **No External Dependencies**: Runs without Supabase or proprietary services
-- ✅ **API Key Authentication**: Simple, secure access control
-- ✅ **Simplified Deployment**: Just PostgreSQL and your API key
-- ✅ **Full Functionality**: All features available in OSS version
+Need professional help with regulatory compliance? **[Shannon Labs](https://shannonlabs.ai)** offers expert consulting services:
 
-### Migration from Previous Versions
-If you're upgrading from a previous version:
+- **📋 DORA Compliance Implementation**: Full compliance setup and documentation
+- **🔍 NIS2 Incident Reporting**: Template-based reporting procedures
+- **🤖 EU AI Act Audit Trails**: Complete transparency documentation
+- **🎓 Regulatory Training**: Team education and compliance workshops
+- **📊 Custom Compliance Frameworks**: Tailored solutions for your industry
 
-1. **Configuration**: Update your `.env` file to use API keys instead of Supabase
-2. **Dashboard**: Log in with your API key instead of email/password  
-3. **API**: All endpoints remain compatible - no changes needed
-4. **Data**: Your existing anomalies and configurations are preserved
+**Why choose our consulting?**
+- Former regulators and compliance officers on staff
+- PhD-level technical expertise in AI systems
+- Proven track record with financial institutions
+- Fixed-price packages with clear deliverables
 
-### New Features
-- **Self-Hosted**: Deploy anywhere - cloud, on-premise, or edge
-- **Simplified Auth**: API key-based authentication for easy integration
-- **Reduced Complexity**: Fewer moving parts, easier to maintain
-- **Open Source**: Fully transparent, community-driven development
+*Open source Driftlock provides the foundation. Our consulting helps you achieve full regulatory compliance with confidence.*
 
-## 🏢 Enterprise Features (Optional)
+### Popular Consulting Packages
 
-## 🏢 Enterprise Features
+| Package | Duration | Investment | Best For |
+|---------|----------|------------|----------|
+| **DORA Quick Start** | 4-6 weeks | $5,000-10,000 | Financial institutions |
+| **AI Act Readiness** | 2-4 weeks | $2,500-5,000 | High-risk AI systems |
+| **Explainable AI Setup** | 6-10 weeks | $10,000-25,000 | Organizations needing transparency |
+| **Compliance-as-a-Service** | Ongoing | $3,000-8,000/month | Continuous compliance support |
 
-Need compliance reports? Check out **[Shannon Labs Compliance Platform](https://compliance.shannonlabs.ai)**
-
-- **DORA Quarterly Reports**: Audit-ready regulatory documentation ($299)
-- **NIS2 Incident Reports**: Template-based incident reporting ($199)
-- **EU AI Act Audit Trails**: Complete transparency documentation ($149)
+📧 **Contact us:** consulting@shannonlabs.ai for a free initial consultation
 
 ## 📖 Documentation
 
@@ -127,31 +134,29 @@ Need compliance reports? Check out **[Shannon Labs Compliance Platform](https://
 
 ### Prerequisites
 
-- Go 1.22+
+- Go 1.24+
 - Rust stable (1.75+ recommended)
 - Node.js 18+
 - Docker & Docker Compose
+- PostgreSQL 14+
 
 ### Local Development
 
 ```bash
-# Install dependencies
-make setup
+# Quick start (setup + start services)
+make quick-start
 
-# Run component tests
-make test
-
-# Start everything locally (Postgres, API, dashboard)
-make dev
-
-# Build production artifacts
-make build
+# Or manually:
+make setup      # Install dependencies
+make test       # Run all tests
+make dev        # Start development environment
+make build      # Build production artifacts
 ```
 
 ### Project Structure
 
 ```
-driftlock/
+Driftlock/
 ├── api-server/        # Go HTTP API + ingest pipeline
 ├── cbad-core/         # Rust compression-based anomaly detector
 ├── web-frontend/      # React dashboard & marketing site
@@ -173,6 +178,9 @@ cd web-frontend && npm run build
 
 # Integration smoke test (requires Postgres)
 make test-integration
+
+# CI validation (lint + test + security scan)
+make ci-check
 ```
 
 ## 🚀 Deployment
@@ -181,11 +189,11 @@ make test-integration
 
 ```bash
 # API server
-docker build -t driftlock/api-server .
+docker build -t Driftlock/api-server .
 
 # Dashboard (serve the static build)
 pnpm --dir web-frontend build
-docker build -f deploy/docker/Dockerfile.web -t driftlock/web-frontend .
+docker build -f deploy/docker/Dockerfile.web -t Driftlock/web-frontend .
 ```
 
 ### Kubernetes / Helm
@@ -193,7 +201,7 @@ docker build -f deploy/docker/Dockerfile.web -t driftlock/web-frontend .
 ```
 kubectl apply -f k8s/
 # or
-helm install driftlock ./helm/driftlock
+helm install Driftlock ./helm/Driftlock
 ```
 
 ## 📊 Compliance & Security
@@ -231,8 +239,8 @@ Apache License 2.0 - see [LICENSE](LICENSE) for details.
 ## 📞 Support
 
 - **Documentation**: [docs/](docs/)
-- **Issues**: [GitHub Issues](https://github.com/Shannon-Labs/driftlock/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/Shannon-Labs/driftlock/discussions)
+- **Issues**: [GitHub Issues](https://github.com/Shannon-Labs/Driftlock/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/Shannon-Labs/Driftlock/discussions)
 - **Security**: security@shannonlabs.ai
 - **Enterprise**: contact@shannonlabs.ai
 
@@ -240,4 +248,4 @@ Apache License 2.0 - see [LICENSE](LICENSE) for details.
 
 **Built by [Shannon Labs](https://shannonlabs.ai)** - Making AI explainable and compliant.
 
-If you find DriftLock useful, please give us a ⭐ on GitHub!
+If you find Driftlock useful, please give us a ⭐ on GitHub!

@@ -50,11 +50,13 @@ export const Hero = () => {
             <div className="grid grid-cols-2 gap-8 pt-8">
               <div className="space-y-1">
                 <div className="text-4xl font-display font-bold text-gradient">100k+</div>
-                <div className="text-sm text-muted-foreground">Events/sec</div>
+                <div className="text-sm text-muted-foreground">Events/sec*</div>
+                <p className="text-xs text-muted-foreground/70">*Based on structured JSON benchmarks</p>
               </div>
               <div className="space-y-1">
                 <div className="text-4xl font-display font-bold text-gradient">&lt;100ms</div>
-                <div className="text-sm text-muted-foreground">Latency</div>
+                <div className="text-sm text-muted-foreground">Latency*</div>
+                <p className="text-xs text-muted-foreground/70">*Results vary by data format</p>
               </div>
             </div>
           </div>

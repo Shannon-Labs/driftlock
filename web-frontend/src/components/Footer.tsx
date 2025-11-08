@@ -19,7 +19,7 @@ export const Footer = () => {
             </p>
             <div className="flex items-center gap-4">
               <a 
-                href="https://github.com/hmbown/driftlock" 
+                href="https://github.com/Shannon-Labs/driftlock" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-muted-foreground hover:text-primary transition-colors"
@@ -78,7 +78,7 @@ export const Footer = () => {
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li><Link to="/faq" className="hover:text-primary transition-colors">FAQ</Link></li>
               <li><Link to="/comparison" className="hover:text-primary transition-colors">vs. ML Detection</Link></li>
-              <li><a href="https://github.com/hmbown/driftlock" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">GitHub</a></li>
+              <li><a href="https://github.com/Shannon-Labs/driftlock" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">GitHub</a></li>
               <li><a href="mailto:hunter@shannonlabs.dev" className="hover:text-primary transition-colors flex items-center gap-1">
                 <Mail className="w-3 h-3" />
                 Contact Sales

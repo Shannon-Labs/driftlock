@@ -299,16 +299,16 @@ func (s *Storage) UpdateAnomalyStatus(ctx context.Context, id uuid.UUID, update 
 
 	query := `
 		UPDATE anomalies
-		SET status = $1,
+		SET status = $1::text,
 		    notes = COALESCE($2, notes),
-		    acknowledged_by = CASE WHEN $1 = 'acknowledged' THEN $3 ELSE acknowledged_by END,
-		    acknowledged_at = CASE WHEN $1 = 'acknowledged' THEN $4 ELSE acknowledged_at END,
-		    dismissed_by = CASE WHEN $1 = 'dismissed' THEN $3 ELSE dismissed_by END,
-		    dismissed_at = CASE WHEN $1 = 'dismissed' THEN $4 ELSE dismissed_at END
+		    acknowledged_by = CASE WHEN $1::text = 'acknowledged' THEN $3 ELSE acknowledged_by END,
+		    acknowledged_at = CASE WHEN $1::text = 'acknowledged' THEN $4 ELSE acknowledged_at END,
+		    dismissed_by = CASE WHEN $1::text = 'dismissed' THEN $3 ELSE dismissed_by END,
+		    dismissed_at = CASE WHEN $1::text = 'dismissed' THEN $4 ELSE dismissed_at END
 		WHERE id = $5
 	`
 
-	result, err := s.db.ExecContext(ctx, query, update.Status, update.Notes, username, now, id)
+	result, err := s.db.ExecContext(ctx, query, string(update.Status), update.Notes, username, now, id)
 	if err != nil {
 		return fmt.Errorf("failed to update anomaly: %w", err)
 	}

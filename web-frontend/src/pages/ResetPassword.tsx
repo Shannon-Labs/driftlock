@@ -1,109 +1,59 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { toast } from 'sonner';
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 
-export default function ResetPassword() {
-  const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [sent, setSent] = useState(false);
+const ResetPassword = () => {
+  const [email, setEmail] = useState("");
+  const [processing, setProcessing] = useState(false);
 
-  const handleReset = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setProcessing(true);
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/dashboard`,
-      });
-
-      if (error) throw error;
-
-      setSent(true);
-      toast.success('Password reset email sent! Check your inbox.');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to send reset email');
+      toast.success("OSS deployments use API keys—set a new DEFAULT_API_KEY in .env to rotate credentials.");
     } finally {
-      setLoading(false);
+      setProcessing(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">
-      <Card className="w-full max-w-md glass-card">
-        <CardHeader className="space-y-1">
-          <div className="flex justify-center mb-4">
-            <div className="w-12 h-12 rounded-lg bg-gradient-primary"></div>
-          </div>
-          <CardTitle className="text-2xl text-center">Reset password</CardTitle>
-          <CardDescription className="text-center">
-            {sent
-              ? 'Check your email for a password reset link'
-              : 'Enter your email to receive a password reset link'}
+      <Card className="w-full max-w-lg glass-card">
+        <CardHeader className="space-y-2 text-center">
+          <CardTitle className="text-3xl">Reset access</CardTitle>
+          <CardDescription>
+            Lost track of your dashboard key? Generate a new `DEFAULT_API_KEY` (and optionally rotate `DRIFTLOCK_DEV_API_KEY`). We’ll send housekeeping tips to the email below.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {!sent ? (
-            <form onSubmit={handleReset} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  disabled={loading}
-                />
-              </div>
-              <Button
-                type="submit"
-                className="w-full bg-gradient-primary hover:opacity-90"
-                disabled={loading}
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Sending...
-                  </>
-                ) : (
-                  'Send reset link'
-                )}
-              </Button>
-            </form>
-          ) : (
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground text-center">
-                We've sent a password reset link to <strong>{email}</strong>.
-                Please check your email and follow the instructions.
-              </p>
-              <Button
-                onClick={() => setSent(false)}
-                variant="outline"
-                className="w-full"
-              >
-                Send another email
-              </Button>
+          <form className="space-y-4" onSubmit={handleSubmit}>
+            <div className="space-y-2">
+              <Label htmlFor="reset-email">Email</Label>
+              <Input
+                id="reset-email"
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="ops@example.com"
+                required
+                disabled={processing}
+              />
             </div>
-          )}
-
-          <div className="mt-6 text-center">
-            <Link
-              to="/login"
-              className="text-sm text-muted-foreground hover:text-primary transition-colors inline-flex items-center"
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to login
-            </Link>
-          </div>
+            <Button type="submit" className="w-full bg-gradient-primary" disabled={processing}>
+              {processing ? "Sending guidance..." : "Send instructions"}
+            </Button>
+            <p className="text-xs text-muted-foreground text-center">
+              Need help rotating keys in production? Review README.md → Authentication or contact your security admin.
+            </p>
+          </form>
         </CardContent>
       </Card>
     </div>
   );
-}
+};
+
+export default ResetPassword;

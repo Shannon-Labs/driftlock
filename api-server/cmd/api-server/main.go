@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -144,23 +145,52 @@ func main() {
 	}
 	log.Printf("CBAD detector initialized")
 
-	// Initialize authenticator
+	// Initialize authenticator and register API keys from environment
 	authenticator := auth.NewAuthenticator()
+	defaultOrgID := strings.TrimSpace(os.Getenv("DEFAULT_ORG_ID"))
+	if defaultOrgID == "" {
+		defaultOrgID = "default"
+	}
 
-	// Add default API key for development (CHANGE IN PRODUCTION!)
-	devKey := os.Getenv("DRIFTLOCK_DEV_API_KEY")
-	if devKey != "" {
-		authenticator.AddAPIKey(
-			auth.HashAPIKey(devKey),
-			auth.APIKeyInfo{
-				Name:   "development",
-				Role:   "admin",
-				Scopes: []string{"read:anomalies", "write:anomalies", "admin:config"},
-			},
-		)
-		log.Printf("Authentication initialized (WARNING: using development API key)")
-	} else {
-		log.Printf("Authentication initialized (no development API key provided)")
+	commonScopes := []string{"read:anomalies", "write:anomalies", "admin:config"}
+	placeholderKey := "your_api_key_here_for_dashboard_access"
+	registeredFrom := make([]string, 0, 2)
+
+	registerAPIKey := func(rawKey, label string, info auth.APIKeyInfo) {
+		rawKey = strings.TrimSpace(rawKey)
+		if rawKey == "" || rawKey == placeholderKey {
+			return
+		}
+
+		authenticator.AddAPIKey(auth.HashAPIKey(rawKey), info)
+		registeredFrom = append(registeredFrom, label)
+		log.Printf("Authentication registered %s (role=%s org=%s)", label, info.Role, info.OrganizationID)
+	}
+
+	registerAPIKey(
+		os.Getenv("DEFAULT_API_KEY"),
+		"DEFAULT_API_KEY",
+		auth.APIKeyInfo{
+			Name:           "default",
+			Role:           "admin",
+			Scopes:         commonScopes,
+			OrganizationID: defaultOrgID,
+		},
+	)
+
+	registerAPIKey(
+		os.Getenv("DRIFTLOCK_DEV_API_KEY"),
+		"DRIFTLOCK_DEV_API_KEY",
+		auth.APIKeyInfo{
+			Name:           "development",
+			Role:           "admin",
+			Scopes:         commonScopes,
+			OrganizationID: defaultOrgID,
+		},
+	)
+
+	if len(registeredFrom) == 0 {
+		log.Printf("Authentication initialized without API keys (set DEFAULT_API_KEY or DRIFTLOCK_DEV_API_KEY)")
 	}
 
 	// Initialize exporter

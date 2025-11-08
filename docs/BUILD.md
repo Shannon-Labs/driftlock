@@ -1,12 +1,11 @@
 # Driftlock Build and Deployment Guide
 
-This document describes how to build the deterministic CBAD core and link it
-into the Go collector. The steps below assume the required toolchain is installed.
+This document describes how to build the deterministic CBAD core and link it into the Go collector. The steps below assume the required toolchain is installed.
 
 ## Prerequisites
 
 ### Go Development
-- Go 1.22 or newer
+- Go 1.24 or newer
 - Standard Go toolchain with cgo support
 
 ### Rust Development  
@@ -18,13 +17,17 @@ into the Go collector. The steps below assume the required toolchain is installe
 - macOS: Xcode command line tools
 - Windows: Visual Studio Build Tools or MinGW-w64
 
+### Node.js Development
+- Node.js 18+ with npm or pnpm
+- For dashboard development
+
 ## Quick Start
 
 ### Local Development
 
 ```bash
 # Clone and setup
-git clone https://github.com/hmbown/driftlock.git
+git clone https://github.com/Shannon-Labs/driftlock.git
 cd driftlock
 
 # Build API server (basic version without CBAD integration)
@@ -38,14 +41,13 @@ curl http://localhost:8080/v1/version
 ### Full Build with CBAD Integration
 
 ```bash
-# Build the Rust static library
-make cbad-core-lib
+# Build all components
+make build
 
-# Build the Go collector with CBAD bindings
-make collector
-
-# Build API server
-make api
+# Or build individual components:
+make cbad-core-lib    # Build Rust CBAD core
+make collector        # Build OTel collector processor
+make api              # Build API server
 
 # Run tests
 make test
@@ -66,6 +68,8 @@ make test
 - `make test` - Run all Go tests
 - `make clean` - Clean build artifacts
 - `make ci-check` - Run full CI validation locally
+- `make migrate` - Run database migrations
+- `make dev` - Start full development environment with Docker Compose
 
 ## Rust CBAD Core
 
@@ -98,7 +102,7 @@ cargo bench
 
 ## Go Collector Integration
 
-The Go collector requires the static library and the `driftlock_cbad_cgo` build tag:
+The Go collector requires the static library and CGO enabled:
 
 ```bash
 make collector
@@ -106,8 +110,10 @@ make collector
 
 This command:
 - Ensures `libcbad_core.a` exists (building it first if necessary)
-- Invokes `go build` with `-tags driftlock_cbad_cgo`
+- Invokes `go build` with CGO enabled so the Rust FFI is linked by default
 - Links against the Rust static library via cgo
+
+> Need to disable the Rust dependency temporarily? Use `go build -tags driftlock_no_cbad` to force the stub implementation while keeping the regular build path unchanged.
 
 ## Testing
 
@@ -273,7 +279,7 @@ The repository includes workflows for:
 - Use `make run` for rapid iteration on API changes
 - Rust changes require `make cbad-core-lib` before Go builds
 - Set `RUST_LOG=debug` for detailed Rust logging
-- Use `go run -tags driftlock_cbad_cgo` for testing FFI integration
+- Use `go run ./...` (CGO enabled) for FFI integration, or `go run -tags driftlock_no_cbad` to force the stub
 
 ## Production Deployment
 

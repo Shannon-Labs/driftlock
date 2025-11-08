@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, LogOut, User } from "lucide-react";
+import { Menu, X, LogOut, Key, Github } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   DropdownMenu,
@@ -14,7 +14,7 @@ import {
 export const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
-  const { user, signOut } = useAuth();
+  const { isAuthenticated, apiKey, signOut } = useAuth();
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -22,7 +22,6 @@ export const Navigation = () => {
     { path: "/", label: "Home" },
     { path: "/docs", label: "Documentation" },
     { path: "/dashboard", label: "Dashboard" },
-    { path: "/pricing", label: "Pricing" },
   ];
 
   return (
@@ -32,7 +31,7 @@ export const Navigation = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-3 group">
             <div className="w-9 h-9 rounded-lg bg-gradient-primary group-hover:scale-110 transition-transform"></div>
-            <span className="text-xl font-display font-bold">Driftlock</span>
+            <span className="text-xl font-display font-bold">driftlock</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -52,14 +51,24 @@ export const Navigation = () => {
             ))}
           </div>
 
-          {/* CTA Buttons */}
+          {/* GitHub Link */}
           <div className="hidden md:flex items-center space-x-3">
-            {user ? (
+            <a
+              href="https://github.com/shannon-labs/driftlock"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="View on GitHub"
+            >
+              <Github className="h-5 w-5" />
+            </a>
+            
+            {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="gap-2">
-                    <User className="h-4 w-4" />
-                    {user.email}
+                    <Key className="h-4 w-4" />
+                    {apiKey?.substring(0, 8)}...
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
@@ -76,18 +85,11 @@ export const Navigation = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <>
-                <Link to="/login">
-                  <Button variant="ghost" size="sm" className="hover:bg-muted/50">
-                    Sign in
-                  </Button>
-                </Link>
-                <Link to="/signup">
-                  <Button size="sm" className="bg-gradient-primary hover:opacity-90 transition-opacity">
-                    Get Started
-                  </Button>
-                </Link>
-              </>
+              <Link to="/login">
+                <Button size="sm" className="bg-gradient-primary hover:opacity-90 transition-opacity">
+                  Sign in with API Key
+                </Button>
+              </Link>
             )}
           </div>
 
@@ -123,10 +125,10 @@ export const Navigation = () => {
               </Link>
             ))}
             <div className="pt-4 space-y-3 border-t border-border/50">
-              {user ? (
+              {isAuthenticated ? (
                 <>
                   <div className="px-4 py-2 text-sm text-muted-foreground">
-                    {user.email}
+                    API Key: {apiKey?.substring(0, 8)}...
                   </div>
                   <Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>
                     <Button variant="ghost" size="sm" className="w-full justify-start hover:bg-muted/50">
@@ -147,18 +149,11 @@ export const Navigation = () => {
                   </Button>
                 </>
               ) : (
-                <>
-                  <Link to="/login" onClick={() => setIsMenuOpen(false)}>
-                    <Button variant="ghost" size="sm" className="w-full justify-start hover:bg-muted/50">
-                      Sign in
-                    </Button>
-                  </Link>
-                  <Link to="/signup" onClick={() => setIsMenuOpen(false)}>
-                    <Button size="sm" className="w-full bg-gradient-primary hover:opacity-90 transition-opacity">
-                      Get Started
-                    </Button>
-                  </Link>
-                </>
+                <Link to="/login" onClick={() => setIsMenuOpen(false)}>
+                  <Button size="sm" className="w-full bg-gradient-primary hover:opacity-90 transition-opacity">
+                    Sign in with API Key
+                  </Button>
+                </Link>
               )}
             </div>
           </div>

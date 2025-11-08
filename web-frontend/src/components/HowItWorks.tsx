@@ -11,7 +11,7 @@ const steps = [
     number: "02",
     icon: Database,
     title: "Compression Engine",
-    description: "OpenZL builds a baseline compression plan from your data. No training required — format-aware compression learns your schema automatically."
+    description: "OpenZL builds a baseline compression plan from your data. Uses Normalized Compression Distance (NCD) and statistical permutation tests for deterministic anomaly detection. No training required — format-aware compression learns your schema automatically."
   },
   {
     number: "03",

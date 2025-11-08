@@ -1,4 +1,4 @@
-//go:build cgo && driftlock_cbad_cgo
+//go:build cgo && !driftlock_no_cbad
 
 package driftlockcbad
 

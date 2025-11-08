@@ -1,4 +1,4 @@
-# DriftLock Makefile
+# Driftlock Makefile
 # Usage: make <target>
 
 .PHONY: help setup build test clean dev docker-build docker-run install-deps
@@ -21,25 +21,30 @@ BLUE := \033[0;34m
 NC := \033[0m # No Color
 
 help: ## Show this help message
-	@echo "$(BLUE)DriftLock by Shannon Labs$(NC)"
+	@echo "$(BLUE)Driftlock Open Source by Shannon Labs$(NC)"
 	@echo "$(GREEN)Available targets:$(NC)"
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  $(YELLOW)%-20s$(NC) %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 setup: ## Set up development environment
-	@echo "$(GREEN)Setting up development environment...$(NC)"
+	@echo "$(GREEN)Setting up Driftlock development environment...$(NC)"
 	@echo "Checking prerequisites..."
-	@go version | grep -q "$(GO_VERSION)" || (echo "$(RED)Go $(GO_VERSION) required$(NC)" && exit 1)
-	@rustc --version | grep -q "$(RUST_VERSION)" || (echo "$(RED)Rust $(RUST_VERSION) required$(NC)" && exit 1)
-	@node --version | grep -q "$(NODE_VERSION)" || (echo "$(RED)Node.js $(NODE_VERSION) required$(NC)" && exit 1)
+	@which go > /dev/null || (echo "$(RED)Go is required$(NC)" && exit 1)
+	@which rustc > /dev/null || (echo "$(RED)Rust is required$(NC)" && exit 1)
+	@which node > /dev/null || (echo "$(RED)Node.js is required$(NC)" && exit 1)
+	@which docker > /dev/null || (echo "$(RED)Docker is required$(NC)" && exit 1)
 	@echo "$(GREEN)Prerequisites satisfied$(NC)"
 	@echo "Installing dependencies..."
 	@cd cbad-core && cargo build
 	@cd api-server && go mod download
 	@cd web-frontend && npm install
 	@echo "$(GREEN)Setup complete!$(NC)"
+	@echo ""
+	@echo "$(YELLOW)Next steps:$(NC)"
+	@echo "1. Copy .env.example to .env and configure your API key"
+	@echo "2. Run 'make dev' to start the development environment"
 
 build: ## Build all components
-	@echo "$(GREEN)Building DriftLock components...$(NC)"
+	@echo "$(GREEN)Building Driftlock components...$(NC)"
 	@cd cbad-core && cargo build --release
 	@cd api-server && go build -o driftlock-api ./cmd/api-server
 	@cd web-frontend && npm run build
@@ -90,38 +95,31 @@ clean: ## Clean build artifacts
 	@echo "$(GREEN)Clean complete!$(NC)"
 
 dev: ## Start development environment
-	@echo "$(GREEN)Starting development environment...$(NC)"
-	@docker compose up -d postgres redis
-	@sleep 5
-	@cd api-server && go run ./cmd/api-server &
-	@cd web-frontend && npm run dev &
+	@echo "$(GREEN)Starting Driftlock development environment...$(NC)"
+	@docker compose up -d
 	@echo "$(GREEN)Development environment started!$(NC)"
 	@echo "$(BLUE)Dashboard: http://localhost:3000$(NC)"
 	@echo "$(BLUE)API Server: http://localhost:8080$(NC)"
+	@echo "$(BLUE)API Health: http://localhost:8080/healthz$(NC)"
+	@echo ""
+	@echo "$(YELLOW)Dashboard login: Use your API key from .env$(NC)"
 
 stop: ## Stop development environment
-	@echo "$(GREEN)Stopping development environment...$(NC)"
-	@pkill -f driftlock-api || true
-	@pkill -f "npm run dev" || true
+	@echo "$(GREEN)Stopping Driftlock development environment...$(NC)"
 	@docker compose down
 	@echo "$(GREEN)Development environment stopped!$(NC)"
 
-docker-build: ## Build Docker images
-	@echo "$(GREEN)Building Docker images...$(NC)"
-	@docker build -t $(DOCKER_REGISTRY)/driftlock-api:$(IMAGE_TAG) -f Dockerfile .
-	@docker build -t $(DOCKER_REGISTRY)/driftlock-dashboard:$(IMAGE_TAG) -f deploy/docker/Dockerfile.web .
-	@echo "$(GREEN)Docker images built!$(NC)"
-
-docker-run: ## Run Docker containers
-	@echo "$(GREEN)Starting Docker containers...$(NC)"
-	@docker compose up -d
-	@echo "$(GREEN)Docker containers started!$(NC)"
-
-docker-push: docker-build ## Push Docker images to registry
-	@echo "$(GREEN)Pushing Docker images...$(NC)"
-	@docker push $(DOCKER_REGISTRY)/driftlock-api:$(IMAGE_TAG)
-	@docker push $(DOCKER_REGISTRY)/driftlock-dashboard:$(IMAGE_TAG)
-	@echo "$(GREEN)Docker images pushed!$(NC)"
+quick-start: ## Quick start (setup + dev)
+	@echo "$(GREEN)Driftlock Quick Start...$(NC)"
+	@if [ ! -f .env ]; then \
+		echo "$(YELLOW)Creating .env from template...$(NC)"; \
+		cp .env.example .env; \
+		echo "$(RED)⚠️  Please edit .env and set your API key and database password$(NC)"; \
+		echo "$(RED)⚠️  Then run 'make dev' to start$(NC)"; \
+	else \
+		echo "$(GREEN).env file exists, starting services...$(NC)"; \
+		$(MAKE) dev; \
+	fi
 
 migrate: ## Run database migrations
 	@echo "$(GREEN)Running database migrations...$(NC)"
@@ -173,14 +171,14 @@ release: clean test lint docker-build ## Prepare release (clean, test, lint, bui
 	@echo "$(GREEN)Release ready!$(NC)"
 
 install-local: ## Install locally
-	@echo "$(GREEN)Installing DriftLock locally...$(NC)"
+	@echo "$(GREEN)Installing Driftlock locally...$(NC)"
 	@cd src/anomaly-detection && cargo install --path .
 	@cd src/api-server && go install ./cmd/driftlock-api
 	@echo "$(GREEN)Installation complete!$(NC)"
 	@echo "$(BLUE)Run: driftlock-api$(NC)"
 
 uninstall-local: ## Uninstall local installation
-	@echo "$(GREEN)Uninstalling DriftLock...$(NC)"
+	@echo "$(GREEN)Uninstalling Driftlock...$(NC)"
 	@cargo uninstall driftlock-anomaly-detection || true
 	@rm -f $(shell go env GOPATH)/bin/driftlock-api
 	@echo "$(GREEN)Uninstall complete!$(NC)"

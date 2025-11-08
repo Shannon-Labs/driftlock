@@ -10,6 +10,7 @@ import (
 
 	"github.com/stripe/stripe-go/v76"
 	"github.com/stripe/stripe-go/v76/client"
+	"github.com/stripe/stripe-go/v76/webhook"
 	"github.com/Shannon-Labs/driftlock/api-server/internal/models"
 )
 
@@ -158,7 +159,7 @@ func (s *StripeService) HandleWebhook(ctx context.Context, payload []byte, signa
 	}
 
 	// Construct event from payload
-	event, err := stripe.ConstructEvent(payload, signature, webhookSecret)
+	event, err := webhook.ConstructEvent(payload, signature, webhookSecret)
 	if err != nil {
 		return fmt.Errorf("failed to verify webhook signature: %w", err)
 	}

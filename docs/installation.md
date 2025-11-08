@@ -30,7 +30,7 @@ cd driftlock
 
 # Copy environment template and configure
 cp .env.example .env
-# Edit .env to set your API key: DRIFTLOCK_DEV_API_KEY=your-secret-key
+# Edit .env to set your API key: DEFAULT_API_KEY=your-secret-key
 
 # Start all services
 docker compose up -d
@@ -89,8 +89,8 @@ AUTH_TYPE=apikey
 DEFAULT_API_KEY=your_api_key_here_for_dashboard_access
 DEFAULT_ORG_ID=default
 
-# Development API Key
-DRIFTLOCK_DEV_API_KEY=dev_api_key_change_me
+# Development API Key (optional)
+DRIFTLOCK_DEV_API_KEY=
 
 # Optional: Supabase (only needed for advanced compliance features)
 # Leave empty for standalone OSS deployment
@@ -100,9 +100,17 @@ SUPABASE_SERVICE_ROLE_KEY=
 SUPABASE_BASE_URL=
 ```
 
-**Note**: For OSS deployments, the `DEFAULT_API_KEY` or `DRIFTLOCK_DEV_API_KEY` is required to access the dashboard.
+**Note**: For OSS deployments, set `DEFAULT_API_KEY` (and optionally override `DRIFTLOCK_DEV_API_KEY`) to access the dashboard.
 
 ### 3. Install Dependencies
+
+Use the automated setup:
+
+```bash
+make setup
+```
+
+Or install manually:
 
 #### Rust Dependencies
 
@@ -131,7 +139,11 @@ npm install
 #### Using Docker (Recommended)
 
 ```bash
+# Start PostgreSQL
 docker compose up -d postgres
+
+# Run migrations (once database is ready)
+make migrate
 ```
 
 #### Local PostgreSQL
@@ -144,20 +156,26 @@ createdb driftlock
 make migrate
 ```
 
+The migration tool will:
+- Create the `schema_migrations` tracking table
+- Apply pending migrations in order
+- Rollback migrations if needed (`make migrate-down`)
+
 ### 5. Start Services
 
 ```bash
-# Start API Server
-cd api-server
-go run ./cmd/api-server &
-
-# Start Dashboard
-cd ../web-frontend
-npm run dev &
-
-# Or use the convenience script
+# Start all services with Docker Compose
 make dev
+
+# Or start individually:
+cd api-server && go run ./cmd/api-server &
+cd web-frontend && npm run dev &
 ```
+
+Services will be available at:
+- API Server: http://localhost:8080
+- Dashboard: http://localhost:3000
+- Health check: http://localhost:8080/healthz
 
 ## OpenTelemetry Collector Setup
 

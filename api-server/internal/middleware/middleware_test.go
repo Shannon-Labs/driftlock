@@ -297,7 +297,7 @@ func TestGetClientIP(t *testing.T) {
 	req5 := httptest.NewRequest(http.MethodGet, "/", nil)
 	req5.RemoteAddr = "[2001:db8::1]:12345"
 	ip5 := getClientIP(req5)
-	assert.Equal(t, "[2001:db8::1]", ip5)
+	assert.Equal(t, "2001:db8::1", ip5)
 }
 
 func TestRequestIDWithPanicRecovery(t *testing.T) {
@@ -376,6 +376,6 @@ func TestRateLimiterErrorResponse(t *testing.T) {
 	var apiError errors.APIError
 	err = json.Unmarshal(body, &apiError)
 	assert.NoError(t, err)
-	assert.Equal(t, http.StatusTooManyRequests, apiError.HTTPStatus)
+	assert.Equal(t, http.StatusTooManyRequests, apiError.Code)
 	assert.Contains(t, strings.ToLower(apiError.Message), "rate limit exceeded")
 }

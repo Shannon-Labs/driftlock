@@ -1,44 +1,23 @@
 services:
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.4.0
-    container_name: driftlock-zookeeper
+  postgres:
+    image: postgres:15-alpine
+    container_name: driftlock-postgres
     environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
+      POSTGRES_DB: ${DB_DATABASE:-driftlock}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "2181:2181"
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./api-server/migrations:/docker-entrypoint-initdb.d
     networks:
       - driftlock-network
-
-  kafka:
-    image: confluentinc/cp-kafka:7.4.0
-    container_name: driftlock-kafka
-    depends_on:
-      - zookeeper
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_HOST://kafka:29092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
-    ports:
-      - "9092:9092"
-    networks:
-      - driftlock-network
-
-  collector:
-    build:
-      context: .
-      dockerfile: deploy/docker/Dockerfile.collector
-    command: ["--config=/etc/otelcol/config.yaml"]
-    ports:
-      - "4318:4318"
-    depends_on:
-      - kafka
-    networks:
-      - driftlock-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_DATABASE:-driftlock}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   api:
     build:
@@ -47,16 +26,28 @@ services:
     container_name: driftlock-api
     environment:
       - PORT=8080
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://collector:4318
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_DATABASE=${DB_DATABASE:-driftlock}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DRIFTLOCK_DEV_API_KEY=${DRIFTLOCK_DEV_API_KEY:-}
+      - DEFAULT_API_KEY=${DEFAULT_API_KEY}
+      - DEFAULT_ORG_ID=${DEFAULT_ORG_ID:-default}
       - OTEL_SERVICE_NAME=driftlock-api
-      # Optional: Add your API key for dashboard access
-      - DEFAULT_API_KEY=${DRIFTLOCK_DEV_API_KEY:-}
+      - OTEL_ENV=development
     ports:
       - "8080:8080"
     depends_on:
-      - collector
+      postgres:
+        condition: service_healthy
     networks:
       - driftlock-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   web-frontend:
     build:
@@ -69,9 +60,14 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      - api
+      api:
+        condition: service_healthy
     networks:
       - driftlock-network
+
+volumes:
+  postgres_data:
+    driver: local
 
 networks:
   driftlock-network:

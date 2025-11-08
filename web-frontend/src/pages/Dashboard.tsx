@@ -57,9 +57,10 @@ const Dashboard = () => {
       const response = await apiClient.get<{ anomalies: Anomaly[]; total: number }>('/v1/anomalies?limit=10');
       setAnomalies(response.anomalies || []);
       setStats(prev => ({ ...prev, totalAnomalies: response.total || 0 }));
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error loading dashboard:', error);
-      toast.error('Failed to load dashboard data');
+      const message = error instanceof Error ? error.message : 'Failed to load dashboard data';
+      toast.error(message);
     } finally {
       setLoading(false);
     }

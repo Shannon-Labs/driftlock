@@ -1,4 +1,4 @@
-//go:build cgo && driftlock_cbad_cgo
+//go:build cgo && !driftlock_no_cbad
 
 package driftlockcbad
 
@@ -20,6 +20,8 @@ typedef struct {
 } CBADMetrics;
 
 // Rust FFI function declarations
+extern void cbad_init_logging();
+
 extern CBADMetrics cbad_compute_metrics(
     const uint8_t* baseline_ptr,
     size_t baseline_len,
@@ -36,8 +38,15 @@ import "C"
 import (
 	"errors"
 	"fmt"
+	"os"
 	"unsafe"
 )
+
+func init() {
+	// Initialize Rust logging
+	os.Setenv("RUST_LOG", "error")
+	C.cbad_init_logging()
+}
 
 // ComputeMetrics calculates CBAD anomaly detection metrics using compression-based analysis
 func ComputeMetrics(baseline []byte, window []byte, seed uint64, permutations int) (*Metrics, error) {

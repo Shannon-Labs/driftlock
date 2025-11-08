@@ -2,7 +2,7 @@
 
 **Professional AI Regulation & Compliance Consulting**
 
-Shannon Labs provides expert consulting services for organizations navigating the complex landscape of AI regulation and compliance. Our team combines technical expertise with regulatory knowledge to help organizations achieve and maintain compliance.
+Shannon Labs provides expert consulting services for organizations using **driftlock open source** to navigate the complex landscape of AI regulation and compliance. Our team combines deep technical expertise with regulatory knowledge to help organizations achieve and maintain compliance using their self-hosted driftlock platform.
 
 ---
 
@@ -51,22 +51,24 @@ The EU AI Act imposes fines of up to €35 million or 7% of global annual turnov
 
 ### 2. DORA Compliance Quick Start
 
-**Perfect For:** Financial services institutions preparing for DORA implementation
+**Perfect For:** Financial services institutions using driftlock open source for DORA implementation
 
 **Duration:** 4-6 weeks
 **Investment:** $5,000 - $10,000
 
 **What's Included:**
+- **driftlock Platform Audit**: Assessment of your self-hosted driftlock configuration for DORA compliance
 - **ICT Risk Assessment**: Evaluation of current ICT risk management frameworks
-- **Anomaly Detection Implementation**: Setup and configuration of DriftLock platform
-- **Digital Operational Resilience Testing**: Design and execution of resilience testing program
+- **Anomaly Detection Optimization**: Fine-tuning of driftlock detection for regulatory requirements
+- **Digital Operational Resilience Testing**: Design and execution of resilience testing program using driftlock
 - **Incident Management Process**: Development of ICT incident identification and reporting procedures
 - **Third-Party Risk Management**: Assessment of critical third-party service providers
-- **Staff Training**: 4-hour workshop on DORA requirements and implementation
+- **Staff Training**: 4-hour workshop on DORA requirements and driftlock implementation
 
 **Deliverables:**
 - ICT Risk Management Framework Assessment
-- DriftLock Anomaly Detection Implementation
+- driftlock Platform Configuration Report
+- Optimized Anomaly Detection Rules for DORA Compliance
 - Digital Operational Resilience Testing Plan
 - ICT Incident Management Procedures
 - Third-Party Risk Assessment Report
@@ -85,7 +87,7 @@ DORA requires financial institutions to maintain robust digital operational resi
 **What's Included:**
 - **AI System Audit**: Comprehensive review of existing AI systems and models
 - **Explainability Framework**: Design of explainable AI architecture
-- **DriftLock Integration**: Full implementation of anomaly detection with explanations
+- **driftlock Integration**: Full implementation of anomaly detection with explanations
 - **Human Oversight Systems**: Development of human-in-the-loop processes
 - **Audit Trail Implementation**: Complete audit logging and documentation systems
 - **Regulatory Documentation**: Preparation of technical documentation for regulators
@@ -94,7 +96,7 @@ DORA requires financial institutions to maintain robust digital operational resi
 **Deliverables:**
 - AI System Audit Report
 - Explainable AI Architecture Design
-- DriftLock Implementation with Explanations
+- driftlock Implementation with Explanations
 - Human Oversight Process Documentation
 - Audit Trail System Implementation
 - Regulatory Technical Documentation Package

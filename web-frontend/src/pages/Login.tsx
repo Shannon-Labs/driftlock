@@ -39,8 +39,9 @@ export default function Login() {
       setAuthApiKey(apiKey);
       toast.success('Successfully logged in!');
       navigate('/dashboard');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to login');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to login';
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -93,9 +94,11 @@ export default function Login() {
 
           <div className="mt-6 text-center space-y-2">
             <div className="text-sm text-muted-foreground">
-              For OSS deployments, configure your API key via the{' '}
+              For OSS deployments, set{' '}
+              <code className="text-xs bg-muted px-1 py-0.5 rounded">DEFAULT_API_KEY</code>
+              {' '}in your API server (it will mirror into{' '}
               <code className="text-xs bg-muted px-1 py-0.5 rounded">DRIFTLOCK_DEV_API_KEY</code>{' '}
-              environment variable
+              when unset) and reuse that key to log into the dashboard.
             </div>
           </div>
         </CardContent>

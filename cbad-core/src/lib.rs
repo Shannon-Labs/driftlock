@@ -105,6 +105,12 @@ pub struct CBADMetrics {
     pub confidence_level: f64,
 }
 
+/// Initialize logging (called from Go)
+#[no_mangle]
+pub extern "C" fn cbad_init_logging() {
+    let _ = env_logger::try_init();
+}
+
 /// Compute CBAD metrics via C FFI
 /// 
 /// # Safety
@@ -122,6 +128,9 @@ pub unsafe extern "C" fn cbad_compute_metrics(
     seed: u64,
     permutations: usize,
 ) -> CBADMetrics {
+    // Initialize logger if not already done
+    cbad_init_logging();
+    
     // Validate pointers
     if baseline_ptr.is_null() || window_ptr.is_null() {
         return CBADMetrics {

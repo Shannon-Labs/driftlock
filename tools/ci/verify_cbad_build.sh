@@ -139,15 +139,15 @@ run_tests() {
 verify_ffi_integration() {
     echo_info "Verifying FFI integration..."
     
-    # Check that build succeeds with the required tag
-    if ! go build -tags driftlock_cbad_cgo ./collector-processor/...; then
-        echo_error "Failed to build with driftlock_cbad_cgo tag"
+    # Default build must link against the Rust CBAD library
+    if ! go build ./collector-processor/...; then
+        echo_error "Failed to build collector with CBAD integration (CGO enabled build is required)"
         exit 1
     fi
     
-    # Verify that build fails gracefully without the tag (should use stub)
-    if ! go build ./collector-processor/...; then
-        echo_error "Failed to build without CBAD integration (stub should work)"
+    # Verify that the optional driftlock_no_cbad tag falls back to the stub
+    if ! go build -tags driftlock_no_cbad ./collector-processor/...; then
+        echo_error "Failed to build collector with driftlock_no_cbad stub tag"
         exit 1
     fi
     

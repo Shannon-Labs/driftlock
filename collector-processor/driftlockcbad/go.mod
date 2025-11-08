@@ -1,4 +1,4 @@
-module github.com/hmbown/driftlock/collector-processor/driftlockcbad
+module github.com/Shannon-Labs/driftlock/collector-processor/driftlockcbad
 
 go 1.24.1
 

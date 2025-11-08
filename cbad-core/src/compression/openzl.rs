@@ -193,7 +193,7 @@ impl OpenZLAdapter {
 
         // Set the format version parameter (required by OpenZL)
         let format_version = unsafe { ZL_getDefaultEncodingVersion() } as c_int;
-        println!("Debug: Setting format version to {}", format_version);
+        log::debug!("Setting format version to {}", format_version);
         let result = unsafe {
             ZL_CCtx_setParameter(cctx, ZL_CParam::FormatVersion, format_version)
         };
@@ -226,7 +226,7 @@ impl OpenZLAdapter {
             )));
         }
 
-        println!("Debug: OpenZL adapter created successfully");
+        log::debug!("OpenZL adapter created successfully");
         Ok(Self { cctx })
     }
 }
@@ -262,7 +262,7 @@ impl CompressionAdapter for OpenZLAdapter {
             )));
         }
 
-        println!("Debug: Starting compression of {} bytes", data.len());
+        log::debug!("Starting compression of {} bytes", data.len());
         let src_size = data.len();
         let dst_capacity = self.compress_bound(src_size);
         let mut dst = vec![0u8; dst_capacity];
@@ -279,13 +279,13 @@ impl CompressionAdapter for OpenZLAdapter {
 
         if is_error(&result) {
             let error_msg = get_error_message(&result);
-            println!("Debug: Compression failed: {}", error_msg);
+            log::debug!("Compression failed: {}", error_msg);
             return Err(CompressionError::CompressionFailed(error_msg));
         }
 
         let compressed_size = get_value(&result);
         dst.truncate(compressed_size);
-        println!("Debug: Compression successful: {} -> {} bytes", src_size, compressed_size);
+        log::debug!("Compression successful: {} -> {} bytes", src_size, compressed_size);
         Ok(dst)
     }
 
@@ -365,7 +365,7 @@ mod tests {
         let decompressed = adapter.decompress(&compressed).expect("decompress");
 
         assert_eq!(original, decompressed.as_slice());
-        println!(
+        log::debug!(
             "OpenZL compression ratio: {:.2}x ({} bytes -> {} bytes)",
             original.len() as f64 / compressed.len() as f64,
             original.len(),
@@ -405,7 +405,7 @@ mod tests {
         let decompressed = adapter.decompress(&compressed).expect("decompress large data");
 
         assert_eq!(original, decompressed);
-        println!(
+        log::debug!(
             "Large data compression ratio: {:.2}x ({} bytes -> {} bytes)",
             original.len() as f64 / compressed.len() as f64,
             original.len(),

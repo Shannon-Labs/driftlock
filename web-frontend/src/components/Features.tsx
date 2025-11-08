@@ -63,7 +63,7 @@ export const Features = () => {
         </div>
 
         {/* Bottom CTA */}
-        <div className="text-center mt-20">
+        <div className="text-center mt-20 space-y-4">
           <p className="text-muted-foreground mb-6">
             See how it works in production
           </p>
@@ -74,6 +74,9 @@ export const Features = () => {
             Explore Dashboard
             <span className="text-primary">→</span>
           </a>
+          <p className="text-xs text-muted-foreground/70">
+            Requires API key - see installation guide
+          </p>
         </div>
       </div>
     </section>

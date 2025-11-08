@@ -5,11 +5,12 @@ edition = "2021"
 
 [lib]
 name = "cbad_core"
-crate-type = ["cdylib", "rlib"]
+crate-type = ["cdylib", "rlib", "staticlib"]
 
 [features]
 default = ["openzl"]
 openzl = []  # Enable OpenZL compression adapter
+debug = []   # Enable debug output
 
 [dependencies]
 rand = "0.8"
@@ -20,6 +21,8 @@ fastrand = "2"
 zstd = "0.13"
 lz4 = "1.24"
 flate2 = "1.0"
+log = "0.4.28"
+env_logger = "0.11.8"
 # Note: Using std::os::raw for C FFI types instead of libc to avoid network dependency
 
 [build-dependencies]

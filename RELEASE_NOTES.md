@@ -5,7 +5,7 @@
 ### Breaking Changes
 
 - **Supabase Dependency Removed**: DriftLock now runs standalone without requiring Supabase. The API server and dashboard work independently using API key authentication.
-- **Authentication Changed**: The web dashboard now uses API key-based authentication instead of Supabase auth. Users must configure an API key via the `DRIFTLOCK_DEV_API_KEY` environment variable.
+- **Authentication Changed**: The web dashboard now uses API key-based authentication instead of Supabase auth. Set `DEFAULT_API_KEY` (and optionally `DRIFTLOCK_DEV_API_KEY`) to control dashboard access.
 
 ### New Features
 
@@ -25,7 +25,7 @@ If you were previously using Supabase:
 
 1. **API Server**: No changes needed - Supabase integration is optional and defaults to disabled
 2. **Dashboard**: Update authentication to use API keys:
-   - Set `DRIFTLOCK_DEV_API_KEY` environment variable on the API server
+   - Set `DEFAULT_API_KEY` (and optionally `DRIFTLOCK_DEV_API_KEY`) environment variables on the API server
    - Use the API key to log into the dashboard
 3. **Environment Variables**: Remove Supabase-related env vars unless you need compliance features
 
@@ -39,4 +39,3 @@ If you were previously using Supabase:
 - Dashboard components updated to use REST API endpoints
 - All Supabase queries replaced with API calls
 - Test suite updated to work without Supabase
-

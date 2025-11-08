@@ -38,17 +38,20 @@ func (e *APIError) GetHTTPStatus() int {
 
 // WithDetails adds details to an API error
 func (e *APIError) WithDetails(details string) *APIError {
-	e.Details = details
-	return e
+	// Create a copy to avoid modifying the original error
+	newError := *e
+	newError.Details = details
+	return &newError
 }
 
 // WithFieldError adds a field-specific error
 func (e *APIError) WithFieldError(field, message string) *APIError {
-	if e.FieldErrors == nil {
-		e.FieldErrors = make(map[string]string)
+	newError := *e
+	if newError.FieldErrors == nil {
+		newError.FieldErrors = make(map[string]string)
 	}
-	e.FieldErrors[field] = message
-	return e
+	newError.FieldErrors[field] = message
+	return &newError
 }
 
 // WithRequestID adds a request ID for tracking
@@ -194,6 +197,7 @@ func HTTPError(w http.ResponseWriter, err error) {
 func ValidationError(fieldErrors map[string]string) *APIError {
 	return &APIError{
 		Code:        http.StatusBadRequest,
+		HTTPStatus:  http.StatusBadRequest,
 		Message:     "Validation failed",
 		Details:     fieldErrors,
 		FieldErrors: fieldErrors,

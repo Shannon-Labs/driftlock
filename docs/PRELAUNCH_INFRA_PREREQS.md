@@ -43,7 +43,7 @@ This guide captures the runtime setup required to exercise the remaining pre-lau
 - When cross-compiling (`make release`), CGO is disabled; stub implementations in `collector-processor/driftlockcbad` allow builds to succeed, but anomaly detection is inactive without CGO.
 - For full functionality, compile with:
   ```bash
-  CGO_ENABLED=1 go build -tags driftlock_cbad_cgo ./collector-processor/cmd/driftlock-collector
+  CGO_ENABLED=1 go build ./collector-processor/cmd/driftlock-collector
   ```
   Ensure a system C compiler is installed and the Rust library path exists.
 

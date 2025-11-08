@@ -68,7 +68,7 @@ Use this format:
 ### First-time Setup
 ```bash
 # Clone repository
-git clone https://github.com/hmbown/driftlock.git
+git clone https://github.com/Shannon-Labs/driftlock.git
 cd driftlock
 
 # Install dependencies
