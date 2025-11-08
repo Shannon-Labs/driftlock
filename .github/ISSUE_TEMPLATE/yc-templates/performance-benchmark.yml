@@ -1,0 +1,89 @@
+name: Performance Benchmark Results
+ description: Share performance benchmarks and comparison with other anomaly detection solutions
+ title: "[Benchmark] "
+ labels: ["benchmark", "performance", "comparison"]
+ body:
+  - type: dropdown
+    id: benchmark_type
+    attributes:
+      label: Benchmark Type
+      description: What type of performance test did you run?
+      options:
+        - Detection Accuracy
+        - False Positive Rate
+        - Processing Speed
+        - Memory Usage
+        - Scalability
+        - Cost Comparison
+        - Other
+    validations:
+      required: true
+  
+  - type: textarea
+    id: dataset
+    attributes:
+      label: Dataset Description
+      description: What dataset did you use for benchmarking?
+      placeholder: Size, type (financial transactions, logs, metrics), time period, anomaly rate
+    validations:
+      required: true
+  
+  - type: textarea
+    id: comparison_solutions
+    attributes:
+      label: Solutions Compared
+      description: What other solutions did you compare against?
+      placeholder: Dynatrace, New Relic, Splunk, custom solutions, etc.
+    validations:
+      required: true
+  
+  - type: textarea
+    id: driftlock_results
+    attributes:
+      label: Driftlock Results
+      description: What were Driftlock's performance metrics?
+      placeholder: Include specific numbers, parameters used, configuration details
+    validations:
+      required: true
+  
+  - type: textarea
+    id: competitor_results
+    attributes:
+      label: Competitor Results
+      description: How did other solutions perform?
+      placeholder: Include comparative metrics and costs
+    validations:
+      required: true
+  
+  - type: textarea
+    id: explainability_comparison
+    attributes:
+      label: Explainability Comparison
+      description: How did the explainability/audit trail features compare?
+      placeholder: Glass-box capabilities, regulatory compliance features
+    validations:
+      required: true
+  
+  - type: textarea
+    id: cost_analysis
+    attributes:
+      label: Cost Analysis
+      description: How do the costs compare?
+      placeholder: Licensing fees, API costs, infrastructure requirements, personnel costs
+    validations:
+      required: false
+  
+  - type: checkboxes
+    id: reproducibility
+    attributes:
+      label: Reproducibility
+      description: Can others reproduce your results?
+      options:
+        - label: I can share the dataset used
+          required: false
+        - label: I can share the exact configuration/parameters
+          required: false
+        - label: I can provide the benchmark code/scripts
+          required: false
+        - label: Results are based on publicly available data
+          required: false

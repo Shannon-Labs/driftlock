@@ -1,0 +1,41 @@
+# GitHub Repository Settings Configuration
+# This file documents the recommended repository settings for YC readiness
+
+repository:
+  # Repository name and description
+  name: driftlock
+  description: "Driftlock: Explainable AI anomaly detection for financial institutions facing €50M DORA fines. Patent-pending CBAD technology with glass-box audit trails."
+  
+  # Repository topics for discoverability
+  topics: 
+    - anomaly-detection
+    - dora-compliance
+    - explainable-ai
+    - financial-regulation
+    - compression-based-detection
+    - audit-trails
+    - yc-ready
+  
+  # Core settings
+  private: false  # Public repository for YC
+  has_issues: true
+  has_projects: false
+  has_wiki: false
+  has_discussions: true  # Enable for community/enterprise discussions
+  
+  # Merge settings for clean history
+  allow_merge_commit: false
+  allow_squash_merge: true
+  allow_rebase_merge: true
+  
+  # Branch protection (to be added after YC application)
+  # main branch protection:
+  # - Require pull request reviews before merging
+  # - Require status checks to pass before merging
+  # - Require branches to be up to date before merging
+  # - Include administrators
+
+  # Other settings
+  delete_branch_on_merge: true
+  allow_auto_merge: false
+  allow_update_branch: true

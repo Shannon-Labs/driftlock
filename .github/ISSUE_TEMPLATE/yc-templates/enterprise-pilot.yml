@@ -1,0 +1,111 @@
+name: Enterprise Pilot Feedback
+ description: Feedback from enterprise pilot customers (banks, financial institutions)
+ title: "[Enterprise Pilot] "
+ labels: ["enterprise", "pilot", "yc-feedback"]
+ body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for participating in the Driftlock enterprise pilot program!
+        Your feedback is crucial for our YC application and product development.
+  
+  - type: input
+    id: institution
+    attributes:
+      label: Financial Institution
+      description: What type of financial institution are you representing?
+      placeholder: e.g., Regional Bank, Credit Union, Investment Firm
+    validations:
+      required: true
+  
+  - type: input
+    id: assets
+    attributes:
+      label: Institution Size
+      description: Approximate asset size (helps us understand scale requirements)
+      placeholder: e.g., $500M, $5B, $50B+
+    validations:
+      required: false
+  
+  - type: dropdown
+    id: use_case
+    attributes:
+      label: Primary Use Case
+      description: What compliance requirement are you addressing?
+      options:
+        - DORA Operational Resilience
+        - NIS2 Cybersecurity
+        - EU AI Act Compliance
+        - Internal Risk Management
+        - Other
+    validations:
+      required: true
+  
+  - type: textarea
+    id: current_solution
+    attributes:
+      label: Current Solution
+      description: What are you currently using for anomaly detection?
+      placeholder: Describe your current tools and their limitations
+    validations:
+      required: true
+  
+  - type: textarea
+    id: pilot_results
+    attributes:
+      label: Pilot Results
+      description: How did Driftlock perform in your pilot testing?
+      placeholder: Detection accuracy, false positive rates, explainability assessment
+    validations:
+      required: true
+  
+  - type: textarea
+    id: compliance_audit
+    attributes:
+      label: Compliance Audit Trail
+      description: How well did the audit trail features meet your regulatory requirements?
+      placeholder: Glass-box explainability, DORA reporting, audit documentation
+    validations:
+      required: true
+  
+  - type: dropdown
+    id: deployment_preference
+    attributes:
+      label: Deployment Preference
+      description: How would you prefer to deploy Driftlock?
+      options:
+        - On-premises
+        - Private cloud
+        - Hybrid
+        - SaaS (if available)
+    validations:
+      required: true
+  
+  - type: input
+    id: timeline
+    attributes:
+      label: Implementation Timeline
+      description: When would you need a production solution?
+      placeholder: e.g., Q1 2025, Q2 2025, etc.
+    validations:
+      required: false
+  
+  - type: textarea
+    id: blockers
+    attributes:
+      label: Blockers
+      description: What's preventing you from adopting Driftlock today?
+      placeholder: Technical, regulatory, budget, or organizational challenges
+    validations:
+      required: true
+  
+  - type: checkboxes
+    id: contact_permission
+    attributes:
+      label: Contact Permission
+      description: May we contact you for follow-up questions?
+      options:
+        - label: Yes, you may contact me for follow-up questions
+          required: false
+        - label: Yes, you may reference my feedback in YC application materials
+          required: false
