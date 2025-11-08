@@ -1,5 +1,12 @@
-// CBAD Core - Compression-Based Anomaly Detection primitives
-// Powered by OpenZL format-aware compression
+// Driftlock - Compression-Based Anomaly Detection
+// Patent-Pending Technology - Shannon Labs, LLC
+// Licensed under AGPL-3.0. Commercial licenses available.
+// See PATENTS.md and LICENSE for details.
+
+//! # Driftlock CBAD Core
+//! 
+//! Patent-pending compression-based anomaly detection technology.
+//! Licensed under AGPL-3.0. Commercial licenses available from Shannon Labs.
 
 pub mod anomaly;
 pub mod compression;

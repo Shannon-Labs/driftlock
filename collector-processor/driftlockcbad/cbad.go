@@ -1,4 +1,10 @@
 //go:build cgo && !driftlock_no_cbad
+// +build cgo,!driftlock_no_cbad
+
+// Driftlock - Compression-Based Anomaly Detection
+// Patent-Pending Technology - Shannon Labs, LLC
+// Licensed under AGPL-3.0. Commercial licenses available.
+// See PATENTS.md and LICENSE for details.
 
 package driftlockcbad
 

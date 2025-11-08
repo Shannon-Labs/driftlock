@@ -1,6 +1,6 @@
 # Driftlock
 
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![Go Report Card](https://goreportcard.com/badge/github.com/shannon-labs/driftlock)](https://goreportcard.com/report/github.com/shannon-labs/driftlock)
 [![Rust](https://img.shields.io/badge/rust-%23000000.svg?style=for-the-badge&logo=rust&logoColor=white)](https://www.rust-lang.org/)
 [![CI](https://github.com/shannon-labs/Driftlock/workflows/CI/badge.svg)](https://github.com/shannon-labs/Driftlock/actions)
@@ -227,7 +227,15 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 
 ## 📄 License
 
-Apache License 2.0 - see [LICENSE](LICENSE) for details.
+Licensed under **AGPL-3.0** with patent protections. See [LICENSE](LICENSE) and [PATENTS.md](PATENTS.md) for details.
+
+### Commercial Licensing
+
+For commercial use, proprietary licenses are available through Shannon Labs. This dual-licensing model allows you to:
+- Use Driftlock under AGPL-3.0 for open source projects
+- Purchase a commercial license for proprietary applications
+
+Contact: licensing@shannonlabs.ai
 
 ## 🙏 Acknowledgments
 
