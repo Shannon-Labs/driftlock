@@ -1,6 +1,6 @@
 # Driftlock
 
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 [![Go Report Card](https://goreportcard.com/badge/github.com/shannon-labs/driftlock)](https://goreportcard.com/report/github.com/shannon-labs/driftlock)
 [![Rust](https://img.shields.io/badge/rust-%23000000.svg?style=for-the-badge&logo=rust&logoColor=white)](https://www.rust-lang.org/)
 [![CI](https://github.com/shannon-labs/Driftlock/workflows/CI/badge.svg)](https://github.com/shannon-labs/Driftlock/actions)
