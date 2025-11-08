@@ -1,19 +1,6 @@
-Driftlock: Explainable AI anomaly detection for financial institutions facing €50M DORA fines
+# Driftlock
 
-⚠️ STATUS: Research prototype (interviewed 12 compliance officers, 0 customers, 0 revenue)
-🤖 AI CONTRIBUTION: Claude/Gemini assisted 40% of codebase; human-audited by founder (JD/MBA)
-🎯 PROBLEM: EU regulators now require glass-box AI audits; Dynatrace/New Relic can't explain anomalies
-💰 SOLUTION: Compression-based detection (CBAD) that runs on-prem with 0 API fees, full audit trails
-
-git clone https://github.com/Shannon-Labs/driftlock.git
-cd Driftlock
-./start.sh  # Live demo: https://demo.driftlock.com (API key: yc-demo-2025)
-
-Driftlock provides compression-based anomaly detection (CBAD) with glass-box explainability, designed specifically for compliance with DORA, NIS2, and EU AI Act regulations.
-
-**🎉 Now available as a pure open source release!** Driftlock runs without external dependencies - just Docker, PostgreSQL, and your API key.
-
-**🌐 Live Demo:** https://9aac0d30.driftlock.pages.dev
+Driftlock is an open-source anomaly detection system that uses compression-based algorithms to provide explainable results for observability data. Designed for organizations requiring transparent AI systems, it processes telemetry data through OpenTelemetry and outputs detailed explanations for detected anomalies.
 
 ## 🚀 Quick Start
 
@@ -66,18 +53,17 @@ service:
       exporters: [otlp]
 ```
 
-## ✨ Features
+## Features
 
-- 🔍 **Glass-Box Anomaly Detection**: Every anomaly comes with human-readable explanations
-- 📊 **Regulatory Compliance**: Built-in audit trails for DORA/NIS2/EU AI Act
-- ⚡ **High Performance**: Rust core with Go API server  
-- 🔧 **OpenTelemetry Native**: Seamless integration with existing observability stacks
-- 🌐 **Pure Open Source**: Apache 2.0 licensed, self-hosted, no external dependencies
-- 📈 **Real-time Monitoring**: Live dashboard with anomaly streaming
-- 🔐 **Simple Authentication**: API key-based access control
-- 🐳 **Docker Ready**: One-command deployment with Docker Compose
+- **Compression-Based Anomaly Detection**: Uses normalized compression distance (NCD) algorithms
+- **Explainable Results**: Each anomaly includes mathematical explanations and context
+- **OpenTelemetry Integration**: Processes logs, metrics, and traces via standard collectors
+- **Self-Hosted**: Runs on-premise with Docker and PostgreSQL
+- **API Access**: RESTful API for programmatic access and integration
+- **Web Dashboard**: Browser-based interface for monitoring and configuration
+- **Audit Logging**: Complete audit trail for compliance and debugging
 
-## 📊 Architecture
+## Architecture
 
 ```
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
@@ -94,7 +80,7 @@ service:
 └─────────────────┘    └──────────────────┘    └─────────────────┘
 ```
 
-## 🧪 Testing
+## Testing
 
 ```bash
 # Quick sweep
@@ -112,7 +98,7 @@ make test-integration
 make ci-check
 ```
 
-## 🚀 Deployment
+## Deployment
 
 ### Docker
 
@@ -133,7 +119,7 @@ kubectl apply -f k8s/
 helm install driftlock ./helm/driftlock
 ```
 
-## 📊 Compliance & Security
+## Security & Compliance
 
 - **Explainable AI**: Every anomaly includes mathematical explanations
 - **Audit Trails**: Complete logging for regulatory compliance
@@ -141,11 +127,11 @@ helm install driftlock ./helm/driftlock
 - **Security**: Built-in authentication and encryption
 - **Transparency**: Open source with clear documentation
 
-## 🤝 Contributing
+## Contributing
 
 We welcome contributions! Please see CONTRIBUTING.md for guidelines and local setup steps.
 
-## 📄 License
+## License
 
 Licensed under **Apache 2.0** with patent protections. See [LICENSE](LICENSE) and [PATENTS.md](PATENTS.md) for details.
 
@@ -157,14 +143,14 @@ For commercial use, proprietary licenses are available through Shannon Labs. Thi
 
 Contact: licensing@shannonlabs.ai
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - OpenTelemetry community for the observability framework
 - Compression-based anomaly detection research community  
 - Regulatory compliance experts who provided insights
 - All our amazing contributors
 
-## 📞 Support
+## Support
 
 - **Documentation**: docs/
 - **Issues**: GitHub Issues
@@ -172,6 +158,4 @@ Contact: licensing@shannonlabs.ai
 - **Security**: security@shannonlabs.ai
 - **Enterprise**: contact@shannonlabs.ai
 
-Built by Shannon Labs - Making AI explainable and compliant.
-
-If you find Driftlock useful, please give us a ⭐ on GitHub!
+Developed by Shannon Labs.
