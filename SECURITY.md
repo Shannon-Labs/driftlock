@@ -14,7 +14,7 @@ If you discover a security vulnerability in DriftLock, please report it to us pr
 
 ### How to Report
 
-**Email**: security@shannonlabs.ai
+**Email**: hunter@shannonlabs.dev
 
 Please include the following information in your report:
 
@@ -73,8 +73,8 @@ We will publish security advisories for resolved vulnerabilities in our [GitHub 
 ## Security Team
 
 The Shannon Labs security team can be reached at:
-- **Security**: security@shannonlabs.ai
-- **General Security Questions**: security@shannonlabs.ai
+- **Security**: hunter@shannonlabs.dev
+- **General Security Questions**: hunter@shannonlabs.dev
 
 ### Encryption Keys and Secrets
 

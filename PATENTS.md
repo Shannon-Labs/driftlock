@@ -21,7 +21,7 @@ This software is released under the **Apache License 2.0**.
 ### Commercial Licensing
 
 For commercial use, proprietary licensing is available through Shannon Labs. Contact us at:
-- **Email:** licensing@shannonlabs.ai
+- **Email:** hunter@shannonlabs.dev
 - **Website:** https://shannonlabs.ai/licensing
 
 ### Apache 2.0 License Terms
@@ -46,7 +46,7 @@ Except as expressly provided herein, no other rights or licenses are granted. Al
 
 ## Questions?
 
-Contact: legal@shannonlabs.ai
+Contact: hunter@shannonlabs.dev
 
 ---
 

@@ -141,7 +141,7 @@ For commercial use, proprietary licenses are available through Shannon Labs. Thi
 - Use Driftlock under Apache 2.0 for open source and commercial projects
 - Purchase a commercial license for proprietary applications
 
-Contact: licensing@shannonlabs.ai
+Contact: hunter@shannonlabs.dev
 
 ## Acknowledgments
 
@@ -155,7 +155,7 @@ Contact: licensing@shannonlabs.ai
 - **Documentation**: docs/
 - **Issues**: GitHub Issues
 - **Discussions**: GitHub Discussions
-- **Security**: security@shannonlabs.ai
-- **Enterprise**: contact@shannonlabs.ai
+- **Security**: hunter@shannonlabs.dev
+- **Enterprise**: hunter@shannonlabs.dev
 
 Developed by Shannon Labs.

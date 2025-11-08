@@ -159,7 +159,7 @@ cd web-frontend && npm run build
 - Check [documentation](docs/)
 - Search [existing issues](https://github.com/shannon-labs/driftlock/issues)
 - Start a [discussion](https://github.com/shannon-labs/driftlock/discussions)
-- Contact maintainers at [Shannon-Labs@example.com]
+- Contact maintainers at [hunter@shannonlabs.dev]
 
 ## Security
 
