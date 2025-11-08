@@ -14,9 +14,6 @@ jobs:
     permissions:
       contents: read
       packages: write
-    defaults:
-      run:
-        working-directory: productized
 
     steps:
     - name: Checkout repository
@@ -46,96 +43,10 @@ jobs:
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
       with:
-        context: ./productized
-        file: ./productized/Dockerfile
+        context: .
+        file: ./Dockerfile
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
-
-  deploy-staging:
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    environment: staging
-    defaults:
-      run:
-        working-directory: productized
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Setup Kubernetes tools
-      uses: azure/setup-kubectl@v3
-      with:
-        version: 'latest'
-
-    - name: Set up kubectl
-      run: |
-        mkdir -p ~/.kube
-        echo "${{ secrets.KUBECONFIG_STAGING }}" | base64 -d > ~/.kube/config
-        chmod 600 ~/.kube/config
-
-    # Deploy to staging
-    - name: Deploy to staging
-      run: |
-        # Update the image in the deployment
-        kubectl set image deployment/driftlock-api driftlock-api=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} -n driftlock
-        # Wait for deployment to complete
-        kubectl rollout status deployment/driftlock-api -n driftlock --timeout=10m
-
-    - name: Run integration tests on staging
-      run: |
-        # Add integration tests here
-        echo "Running integration tests on staging..."
-        # Example: curl health endpoint, run test suite, etc.
-
-  deploy-production:
-    needs: deploy-staging
-    runs-on: ubuntu-latest
-    environment: production
-    defaults:
-      run:
-        working-directory: productized
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Setup Kubernetes tools
-      uses: azure/setup-kubectl@v3
-      with:
-        version: 'latest'
-
-    - name: Set up kubectl
-      run: |
-        mkdir -p ~/.kube
-        echo "${{ secrets.KUBECONFIG_PRODUCTION }}" | base64 -d > ~/.kube/config
-        chmod 600 ~/.kube/config
-
-    - name: Deploy to production
-      run: |
-        # Update the image in the deployment
-        kubectl set image deployment/driftlock-api driftlock-api=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} -n driftlock
-        # Wait for deployment to complete
-        kubectl rollout status deployment/driftlock-api -n driftlock --timeout=10m
-
-    - name: Verify production deployment
-      run: |
-        # Run verification tests
-        echo "Verifying production deployment..."
-        # Example: curl health endpoint, verify key functions work, etc.
-
-  deploy-frontend:
-    needs: deploy-production
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Deploy frontend to Cloudflare Pages
-      uses: cloudflare/pages-action@v1
-      with:
-        apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        projectName: driftlock-frontend
-        directory: productized/frontend/build
-        # Optional: Environment variables for production
-        wranglerVersion: '3.1.1'
+        cache-from: type=gha
+        cache-to: type=gha,mode=max

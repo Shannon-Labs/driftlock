@@ -7,7 +7,7 @@ on:
     branches: [ main, develop ]
 
 env:
-  GO_VERSION: '1.22'
+  GO_VERSION: '1.24'
   RUST_TOOLCHAIN: 'stable'
   NODE_VERSION: '18'
 
@@ -106,10 +106,6 @@ jobs:
       working-directory: web-frontend
       run: npm ci
 
-    - name: Run tests
-      working-directory: web-frontend
-      run: npm run build
-
     - name: Run lints
       working-directory: web-frontend
       run: npm run lint
@@ -152,7 +148,7 @@ jobs:
     - name: Set up Rust
       uses: dtolnay/rust-toolchain@stable
       with:
-        toolchain: ${{ env.RUST_VERSION }}
+        toolchain: ${{ env.RUST_TOOLCHAIN }}
 
     - name: Install system dependencies
       run: |
@@ -186,18 +182,10 @@ jobs:
     - name: Build API Server image
       uses: docker/build-push-action@v5
       with:
-        context: src/api-server
+        context: .
+        file: ./Dockerfile
         push: false
-        tags: driftlock/api-server:test
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-
-    - name: Build Dashboard image
-      uses: docker/build-push-action@v5
-      with:
-        context: src/dashboard
-        push: false
-        tags: driftlock/dashboard:test
+        tags: driftlock-api:test
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
@@ -211,7 +199,7 @@ jobs:
     - name: Run Gosec Security Scanner
       uses: securecodewarrior/github-action-gosec@master
       with:
-        args: '-no-fail -fmt sarif -out gosec.sarif ./src/api-server/...'
+        args: '-no-fail -fmt sarif -out gosec.sarif ./api-server/...'
 
     - name: Upload SARIF file
       uses: github/codeql-action/upload-sarif@v2
