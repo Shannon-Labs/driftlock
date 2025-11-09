@@ -1,0 +1,44 @@
+name: YC Verification (Only)
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  verify-demo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22.x'
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build CBAD core (Rust)
+        run: |
+          cd cbad-core
+          cargo build --release
+
+      - name: Build demo (Go)
+        run: go build -o driftlock-demo cmd/demo/main.go
+
+      - name: Run demo
+        run: |
+          timeout 30s ./driftlock-demo test-data/financial-demo.json
+
+      - name: Verify HTML report
+        run: test -f demo-output.html
+
+      - name: Verify anomalies are in expected band (10-30)
+        shell: bash
+        run: |
+          A=$(grep -c "ANOMALY DETECTED" demo-output.html || echo 0)
+          echo "Anomalies: $A"
+          if [ "$A" -lt 10 ] || [ "$A" -gt 30 ]; then
+            echo "Expected 10-30 anomalies; got $A" >&2
+            exit 1
+          fi
