@@ -69,5 +69,3 @@ Visual proof (optional):
 ---
 
 *Developed by Shannon Labs. Licensed under Apache 2.0.*
-
-![Demo Anomaly](screenshots/demo-anomaly-card.png)
