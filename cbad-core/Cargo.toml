@@ -11,9 +11,9 @@ name = "cbad_core"
 crate-type = ["cdylib", "rlib", "staticlib"]
 
 [features]
-default = ["openzl"]
-openzl = []  # Enable OpenZL compression adapter
-debug = []   # Enable debug output
+default = []            # No external adapters by default; zstd/lz4/gzip only
+openzl = []             # Optional: OpenZL adapter (not enabled by default)
+debug = []              # Enable debug output
 
 [dependencies]
 rand = "0.8"
