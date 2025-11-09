@@ -126,6 +126,7 @@ func main() {
     var warmupTxs []Transaction
     warmupTxs = make([]Transaction, 0, warmupCount)
     procVals := make([]int, 0, warmupCount)
+    amountVals := make([]float64, 0, warmupCount)
     endpointFreq := make(map[string]int)
     originFreq := make(map[string]int)
 
@@ -136,6 +137,7 @@ func main() {
         // Track for baseline
         warmupTxs = append(warmupTxs, tx)
         procVals = append(procVals, tx.ProcessingMs)
+        amountVals = append(amountVals, tx.AmountUSD)
         endpointFreq[tx.APIEndpoint]++
         originFreq[tx.OriginCountry]++
         txJSON, _ := json.Marshal(tx)
@@ -159,8 +161,8 @@ func main() {
         log.Fatal("❌ Detector not ready after warmup")
     }
     // Compute baseline stats
-    baseline := computeBaselineStats(procVals, endpointFreq, originFreq)
-    fmt.Printf("✅ Baseline ready! (processing_ms median=%.0fms, p95=%.0fms)\n\n", baseline.ProcMedian, baseline.ProcP95)
+    baseline := computeBaselineStats(procVals, amountVals, endpointFreq, originFreq)
+    fmt.Printf("✅ Baseline ready! (processing_ms median=%.0fms, p95=%.0fms; amount median=$%.2f)\n\n", baseline.ProcMedian, baseline.ProcP95, baseline.AmountMedian)
 
 	// Phase 2: Detection - ingest AND detect anomalies
     fmt.Printf("🚨 Phase 2: Anomaly detection (transactions %d-%d)...\n", warmupCount, processingLimit)
@@ -238,6 +240,18 @@ func main() {
                 }
                 why = append(why, fmt.Sprintf("processing_ms %dms vs baseline median %.0fms %s", tx.ProcessingMs, baseline.ProcMedian, zStr))
 
+                // amount vs baseline median and z-score, with ratio
+                if baseline.AmountMedian > 0 {
+                    ratio := tx.AmountUSD / baseline.AmountMedian
+                    var az string
+                    if baseline.AmountStd > 0 {
+                        az = fmt.Sprintf("(z=%+.1f)", (tx.AmountUSD - baseline.AmountMean)/baseline.AmountStd)
+                    } else {
+                        az = "(z=N/A)"
+                    }
+                    why = append(why, fmt.Sprintf("amount $%.2f vs baseline median $%.2f (×%.1f) %s", tx.AmountUSD, baseline.AmountMedian, ratio, az))
+                }
+
                 // Endpoint frequency insight
                 epCount := baseline.EndpointFreq[tx.APIEndpoint]
                 epPct := pctFloat(epCount, baseline.Count)
@@ -264,6 +278,10 @@ func main() {
                     ProcMedian:                baseline.ProcMedian,
                     ZScore:                    0,
                     HasZScore:                 baseline.ProcStd > 0,
+                    AmountValue:               tx.AmountUSD,
+                    AmountMedian:              baseline.AmountMedian,
+                    AmountRatio:               func() float64 { if baseline.AmountMedian>0 { return tx.AmountUSD / baseline.AmountMedian }; return 0 }(),
+                    AmountHasZ:                baseline.AmountStd > 0,
                     Endpoint:                  tx.APIEndpoint,
                     EndpointCount:             epCount,
                     EndpointPct:               epPct,
@@ -276,6 +294,9 @@ func main() {
                 }
                 if cmp.HasZScore {
                     cmp.ZScore = (float64(tx.ProcessingMs) - baseline.ProcMean) / baseline.ProcStd
+                }
+                if cmp.AmountHasZ {
+                    cmp.AmountZScore = (tx.AmountUSD - baseline.AmountMean) / baseline.AmountStd
                 }
 
                 // Find similar normal examples from warmup
@@ -325,6 +346,12 @@ type BaselineStats struct {
     ProcMedian float64
     ProcStd    float64
     ProcP95    float64
+    AmountMin    float64
+    AmountMax    float64
+    AmountMean   float64
+    AmountMedian float64
+    AmountStd    float64
+    AmountP95    float64
     EndpointFreq map[string]int
     OriginFreq   map[string]int
 }
@@ -340,6 +367,9 @@ type BaselineSummary struct {
     ProcMin      int
     ProcMedian   float64
     ProcP95      float64
+    AmountMin    float64
+    AmountMedian float64
+    AmountP95    float64
     TopEndpoints []FreqItem
     TopOrigins   []FreqItem
 }
@@ -349,6 +379,11 @@ type BaselineCompare struct {
     ProcMedian float64
     ZScore     float64
     HasZScore  bool
+    AmountValue  float64
+    AmountMedian float64
+    AmountRatio  float64
+    AmountZScore float64
+    AmountHasZ   bool
     Endpoint   string
     EndpointCount int
     EndpointPct float64
@@ -360,7 +395,7 @@ type BaselineCompare struct {
     CompressionDeltaPct      float64
 }
 
-func computeBaselineStats(procVals []int, ep map[string]int, origin map[string]int) BaselineStats {
+func computeBaselineStats(procVals []int, amountVals []float64, ep map[string]int, origin map[string]int) BaselineStats {
     bs := BaselineStats{Count: len(procVals), EndpointFreq: ep, OriginFreq: origin}
     if len(procVals) == 0 {
         return bs
@@ -398,6 +433,39 @@ func computeBaselineStats(procVals []int, ep map[string]int, origin map[string]i
         varSum += d * d
     }
     bs.ProcStd = math.Sqrt(varSum / float64(n))
+
+    // Amount stats
+    if len(amountVals) > 0 {
+        amin, amax := amountVals[0], amountVals[0]
+        var asum float64
+        for _, a := range amountVals {
+            if a < amin { amin = a }
+            if a > amax { amax = a }
+            asum += a
+        }
+        bs.AmountMin = amin
+        bs.AmountMax = amax
+        bs.AmountMean = asum / float64(len(amountVals))
+        as := append([]float64(nil), amountVals...)
+        sort.Float64s(as)
+        m := len(as)
+        if m%2 == 1 {
+            bs.AmountMedian = as[m/2]
+        } else {
+            bs.AmountMedian = (as[m/2-1] + as[m/2]) / 2.0
+        }
+        aidx := int(math.Ceil(0.95*float64(m))) - 1
+        if aidx < 0 { aidx = 0 }
+        if aidx >= m { aidx = m-1 }
+        bs.AmountP95 = as[aidx]
+        var avarSum float64
+        amu := bs.AmountMean
+        for _, a := range amountVals {
+            d := a - amu
+            avarSum += d * d
+        }
+        bs.AmountStd = math.Sqrt(avarSum / float64(m))
+    }
     return bs
 }
 
@@ -467,6 +535,9 @@ func baselineSummaryFrom(bs BaselineStats) BaselineSummary {
         ProcMin: bs.ProcMin,
         ProcMedian: bs.ProcMedian,
         ProcP95: bs.ProcP95,
+        AmountMin: bs.AmountMin,
+        AmountMedian: bs.AmountMedian,
+        AmountP95: bs.AmountP95,
         TopEndpoints: topN(bs.EndpointFreq, bs.Count, 5),
         TopOrigins: topN(bs.OriginFreq, bs.Count, 5),
     }
@@ -725,6 +796,10 @@ func generateHTMLReport(anomalies []AnomalyResult, allTransactions []Transaction
                     min: {{.Baseline.ProcMin}}ms · median: {{printf "%.0f" .Baseline.ProcMedian}}ms · p95: {{printf "%.0f" .Baseline.ProcP95}}ms
                   </div>
                   <div class="baseline-card">
+                    <strong>amount_usd</strong><br>
+                    min: ${{printf "%.2f" .Baseline.AmountMin}} · median: ${{printf "%.2f" .Baseline.AmountMedian}} · p95: ${{printf "%.2f" .Baseline.AmountP95}}
+                  </div>
+                  <div class="baseline-card">
                     <strong>Top Endpoints</strong>
                     <ul class="baseline-list">
                         {{range .Baseline.TopEndpoints}}
@@ -806,6 +881,10 @@ func generateHTMLReport(anomalies []AnomalyResult, allTransactions []Transaction
                             <td>{{.Compare.ProcValue}}ms vs median {{printf "%.0f" .Compare.ProcMedian}}ms {{if .Compare.HasZScore}}(z={{printf "%+.1f" .Compare.ZScore}}){{else}}(z=N/A){{end}}</td>
                         </tr>
                         <tr>
+                            <th>amount_usd</th>
+                            <td>${{printf "%.2f" .Compare.AmountValue}} vs median ${{printf "%.2f" .Compare.AmountMedian}} (×{{printf "%.1f" .Compare.AmountRatio}} {{if .Compare.AmountHasZ}}; z={{printf "%+.1f" .Compare.AmountZScore}}{{else}}; z=N/A{{end}})</td>
+                        </tr>
+                        <tr>
                             <th>api_endpoint</th>
                             <td>{{.Compare.Endpoint}} — {{printf "%.1f" .Compare.EndpointPct}}% of baseline ({{.Compare.EndpointCount}}/{{$.Baseline.Count}})</td>
                         </tr>
@@ -821,12 +900,14 @@ func generateHTMLReport(anomalies []AnomalyResult, allTransactions []Transaction
                 </div>
 
                 {{if .Examples}}
-                <div class="examples">
-                    <h4>Similar normal examples</h4>
+                <details>
+                  <summary>Similar normal examples</summary>
+                  <div class="details-body">
                     {{range .Examples}}
 <pre><code>{{.Timestamp}} | ${{printf "%.2f" .AmountUSD}} | {{.ProcessingMs}}ms | {{.OriginCountry}} | {{.APIEndpoint}} | {{.Status}}</code></pre>
                     {{end}}
-                </div>
+                  </div>
+                </details>
                 {{end}}
             </div>
             {{end}}
