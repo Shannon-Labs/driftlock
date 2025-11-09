@@ -28,6 +28,7 @@ jobs:
 
       - name: Run demo
         run: |
+          export LD_LIBRARY_PATH=$PWD/cbad-core/target/release:$LD_LIBRARY_PATH
           timeout 30s ./driftlock-demo test-data/financial-demo.json
 
       - name: Verify HTML report
