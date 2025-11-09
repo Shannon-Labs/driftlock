@@ -41,6 +41,8 @@ Driftlock analyzes payment gateway telemetry using compression-based anomaly det
 3. **Generates explanations** with NCD scores, p-values, and statistical significance
 4. **Outputs HTML report** with flagged anomalies and regulator-friendly math
 
+The HTML includes a baseline comparison panel and similar normal examples for each anomaly to make the “why” obvious to non‑experts.
+
 ## Project Status
 
 **Alpha:** Core engine (Rust CBAD), Go CLI, and demo data implemented. Demo processes 2,000 transactions in ~5 seconds with full explainability. Not yet battle-tested—seeking early design partners.

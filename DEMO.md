@@ -32,6 +32,8 @@ open demo-output.html   # macOS
   - NCD score and p-value
   - Compression ratio/entropy deltas
   - A natural-language summary for auditors
+  - Baseline Comparison (processing_ms vs median with z-score, endpoint/origin baseline frequency, compression baseline vs window)
+  - Similar normal examples from the warmup window (2–3 nearest by processing_ms)
 
 ### 4. The Magic Moment
 
