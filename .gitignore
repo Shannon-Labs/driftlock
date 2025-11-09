@@ -29,6 +29,14 @@ synthetic
 **/target/
 Cargo.lock
 
+# Demo artifacts / binaries
+driftlock-demo
+driftlock-demo-*
+demo-output.html
+verify.log
+debug.log
+simple_format
+
 # Node.js
 **/node_modules/
 **/dist/

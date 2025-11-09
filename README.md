@@ -4,6 +4,8 @@
 
 EU banks face €50M fines for black-box AI. LLM anomaly detectors can't explain themselves to auditors. Driftlock uses compression (NCD) to flag drift and generates math explanations regulators accept.
 
+![Demo Anomaly](screenshots/demo-anomaly-card.png)
+
 ## 🚀 Demo in 30 Seconds
 
 ```bash
@@ -31,14 +33,14 @@ open demo-output.html  # macOS
 
 Driftlock analyzes payment gateway telemetry using compression-based anomaly detection:
 
-1. **Builds a baseline** from normal transactions (first 100 transactions)
-2. **Detects anomalies** by comparing compression ratios of new vs. baseline data
+1. **Builds a baseline** from normal transactions (first ~400 events in this demo)
+2. **Detects anomalies** by comparing compression distance (NCD) of new vs. baseline data
 3. **Generates explanations** with NCD scores, p-values, and statistical significance
 4. **Outputs HTML report** with flagged anomalies and regulator-friendly math
 
 ## Project Status
 
-**Alpha:** Core engine (Rust CBAD), Go CLI, and demo data implemented. Demo processes 2000 transactions in ~8 seconds with full explainability. Not yet battle-tested—seeking early design partners.
+**Alpha:** Core engine (Rust CBAD), Go CLI, and demo data implemented. Demo processes 2,000 transactions in ~5 seconds with full explainability. Not yet battle-tested—seeking early design partners.
 
 ## AI-Assisted Development
 
@@ -47,9 +49,9 @@ Built with AI coding assistants (Claude, Codex, Kimi CLI); see [docs/ai-agents/]
 ## 📊 Demo Data
 
 The demo uses `test-data/financial-demo.json` containing 5,000 synthetic payment transactions with:
-- **Normal pattern**: 50-100ms processing, US/UK origins, `/v1/charges` endpoint
-- **Anomalies**: 20 transactions with 2000ms latency, 1000 from Nigeria (NG), 2 with malformed endpoints
-- **Detection**: System flags ~20% as anomalous based on compression distance
+- **Normal pattern**: 50–100ms processing, US/UK origins, `/v1/charges` endpoint
+- **Anomalies**: 20 transactions with 8000ms latency, 200 from Nigeria (NG), 2 with malformed endpoints
+- **Detection**: Demo tuned to flag ~30 anomalies (NCD + permutation test) from 2,000 processed events
 
 ## 📚 Learn More
 
