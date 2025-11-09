@@ -1,0 +1,9 @@
+go 1.24.1
+
+use (
+	.
+	./api-server
+	./collector-processor
+	./collector-processor/driftlockcbad
+	./pkg/version
+)

@@ -1,0 +1,61 @@
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    container_name: driftlock-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - driftlock-network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: driftlock-kafka
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_HOST://kafka:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+    ports:
+      - "9092:9092"
+    networks:
+      - driftlock-network
+
+  collector:
+    build:
+      context: ..
+      dockerfile: deploy/docker/Dockerfile.collector
+    command: ["--config=/etc/otelcol/config.yaml"]
+    ports:
+      - "4318:4318"
+    depends_on:
+      - kafka
+    networks:
+      - driftlock-network
+
+  api:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: driftlock-api
+    environment:
+      - PORT=8080
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://collector:4318
+      - OTEL_SERVICE_NAME=driftlock-api
+    ports:
+      - "8080:8080"
+    depends_on:
+      - collector
+    networks:
+      - driftlock-network
+
+networks:
+  driftlock-network:
+    driver: bridge

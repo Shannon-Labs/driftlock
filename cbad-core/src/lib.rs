@@ -11,6 +11,7 @@
 pub mod anomaly;
 pub mod compression;
 pub mod ffi;
+pub mod ffi_simplified;
 pub mod metrics;
 pub mod performance;
 pub mod window;

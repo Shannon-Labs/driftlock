@@ -1,0 +1,1408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Driftlock DORA Compliance Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+        
+        .header .tagline {
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 1rem;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .stat-card .number {
+            font-size: 2rem;
+            font-weight: bold;
+            display: block;
+        }
+        
+        .stat-card .label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .anomalies-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .anomalies-section h2 {
+            color: #667eea;
+            margin-bottom: 1.5rem;
+            font-size: 1.8rem;
+        }
+        
+        .anomaly-card {
+            background: #f8f9ff;
+            border: 2px solid #e8ecff;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .anomaly-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.2);
+        }
+        
+        .anomaly-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .anomaly-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1rem;
+        }
+        
+        .anomaly-badge {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .transaction-details {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.85rem;
+            border-left: 4px solid #667eea;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .metric {
+            background: white;
+            padding: 0.75rem;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #e8ecff;
+        }
+        
+        .metric-label {
+            font-size: 0.8rem;
+            color: #666;
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+        
+        .metric-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .explanation {
+            background: linear-gradient(135deg, #667eea10, #764ba210);
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            font-style: italic;
+            color: #555;
+        }
+        
+        .footer {
+            text-align: center;
+            color: white;
+            padding: 2rem;
+            opacity: 0.8;
+        }
+        
+        .no-anomalies {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+        
+        .no-anomalies h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛡️ Driftlock</h1>
+            <div class="tagline">Regulator-Proof AI for DORA Compliance</div>
+            <p>Compression-based anomaly detection with mathematical explanations</p>
+            
+            <div class="stats">
+                <div class="stat-card">
+                    <span class="number">5000</span>
+                    <span class="label">Transactions Processed</span>
+                </div>
+                <div class="stat-card">
+                    <span class="number">30</span>
+                    <span class="label">Anomalies Detected</span>
+                </div>
+                <div class="stat-card">
+                    <span class="number">0.6%</span>
+                    <span class="label">Detection Rate</span>
+                </div>
+                <div class="stat-card">
+                    <span class="number">4.178464084s</span>
+                    <span class="label">Processing Time</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="anomalies-section">
+            <h2>🚨 Detected Anomalies</h2>
+            
+            
+                
+                <div class="anomaly-card">
+                    <div class="anomaly-header">
+                        <div class="anomaly-title">Transaction txn_d1a15dbfe5e67238bc7f00c5</div>
+                        <div class="anomaly-badge">ANOMALY DETECTED</div>
+                    </div>
+                    
+                    <div class="transaction-details">
+                        <strong>Timestamp:</strong> 2025-11-10T02:00:00Z<br>
+                        <strong>Amount:</strong> $433.39<br>
+                        <strong>Processing Time:</strong> 85ms<br>
+                        <strong>Origin:</strong> US<br>
+                        <strong>Endpoint:</strong> /v1/charges<br>
+                        <strong>Status:</strong> success
+                    </div>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <span class="metric-label">NCD Score</span>
+                            <span class="metric-value">0.865</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">P-Value</span>
+                            <span class="metric-value">0.0060</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Confidence</span>
+                            <span class="metric-value">1.0%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Compression Δ</span>
+                            <span class="metric-value">-0.12</span>
+                        </div>
+                    </div>
+                    
+                    <div class="explanation">
+                        <strong>🧠 Explanation:</strong> NCD=0.8647512263489839 (threshold=0.3), P-value=0.006. Statistically significant. Compression ratio changed by -0.1223773098514727x, entropy changed by 0.0026743301406382857.
+                    </div>
+                </div>
+                
+                <div class="anomaly-card">
+                    <div class="anomaly-header">
+                        <div class="anomaly-title">Transaction txn_42f53a6e2b0983ddd2592181</div>
+                        <div class="anomaly-badge">ANOMALY DETECTED</div>
+                    </div>
+                    
+                    <div class="transaction-details">
+                        <strong>Timestamp:</strong> 2025-11-10T02:07:30Z<br>
+                        <strong>Amount:</strong> $362.81<br>
+                        <strong>Processing Time:</strong> 74ms<br>
+                        <strong>Origin:</strong> US<br>
+                        <strong>Endpoint:</strong> /v1/charges<br>
+                        <strong>Status:</strong> success
+                    </div>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <span class="metric-label">NCD Score</span>
+                            <span class="metric-value">0.880</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">P-Value</span>
+                            <span class="metric-value">0.0010</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Confidence</span>
+                            <span class="metric-value">1.0%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Compression Δ</span>
+                            <span class="metric-value">-0.12</span>
+                        </div>
+                    </div>
+                    
+                    <div class="explanation">
+                        <strong>🧠 Explanation:</strong> NCD=0.8799720865317515 (threshold=0.3), P-value=0.001. Statistically significant. Compression ratio changed by -0.12308746092933799x, entropy changed by 0.0012180076833879796.
+                    </div>
+                </div>
+                
+                <div class="anomaly-card">
+                    <div class="anomaly-header">
+                        <div class="anomaly-title">Transaction txn_0cebe2a2a9ad4721044757ef</div>
+                        <div class="anomaly-badge">ANOMALY DETECTED</div>
+                    </div>
+                    
+                    <div class="transaction-details">
+                        <strong>Timestamp:</strong> 2025-11-10T02:15:00Z<br>
+                        <strong>Amount:</strong> $18.06<br>
+                        <strong>Processing Time:</strong> 58ms<br>
+                        <strong>Origin:</strong> US<br>
+                        <strong>Endpoint:</strong> /v1/charges<br>
+                        <strong>Status:</strong> success
+                    </div>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <span class="metric-label">NCD Score</span>
+                            <span class="metric-value">0.892</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">P-Value</span>
+                            <span class="metric-value">0.0000</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Confidence</span>
+                            <span class="metric-value">1.0%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Compression Δ</span>
+                            <span class="metric-value">-0.09</span>
+                        </div>
+                    </div>
+                    
+                    <div class="explanation">
+                        <strong>🧠 Explanation:</strong> NCD=0.892318244170096 (threshold=0.3), P-value=0. Statistically significant. Compression ratio changed by -0.09177958789962906x, entropy changed by -0.001711644800601485.
+                    </div>
+                </div>
+                
+                <div class="anomaly-card">
+                    <div class="anomaly-header">
+                        <div class="anomaly-title">Transaction txn_ecfa3818528b0d792b265e07</div>
+                        <div class="anomaly-badge">ANOMALY DETECTED</div>
+                    </div>
+                    
+                    <div class="transaction-details">
+                        <strong>Timestamp:</strong> 2025-11-10T02:37:30Z<br>
+                        <strong>Amount:</strong> $299.27<br>
+                        <strong>Processing Time:</strong> 54ms<br>
+                        <strong>Origin:</strong> UK<br>
+                        <strong>Endpoint:</strong> /v1/charges<br>
+                        <strong>Status:</strong> success
+                    </div>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <span class="metric-label">NCD Score</span>
+                            <span class="metric-value">0.871</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">P-Value</span>
+                            <span class="metric-value">0.0030</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Confidence</span>
+                            <span class="metric-value">1.0%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Compression Δ</span>
+                            <span class="metric-value">-0.11</span>
+                        </div>
+                    </div>
+                    
+                    <div class="explanation">
+                        <strong>🧠 Explanation:</strong> NCD=0.8706713780918728 (threshold=0.3), P-value=0.003. Statistically significant. Compression ratio changed by -0.11220445281058489x, entropy changed by 0.0006562022646154487.
+                    </div>
+                </div>
+                
+                <div class="anomaly-card">
+                    <div class="anomaly-header">
+                        <div class="anomaly-title">Transaction txn_7456160bec6dce84c71d141a</div>
+                        <div class="anomaly-badge">ANOMALY DETECTED</div>
+                    </div>
+                    
+                    <div class="transaction-details">
+                        <strong>Timestamp:</strong> 2025-11-10T03:07:30Z<br>
+                        <strong>Amount:</strong> $255.18<br>
+                        <strong>Processing Time:</strong> 82ms<br>
+                        <strong>Origin:</strong> US<br>
+                        <strong>Endpoint:</strong> /v1/charges<br>
+                        <strong>Status:</strong> success
+                    </div>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <span class="metric-label">NCD Score</span>
+                            <span class="metric-value">0.881</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">P-Value</span>
+                            <span class="metric-value">0.0010</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Confidence</span>
+                            <span class="metric-value">1.0%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Compression Δ</span>
+                            <span class="metric-value">-0.10</span>
+                        </div>
+                    </div>
+                    
+                    <div class="explanation">
+                        <strong>🧠 Explanation:</strong> NCD=0.8807339449541285 (threshold=0.3), P-value=0.001. Statistically significant. Compression ratio changed by -0.09766167463345463x, entropy changed by -0.0021018654710400356.
+                    </div>
+                </div>
+                
+                <div class="anomaly-card">
+                    <div class="anomaly-header">
+                        <div class="anomaly-title">Transaction txn_1f1772fc932b012b0a891f58</div>
+                        <div class="anomaly-badge">ANOMALY DETECTED</div>
+                    </div>
+                    
+                    <div class="transaction-details">
+                        <strong>Timestamp:</strong> 2025-11-10T03:15:00Z<br>
+                        <strong>Amount:</strong> $491.7<br>
+                        <strong>Processing Time:</strong> 79ms<br>
+                        <strong>Origin:</strong> US<br>
+                        <strong>Endpoint:</strong> /v1/charges<br>
+                        <strong>Status:</strong> success
+                    </div>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <span class="metric-label">NCD Score</span>
+                            <span class="metric-value">0.885</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">P-Value</span>
+                            <span class="metric-value">0.0000</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Confidence</span>
+                            <span class="metric-value">1.0%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Compression Δ</span>
+                            <span class="metric-value">-0.11</span>
+                        </div>
+                    </div>
+                    
+                    <div class="explanation">
+                        <strong>🧠 Explanation:</strong> NCD=0.8845089903181189 (threshold=0.3), P-value=0. Statistically significant. Compression ratio changed by -0.10758686168102423x, entropy changed by 0.00008720916248981588.
+                    </div>
+                </div>
+                
+                <div class="anomaly-card">
+                    <div class="anomaly-header">
+                        <div class="anomaly-title">Transaction txn_974a306bf48ee79c9e990320</div>
+                        <div class="anomaly-badge">ANOMALY DETECTED</div>
+                    </div>
+                    
+                    <div class="transaction-details">
+                        <strong>Timestamp:</strong> 2025-11-10T03:22:30Z<br>
+                        <strong>Amount:</strong> $25.27<br>
+                        <strong>Processing Time:</strong> 70ms<br>
+                        <strong>Origin:</strong> UK<br>
+                        <strong>Endpoint:</strong> /v1/charges<br>
+                        <strong>Status:</strong> success
+                    </div>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <span class="metric-label">NCD Score</span>
+                            <span class="metric-value">0.880</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">P-Value</span>
+                            <span class="metric-value">0.0000</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Confidence</span>
+                            <span class="metric-value">1.0%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Compression Δ</span>
+                            <span class="metric-value">-0.11</span>
+                        </div>
+                    </div>
+                    
+                    <div class="explanation">
+                        <strong>🧠 Explanation:</strong> NCD=0.88 (threshold=0.3), P-value=0. Statistically significant. Compression ratio changed by -0.10889668509058964x, entropy changed by 0.0007095106240230654.
+                    </div>
+                </div>
+                
+                <div class="anomaly-card">
+                    <div class="anomaly-header">
+                        <div class="anomaly-title">Transaction txn_0907088cd60c21a0ebb68102</div>
+                        <div class="anomaly-badge">ANOMALY DETECTED</div>
+                    </div>
+                    
+                    <div class="transaction-details">
+                        <strong>Timestamp:</strong> 2025-11-10T03:52:30Z<br>
+                        <strong>Amount:</strong> $340.79<br>
+                        <strong>Processing Time:</strong> 95ms<br>
+                        <strong>Origin:</strong> UK<br>
+                        <strong>Endpoint:</strong> /v1/charges<br>
+                        <strong>Status:</strong> success
+                    </div>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <span class="metric-label">NCD Score</span>
+                            <span class="metric-value">0.863</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">P-Value</span>
+                            <span class="metric-value">0.0160</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Confidence</span>
+                            <span class="metric-value">1.0%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Compression Δ</span>
+                            <span class="metric-value">-0.11</span>
+                        </div>
+                    </div>
+                    
+                    <div class="explanation">
+                        <strong>🧠 Explanation:</strong> NCD=0.8626760563380281 (threshold=0.3), P-value=0.016. Statistically significant. Compression ratio changed by -0.11129748530526348x, entropy changed by 0.0008619215213336883.
+                    </div>
+                </div>
+                
+                <div class="anomaly-card">
+                    <div class="anomaly-header">
+                        <div class="anomaly-title">Transaction txn_29bc0ca13e597e1582bd3d4a</div>
+                        <div class="anomaly-badge">ANOMALY DETECTED</div>
+                    </div>
+                    
+                    <div class="transaction-details">
+                        <strong>Timestamp:</strong> 2025-11-10T04:07:30Z<br>
+                        <strong>Amount:</strong> $425.35<br>
+                        <strong>Processing Time:</strong> 75ms<br>
+                        <strong>Origin:</strong> UK<br>
+                        <strong>Endpoint:</strong> /v1/charges<br>
+                        <strong>Status:</strong> success
+                    </div>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <span class="metric-label">NCD Score</span>
+                            <span class="metric-value">0.884</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">P-Value</span>
+                            <span class="metric-value">0.0010</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Confidence</span>
+                            <span class="metric-value">1.0%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Compression Δ</span>
+                            <span class="metric-value">-0.11</span>
+                        </div>
+                    </div>
+                    
+                    <div class="explanation">
+                        <strong>🧠 Explanation:</strong> NCD=0.8838977194194886 (threshold=0.3), P-value=0.001. Statistically significant. Compression ratio changed by -0.10687783703342545x, entropy changed by -0.002036638407028697.
+                    </div>
+                </div>
+                
+                <div class="anomaly-card">
+                    <div class="anomaly-header">
+                        <div class="anomaly-title">Transaction txn_c0d7c3e65aeb7beb9b0400e3</div>
+                        <div class="anomaly-badge">ANOMALY DETECTED</div>
+                    </div>
+                    
+                    <div class="transaction-details">
+                        <strong>Timestamp:</strong> 2025-11-10T04:15:00Z<br>
+                        <strong>Amount:</strong> $182.28<br>
+                        <strong>Processing Time:</strong> 74ms<br>
+                        <strong>Origin:</strong> UK<br>
+                        <strong>Endpoint:</strong> /v1/charges<br>
+                        <strong>Status:</strong> success
+                    </div>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <span class="metric-label">NCD Score</span>
+                            <span class="metric-value">0.876</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">P-Value</span>
+                            <span class="metric-value">0.0010</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Confidence</span>
+                            <span class="metric-value">1.0%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Compression Δ</span>
+                            <span class="metric-value">-0.14</span>
+                        </div>
+                    </div>
+                    
+                    <div class="explanation">
+                        <strong>🧠 Explanation:</strong> NCD=0.8756218905472637 (threshold=0.3), P-value=0.001. Statistically significant. Compression ratio changed by -0.14258746206867412x, entropy changed by -0.0005952427436640113.
+                    </div>
+                </div>
+                
+                <div class="anomaly-card">
+                    <div class="anomaly-header">
+                        <div class="anomaly-title">Transaction txn_038d04c57f5939447d005c0e</div>
+                        <div class="anomaly-badge">ANOMALY DETECTED</div>
+                    </div>
+                    
+                    <div class="transaction-details">
+                        <strong>Timestamp:</strong> 2025-11-10T04:22:30Z<br>
+                        <strong>Amount:</strong> $467.86<br>
+                        <strong>Processing Time:</strong> 86ms<br>
+                        <strong>Origin:</strong> US<br>
+                        <strong>Endpoint:</strong> /v1/charges<br>
+                        <strong>Status:</strong> success
+                    </div>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <span class="metric-label">NCD Score</span>
+                            <span class="metric-value">0.886</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">P-Value</span>
+                            <span class="metric-value">0.0020</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Confidence</span>
+                            <span class="metric-value">1.0%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Compression Δ</span>
+                            <span class="metric-value">-0.08</span>
+                        </div>
+                    </div>
+                    
+                    <div class="explanation">
+                        <strong>🧠 Explanation:</strong> NCD=0.8858131487889274 (threshold=0.3), P-value=0.002. Statistically significant. Compression ratio changed by -0.08069395202337468x, entropy changed by -0.000019635523586068806.
+                    </div>
+                </div>
+                
+                <div class="anomaly-card">
+                    <div class="anomaly-header">
+                        <div class="anomaly-title">Transaction txn_86c1e8e52ce73e70492a000e</div>
+                        <div class="anomaly-badge">ANOMALY DETECTED</div>
+                    </div>
+                    
+                    <div class="transaction-details">
+                        <strong>Timestamp:</strong> 2025-11-10T04:37:30Z<br>
+                        <strong>Amount:</strong> $99.24<br>
+                        <strong>Processing Time:</strong> 82ms<br>
+                        <strong>Origin:</strong> US<br>
+                        <strong>Endpoint:</strong> /v1/charges<br>
+                        <strong>Status:</strong> success
+                    </div>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <span class="metric-label">NCD Score</span>
+                            <span class="metric-value">0.862</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">P-Value</span>
+                            <span class="metric-value">0.0120</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Confidence</span>
+                            <span class="metric-value">1.0%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Compression Δ</span>
+                            <span class="metric-value">-0.13</span>
+                        </div>
+                    </div>
+                    
+                    <div class="explanation">
+                        <strong>🧠 Explanation:</strong> NCD=0.8623136976579134 (threshold=0.3), P-value=0.012. Statistically significant. Compression ratio changed by -0.12800410728166606x, entropy changed by 0.0010023670145419845.
+                    </div>
+                </div>
+                
+                <div class="anomaly-card">
+                    <div class="anomaly-header">
+                        <div class="anomaly-title">Transaction txn_5502046f71ac640c223abb59</div>
+                        <div class="anomaly-badge">ANOMALY DETECTED</div>
+                    </div>
+                    
+                    <div class="transaction-details">
+                        <strong>Timestamp:</strong> 2025-11-10T05:07:30Z<br>
+                        <strong>Amount:</strong> $109.53<br>
+                        <strong>Processing Time:</strong> 88ms<br>
+                        <strong>Origin:</strong> UK<br>
+                        <strong>Endpoint:</strong> /v1/charges<br>
+                        <strong>Status:</strong> success
+                    </div>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <span class="metric-label">NCD Score</span>
+                            <span class="metric-value">0.883</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">P-Value</span>
+                            <span class="metric-value">0.0050</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Confidence</span>
+                            <span class="metric-value">1.0%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Compression Δ</span>
+                            <span class="metric-value">-0.10</span>
+                        </div>
+                    </div>
+                    
+                    <div class="explanation">
+                        <strong>🧠 Explanation:</strong> NCD=0.8830449826989619 (threshold=0.3), P-value=0.005. Statistically significant. Compression ratio changed by -0.09856100926473488x, entropy changed by -0.0024041963824886796.
+                    </div>
+                </div>
+                
+                <div class="anomaly-card">
+                    <div class="anomaly-header">
+                        <div class="anomaly-title">Transaction txn_f79aadd48b63ca0188bfb305</div>
+                        <div class="anomaly-badge">ANOMALY DETECTED</div>
+                    </div>
+                    
+                    <div class="transaction-details">
+                        <strong>Timestamp:</strong> 2025-11-10T05:15:00Z<br>
+                        <strong>Amount:</strong> $109.45<br>
+                        <strong>Processing Time:</strong> 73ms<br>
+                        <strong>Origin:</strong> UK<br>
+                        <strong>Endpoint:</strong> /v1/charges<br>
+                        <strong>Status:</strong> success
+                    </div>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <span class="metric-label">NCD Score</span>
+                            <span class="metric-value">0.877</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">P-Value</span>
+                            <span class="metric-value">0.0080</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Confidence</span>
+                            <span class="metric-value">1.0%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Compression Δ</span>
+                            <span class="metric-value">-0.13</span>
+                        </div>
+                    </div>
+                    
+                    <div class="explanation">
+                        <strong>🧠 Explanation:</strong> NCD=0.876750700280112 (threshold=0.3), P-value=0.008. Statistically significant. Compression ratio changed by -0.1346347779581344x, entropy changed by -0.002979519938208663.
+                    </div>
+                </div>
+                
+                <div class="anomaly-card">
+                    <div class="anomaly-header">
+                        <div class="anomaly-title">Transaction txn_40358e463f04a4ead3c31f4b</div>
+                        <div class="anomaly-badge">ANOMALY DETECTED</div>
+                    </div>
+                    
+                    <div class="transaction-details">
+                        <strong>Timestamp:</strong> 2025-11-10T06:00:00Z<br>
+                        <strong>Amount:</strong> $4123.6<br>
+                        <strong>Processing Time:</strong> 61ms<br>
+                        <strong>Origin:</strong> XX<br>
+                        <strong>Endpoint:</strong> /v1/charges<br>
+                        <strong>Status:</strong> success
+                    </div>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <span class="metric-label">NCD Score</span>
+                            <span class="metric-value">0.873</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">P-Value</span>
+                            <span class="metric-value">0.0110</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Confidence</span>
+                            <span class="metric-value">1.0%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Compression Δ</span>
+                            <span class="metric-value">-0.11</span>
+                        </div>
+                    </div>
+                    
+                    <div class="explanation">
+                        <strong>🧠 Explanation:</strong> NCD=0.8729166666666667 (threshold=0.3), P-value=0.011. Statistically significant. Compression ratio changed by -0.10503556122036399x, entropy changed by -0.000007284763284148636.
+                    </div>
+                </div>
+                
+                <div class="anomaly-card">
+                    <div class="anomaly-header">
+                        <div class="anomaly-title">Transaction txn_ea32cd6e4cf08f21acc61131</div>
+                        <div class="anomaly-badge">ANOMALY DETECTED</div>
+                    </div>
+                    
+                    <div class="transaction-details">
+                        <strong>Timestamp:</strong> 2025-11-10T06:07:30Z<br>
+                        <strong>Amount:</strong> $3118.5<br>
+                        <strong>Processing Time:</strong> 86ms<br>
+                        <strong>Origin:</strong> XX<br>
+                        <strong>Endpoint:</strong> /v1/charges<br>
+                        <strong>Status:</strong> success
+                    </div>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <span class="metric-label">NCD Score</span>
+                            <span class="metric-value">0.893</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">P-Value</span>
+                            <span class="metric-value">0.0000</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Confidence</span>
+                            <span class="metric-value">1.0%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Compression Δ</span>
+                            <span class="metric-value">-0.11</span>
+                        </div>
+                    </div>
+                    
+                    <div class="explanation">
+                        <strong>🧠 Explanation:</strong> NCD=0.8929321203638908 (threshold=0.3), P-value=0. Statistically significant. Compression ratio changed by -0.1089241266439741x, entropy changed by -0.0004621492896824075.
+                    </div>
+                </div>
+                
+                <div class="anomaly-card">
+                    <div class="anomaly-header">
+                        <div class="anomaly-title">Transaction txn_519c905a99c064a5e169bdeb</div>
+                        <div class="anomaly-badge">ANOMALY DETECTED</div>
+                    </div>
+                    
+                    <div class="transaction-details">
+                        <strong>Timestamp:</strong> 2025-11-10T06:15:00Z<br>
+                        <strong>Amount:</strong> $1051.9<br>
+                        <strong>Processing Time:</strong> 90ms<br>
+                        <strong>Origin:</strong> XX<br>
+                        <strong>Endpoint:</strong> /v1/charges<br>
+                        <strong>Status:</strong> success
+                    </div>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <span class="metric-label">NCD Score</span>
+                            <span class="metric-value">0.885</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">P-Value</span>
+                            <span class="metric-value">0.0000</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Confidence</span>
+                            <span class="metric-value">1.0%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Compression Δ</span>
+                            <span class="metric-value">-0.12</span>
+                        </div>
+                    </div>
+                    
+                    <div class="explanation">
+                        <strong>🧠 Explanation:</strong> NCD=0.8845618915159944 (threshold=0.3), P-value=0. Statistically significant. Compression ratio changed by -0.11580249240737192x, entropy changed by -0.0031500370743823146.
+                    </div>
+                </div>
+                
+                <div class="anomaly-card">
+                    <div class="anomaly-header">
+                        <div class="anomaly-title">Transaction txn_1aaa774b4a44a3f3a570b3a8</div>
+                        <div class="anomaly-badge">ANOMALY DETECTED</div>
+                    </div>
+                    
+                    <div class="transaction-details">
+                        <strong>Timestamp:</strong> 2025-11-10T06:45:00Z<br>
+                        <strong>Amount:</strong> $3117.3<br>
+                        <strong>Processing Time:</strong> 65ms<br>
+                        <strong>Origin:</strong> XX<br>
+                        <strong>Endpoint:</strong> /v1/charges<br>
+                        <strong>Status:</strong> success
+                    </div>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <span class="metric-label">NCD Score</span>
+                            <span class="metric-value">0.859</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">P-Value</span>
+                            <span class="metric-value">0.0170</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Confidence</span>
+                            <span class="metric-value">1.0%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Compression Δ</span>
+                            <span class="metric-value">-0.12</span>
+                        </div>
+                    </div>
+                    
+                    <div class="explanation">
+                        <strong>🧠 Explanation:</strong> NCD=0.8591352859135286 (threshold=0.3), P-value=0.017. Statistically significant. Compression ratio changed by -0.11646983419367675x, entropy changed by 0.001912337131782539.
+                    </div>
+                </div>
+                
+                <div class="anomaly-card">
+                    <div class="anomaly-header">
+                        <div class="anomaly-title">Transaction txn_72d98968aea09eb37bc07413</div>
+                        <div class="anomaly-badge">ANOMALY DETECTED</div>
+                    </div>
+                    
+                    <div class="transaction-details">
+                        <strong>Timestamp:</strong> 2025-11-10T06:52:30Z<br>
+                        <strong>Amount:</strong> $260.79999999999995<br>
+                        <strong>Processing Time:</strong> 92ms<br>
+                        <strong>Origin:</strong> XX<br>
+                        <strong>Endpoint:</strong> /v1/charges<br>
+                        <strong>Status:</strong> success
+                    </div>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <span class="metric-label">NCD Score</span>
+                            <span class="metric-value">0.853</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">P-Value</span>
+                            <span class="metric-value">0.0120</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Confidence</span>
+                            <span class="metric-value">1.0%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Compression Δ</span>
+                            <span class="metric-value">-0.12</span>
+                        </div>
+                    </div>
+                    
+                    <div class="explanation">
+                        <strong>🧠 Explanation:</strong> NCD=0.8532871972318339 (threshold=0.3), P-value=0.012. Statistically significant. Compression ratio changed by -0.12255705939179319x, entropy changed by -0.00002100531939800573.
+                    </div>
+                </div>
+                
+                <div class="anomaly-card">
+                    <div class="anomaly-header">
+                        <div class="anomaly-title">Transaction txn_8e9cd023c5a519552c86f68a</div>
+                        <div class="anomaly-badge">ANOMALY DETECTED</div>
+                    </div>
+                    
+                    <div class="transaction-details">
+                        <strong>Timestamp:</strong> 2025-11-10T07:00:00Z<br>
+                        <strong>Amount:</strong> $3835.2999999999997<br>
+                        <strong>Processing Time:</strong> 55ms<br>
+                        <strong>Origin:</strong> XX<br>
+                        <strong>Endpoint:</strong> /v1/charges<br>
+                        <strong>Status:</strong> success
+                    </div>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <span class="metric-label">NCD Score</span>
+                            <span class="metric-value">0.849</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">P-Value</span>
+                            <span class="metric-value">0.0380</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Confidence</span>
+                            <span class="metric-value">1.0%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Compression Δ</span>
+                            <span class="metric-value">-0.13</span>
+                        </div>
+                    </div>
+                    
+                    <div class="explanation">
+                        <strong>🧠 Explanation:</strong> NCD=0.8486750348675035 (threshold=0.3), P-value=0.038. Statistically significant. Compression ratio changed by -0.12622407261710283x, entropy changed by -0.0005855112873822918.
+                    </div>
+                </div>
+                
+                <div class="anomaly-card">
+                    <div class="anomaly-header">
+                        <div class="anomaly-title">Transaction txn_e96f173f7c3e0a88228f4085</div>
+                        <div class="anomaly-badge">ANOMALY DETECTED</div>
+                    </div>
+                    
+                    <div class="transaction-details">
+                        <strong>Timestamp:</strong> 2025-11-10T07:07:30Z<br>
+                        <strong>Amount:</strong> $3822.2000000000003<br>
+                        <strong>Processing Time:</strong> 58ms<br>
+                        <strong>Origin:</strong> XX<br>
+                        <strong>Endpoint:</strong> /v1/charges<br>
+                        <strong>Status:</strong> success
+                    </div>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <span class="metric-label">NCD Score</span>
+                            <span class="metric-value">0.874</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">P-Value</span>
+                            <span class="metric-value">0.0020</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Confidence</span>
+                            <span class="metric-value">1.0%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Compression Δ</span>
+                            <span class="metric-value">-0.14</span>
+                        </div>
+                    </div>
+                    
+                    <div class="explanation">
+                        <strong>🧠 Explanation:</strong> NCD=0.8737796373779637 (threshold=0.3), P-value=0.002. Statistically significant. Compression ratio changed by -0.1351903311084251x, entropy changed by -0.0015544361615011189.
+                    </div>
+                </div>
+                
+                <div class="anomaly-card">
+                    <div class="anomaly-header">
+                        <div class="anomaly-title">Transaction txn_095d338f18cc84fd4048bf83</div>
+                        <div class="anomaly-badge">ANOMALY DETECTED</div>
+                    </div>
+                    
+                    <div class="transaction-details">
+                        <strong>Timestamp:</strong> 2025-11-10T07:15:00Z<br>
+                        <strong>Amount:</strong> $3203.1<br>
+                        <strong>Processing Time:</strong> 89ms<br>
+                        <strong>Origin:</strong> XX<br>
+                        <strong>Endpoint:</strong> /v1/charges<br>
+                        <strong>Status:</strong> success
+                    </div>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <span class="metric-label">NCD Score</span>
+                            <span class="metric-value">0.873</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">P-Value</span>
+                            <span class="metric-value">0.0000</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Confidence</span>
+                            <span class="metric-value">1.0%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Compression Δ</span>
+                            <span class="metric-value">-0.14</span>
+                        </div>
+                    </div>
+                    
+                    <div class="explanation">
+                        <strong>🧠 Explanation:</strong> NCD=0.8734982332155476 (threshold=0.3), P-value=0. Statistically significant. Compression ratio changed by -0.13824366616802847x, entropy changed by -0.0016260753351987965.
+                    </div>
+                </div>
+                
+                <div class="anomaly-card">
+                    <div class="anomaly-header">
+                        <div class="anomaly-title">Transaction txn_67126e2d1a3d4f88758e3a36</div>
+                        <div class="anomaly-badge">ANOMALY DETECTED</div>
+                    </div>
+                    
+                    <div class="transaction-details">
+                        <strong>Timestamp:</strong> 2025-11-10T08:00:00Z<br>
+                        <strong>Amount:</strong> $2420.1<br>
+                        <strong>Processing Time:</strong> 60ms<br>
+                        <strong>Origin:</strong> XX<br>
+                        <strong>Endpoint:</strong> /v1/charges<br>
+                        <strong>Status:</strong> success
+                    </div>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <span class="metric-label">NCD Score</span>
+                            <span class="metric-value">0.852</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">P-Value</span>
+                            <span class="metric-value">0.0410</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Confidence</span>
+                            <span class="metric-value">1.0%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Compression Δ</span>
+                            <span class="metric-value">-0.12</span>
+                        </div>
+                    </div>
+                    
+                    <div class="explanation">
+                        <strong>🧠 Explanation:</strong> NCD=0.8518005540166205 (threshold=0.3), P-value=0.041. Statistically significant. Compression ratio changed by -0.12003431107464527x, entropy changed by 0.0007815783689163785.
+                    </div>
+                </div>
+                
+                <div class="anomaly-card">
+                    <div class="anomaly-header">
+                        <div class="anomaly-title">Transaction txn_810c35fb839b418bf2f83a8e</div>
+                        <div class="anomaly-badge">ANOMALY DETECTED</div>
+                    </div>
+                    
+                    <div class="transaction-details">
+                        <strong>Timestamp:</strong> 2025-11-10T08:07:30Z<br>
+                        <strong>Amount:</strong> $2137.5<br>
+                        <strong>Processing Time:</strong> 94ms<br>
+                        <strong>Origin:</strong> XX<br>
+                        <strong>Endpoint:</strong> /v1/charges<br>
+                        <strong>Status:</strong> success
+                    </div>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <span class="metric-label">NCD Score</span>
+                            <span class="metric-value">0.875</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">P-Value</span>
+                            <span class="metric-value">0.0000</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Confidence</span>
+                            <span class="metric-value">1.0%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Compression Δ</span>
+                            <span class="metric-value">-0.12</span>
+                        </div>
+                    </div>
+                    
+                    <div class="explanation">
+                        <strong>🧠 Explanation:</strong> NCD=0.8746556473829201 (threshold=0.3), P-value=0. Statistically significant. Compression ratio changed by -0.12251609908575989x, entropy changed by -0.0010832641929826095.
+                    </div>
+                </div>
+                
+                <div class="anomaly-card">
+                    <div class="anomaly-header">
+                        <div class="anomaly-title">Transaction txn_bbf6495711b70bf192f93f85</div>
+                        <div class="anomaly-badge">ANOMALY DETECTED</div>
+                    </div>
+                    
+                    <div class="transaction-details">
+                        <strong>Timestamp:</strong> 2025-11-10T08:22:30Z<br>
+                        <strong>Amount:</strong> $2456.5<br>
+                        <strong>Processing Time:</strong> 71ms<br>
+                        <strong>Origin:</strong> XX<br>
+                        <strong>Endpoint:</strong> /v1/charges<br>
+                        <strong>Status:</strong> success
+                    </div>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <span class="metric-label">NCD Score</span>
+                            <span class="metric-value">0.863</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">P-Value</span>
+                            <span class="metric-value">0.0260</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Confidence</span>
+                            <span class="metric-value">1.0%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Compression Δ</span>
+                            <span class="metric-value">-0.10</span>
+                        </div>
+                    </div>
+                    
+                    <div class="explanation">
+                        <strong>🧠 Explanation:</strong> NCD=0.863481228668942 (threshold=0.3), P-value=0.026. Statistically significant. Compression ratio changed by -0.1003198763778425x, entropy changed by -0.0021096422890807044.
+                    </div>
+                </div>
+                
+                <div class="anomaly-card">
+                    <div class="anomaly-header">
+                        <div class="anomaly-title">Transaction txn_455bb15332529728ca76da48</div>
+                        <div class="anomaly-badge">ANOMALY DETECTED</div>
+                    </div>
+                    
+                    <div class="transaction-details">
+                        <strong>Timestamp:</strong> 2025-11-10T08:52:30Z<br>
+                        <strong>Amount:</strong> $3572.7999999999997<br>
+                        <strong>Processing Time:</strong> 66ms<br>
+                        <strong>Origin:</strong> XX<br>
+                        <strong>Endpoint:</strong> /v1/charges<br>
+                        <strong>Status:</strong> success
+                    </div>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <span class="metric-label">NCD Score</span>
+                            <span class="metric-value">0.854</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">P-Value</span>
+                            <span class="metric-value">0.0300</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Confidence</span>
+                            <span class="metric-value">1.0%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Compression Δ</span>
+                            <span class="metric-value">-0.13</span>
+                        </div>
+                    </div>
+                    
+                    <div class="explanation">
+                        <strong>🧠 Explanation:</strong> NCD=0.8539325842696629 (threshold=0.3), P-value=0.03. Statistically significant. Compression ratio changed by -0.13029164906040236x, entropy changed by 0.0009571292925344625.
+                    </div>
+                </div>
+                
+                <div class="anomaly-card">
+                    <div class="anomaly-header">
+                        <div class="anomaly-title">Transaction txn_9a13b6322f5f745440886f8a</div>
+                        <div class="anomaly-badge">ANOMALY DETECTED</div>
+                    </div>
+                    
+                    <div class="transaction-details">
+                        <strong>Timestamp:</strong> 2025-11-10T09:00:00Z<br>
+                        <strong>Amount:</strong> $727.3000000000001<br>
+                        <strong>Processing Time:</strong> 91ms<br>
+                        <strong>Origin:</strong> XX<br>
+                        <strong>Endpoint:</strong> /v1/charges<br>
+                        <strong>Status:</strong> success
+                    </div>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <span class="metric-label">NCD Score</span>
+                            <span class="metric-value">0.865</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">P-Value</span>
+                            <span class="metric-value">0.0000</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Confidence</span>
+                            <span class="metric-value">1.0%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Compression Δ</span>
+                            <span class="metric-value">-0.11</span>
+                        </div>
+                    </div>
+                    
+                    <div class="explanation">
+                        <strong>🧠 Explanation:</strong> NCD=0.8650519031141869 (threshold=0.3), P-value=0. Statistically significant. Compression ratio changed by -0.11393555971869218x, entropy changed by -0.0004690439355266519.
+                    </div>
+                </div>
+                
+                <div class="anomaly-card">
+                    <div class="anomaly-header">
+                        <div class="anomaly-title">Transaction txn_9feb421a816c794b81150c14</div>
+                        <div class="anomaly-badge">ANOMALY DETECTED</div>
+                    </div>
+                    
+                    <div class="transaction-details">
+                        <strong>Timestamp:</strong> 2025-11-10T09:07:30Z<br>
+                        <strong>Amount:</strong> $81.8<br>
+                        <strong>Processing Time:</strong> 58ms<br>
+                        <strong>Origin:</strong> XX<br>
+                        <strong>Endpoint:</strong> /v1/charges<br>
+                        <strong>Status:</strong> success
+                    </div>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <span class="metric-label">NCD Score</span>
+                            <span class="metric-value">0.881</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">P-Value</span>
+                            <span class="metric-value">0.0000</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Confidence</span>
+                            <span class="metric-value">1.0%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Compression Δ</span>
+                            <span class="metric-value">-0.13</span>
+                        </div>
+                    </div>
+                    
+                    <div class="explanation">
+                        <strong>🧠 Explanation:</strong> NCD=0.8809192200557103 (threshold=0.3), P-value=0. Statistically significant. Compression ratio changed by -0.12981236918447947x, entropy changed by -0.0030070505778991194.
+                    </div>
+                </div>
+                
+                <div class="anomaly-card">
+                    <div class="anomaly-header">
+                        <div class="anomaly-title">Transaction txn_c80a60cee60cd711a35567bd</div>
+                        <div class="anomaly-badge">ANOMALY DETECTED</div>
+                    </div>
+                    
+                    <div class="transaction-details">
+                        <strong>Timestamp:</strong> 2025-11-10T09:15:00Z<br>
+                        <strong>Amount:</strong> $2748.2999999999997<br>
+                        <strong>Processing Time:</strong> 58ms<br>
+                        <strong>Origin:</strong> XX<br>
+                        <strong>Endpoint:</strong> /v1/charges<br>
+                        <strong>Status:</strong> success
+                    </div>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <span class="metric-label">NCD Score</span>
+                            <span class="metric-value">0.873</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">P-Value</span>
+                            <span class="metric-value">0.0020</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Confidence</span>
+                            <span class="metric-value">1.0%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Compression Δ</span>
+                            <span class="metric-value">-0.13</span>
+                        </div>
+                    </div>
+                    
+                    <div class="explanation">
+                        <strong>🧠 Explanation:</strong> NCD=0.873249299719888 (threshold=0.3), P-value=0.002. Statistically significant. Compression ratio changed by -0.12793057951892822x, entropy changed by -0.002766302741199237.
+                    </div>
+                </div>
+                
+                <div class="anomaly-card">
+                    <div class="anomaly-header">
+                        <div class="anomaly-title">Transaction txn_e6fc47fec2a313d465593a0d</div>
+                        <div class="anomaly-badge">ANOMALY DETECTED</div>
+                    </div>
+                    
+                    <div class="transaction-details">
+                        <strong>Timestamp:</strong> 2025-11-10T09:30:00Z<br>
+                        <strong>Amount:</strong> $1025.3<br>
+                        <strong>Processing Time:</strong> 94ms<br>
+                        <strong>Origin:</strong> XX<br>
+                        <strong>Endpoint:</strong> /v1/charges<br>
+                        <strong>Status:</strong> success
+                    </div>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <span class="metric-label">NCD Score</span>
+                            <span class="metric-value">0.859</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">P-Value</span>
+                            <span class="metric-value">0.0160</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Confidence</span>
+                            <span class="metric-value">1.0%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Compression Δ</span>
+                            <span class="metric-value">-0.13</span>
+                        </div>
+                    </div>
+                    
+                    <div class="explanation">
+                        <strong>🧠 Explanation:</strong> NCD=0.8590556730091614 (threshold=0.3), P-value=0.016. Statistically significant. Compression ratio changed by -0.12657671957671957x, entropy changed by 0.001523224716991482.
+                    </div>
+                </div>
+                
+            
+        </div>
+
+        <div class="footer">
+            <p>Driftlock - Patent-pending compression-based anomaly detection | Shannon Labs</p>
+            <p>Built with Rust CBAD core for transparent, regulator-friendly AI</p>
+        </div>
+    </div>
+</body>
+</html>

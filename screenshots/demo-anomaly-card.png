@@ -1,0 +1,8 @@
+INSERT: Dashboard showing flagged payment latency spike with compression explanation
+
+This is a placeholder image. Replace with actual screenshot showing:
+1. Anomaly list with one flagged item
+2. Explanation panel with NCD math visible
+3. Timestamp: 14:32:15
+4. NCD Score: 0.73
+5. Compression ratio: 2.4x deviation
