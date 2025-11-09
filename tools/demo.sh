@@ -29,4 +29,4 @@ curl -X POST http://localhost:8080/v1/anomalies \
 
 # Step 3: Show the explanation
 echo ""
-echo "Now open http://localhost:3000 and click the anomaly to see the explanation."
+echo "Now open http://localhost:3000 (Driftlock Dashboard) and click the anomaly to see the explanation."

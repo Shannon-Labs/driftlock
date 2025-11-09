@@ -1,10 +1,10 @@
 [0-10s] "I'm Hunter. EU banks face €50M DORA fines for opaque AI. Their current tools can't explain anomalies to regulators."
 
-[10-25s] "Here's real transaction data. I just generated 4 transactions: 3 normal, 2 obviously anomalous."
+[10-25s] "Here's real transaction data. I just generated 4 transactions: 3 normal, 1 obviously anomalous."
 
 [25-45s] "Watch Driftlock detect them in real-time." [run tools/demo.sh]
 
-[45-65s] "Click the anomaly. See this? NCD of 0.88 means it's 88% different from normal patterns. Here's the human-readable explanation: 'Transaction amount exceeds 3-sigma threshold.' That's what regulators need."
+[45-65s] "Click the anomaly in the dashboard. See this? NCD of 0.88 means it's 88% different from normal patterns. Here's the human-readable explanation: 'Transaction amount exceeds 3-sigma threshold.' That's what regulators need."
 
 [65-75s] "This runs on-prem with OpenTelemetry, zero API fees. Built in Rust for speed, Go for ergonomics."
 
