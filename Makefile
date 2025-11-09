@@ -13,7 +13,7 @@ demo: cbad-core
 	@go build -o driftlock-demo cmd/demo/main.go
 
 verify: demo
-	@echo "Running YC verify script ..."
+	@echo "Running verification script ..."
 	@./verify-yc-ready.sh
 
 clean:

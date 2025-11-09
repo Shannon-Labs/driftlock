@@ -28,9 +28,9 @@ open demo-output.html  # macOS
 
 ## Why Now
 
-- **€50M fines** for EU banks using unexplainable AI under DORA regulations
-- **Black-box LLMs** can't provide audit trails for financial regulators  
-- **Driftlock** delivers glass-box anomaly detection with mathematical proof regulators accept
+- **DORA applies EU‑wide from Jan 17, 2025**; fines up to €50M for unexplainable AI
+- **Black-box LLMs** can't provide audit trails for financial regulators
+- **Driftlock** delivers glass‑box anomaly detection with mathematical proof regulators accept
 
 ## How It Works
 
@@ -45,7 +45,9 @@ The HTML includes a baseline comparison panel and similar normal examples for ea
 
 ## Project Status
 
-**Alpha:** Core engine (Rust CBAD), Go CLI, and demo data implemented. Demo processes 2,000 transactions in ~5 seconds with full explainability. Not yet battle-tested—seeking early design partners.
+**Alpha:** Core engine (Rust CBAD), Go CLI, and demo data implemented. Demo processes 2,000 transactions in ~4–6 seconds locally (<30s in CI) with full explainability. Not yet battle‑tested—seeking early design partners.
+
+Target customers: EU‑regulated banks and PSPs; starting with paid pilots replacing black‑box LLM anomaly detectors in payment gateways.
 
 ## AI-Assisted Development
 
@@ -56,7 +58,7 @@ Built with AI coding assistants (Claude, Codex, Kimi CLI); see [docs/ai-agents/]
 The demo uses `test-data/financial-demo.json` containing 5,000 synthetic payment transactions with:
 - **Normal pattern**: 50–100ms processing, US/UK origins, `/v1/charges` endpoint
 - **Anomalies**: Latency spikes up to 8000ms and a handful of malformed endpoints
-- **Detection**: Demo tuned to flag ~30 anomalies (NCD + permutation test) from 2,000 processed events. The sample anomaly shown is a US transaction.
+- **Detection**: Demo tuned to flag ~30 anomalies (NCD + permutation test) from 2,000 processed events; detection rate in the report is ~0.6% over all 5,000 events.
 
 ## 📚 Learn More
 
@@ -64,7 +66,7 @@ The demo uses `test-data/financial-demo.json` containing 5,000 synthetic payment
 - **[docs/](docs/)** - Full documentation and AI agent history
 
 Visual proof (optional):
-- Run: `./scripts/capture-anomaly-card.sh` (macOS Safari) to auto-capture the first anomaly card into `screenshots/demo-anomaly-card.png`. If it fails due to permissions, follow `docs/CAPTURE-ANOMALY-SCREENSHOT.md` for manual capture.
+- Run: `./scripts/capture-anomaly-card.sh` (macOS Safari) to auto‑capture the first anomaly card into `screenshots/demo-anomaly-card.png`. If it fails due to permissions, follow `docs/CAPTURE-ANOMALY-SCREENSHOT.md` for manual capture.
 
 ---
 

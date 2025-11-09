@@ -1,77 +1,45 @@
-# Driftlock Repository Status - Ready for YC Review
+# Driftlock Repository Status — Ready for Review
 
-## ✅ Repository is Ready
+This file reflects the current, simplified demo that ships in this repository.
 
-This repository has been cleaned and prepared for YC partner review. 
+## What ships today
 
-### Quick Start
+- Rust core (`cbad-core/`) with FFI for Go
+- Go CLI demo (`cmd/demo/main.go`) that reads a static JSON file
+- Synthetic demo data (`test-data/financial-demo.json`)
+- One minimal CI workflow that builds, runs, and verifies the demo
+- HTML output (`demo-output.html`) with anomaly cards, baseline comparisons, and similar normal examples
+
+## Quick start
 
 ```bash
 git clone https://github.com/Shannon-Labs/driftlock.git
 cd driftlock
-docker-compose up
+make demo
+./driftlock-demo test-data/financial-demo.json
+open demo-output.html  # macOS (or xdg-open on Linux)
 ```
 
-Open http://localhost:3000 and use API key: `demo-key-123`
+Or run the single verification script used in CI:
 
-### What's Included
+```bash
+./verify-yc-ready.sh
+```
 
-**Essential Files (11 items):**
-- `README.md` - YC-focused pitch
-- `DEMO.md` - 2-minute partner walkthrough
-- `docker-compose.yml` - One-command deployment
-- `start.sh` - Alternative startup script
-- `api-server/` - Go API server
-- `cbad-core/` - Rust anomaly detection engine
-- `collector-processor/` - OpenTelemetry integration
-- `exporters/` - Data export modules
-- `web-frontend/` - React dashboard
-- `test-data/` - 1,600 synthetic transactions
-- `screenshots/` - Dashboard placeholder
-- `docs/` - Documentation (including AI agent history)
-- `go.mod/go.sum` - Go dependencies
+## Current expected results
 
-**Configuration:**
-- `.env` and `.env.example` pre-configured with demo values
-- No manual setup required
-- Demo data auto-loads on first boot
+- Processes the first 2,000 events from a 5,000‑row dataset
+- Warmup: first 400 events build the baseline
+- Anomalies: 10–30 (typically ~30)
+- Runtime: ~4–6s on a modern laptop; <30s in CI
+- Detection rate in the report: ~0.6% (30/5000 total events)
 
-### What Happens on `docker-compose up`
+## Notes on removed/archived components
 
-1. PostgreSQL boots and initializes schema
-2. API server builds (Rust + Go linking resolved)
-3. Web frontend builds and serves on port 3000
-4. Demo data loader injects 1,600 transactions
-5. Dashboard shows flagged anomalies within 60 seconds
+Earlier iterations included a Docker/React dashboard (docker‑compose, web frontend, API, DB). That stack is not part of this repository anymore. The current demo is a self‑contained Rust+Go CLI that renders HTML — no Docker, DB, or external services.
 
-### Success Criteria Met
-
-✅ Repository root has < 15 top-level items (currently 11)
-✅ `docker-compose up` → dashboard shows data in < 2 min
-✅ README tells complete story without scrolling
-✅ No references to dead experiments visible
-✅ Zero manual configuration required
-
-### Demo Data
-
-The system loads `test-data/mixed-transactions.jsonl` containing:
-- 1,600 synthetic financial transactions
-- Normal purchases (Starbucks, Amazon, Uber, etc.)
-- Anomalous transactions (high amounts, suspicious merchants)
-- Compression-based detection flags ~5% as anomalies
-
-### Dashboard Login
-
-- URL: http://localhost:3000
-- API Key: `demo-key-123` (pre-configured)
-
-### Technical Notes
-
-- **Architecture**: Rust core (CBAD) + Go API + React frontend
-- **Detection**: Normalized Compression Distance (NCD) algorithm
-- **Performance**: 50ms detection latency
-- **Compliance**: Full audit trails for DORA regulations
+If you find any remaining references to docker-compose or a web frontend in older docs, treat them as historical. The authoritative instructions are in `README.md`, `DEMO.md`, and `verify-yc-ready.sh`.
 
 ---
 
-*Repository prepared for Y Combinator partner review*
+Prepared for partner review.

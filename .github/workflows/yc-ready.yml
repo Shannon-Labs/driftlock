@@ -1,4 +1,4 @@
-name: YC Verification (Only)
+name: Demo Verification
 
 on:
   push:

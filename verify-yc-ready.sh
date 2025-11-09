@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "🔍 Verifying Driftlock YC Demo..."
+echo "🔍 Verifying Driftlock demo..."
 
 # Build
 echo "Building Rust core..."
@@ -31,4 +31,4 @@ if [ "$ANOMALIES" -lt 10 ] || [ "$ANOMALIES" -gt 30 ]; then
 fi
 
 echo "✅ Demo ready: $ANOMALIES anomalies, <30s runtime"
-echo "✅ YC partners can run: ./verify-yc-ready.sh"
+echo "✅ Partners can run: ./verify-yc-ready.sh"

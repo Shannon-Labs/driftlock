@@ -1,6 +1,8 @@
+```bash
 git clone https://github.com/Shannon-Labs/driftlock.git
 cd driftlock
 make demo
+```
 
 # Driftlock Demo Walkthrough
 
