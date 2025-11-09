@@ -25,7 +25,7 @@ The fastest way to get DriftLock running is with Docker Compose:
 
 ```bash
 # Clone the repository
-git clone https://github.com/shannon-labs/driftlock.git
+git clone https://github.com/Shannon-Labs/driftlock.git
 cd driftlock
 
 # Copy environment template and configure
@@ -442,8 +442,8 @@ chmod +x api-server/driftlock-api
 ### Getting Help
 
 - **Documentation**: [docs/](../docs/)
-- **Issues**: [GitHub Issues](https://github.com/shannon-labs/driftlock/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/shannon-labs/driftlock/discussions)
+- **Issues**: [GitHub Issues](https://github.com/Shannon-Labs/driftlock/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/Shannon-Labs/driftlock/discussions)
 - **Security**: security@shannonlabs.ai
 
 ## Next Steps

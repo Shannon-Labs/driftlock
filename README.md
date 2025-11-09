@@ -9,7 +9,7 @@ EU banks face €50M fines for black-box AI. LLM anomaly detectors can't explain
 ## 🚀 Demo in 30 Seconds
 
 ```bash
-git clone https://github.com/shannon-labs/driftlock.git
+git clone https://github.com/Shannon-Labs/driftlock.git
 cd driftlock
 
 # Build CBAD core (Rust) and the demo (Go)

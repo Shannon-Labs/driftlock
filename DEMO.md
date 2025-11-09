@@ -1,4 +1,4 @@
-git clone https://github.com/shannon-labs/driftlock.git
+git clone https://github.com/Shannon-Labs/driftlock.git
 cd driftlock
 make demo
 

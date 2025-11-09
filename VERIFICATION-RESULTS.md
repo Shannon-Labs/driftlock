@@ -27,7 +27,7 @@ Essential Files:
 ### Quick Start (Verified Working)
 
 ```bash
-git clone https://github.com/shannon-labs/driftlock.git
+git clone https://github.com/Shannon-Labs/driftlock.git
 cd driftlock
 
 # Build and run

@@ -7,7 +7,7 @@ This repository has been cleaned and prepared for YC partner review.
 ### Quick Start
 
 ```bash
-git clone https://github.com/shannon-labs/driftlock.git
+git clone https://github.com/Shannon-Labs/driftlock.git
 cd driftlock
 docker-compose up
 ```

@@ -20,7 +20,7 @@ This project follows the [Code of Conduct](CODE_OF_CONDUCT.md). Please read and 
 
 1. **Fork and clone the repository**
    ```bash
-   git clone https://github.com/shannon-labs/driftlock.git
+   git clone https://github.com/Shannon-Labs/driftlock.git
    cd driftlock
    ```
 
@@ -157,8 +157,8 @@ cd web-frontend && npm run build
 ## Getting Help
 
 - Check [documentation](docs/)
-- Search [existing issues](https://github.com/shannon-labs/driftlock/issues)
-- Start a [discussion](https://github.com/shannon-labs/driftlock/discussions)
+- Search [existing issues](https://github.com/Shannon-Labs/driftlock/issues)
+- Start a [discussion](https://github.com/Shannon-Labs/driftlock/discussions)
 - Contact maintainers at [hunter@shannonlabs.dev]
 
 ## Security
