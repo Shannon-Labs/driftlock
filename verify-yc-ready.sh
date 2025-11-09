@@ -4,8 +4,13 @@ set -e
 echo "🔍 Verifying Driftlock YC Demo..."
 
 # Build
-echo "Building..."
-go build -o driftlock-demo cmd/demo/main.go
+echo "Building Rust core..."
+if [ ! -f cbad-core/target/release/libcbad_core.a ]; then
+  (cd cbad-core && timeout 120s cargo build --release) || { echo "❌ Rust core build failed"; exit 1; }
+fi
+
+echo "Building Go demo..."
+go build -o driftlock-demo cmd/demo/main.go || { echo "❌ Go build failed"; exit 1; }
 
 # Run and time
 echo "Running demo..."

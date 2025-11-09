@@ -7,16 +7,13 @@
 
 ## ✅ Completed (30%)
 
-### OpenZL Integration (Week 1) - DONE
-- [x] Clone and build OpenZL C library (`libopenzl.a`)
-- [x] Create Rust FFI bindings for OpenZL C API (270 lines)
-- [x] Implement `OpenZLAdapter` with compress/decompress
-- [x] Add build.rs for C library linking
+### Compression Adapters (Week 1) - DONE
+- [x] Implement zstd/lz4/gzip adapters with FFI-safe interfaces
+- [x] Add build.rs for linking and feature gating
 - [x] Write comprehensive tests (4 test cases)
-- [x] Update README.md with OpenZL positioning
-- [x] Create `docs/OPENZL_ANALYSIS.md` feasibility study
+- [x] Update README.md with demo positioning
 
-**Deliverable:** `cbad-core` now has working OpenZL compression adapter
+**Deliverable:** `cbad-core` has working compression adapters (zstd/lz4/gzip)
 
 ---
 

@@ -10,12 +10,15 @@ EU banks face €50M fines for black-box AI. LLM anomaly detectors can't explain
 git clone https://github.com/shannon-labs/driftlock.git
 cd driftlock
 
-# Build and run the demo
-go build -o driftlock-demo cmd/demo/main.go
+# Build CBAD core (Rust) and the demo (Go)
+make demo
+
+# Run the demo
 ./driftlock-demo test-data/financial-demo.json
 
 # Open the results
-open demo-output.html
+open demo-output.html  # macOS
+# xdg-open demo-output.html  # Linux
 ```
 
 ## Why Now
@@ -52,6 +55,9 @@ The demo uses `test-data/financial-demo.json` containing 5,000 synthetic payment
 
 - **[DEMO.md](DEMO.md)** - 2-minute partner walkthrough with screenshots
 - **[docs/](docs/)** - Full documentation and AI agent history
+
+Visual proof (optional):
+- Run: `./scripts/capture-anomaly-card.sh` (macOS Safari) to auto-capture the first anomaly card into `screenshots/demo-anomaly-card.png`. If it fails due to permissions, follow `docs/CAPTURE-ANOMALY-SCREENSHOT.md` for manual capture.
 
 ---
 

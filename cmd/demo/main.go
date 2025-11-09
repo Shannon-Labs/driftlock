@@ -474,7 +474,7 @@ func generateHTMLReport(anomalies []AnomalyResult, allTransactions []Transaction
                         </div>
                         <div class="metric">
                             <span class="metric-label">Confidence</span>
-                            <span class="metric-value">{{printf "%.1f%%" .Metrics.ConfidenceLevel}}</span>
+                            <span class="metric-value">{{printf "%.1f%%" (pct .Metrics.ConfidenceLevel)}}</span>
                         </div>
                         <div class="metric">
                             <span class="metric-label">Compression Δ</span>
@@ -503,8 +503,11 @@ func generateHTMLReport(anomalies []AnomalyResult, allTransactions []Transaction
 </body>
 </html>`
 
-	// Parse template
-	t, err := template.New("report").Parse(tmpl)
+    // Parse template with helpers
+    funcMap := template.FuncMap{
+        "pct": func(v float64) float64 { return v * 100.0 },
+    }
+    t, err := template.New("report").Funcs(funcMap).Parse(tmpl)
 	if err != nil {
 		return fmt.Errorf("template parse error: %v", err)
 	}

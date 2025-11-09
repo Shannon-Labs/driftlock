@@ -1,3 +1,7 @@
+make demo
+./driftlock-demo test-data/financial-demo.json
+open demo-output.html
+
 # Driftlock Demo Walkthrough
 
 ## The 2-Minute Partner Script
@@ -11,7 +15,7 @@
 No Docker needed. Build and run the local demo:
 
 ```bash
-go build -o driftlock-demo cmd/demo/main.go
+make demo               # builds Rust core + Go demo
 ./driftlock-demo test-data/financial-demo.json
 
 # Open the HTML report
@@ -42,9 +46,7 @@ Click any flagged anomaly → see the **explanation panel** with:
 
 ## Screenshot Reference
 
-![Driftlock Dashboard](screenshots/dashboard-placeholder.png)
-
-*Placeholder: Dashboard showing flagged payment latency spike with compression explanation*
+![Demo Anomaly](screenshots/demo-anomaly-card.png)
 
 ## What To Look For
 
