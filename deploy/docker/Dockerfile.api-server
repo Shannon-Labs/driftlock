@@ -1,6 +1,6 @@
 # Multi-stage Dockerfile for Driftlock API Server
 # Stage 1: Build Rust CBAD core
-FROM rust:1.75-slim as rust-builder
+FROM rust:1.80-slim AS rust-builder
 
 WORKDIR /build
 
@@ -15,44 +15,65 @@ COPY openzl ./openzl
 
 # Build CBAD core as static library
 WORKDIR /build/cbad-core
-RUN cargo build --release
+RUN cargo build --release --no-default-features && ranlib target/release/libcbad_core.a
 
 # Stage 2: Build Go API server
-FROM golang:1.24-alpine AS go-builder
+FROM golang:1.24-bookworm AS go-builder
 
 WORKDIR /build
 
 # Install build dependencies
-RUN apk add --no-cache git gcc musl-dev
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    pkg-config \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy go modules first for better caching
 COPY go.mod go.sum go.work go.work.sum ./
 COPY api-server/go.mod api-server/go.sum ./api-server/
 COPY collector-processor/go.mod collector-processor/go.sum ./collector-processor/
 COPY collector-processor/driftlockcbad/go.mod collector-processor/driftlockcbad/go.sum ./collector-processor/driftlockcbad/
+COPY pkg/version/go.mod ./pkg/version/
 
 RUN go mod download
 
 # Copy source code
 COPY . .
 
-# Copy Rust library from previous stage
+# Ensure location for prebuilt Rust library exists and copy it in place for CGO
+RUN mkdir -p /build/cbad-core/target/release
 COPY --from=rust-builder /build/cbad-core/target/release/libcbad_core.a /build/cbad-core/target/release/
 
-# Build API server
+# Verify the library exists and has proper index
+RUN ls -lh /build/cbad-core/target/release/libcbad_core.a && \
+    file /build/cbad-core/target/release/libcbad_core.a && \
+    nm /build/cbad-core/target/release/libcbad_core.a | head -20 || true
+
+# Build API server with explicit CGO flags to ensure proper linking
 WORKDIR /build/api-server
-RUN CGO_ENABLED=1 GOOS=linux go build -a -installsuffix cgo \
+RUN CGO_ENABLED=1 \
+    GOOS=linux \
+    CGO_CFLAGS="-I/build/cbad-core/src" \
+    CGO_LDFLAGS="-L/build/cbad-core/target/release -lcbad_core -lm" \
+    go build -a -installsuffix cgo \
     -ldflags="-w -s -X github.com/Shannon-Labs/driftlock/pkg/version.version=1.0.0" \
     -o /build/api-server-bin \
     ./cmd/api-server
 
-# Stage 3: Final minimal image
-FROM gcr.io/distroless/base-debian12
+# Stage 3: Final runtime image (Debian-based so docker-compose curl healthcheck works)
+FROM debian:12-slim
 
 LABEL org.opencontainers.image.title="Driftlock API Server"
 LABEL org.opencontainers.image.description="High-performance API server for compression-based anomaly detection"
 LABEL org.opencontainers.image.vendor="Driftlock"
 LABEL org.opencontainers.image.version="1.0.0"
+
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN useradd -m -u 65532 driftlock
 
 WORKDIR /app
 
@@ -65,7 +86,6 @@ COPY api-server/config/config.yaml /app/config/config.yaml
 # Expose ports
 EXPOSE 8080 9090
 
-# Run as non-root user
-USER nobody:nobody
+USER driftlock
 
 ENTRYPOINT ["/app/api-server"]

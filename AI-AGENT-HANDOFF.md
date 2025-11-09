@@ -4,6 +4,8 @@
 
 **Your Mission:** Fix the Docker build so Driftlock can be deployed via `docker-compose up`
 
+**Latest Update:** Improved Dockerfile with explicit CGO linking flags and library verification steps.
+
 ## Current State
 
 ### ✅ What Works
@@ -55,12 +57,17 @@ run ranlib to add one
 
 ## What Still Needs to Be Fixed
 
-### Option 1: Fix Static Library Index (Easiest)
+### ✅ Option 1: Fix Static Library Index (IMPLEMENTED)
 ```dockerfile
 # In Rust builder stage
-RUN cargo build --release && ranlib target/release/libcbad_core.a
+RUN cargo build --release --no-default-features && ranlib target/release/libcbad_core.a
 ```
-**Then:** Ensure Go links against static library correctly
+**Status:** ✅ Already implemented in `deploy/docker/Dockerfile.api-server` line 18
+
+**Additional improvements made:**
+- Added explicit CGO_CFLAGS and CGO_LDFLAGS with absolute paths
+- Added library verification step to ensure proper indexing
+- Ensured include paths are correct for CGO compilation
 
 ### Option 2: Use Dynamic Library (.so)
 ```dockerfile
@@ -93,14 +100,17 @@ ENTRYPOINT ["/app/driftlock-api"]
 
 ## Immediate Next Steps
 
-1. **Try ranlib fix:**
+1. **✅ ranlib fix already implemented** - The Dockerfile already includes `ranlib` command
+   
+2. **Test the Docker build:**
    ```bash
    cd /Volumes/VIXinSSD/driftlock
-   sed -i '/cargo build --release/ s/$/ \&\& ranlib target\/release\/libcbad_core.a/' Dockerfile
-   docker build -t driftlock:test .
+   docker build -f deploy/docker/Dockerfile.api-server -t driftlock:test .
+   # Or use docker-compose
+   docker compose up --build
    ```
 
-2. **If that fails, try pre-built approach:**
+3. **If that fails, try pre-built approach:**
    ```bash
    # Build outside Docker (works!)
    cd cbad-core && cargo build --release

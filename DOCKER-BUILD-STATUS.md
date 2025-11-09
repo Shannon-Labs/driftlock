@@ -4,19 +4,14 @@
 
 **Core Algorithm:** ✅ WORKING (58/58 unit tests pass)
 
-**Docker Build:** ⚠️ IN PROGRESS (linking issues with Rust static libraries)
+**Docker Build:** ✅ WORKING (Docker image builds end-to-end)
 
 ## Known Issues
 
-### 1. Rust Static Library Linking
-- **Problem:** `libcbad_core.a` has no index (ranlib issue)
-- **Error:** `archive has no index; run ranlib to add one`
-- **Root Cause:** Alpine Linux's musl libc + static linking complexity
-
-### 2. CGO Linking Complexity
-- **Problem:** Go CGO can't find Rust symbols in static library
-- **Error:** `undefined reference` during Go build
-- **Root Cause:** Cross-language linking between Rust (static) and Go (dynamic)
+### 1. OpenZL dependency (Docker only)
+- **Status:** Temporarily disabled inside the container build
+- **Reason:** OpenZL ships macOS-only prebuilts; compiling it for Linux inside Docker would drastically increase build time/complexity
+- **Impact:** API server uses the Zstd fallback adapter when running in Docker. Native/mac builds still enable OpenZL.
 
 ## Workaround for Testing
 
@@ -59,11 +54,26 @@ DOCKER_BUILDKIT=1 docker build -f docker/Dockerfile.prebuilt -t driftlock:test .
 - API server works (proven by direct build)
 - Focus on algorithm demonstration, not deployment
 
+## Verified Docker Build (2025-02-15)
+
+```bash
+# Build the API server image (uses deploy/docker/Dockerfile.api-server)
+docker build -f deploy/docker/Dockerfile.api-server -t driftlock:test .
+
+# Or with docker-compose (DB + API + web)
+docker compose up --build
+```
+
+Notes:
+- The Docker image uses Debian-based builders/runtimes (no musl/glibc mismatch).
+- `libcbad_core.a` is rebuilt with `ranlib` to ensure the archive index exists.
+- OpenZL is disabled inside Docker for now; the CBAD engine automatically falls back to the Rust Zstd adapter.
+
 ## Next Steps
 
-1. **Short term:** Document workaround for YC demo
-2. **Medium term:** Fix Docker build with proper linking
-3. **Long term:** Consider simplifying architecture (pure Go or pure Rust)
+1. **Short term:** 🌟 Done – Docker build now succeeds (`docker build -f deploy/docker/Dockerfile.api-server -t driftlock:test .`)
+2. **Medium term:** Re-enable OpenZL in the container once a Linux build of `libopenzl` is available
+3. **Long term:** Evaluate simplifying the native dependency stack (pure Go or pure Rust)
 
 ## For YC Application
 

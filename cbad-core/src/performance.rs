@@ -125,6 +125,18 @@ impl PerformanceValidator {
         Self { config }
     }
 
+    #[cfg_attr(not(feature = "openzl"), allow(dead_code))]
+    fn default_adapter() -> CompressionAlgorithm {
+        #[cfg(feature = "openzl")]
+        {
+            CompressionAlgorithm::OpenZL
+        }
+        #[cfg(not(feature = "openzl"))]
+        {
+            CompressionAlgorithm::Zstd
+        }
+    }
+
     /// Run all benchmarks and return results
     pub fn run_all_benchmarks(&self) -> Vec<BenchmarkResult> {
         vec![
@@ -138,7 +150,8 @@ impl PerformanceValidator {
     /// Benchmark compression throughput
     fn benchmark_compression_throughput(&self) -> BenchmarkResult {
         let mut result = BenchmarkResult::new("Compression Throughput");
-        let adapter = create_adapter(CompressionAlgorithm::OpenZL).expect("create adapter");
+        let adapter =
+            create_adapter(Self::default_adapter()).expect("create adapter");
         
         let test_data = self.generate_test_data(self.config.data_size);
         let start_time = Instant::now();
@@ -180,7 +193,8 @@ impl PerformanceValidator {
     /// Benchmark metrics calculation performance
     fn benchmark_metrics_calculation(&self) -> BenchmarkResult {
         let mut result = BenchmarkResult::new("Metrics Calculation");
-        let adapter = create_adapter(CompressionAlgorithm::OpenZL).expect("create adapter");
+        let adapter =
+            create_adapter(Self::default_adapter()).expect("create adapter");
         
         let baseline = self.generate_test_data(self.config.data_size);
         let window = self.generate_test_data(self.config.data_size);
@@ -287,7 +301,8 @@ impl PerformanceValidator {
         };
         
         let mut window = SlidingWindow::new(config);
-        let adapter = create_adapter(CompressionAlgorithm::OpenZL).expect("create adapter");
+        let adapter =
+            create_adapter(Self::default_adapter()).expect("create adapter");
         let compute_config = crate::ComputeConfig::default();
         
         // Pre-fill window with baseline data

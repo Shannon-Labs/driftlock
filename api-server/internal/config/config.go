@@ -157,7 +157,7 @@ func Load() (*Config, error) {
 			User:           getEnv("DB_USER", "postgres"),
 			Password:       getEnv("DB_PASSWORD", ""),
 			MaxConnections: getEnvInt("DB_MAX_CONNECTIONS", 100),
-			SSLMode:        getEnv("DB_SSL_MODE", "prefer"),
+			SSLMode:        getEnv("DB_SSL_MODE", "disable"),
 		},
 		CBAD: CBADConfig{
 			NCDThreshold:    getEnvFloat("CBAD_NCD_THRESHOLD", 0.3),

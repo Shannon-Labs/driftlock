@@ -15,7 +15,7 @@ database:
   user: postgres
   password: ${DB_PASSWORD}
   max_connections: 100
-  ssl_mode: require
+  ssl_mode: ${DB_SSL_MODE:-disable}
 
 cbad:
   # Normalized Compression Distance threshold (0-1)
