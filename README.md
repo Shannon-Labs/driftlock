@@ -15,6 +15,9 @@ cd driftlock
 # Build CBAD core (Rust) and the demo (Go)
 make demo
 
+# Or build the demo directly (no Makefile)
+go build -o driftlock-demo cmd/demo/main.go
+
 # Run the demo
 ./driftlock-demo test-data/financial-demo.json
 
@@ -50,8 +53,8 @@ Built with AI coding assistants (Claude, Codex, Kimi CLI); see [docs/ai-agents/]
 
 The demo uses `test-data/financial-demo.json` containing 5,000 synthetic payment transactions with:
 - **Normal pattern**: 50–100ms processing, US/UK origins, `/v1/charges` endpoint
-- **Anomalies**: 20 transactions with 8000ms latency, 200 from Nigeria (NG), 2 with malformed endpoints
-- **Detection**: Demo tuned to flag ~30 anomalies (NCD + permutation test) from 2,000 processed events
+- **Anomalies**: Latency spikes up to 8000ms and a handful of malformed endpoints
+- **Detection**: Demo tuned to flag ~30 anomalies (NCD + permutation test) from 2,000 processed events. The sample anomaly shown is a US transaction.
 
 ## 📚 Learn More
 

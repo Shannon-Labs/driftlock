@@ -1,6 +1,6 @@
+git clone https://github.com/shannon-labs/driftlock.git
+cd driftlock
 make demo
-./driftlock-demo test-data/financial-demo.json
-open demo-output.html
 
 # Driftlock Demo Walkthrough
 
