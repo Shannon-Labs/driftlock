@@ -23,70 +23,69 @@
 
       <!-- Lead Capture Form -->
       <div class="max-w-lg mx-auto mb-16">
-        <form @submit.prevent="handleSubmit" class="bg-white/10 backdrop-blur-xl rounded-3xl p-10 border border-white/30 premium-shadow-lg">
-          <div class="space-y-5">
-            <div>
-              <input
-                v-model="form.name"
-                type="text"
-                placeholder="Your Name"
-                class="w-full px-5 py-4 bg-white/20 border-2 border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:border-white focus:bg-white/30 transition-all focus:ring-2 focus:ring-white/20 text-lg"
-                required
-              />
-            </div>
+        <!-- Trust signals above form -->
+        <div class="flex justify-center gap-4 mb-6">
+          <div class="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2 flex items-center gap-2">
+            <Shield class="w-4 h-4 text-white/80" />
+            <span class="text-white/80 text-sm">DORA Aligned</span>
+          </div>
+          <div class="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2 flex items-center gap-2">
+            <Lock class="w-4 h-4 text-white/80" />
+            <span class="text-white/80 text-sm">SOC 2 Ready</span>
+          </div>
+          <div class="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2 flex items-center gap-2">
+            <CheckCircle class="w-4 h-4 text-white/80" />
+            <span class="text-white/80 text-sm">GDPR Compliant</span>
+          </div>
+        </div>
+
+        <form @submit.prevent="handleSubmit" class="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/30 premium-shadow-lg">
+          <div class="space-y-4">
             <div>
               <input
                 v-model="form.email"
                 type="email"
-                placeholder="Work Email"
+                placeholder="Work Email *"
                 class="w-full px-5 py-4 bg-white/20 border-2 border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:border-white focus:bg-white/30 transition-all focus:ring-2 focus:ring-white/20 text-lg"
                 required
               />
             </div>
-            <div>
-              <input
-                v-model="form.company"
-                type="text"
-                placeholder="Bank/Company Name"
-                class="w-full px-5 py-4 bg-white/20 border-2 border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:border-white focus:bg-white/30 transition-all focus:ring-2 focus:ring-white/20 text-lg"
-                required
-              />
-            </div>
+            
             <div>
               <select
                 v-model="form.role"
                 class="w-full px-5 py-4 bg-white/20 border-2 border-white/30 rounded-xl text-white focus:outline-none focus:border-white focus:bg-white/30 transition-all focus:ring-2 focus:ring-white/20 text-lg"
                 required
               >
-                <option value="" class="text-gray-900">Your Role</option>
+                <option value="" class="text-gray-900">Your Role *</option>
                 <option value="compliance" class="text-gray-900">Compliance Officer</option>
                 <option value="security" class="text-gray-900">Security Professional</option>
                 <option value="engineering" class="text-gray-900">Engineering Lead</option>
-                <option value="executive" class="text-gray-900">Executive</option>
-                <option value="other" class="text-gray-900">Other</option>
+                <option value="executive" class="text-gray-900">C-Level Executive</option>
               </select>
             </div>
+            
             <div>
               <select
                 v-model="form.timeline"
                 class="w-full px-5 py-4 bg-white/20 border-2 border-white/30 rounded-xl text-white focus:outline-none focus:border-white focus:bg-white/30 transition-all focus:ring-2 focus:ring-white/20 text-lg"
                 required
               >
-                <option value="" class="text-gray-900">Implementation Timeline</option>
-                <option value="immediate" class="text-gray-900">Immediate (1-2 months)</option>
+                <option value="" class="text-gray-900">Implementation Timeline *</option>
+                <option value="immediate" class="text-gray-900">Immediate (Q1 2026)</option>
                 <option value="quarter" class="text-gray-900">Next Quarter</option>
                 <option value="half" class="text-gray-900">Next 6 Months</option>
-                <option value="exploring" class="text-gray-900">Just Exploring</option>
               </select>
             </div>
+
             <button
               type="submit"
               :disabled="isSubmitting"
-              class="w-full bg-white text-primary-600 font-bold py-5 px-6 rounded-xl hover:bg-gray-50 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-3 text-lg premium-shadow-lg mt-2"
+              class="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold py-5 px-6 rounded-xl hover:from-orange-600 hover:to-red-600 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-3 text-lg premium-shadow-lg mt-4"
             >
-              <Mail v-if="!isSubmitting" class="w-6 h-6" />
+              <Sparkles v-if="!isSubmitting" class="w-6 h-6" />
               <Loader v-else class="w-6 h-6 animate-spin" />
-              {{ isSubmitting ? 'Submitting...' : 'Apply for Design Partner Program' }}
+              {{ isSubmitting ? 'Securing Your Spot...' : 'Get Compliant - Avoid Fines' }}
             </button>
           </div>
 
@@ -150,12 +149,12 @@
 
       <!-- Final Urgency Message -->
       <div class="mt-16 text-center">
-        <div class="inline-flex items-center gap-2 px-6 py-3 bg-white/20 backdrop-blur-sm rounded-full mb-6">
-          <AlertTriangle class="w-5 h-5" />
-          <span class="text-white font-semibold">January 2025 Deadline Approaching</span>
+        <div class="inline-flex items-center gap-2 px-6 py-3 bg-red-500/20 backdrop-blur-sm rounded-full mb-6">
+          <AlertTriangle class="w-5 h-5 text-red-300" />
+          <span class="text-red-200 font-semibold">DORA Enforcement Active Since January 2025</span>
         </div>
         <p class="text-lg text-white/90 max-w-2xl mx-auto">
-          Don't wait until regulators come knocking. Every day without explainable fraud detection increases your compliance risk.
+          Banks are being audited now. Every day without explainable fraud detection increases your compliance risk and potential fines.
         </p>
       </div>
     </div>
@@ -164,16 +163,14 @@
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
-import { Mail, Phone, Shield, Users, Clock, AlertTriangle, CheckCircle, AlertCircle, Loader } from 'lucide-vue-next'
+import { Mail, Phone, Shield, Users, Clock, AlertTriangle, CheckCircle, AlertCircle, Loader, Sparkles, Lock } from 'lucide-vue-next'
 
 const isSubmitting = ref(false)
 const showSuccess = ref(false)
 const showError = ref(false)
 
 const form = reactive({
-  name: '',
   email: '',
-  company: '',
   role: '',
   timeline: ''
 })

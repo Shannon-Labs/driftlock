@@ -64,24 +64,30 @@
       </div>
 
       <!-- CTA Buttons -->
-      <div class="flex flex-col sm:flex-row gap-6 justify-center items-center animate-slide-up" style="animation-delay: 0.8s;">
+      <div class="flex flex-col sm:flex-row gap-4 justify-center items-center animate-slide-up" style="animation-delay: 0.8s;">
         <a
           href="#cta"
-          class="group relative px-10 py-5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 premium-shadow-lg"
+          class="group relative px-8 py-4 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 premium-shadow-lg text-lg"
         >
-          <span class="relative z-10 flex items-center gap-3 text-lg">
-            Become a Design Partner
-            <ArrowRight class="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+          <span class="relative z-10 flex items-center gap-3">
+            Get Compliant Now
+            <ArrowRight class="w-6 h-6 group-hover:translate-x-1 transition-transform" />
           </span>
         </a>
-
+        
         <a
           href="#proof"
-          class="group px-10 py-5 bg-white dark:bg-gray-800 text-primary-600 dark:text-primary-400 font-bold rounded-2xl border-2 border-gray-300 dark:border-gray-600 hover:border-primary-600 dark:hover:border-primary-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-300 flex items-center gap-3 text-lg premium-shadow"
+          class="group px-8 py-4 bg-white/80 dark:bg-gray-800/80 text-primary-600 dark:text-primary-400 font-semibold rounded-2xl border-2 border-gray-300 dark:border-gray-600 hover:border-primary-600 dark:hover:border-primary-400 transition-all duration-300 flex items-center gap-3"
         >
           <Play class="w-5 h-5" />
-          See 30-Second Demo
+          Watch Demo (30s)
         </a>
+      </div>
+
+      <!-- Urgency Banner -->
+      <div class="mt-6 inline-flex items-center gap-2 px-4 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-full">
+        <Clock class="w-4 h-4" />
+        <span class="text-sm font-semibold">DORA Enforcement Active Since January 2025</span>
       </div>
 
       <!-- Trust Indicators -->

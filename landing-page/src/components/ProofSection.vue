@@ -80,9 +80,9 @@
                       <h5 class="font-semibold text-gray-900 dark:text-white mb-2">Mathematical Proof</h5>
                       <div class="bg-gray-50 dark:bg-gray-800 rounded p-3 font-mono text-xs">
                         <div>NCD Score: 0.847</div>
-                        <div>P-value: 0.002</div>
-                        <div>Statistical Significance: 99.8%</div>
-                        <div>Compression Ratio: 1:47</div>
+                        <div>P-value: 0.023</div>
+                        <div>Statistical Significance: 97.7%</div>
+                        <div>Confidence Interval: [0.82, 0.87]</div>
                       </div>
                     </div>
                   </div>

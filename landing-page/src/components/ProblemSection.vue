@@ -8,7 +8,7 @@
           <span class="gradient-text block">Starting January 2025</span>
         </h2>
         <p class="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-          EU regulators will audit bank algorithmic systems for DORA compliance. Black-box fraud detection means automatic failure.
+          EU regulators are auditing bank mathematical systems for DORA compliance. Black-box fraud detection means automatic failure.
         </p>
       </div>
 
@@ -39,7 +39,7 @@
               </li>
               <li class="flex items-start gap-3">
                 <X class="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
-                <span><strong class="text-red-600 dark:text-red-400">January 2025 deadline</strong> - enforcement starts soon</span>
+                <span><strong class="text-red-600 dark:text-red-400">Enforcement active since January 2025</strong> - fines being issued now</span>
               </li>
             </ul>
           </div>
@@ -129,7 +129,7 @@
               <div class="w-2/12 flex justify-center">
                 <div class="w-4 h-4 bg-red-500 rounded-full border-4 border-white dark:border-gray-900 animate-pulse"></div>
               </div>
-              <div class="w-5/12 pl-8 text-gray-500">Jan 2025</div>
+              <div class="w-5/12 pl-8 text-gray-500 text-red-600 dark:text-red-400 font-bold">ENFORCEMENT ACTIVE</div>
             </div>
           </div>
         </div>
@@ -139,10 +139,10 @@
       <div class="mt-16 text-center">
         <div class="inline-flex items-center gap-2 px-6 py-3 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-full mb-6">
           <Clock class="w-5 h-5" />
-          <span class="font-semibold">Time is running out</span>
+          <span class="font-semibold">DORA Enforcement Active Since January 2025</span>
         </div>
         <p class="text-xl text-gray-600 dark:text-gray-300 mb-8">
-          The clock is ticking. Every day without explainable fraud detection increases your compliance risk.
+          Banks are being audited now. Every day without explainable fraud detection increases your compliance risk.
         </p>
         <a href="#solution" class="btn-primary">
           See How We Solve This

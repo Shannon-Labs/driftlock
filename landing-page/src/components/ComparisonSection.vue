@@ -60,7 +60,7 @@
                   <span class="px-3 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 rounded-full text-sm">CBAD</span>
                 </td>
                 <td class="py-6 px-4 text-center">
-                  <span class="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-full text-sm">Neural Network</span>
+                  <span class="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-full text-sm">Black-Box ML</span>
                 </td>
               </tr>
 
