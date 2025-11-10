@@ -14,23 +14,23 @@
 
     <div class="relative z-10 container-padding mx-auto text-center">
       <!-- Main CTA -->
-      <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">
+      <h2 class="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
         Ready to Stop €50M Fines?
       </h2>
-      <p class="text-xl md:text-2xl text-white/90 mb-12 max-w-3xl mx-auto">
+      <p class="text-xl md:text-2xl text-white/90 mb-16 max-w-3xl mx-auto font-light leading-relaxed">
         Join the pilot program and see explainable fraud detection work with your real payment data.
       </p>
 
       <!-- Lead Capture Form -->
-      <div class="max-w-md mx-auto mb-12">
-        <form @submit.prevent="handleSubmit" class="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20">
-          <div class="space-y-4">
+      <div class="max-w-lg mx-auto mb-16">
+        <form @submit.prevent="handleSubmit" class="bg-white/10 backdrop-blur-xl rounded-3xl p-10 border border-white/30 premium-shadow-lg">
+          <div class="space-y-5">
             <div>
               <input
                 v-model="form.name"
                 type="text"
                 placeholder="Your Name"
-                class="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/60 focus:outline-none focus:border-white/60 focus:bg-white/30 transition-colors"
+                class="w-full px-5 py-4 bg-white/20 border-2 border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:border-white focus:bg-white/30 transition-all focus:ring-2 focus:ring-white/20 text-lg"
                 required
               />
             </div>
@@ -39,7 +39,7 @@
                 v-model="form.email"
                 type="email"
                 placeholder="Work Email"
-                class="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/60 focus:outline-none focus:border-white/60 focus:bg-white/30 transition-colors"
+                class="w-full px-5 py-4 bg-white/20 border-2 border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:border-white focus:bg-white/30 transition-all focus:ring-2 focus:ring-white/20 text-lg"
                 required
               />
             </div>
@@ -48,14 +48,14 @@
                 v-model="form.company"
                 type="text"
                 placeholder="Bank/Company Name"
-                class="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/60 focus:outline-none focus:border-white/60 focus:bg-white/30 transition-colors"
+                class="w-full px-5 py-4 bg-white/20 border-2 border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:border-white focus:bg-white/30 transition-all focus:ring-2 focus:ring-white/20 text-lg"
                 required
               />
             </div>
             <div>
               <select
                 v-model="form.role"
-                class="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-lg text-white focus:outline-none focus:border-white/60 focus:bg-white/30 transition-colors"
+                class="w-full px-5 py-4 bg-white/20 border-2 border-white/30 rounded-xl text-white focus:outline-none focus:border-white focus:bg-white/30 transition-all focus:ring-2 focus:ring-white/20 text-lg"
                 required
               >
                 <option value="" class="text-gray-900">Your Role</option>
@@ -69,7 +69,7 @@
             <div>
               <select
                 v-model="form.timeline"
-                class="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-lg text-white focus:outline-none focus:border-white/60 focus:bg-white/30 transition-colors"
+                class="w-full px-5 py-4 bg-white/20 border-2 border-white/30 rounded-xl text-white focus:outline-none focus:border-white focus:bg-white/30 transition-all focus:ring-2 focus:ring-white/20 text-lg"
                 required
               >
                 <option value="" class="text-gray-900">Implementation Timeline</option>
@@ -82,10 +82,10 @@
             <button
               type="submit"
               :disabled="isSubmitting"
-              class="w-full bg-white text-primary-600 font-bold py-4 px-6 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              class="w-full bg-white text-primary-600 font-bold py-5 px-6 rounded-xl hover:bg-gray-50 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-3 text-lg premium-shadow-lg mt-2"
             >
-              <Mail v-if="!isSubmitting" class="w-5 h-5" />
-              <Loader v-else class="w-5 h-5 animate-spin" />
+              <Mail v-if="!isSubmitting" class="w-6 h-6" />
+              <Loader v-else class="w-6 h-6 animate-spin" />
               {{ isSubmitting ? 'Submitting...' : 'Schedule Pilot Demo' }}
             </button>
           </div>

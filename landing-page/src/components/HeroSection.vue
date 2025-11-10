@@ -15,36 +15,43 @@
 
     <div class="relative z-10 container-padding mx-auto text-center">
       <!-- Main Headline -->
-      <h1 class="text-5xl md:text-6xl lg:text-7xl font-bold mb-8 animate-fade-in">
+      <h1 class="text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold mb-8 animate-fade-in leading-tight">
         <span class="gradient-text">Stop €50M</span>
         <br />
         <span class="text-gray-900 dark:text-white">DORA Fines</span>
       </h1>
 
       <!-- Subheadline -->
-      <p class="text-xl md:text-2xl lg:text-3xl text-gray-600 dark:text-gray-300 mb-12 max-w-4xl mx-auto animate-slide-up leading-relaxed">
-        Explainable fraud detection that <strong>auditors love</strong>.
+      <p class="text-xl md:text-2xl lg:text-3xl text-gray-600 dark:text-gray-300 mb-12 max-w-4xl mx-auto animate-slide-up leading-relaxed font-light">
+        Explainable fraud detection that <strong class="font-semibold text-gray-900 dark:text-white">auditors love</strong>.
+        <br class="hidden sm:block" />
         Glass-box compliance with mathematical proof for every flagged transaction.
       </p>
 
       <!-- Key Benefits -->
-      <div class="grid md:grid-cols-3 gap-8 mb-16 max-w-4xl mx-auto">
-        <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-6 border border-gray-200 dark:border-gray-700 animate-slide-up" style="animation-delay: 0.2s;">
-          <Shield class="w-12 h-12 text-primary-600 mx-auto mb-4" />
-          <h3 class="font-bold text-lg mb-2">Glass-Box AI</h3>
-          <p class="text-gray-600 dark:text-gray-400 text-sm">Mathematical explanations for every decision, no black boxes</p>
+      <div class="grid md:grid-cols-3 gap-6 mb-16 max-w-5xl mx-auto">
+        <div class="bg-white/90 dark:bg-gray-800/90 backdrop-blur-md rounded-2xl p-8 border border-gray-200 dark:border-gray-700 animate-slide-up card-hover premium-shadow" style="animation-delay: 0.2s;">
+          <div class="bg-gradient-to-br from-blue-500 to-indigo-600 w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-6">
+            <Shield class="w-8 h-8 text-white" />
+          </div>
+          <h3 class="font-bold text-xl mb-3 text-gray-900 dark:text-white">Glass-Box AI</h3>
+          <p class="text-gray-600 dark:text-gray-400 leading-relaxed">Mathematical explanations for every decision, no black boxes</p>
         </div>
 
-        <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-6 border border-gray-200 dark:border-gray-700 animate-slide-up" style="animation-delay: 0.4s;">
-          <Zap class="w-12 h-12 text-primary-600 mx-auto mb-4" />
-          <h3 class="font-bold text-lg mb-2">Real-Time Detection</h3>
-          <p class="text-gray-600 dark:text-gray-400 text-sm">Process 1000+ events/second with sub-second latency</p>
+        <div class="bg-white/90 dark:bg-gray-800/90 backdrop-blur-md rounded-2xl p-8 border border-gray-200 dark:border-gray-700 animate-slide-up card-hover premium-shadow" style="animation-delay: 0.4s;">
+          <div class="bg-gradient-to-br from-cyan-500 to-blue-600 w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-6">
+            <Zap class="w-8 h-8 text-white" />
+          </div>
+          <h3 class="font-bold text-xl mb-3 text-gray-900 dark:text-white">Real-Time Detection</h3>
+          <p class="text-gray-600 dark:text-gray-400 leading-relaxed">Process 1000+ events/second with sub-second latency</p>
         </div>
 
-        <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-6 border border-gray-200 dark:border-gray-700 animate-slide-up" style="animation-delay: 0.6s;">
-          <FileText class="w-12 h-12 text-primary-600 mx-auto mb-4" />
-          <h3 class="font-bold text-lg mb-2">Audit-Ready Reports</h3>
-          <p class="text-gray-600 dark:text-gray-400 text-sm">One-click compliance reports for regulator submissions</p>
+        <div class="bg-white/90 dark:bg-gray-800/90 backdrop-blur-md rounded-2xl p-8 border border-gray-200 dark:border-gray-700 animate-slide-up card-hover premium-shadow" style="animation-delay: 0.6s;">
+          <div class="bg-gradient-to-br from-indigo-500 to-purple-600 w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-6">
+            <FileText class="w-8 h-8 text-white" />
+          </div>
+          <h3 class="font-bold text-xl mb-3 text-gray-900 dark:text-white">Audit-Ready Reports</h3>
+          <p class="text-gray-600 dark:text-gray-400 leading-relaxed">One-click compliance reports for regulator submissions</p>
         </div>
       </div>
 
@@ -52,9 +59,9 @@
       <div class="flex flex-col sm:flex-row gap-6 justify-center items-center animate-slide-up" style="animation-delay: 0.8s;">
         <a
           href="#cta"
-          class="group relative px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+          class="group relative px-10 py-5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 premium-shadow-lg"
         >
-          <span class="relative z-10 flex items-center gap-2">
+          <span class="relative z-10 flex items-center gap-3 text-lg">
             Request Compliance Audit
             <ArrowRight class="w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </span>
@@ -62,7 +69,7 @@
 
         <a
           href="#proof"
-          class="group px-8 py-4 bg-white dark:bg-gray-800 text-primary-600 dark:text-primary-400 font-bold rounded-xl border-2 border-primary-600 dark:border-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all duration-300 flex items-center gap-2"
+          class="group px-10 py-5 bg-white dark:bg-gray-800 text-primary-600 dark:text-primary-400 font-bold rounded-2xl border-2 border-gray-300 dark:border-gray-600 hover:border-primary-600 dark:hover:border-primary-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-300 flex items-center gap-3 text-lg premium-shadow"
         >
           <Play class="w-5 h-5" />
           See 30-Second Demo
@@ -70,23 +77,23 @@
       </div>
 
       <!-- Trust Indicators -->
-      <div class="mt-20 pt-12 border-t border-gray-200 dark:border-gray-700">
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
-          <div class="text-center">
-            <div class="text-3xl font-bold text-primary-600 mb-1">€50M</div>
-            <div class="text-sm text-gray-600 dark:text-gray-400">Potential fines per bank</div>
+      <div class="mt-24 pt-16 border-t border-gray-200 dark:border-gray-700">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
+          <div class="text-center group">
+            <div class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-red-600 to-red-500 bg-clip-text text-transparent mb-2 transition-transform duration-300 group-hover:scale-110">€50M</div>
+            <div class="text-sm md:text-base text-gray-600 dark:text-gray-400 font-medium">Potential fines per bank</div>
           </div>
-          <div class="text-center">
-            <div class="text-3xl font-bold text-primary-600 mb-1">< 100ms</div>
-            <div class="text-sm text-gray-600 dark:text-gray-400">Detection latency</div>
+          <div class="text-center group">
+            <div class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent mb-2 transition-transform duration-300 group-hover:scale-110">< 100ms</div>
+            <div class="text-sm md:text-base text-gray-600 dark:text-gray-400 font-medium">Detection latency</div>
           </div>
-          <div class="text-center">
-            <div class="text-3xl font-bold text-primary-600 mb-1">95%+</div>
-            <div class="text-sm text-gray-600 dark:text-gray-400">Accuracy rate</div>
+          <div class="text-center group">
+            <div class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-2 transition-transform duration-300 group-hover:scale-110">95%+</div>
+            <div class="text-sm md:text-base text-gray-600 dark:text-gray-400 font-medium">Accuracy rate</div>
           </div>
-          <div class="text-center">
-            <div class="text-3xl font-bold text-primary-600 mb-1">10x</div>
-            <div class="text-sm text-gray-600 dark:text-gray-400">Less storage than ML</div>
+          <div class="text-center group">
+            <div class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2 transition-transform duration-300 group-hover:scale-110">10x</div>
+            <div class="text-sm md:text-base text-gray-600 dark:text-gray-400 font-medium">Less storage than ML</div>
           </div>
         </div>
       </div>
