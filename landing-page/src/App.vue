@@ -1,25 +1,27 @@
 <template>
   <div id="app" :class="{ 'dark': isDarkMode }">
     <!-- Navigation -->
-    <nav class="fixed top-0 w-full bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 z-50">
+    <nav class="fixed top-0 w-full bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 z-50 premium-shadow">
       <div class="container-padding mx-auto">
-        <div class="flex items-center justify-between h-16">
-          <div class="flex items-center space-x-2">
-            <Shield class="w-8 h-8 text-primary-600" />
-            <span class="font-bold text-xl">DriftLock</span>
+        <div class="flex items-center justify-between h-20">
+          <div class="flex items-center space-x-3">
+            <div class="bg-gradient-to-br from-blue-600 to-indigo-600 p-2 rounded-xl">
+              <Shield class="w-6 h-6 text-white" />
+            </div>
+            <span class="font-bold text-2xl bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">DriftLock</span>
           </div>
 
           <div class="hidden md:flex items-center space-x-8">
-            <a href="#problem" class="text-gray-600 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400 transition-colors">
+            <a href="#problem" class="text-gray-700 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400 transition-colors font-medium">
               Problem
             </a>
-            <a href="#solution" class="text-gray-600 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400 transition-colors">
+            <a href="#solution" class="text-gray-700 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400 transition-colors font-medium">
               Solution
             </a>
-            <a href="#proof" class="text-gray-600 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400 transition-colors">
+            <a href="#proof" class="text-gray-700 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400 transition-colors font-medium">
               Proof
             </a>
-            <a href="#cta" class="btn-primary">
+            <a href="#cta" class="btn-primary px-6 py-3 rounded-xl">
               Request Demo
             </a>
           </div>
@@ -71,49 +73,62 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
-      <div class="container-padding mx-auto py-12">
-        <div class="grid md:grid-cols-4 gap-8">
+    <footer class="bg-gradient-to-b from-gray-50 to-white dark:from-gray-800 dark:to-gray-900 border-t border-gray-200 dark:border-gray-700">
+      <div class="container-padding mx-auto py-16">
+        <div class="grid md:grid-cols-4 gap-12 mb-12">
           <div>
-            <div class="flex items-center space-x-2 mb-4">
-              <Shield class="w-6 h-6 text-primary-600" />
-              <span class="font-bold text-lg">DriftLock</span>
+            <div class="flex items-center space-x-3 mb-6">
+              <div class="bg-gradient-to-br from-blue-600 to-indigo-600 p-2 rounded-xl">
+                <Shield class="w-5 h-5 text-white" />
+              </div>
+              <span class="font-bold text-xl bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">DriftLock</span>
             </div>
-            <p class="text-sm text-gray-600 dark:text-gray-400">
-              Explainable anomaly detection for regulated industries.
+            <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed mb-4">
+              Explainable anomaly detection for regulated industries. Stop €50M DORA fines with glass-box AI.
+            </p>
+            <p class="text-xs text-gray-500 dark:text-gray-500">
+              Built by Shannon Labs
             </p>
           </div>
 
           <div>
-            <h3 class="font-semibold mb-4">Product</h3>
-            <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-              <li><a href="#solution" class="hover:text-primary-600 dark:hover:text-primary-400">Technology</a></li>
-              <li><a href="#proof" class="hover:text-primary-600 dark:hover:text-primary-400">Demo</a></li>
-              <li><a href="#comparison" class="hover:text-primary-600 dark:hover:text-primary-400">Comparison</a></li>
+            <h3 class="font-bold text-gray-900 dark:text-white mb-4 text-sm uppercase tracking-wider">Product</h3>
+            <ul class="space-y-3 text-sm text-gray-600 dark:text-gray-400">
+              <li><a href="#solution" class="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Technology</a></li>
+              <li><a href="#proof" class="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Demo</a></li>
+              <li><a href="#comparison" class="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Comparison</a></li>
             </ul>
           </div>
 
           <div>
-            <h3 class="font-semibold mb-4">Company</h3>
-            <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-              <li><a href="#" class="hover:text-primary-600 dark:hover:text-primary-400">About</a></li>
-              <li><a href="#" class="hover:text-primary-600 dark:hover:text-primary-400">Blog</a></li>
-              <li><a href="#" class="hover:text-primary-600 dark:hover:text-primary-400">Careers</a></li>
+            <h3 class="font-bold text-gray-900 dark:text-white mb-4 text-sm uppercase tracking-wider">Company</h3>
+            <ul class="space-y-3 text-sm text-gray-600 dark:text-gray-400">
+              <li><a href="#" class="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">About</a></li>
+              <li><a href="#" class="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Blog</a></li>
+              <li><a href="#" class="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Careers</a></li>
             </ul>
           </div>
 
           <div>
-            <h3 class="font-semibold mb-4">Legal</h3>
-            <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-              <li><a href="#" class="hover:text-primary-600 dark:hover:text-primary-400">Privacy</a></li>
-              <li><a href="#" class="hover:text-primary-600 dark:hover:text-primary-400">Terms</a></li>
-              <li><a href="#" class="hover:text-primary-600 dark:hover:text-primary-400">Compliance</a></li>
+            <h3 class="font-bold text-gray-900 dark:text-white mb-4 text-sm uppercase tracking-wider">Legal</h3>
+            <ul class="space-y-3 text-sm text-gray-600 dark:text-gray-400">
+              <li><a href="#" class="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Privacy</a></li>
+              <li><a href="#" class="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Terms</a></li>
+              <li><a href="#" class="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Compliance</a></li>
             </ul>
           </div>
         </div>
 
-        <div class="border-t border-gray-200 dark:border-gray-600 mt-8 pt-8 text-center text-sm text-gray-600 dark:text-gray-400">
-          <p>&copy; 2024 Shannon Labs. Licensed under Apache 2.0.</p>
+        <div class="border-t border-gray-200 dark:border-gray-700 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p class="text-sm text-gray-600 dark:text-gray-400">
+            &copy; 2025 Shannon Labs. Licensed under Apache 2.0.
+          </p>
+          <div class="flex items-center gap-6 text-sm text-gray-600 dark:text-gray-400">
+            <span class="flex items-center gap-2">
+              <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+              All systems operational
+            </span>
+          </div>
         </div>
       </div>
     </footer>
@@ -154,6 +169,10 @@ onMounted(() => {
 
 <style scoped>
 .btn-primary {
-  @apply bg-primary-600 hover:bg-primary-700 text-white px-6 py-2 rounded-lg font-medium transition-colors;
+  @apply bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold transition-all duration-300 transform hover:scale-105;
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05),
+    0 0 0 1px rgba(0, 0, 0, 0.05);
 }
 </style>
