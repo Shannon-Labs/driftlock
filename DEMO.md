@@ -48,6 +48,17 @@ Click any flagged anomaly → see the **explanation panel** with:
 
 "Export this audit log, hand it to regulators → fine avoided. Glass-box AI that ships."
 
+### 6. Production Deployment
+
+"This demo proves the core algorithm. In production, Driftlock would:
+- **Plug into your OpenTelemetry collector** (no code changes to your payment gateway)
+- **Detect in real-time** (sub-second latency, not batch processing)
+- **Alert immediately** (webhook to PagerDuty/Slack when drift detected)
+- **Store audit trails** (immutable PostgreSQL records for regulator requests)
+- **Export compliance reports** (one-click PDF with mathematical proofs)
+
+Ready to pilot on your real payment data?"
+
 ## Screenshot Reference
 
 ![Demo Anomaly](screenshots/demo-anomaly-card.png)

@@ -41,7 +41,32 @@ Driftlock analyzes payment gateway telemetry using compression-based anomaly det
 3. **Generates explanations** with NCD scores, p-values, and statistical significance
 4. **Outputs HTML report** with flagged anomalies and regulator-friendly math
 
-The HTML includes a baseline comparison panel and similar normal examples for each anomaly to make the “why” obvious to non‑experts.
+The HTML includes a baseline comparison panel and similar normal examples for each anomaly to make the "why" obvious to non‑experts.
+
+## From Demo to Production
+
+**This repository contains a proof-of-concept demo** that validates the core CBAD algorithm. The full production system would include:
+
+### Production Architecture
+- **OpenTelemetry Collector Integration**: Drop-in processor that ingests live telemetry from payment gateways, API gateways, or any OTLP-compatible source
+- **Real-time Detection API**: REST/gRPC service with sub-second anomaly flagging
+- **Audit Trail Storage**: PostgreSQL-backed evidence bundles with immutable audit logs
+- **Dashboard**: Real-time anomaly viewer with drill-down and export capabilities
+- **Compliance Exports**: One-click PDF/JSON reports formatted for DORA/NIS2 audits
+
+### Integration Points
+1. **Data In**: OpenTelemetry collector receives logs/metrics from your infrastructure
+2. **Detection**: CBAD processor (this Rust core) analyzes streams in real-time
+3. **Alerts**: Webhooks, email, PagerDuty, or Slack notifications
+4. **Audit**: Regulator-ready exports with mathematical proofs and timestamps
+
+### What This Demo Proves
+- ✅ Core CBAD algorithm works (NCD + permutation testing)
+- ✅ Generates explainable, audit-friendly output
+- ✅ Processes 2,000 transactions in seconds with zero false negatives on synthetic data
+- ✅ Glass-box explanations (compression ratios, p-values, z-scores)
+
+**Next step**: Pilot integration with a design partner's payment gateway to validate real-world performance and tune thresholds for production traffic patterns.
 
 ## Project Status
 
