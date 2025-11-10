@@ -14,6 +14,7 @@ go build -o driftlock-demo cmd/demo/main.go || { echo "❌ Go build failed"; exi
 
 # Run and time
 echo "Running demo..."
+export LD_LIBRARY_PATH=$PWD/cbad-core/target/release:$LD_LIBRARY_PATH
 timeout 30s ./driftlock-demo test-data/financial-demo.json > verify.log 2>&1 || {
   echo "❌ Demo run failed or timed out"; exit 1;
 }
