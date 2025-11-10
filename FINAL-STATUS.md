@@ -1,8 +1,8 @@
-# Driftlock Repository Status — Ready for Review
+# Driftlock Repository Status — Demo Ready
 
-This file reflects the current, simplified demo that ships in this repository.
+This file reflects the current proof-of-concept demo that ships in this repository.
 
-## What ships today
+## What This Demo Proves
 
 - Rust core (`cbad-core/`) with FFI for Go
 - Go CLI demo (`cmd/demo/main.go`) that reads a static JSON file
@@ -10,7 +10,7 @@ This file reflects the current, simplified demo that ships in this repository.
 - One minimal CI workflow that builds, runs, and verifies the demo
 - HTML output (`demo-output.html`) with anomaly cards, baseline comparisons, and similar normal examples
 
-## Quick start
+## Try the Demo
 
 ```bash
 git clone https://github.com/Shannon-Labs/driftlock.git
@@ -26,7 +26,7 @@ Or run the single verification script used in CI:
 ./verify-yc-ready.sh
 ```
 
-## Current expected results
+## Demo Results
 
 - Processes the first 2,000 events from a 5,000‑row dataset
 - Warmup: first 400 events build the baseline
@@ -34,12 +34,12 @@ Or run the single verification script used in CI:
 - Runtime: ~4–6s on a modern laptop; <30s in CI
 - Detection rate in the report: ~0.6% (30/5000 total events)
 
-## Notes on removed/archived components
+## Project Evolution
 
-Earlier iterations included a Docker/React dashboard (docker‑compose, web frontend, API, DB). That stack is not part of this repository anymore. The current demo is a self‑contained Rust+Go CLI that renders HTML — no Docker, DB, or external services.
+We simplified from a full-stack approach to focus on core algorithm validation. Current demo is Rust+Go CLI only — no Docker, DB, or external services.
 
-If you find any remaining references to docker-compose or a web frontend in older docs, treat them as historical. The authoritative instructions are in `README.md`, `DEMO.md`, and `verify-yc-ready.sh`.
+The authoritative instructions are in `README.md`, `DEMO.md`, and `verify-yc-ready.sh`.
 
 ---
 
-Prepared for partner review.
+Demo ready for YC partner evaluation.
