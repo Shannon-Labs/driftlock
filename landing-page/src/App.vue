@@ -8,7 +8,7 @@
             <div class="bg-gradient-to-br from-blue-600 to-indigo-600 p-2 rounded-xl">
               <Shield class="w-6 h-6 text-white" />
             </div>
-            <span class="font-bold text-2xl bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">DriftLock</span>
+            <span class="font-bold text-2xl bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">Driftlock</span>
           </div>
 
           <div class="hidden md:flex items-center space-x-8">
@@ -22,7 +22,7 @@
               Proof
             </a>
             <a href="#cta" class="btn-primary px-6 py-3 rounded-xl">
-              Request Demo
+              Become a Partner
             </a>
           </div>
 
@@ -56,7 +56,7 @@
             Proof
           </a>
           <a href="#cta" class="btn-primary w-full text-center">
-            Request Demo
+            Become a Partner
           </a>
         </div>
       </div>
@@ -81,10 +81,10 @@
               <div class="bg-gradient-to-br from-blue-600 to-indigo-600 p-2 rounded-xl">
                 <Shield class="w-5 h-5 text-white" />
               </div>
-              <span class="font-bold text-xl bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">DriftLock</span>
+              <span class="font-bold text-xl bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">Driftlock</span>
             </div>
             <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed mb-4">
-              Explainable anomaly detection for regulated industries. Stop €50M DORA fines with glass-box AI.
+              Explainable anomaly detection for regulated industries. Stop €50M DORA fines with glass-box algorithm.
             </p>
             <p class="text-xs text-gray-500 dark:text-gray-500">
               Built by Shannon Labs

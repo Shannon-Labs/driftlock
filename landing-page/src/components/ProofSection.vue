@@ -20,7 +20,7 @@
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-3">
                 <Terminal class="w-6 h-6" />
-                <span class="font-bold text-lg">DriftLock Demo</span>
+                <span class="font-bold text-lg">Driftlock Demo</span>
               </div>
               <div class="flex items-center gap-4">
                 <div class="flex items-center gap-2">
@@ -227,7 +227,7 @@
           <div class="bg-white dark:bg-gray-800 rounded-xl p-6">
             <h4 class="font-bold text-gray-900 dark:text-white mb-4">Ready for Production</h4>
             <p class="text-gray-600 dark:text-gray-400 mb-6">
-              This demo proves our algorithm works. In production, DriftLock:
+              This demo proves our algorithm works. In production, Driftlock:
             </p>
             <ul class="space-y-2 text-gray-600 dark:text-gray-400">
               <li class="flex items-start gap-2">

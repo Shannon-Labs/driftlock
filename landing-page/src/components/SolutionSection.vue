@@ -8,7 +8,7 @@
           <span class="text-gray-900 dark:text-white block">That Auditors Love</span>
         </h2>
         <p class="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-          DriftLock uses compression-based anomaly detection to provide mathematical proof for every flagged transaction.
+          Driftlock uses compression-based anomaly detection to provide mathematical proof for every flagged transaction.
         </p>
       </div>
 

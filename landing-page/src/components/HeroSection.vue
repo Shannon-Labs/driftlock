@@ -15,15 +15,23 @@
 
     <div class="relative z-10 container-padding mx-auto text-center">
       <!-- Main Headline -->
-      <h1 class="text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold mb-8 animate-fade-in leading-tight">
+      <h1 class="text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold mb-6 animate-fade-in leading-tight">
         <span class="gradient-text">Stop €50M</span>
         <br />
         <span class="text-gray-900 dark:text-white">DORA Fines</span>
       </h1>
 
+      <!-- Alpha Badge -->
+      <div class="mb-8 animate-fade-in">
+        <span class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white text-sm font-semibold rounded-full shadow-lg">
+          <Sparkles class="w-4 h-4 mr-2" />
+          Alpha Phase - Seeking Design Partners
+        </span>
+      </div>
+
       <!-- Subheadline -->
       <p class="text-xl md:text-2xl lg:text-3xl text-gray-600 dark:text-gray-300 mb-12 max-w-4xl mx-auto animate-slide-up leading-relaxed font-light">
-        Explainable fraud detection that <strong class="font-semibold text-gray-900 dark:text-white">auditors love</strong>.
+        Mathematically explainable fraud detection that <strong class="font-semibold text-gray-900 dark:text-white">auditors love</strong>.
         <br class="hidden sm:block" />
         Glass-box compliance with mathematical proof for every flagged transaction.
       </p>
@@ -34,7 +42,7 @@
           <div class="bg-gradient-to-br from-blue-500 to-indigo-600 w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-6">
             <Shield class="w-8 h-8 text-white" />
           </div>
-          <h3 class="font-bold text-xl mb-3 text-gray-900 dark:text-white">Glass-Box AI</h3>
+          <h3 class="font-bold text-xl mb-3 text-gray-900 dark:text-white">Glass-Box Algorithm</h3>
           <p class="text-gray-600 dark:text-gray-400 leading-relaxed">Mathematical explanations for every decision, no black boxes</p>
         </div>
 
@@ -62,7 +70,7 @@
           class="group relative px-10 py-5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 premium-shadow-lg"
         >
           <span class="relative z-10 flex items-center gap-3 text-lg">
-            Request Compliance Audit
+            Become a Design Partner
             <ArrowRight class="w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </span>
         </a>
@@ -93,7 +101,7 @@
           </div>
           <div class="text-center group">
             <div class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2 transition-transform duration-300 group-hover:scale-110">10x</div>
-            <div class="text-sm md:text-base text-gray-600 dark:text-gray-400 font-medium">Less storage than ML</div>
+            <div class="text-sm md:text-base text-gray-600 dark:text-gray-400 font-medium">Less storage than ML systems</div>
           </div>
         </div>
       </div>
@@ -108,7 +116,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Shield, Zap, FileText, ArrowRight, Play, ChevronDown } from 'lucide-vue-next'
+import { Shield, Zap, FileText, ArrowRight, Play, ChevronDown, Sparkles } from 'lucide-vue-next'
 
 const backgroundPattern = computed(() => ({
   backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%231a73e8' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,

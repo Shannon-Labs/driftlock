@@ -8,7 +8,7 @@
           <span class="gradient-text block">Starting January 2025</span>
         </h2>
         <p class="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-          EU regulators will audit bank AI systems for DORA compliance. Black-box fraud detection means automatic failure.
+          EU regulators will audit bank algorithmic systems for DORA compliance. Black-box fraud detection means automatic failure.
         </p>
       </div>
 
@@ -31,7 +31,7 @@
               </li>
               <li class="flex items-start gap-3">
                 <X class="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
-                <span><strong class="text-red-600 dark:text-red-400">Explainable AI required</strong> - must show reasoning for every decision</span>
+                <span><strong class="text-red-600 dark:text-red-400">Explainable algorithms required</strong> - must show reasoning for every decision</span>
               </li>
               <li class="flex items-start gap-3">
                 <X class="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
@@ -52,7 +52,7 @@
           <div class="relative z-10">
             <div class="flex items-center gap-3 mb-6">
               <EyeOff class="w-8 h-8 text-gray-500" />
-              <h3 class="text-2xl font-bold text-gray-900 dark:text-white">Black-Box AI Problems</h3>
+              <h3 class="text-2xl font-bold text-gray-900 dark:text-white">Black-Box Algorithm Problems</h3>
             </div>
 
             <ul class="space-y-4 text-gray-700 dark:text-gray-300">
@@ -82,7 +82,7 @@
         <Quote class="w-12 h-12 text-red-500 mx-auto mb-6" />
 
         <blockquote class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-6 max-w-4xl mx-auto">
-          "When your ML flags a transaction as suspicious, regulators demand: <strong class="text-red-600 dark:text-red-400">'Show your work.'</strong> Black-box models can't answer that."
+          "When your ML system flags a transaction as suspicious, regulators demand: <strong class="text-red-600 dark:text-red-400">'Show your work.'</strong> Black-box models can't answer that."
         </blockquote>
 
         <div class="text-lg text-gray-600 dark:text-gray-300">

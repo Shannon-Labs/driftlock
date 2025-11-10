@@ -15,10 +15,10 @@
     <div class="relative z-10 container-padding mx-auto text-center">
       <!-- Main CTA -->
       <h2 class="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
-        Ready to Stop €50M Fines?
+        Become a Design Partner
       </h2>
       <p class="text-xl md:text-2xl text-white/90 mb-16 max-w-3xl mx-auto font-light leading-relaxed">
-        Join the pilot program and see explainable fraud detection work with your real payment data.
+        Shape the future of explainable algorithms. Get early access, hands-on support, and special pricing as our founding partners.
       </p>
 
       <!-- Lead Capture Form -->
@@ -86,7 +86,7 @@
             >
               <Mail v-if="!isSubmitting" class="w-6 h-6" />
               <Loader v-else class="w-6 h-6 animate-spin" />
-              {{ isSubmitting ? 'Submitting...' : 'Schedule Pilot Demo' }}
+              {{ isSubmitting ? 'Submitting...' : 'Apply for Design Partner Program' }}
             </button>
           </div>
 
@@ -94,7 +94,7 @@
           <div v-if="showSuccess" class="mt-4 p-4 bg-green-500/20 border border-green-500/50 rounded-lg">
             <div class="flex items-center gap-2 text-green-100">
               <CheckCircle class="w-5 h-5" />
-              <span class="font-medium">Thank you! We'll contact you within 24 hours.</span>
+              <span class="font-medium">Thank you! We'll contact you within 24 hours to discuss the design partner program.</span>
             </div>
           </div>
 
@@ -119,11 +119,11 @@
         </a>
 
         <a
-          href="mailto:pilot@driftlock.com"
+          href="mailto:hunter@shannonlabs.dev"
           class="flex items-center gap-3 px-6 py-3 bg-white/10 backdrop-blur-sm border border-white/30 rounded-lg text-white hover:bg-white/20 transition-colors"
         >
           <Mail class="w-5 h-5" />
-          <span>Email Us Directly</span>
+          <span>Email hunter@shannonlabs.dev</span>
         </a>
       </div>
 

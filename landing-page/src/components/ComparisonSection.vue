@@ -8,7 +8,7 @@
           <span class="text-gray-900 dark:text-white block">The Clear Winner</span>
         </h2>
         <p class="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-          Compare DriftLock's explainable approach against traditional black-box AI solutions.
+          Compare Driftlock's explainable approach against traditional black-box algorithmic solutions.
         </p>
       </div>
 
@@ -24,7 +24,7 @@
                     <div class="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 rounded-lg flex items-center justify-center mb-2">
                       <Shield class="w-6 h-6 text-primary-600" />
                     </div>
-                    <span class="font-bold text-primary-600">DriftLock</span>
+                    <span class="font-bold text-primary-600">Driftlock</span>
                   </div>
                 </th>
                 <th class="text-center py-4 px-4">
@@ -32,7 +32,7 @@
                     <div class="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center mb-2">
                       <EyeOff class="w-6 h-6 text-gray-500" />
                     </div>
-                    <span class="font-bold text-gray-600 dark:text-gray-400">Black-Box AI</span>
+                    <span class="font-bold text-gray-600 dark:text-gray-400">Black-Box Algorithms</span>
                   </div>
                 </th>
               </tr>
@@ -151,7 +151,7 @@
           <div class="space-y-4">
             <div class="bg-white dark:bg-gray-800 rounded-lg p-4">
               <div class="flex items-center justify-between mb-2">
-                <span class="font-medium text-gray-900 dark:text-white">Explainable AI</span>
+                <span class="font-medium text-gray-900 dark:text-white">Explainable Algorithms</span>
                 <span class="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded text-sm">100% Compliant</span>
               </div>
               <p class="text-sm text-gray-600 dark:text-gray-400">Mathematical explanations for every decision</p>
@@ -228,7 +228,7 @@
 
       <!-- Key Differentiators -->
       <div class="bg-gradient-to-r from-primary-50 to-cyan-50 dark:from-primary-900/20 dark:to-cyan-900/20 rounded-2xl p-8 md:p-12">
-        <h3 class="text-2xl font-bold text-center text-gray-900 dark:text-white mb-12">Why DriftLock Wins Every Time</h3>
+        <h3 class="text-2xl font-bold text-center text-gray-900 dark:text-white mb-12">Why Driftlock Wins Every Time</h3>
 
         <div class="grid md:grid-cols-3 gap-8">
           <div class="text-center">
@@ -270,7 +270,7 @@
           <span class="font-semibold">The Choice is Clear</span>
         </div>
         <p class="text-xl text-gray-600 dark:text-gray-300 mb-8">
-          Don't risk €50M fines. Choose explainable AI that regulators will actually approve.
+          Don't risk €50M fines. Choose explainable algorithms that regulators will actually approve.
         </p>
         <a href="#cta" class="btn-primary">
           Get Started Today
