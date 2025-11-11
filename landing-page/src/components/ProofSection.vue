@@ -89,33 +89,20 @@
 
                   <div>
                     <h5 class="font-semibold text-gray-900 dark:text-white mb-2">Comparison to Normal Transactions</h5>
-                    <div class="grid grid-cols-3 gap-2">
-                      <div class="bg-green-50 dark:bg-green-900/20 rounded p-2 text-center text-xs">
-                        <div class="text-green-600 dark:text-green-400">Normal</div>
-                        <div>$127.50</div>
-                        <div>67ms</div>
-                      </div>
-                      <div class="bg-green-50 dark:bg-green-900/20 rounded p-2 text-center text-xs">
-                        <div class="text-green-600 dark:text-green-400">Normal</div>
-                        <div>$89.99</div>
-                        <div>52ms</div>
-                      </div>
-                      <div class="bg-red-50 dark:bg-red-900/20 rounded p-2 text-center text-xs border-2 border-red-200">
-                        <div class="text-red-600 dark:text-red-400">This Tx</div>
-                        <div>$5,992.50</div>
-                        <div>8,047ms</div>
-                      </div>
+                    <div class="bg-gray-50 dark:bg-gray-800 rounded p-4 text-sm text-gray-600 dark:text-gray-400 italic">
+                      <p>Example comparison data will be displayed here in production. The demo shows how Driftlock compares anomalous transactions against baseline patterns, highlighting deviations in amount, latency, and transaction patterns.</p>
                     </div>
                   </div>
 
-                  <div class="flex justify-end gap-3">
-                    <button class="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm hover:bg-primary-700 transition-colors">
+                  <div class="flex justify-end gap-3 pt-2">
+                    <button class="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-lg text-sm cursor-not-allowed opacity-60" disabled>
                       Export Audit Trail
                     </button>
-                    <button class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                    <button class="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-lg text-sm cursor-not-allowed opacity-60" disabled>
                       View Similar Cases
                     </button>
                   </div>
+                  <p class="text-xs text-gray-500 dark:text-gray-500 mt-2 text-right italic">Demo preview - full functionality available in production</p>
                 </div>
               </div>
             </div>

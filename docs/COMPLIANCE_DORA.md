@@ -2,6 +2,8 @@
 
 > Template for assembling Digital Operational Resilience Act (DORA) evidence. The exporter will populate structured sections automatically; operators can append manual notes as required.
 
+**Note**: Driftlock's mathematical explanations also satisfy US regulatory requirements (CFPB Fair Lending, NYDFS Part 500, FFIEC). See [COMPLIANCE_US.md](COMPLIANCE_US.md) for US-specific templates.
+
 ## Overview
 - Organisation:
 - Service / System:

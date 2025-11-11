@@ -4,16 +4,43 @@
       <!-- Section Header -->
       <div class="text-center mb-16">
         <h2 class="text-4xl md:text-5xl font-bold mb-6">
-          <span class="text-gray-900 dark:text-white">The €50M Problem</span>
-          <span class="gradient-text block">Starting January 2025</span>
+          <span class="text-gray-900 dark:text-white">Multi-Million Dollar Fines</span>
+          <span class="gradient-text block">EU & US Regulations</span>
         </h2>
         <p class="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-          EU regulators are auditing bank mathematical systems for DORA compliance. Black-box fraud detection means automatic failure.
+          Regulators worldwide are auditing bank mathematical systems for explainability compliance. Black-box fraud detection means automatic failure.
         </p>
       </div>
 
+      <!-- Fine Calculation Examples -->
+      <div class="mb-16 bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-2xl p-8 border border-red-200 dark:border-red-800/30">
+        <h3 class="text-2xl font-bold text-center text-gray-900 dark:text-white mb-6">DORA Fine Structure (Article 17)</h3>
+        <div class="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          <div class="bg-white dark:bg-gray-900 rounded-xl p-6 text-center">
+            <div class="text-3xl font-bold text-red-600 dark:text-red-400 mb-2">Up to 2%</div>
+            <div class="text-sm text-gray-600 dark:text-gray-400 mb-3">of annual worldwide turnover</div>
+            <div class="text-xs text-gray-500 dark:text-gray-500 italic">OR 1% of average daily turnover</div>
+          </div>
+          <div class="bg-white dark:bg-gray-900 rounded-xl p-6 text-center">
+            <div class="text-3xl font-bold text-red-600 dark:text-red-400 mb-2">€1M</div>
+            <div class="text-sm text-gray-600 dark:text-gray-400">Individual manager liability</div>
+            <div class="text-xs text-gray-500 dark:text-gray-500 italic mt-2">Per responsible executive</div>
+          </div>
+          <div class="bg-white dark:bg-gray-900 rounded-xl p-6 text-center">
+            <div class="text-3xl font-bold text-red-600 dark:text-red-400 mb-2">€5M</div>
+            <div class="text-sm text-gray-600 dark:text-gray-400">Third-party providers</div>
+            <div class="text-xs text-gray-500 dark:text-gray-500 italic mt-2">Critical ICT service providers</div>
+          </div>
+        </div>
+        <div class="mt-6 text-center">
+          <p class="text-sm text-gray-600 dark:text-gray-400">
+            <strong class="text-gray-900 dark:text-white">Example:</strong> A bank with €5B annual turnover faces potential fines of <strong class="text-red-600 dark:text-red-400">€100M</strong> (2% of turnover)
+          </p>
+        </div>
+      </div>
+
       <!-- Main Problem Cards -->
-      <div class="grid md:grid-cols-2 gap-12 mb-16">
+      <div class="grid md:grid-cols-3 gap-8 mb-16">
         <!-- DORA Compliance Card -->
         <div class="bg-white dark:bg-gray-900 rounded-2xl p-8 shadow-xl border border-red-100 dark:border-red-900/30 relative overflow-hidden">
           <div class="absolute top-0 right-0 w-32 h-32 bg-red-500/10 rounded-full -mr-16 -mt-16"></div>
@@ -21,25 +48,56 @@
           <div class="relative z-10">
             <div class="flex items-center gap-3 mb-6">
               <AlertTriangle class="w-8 h-8 text-red-500" />
-              <h3 class="text-2xl font-bold text-gray-900 dark:text-white">DORA Compliance</h3>
+              <h3 class="text-2xl font-bold text-gray-900 dark:text-white">EU DORA</h3>
             </div>
 
-            <ul class="space-y-4 text-gray-700 dark:text-gray-300">
-              <li class="flex items-start gap-3">
-                <X class="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
-                <span><strong class="text-red-600 dark:text-red-400">€50M-€200M fines</strong> per violation for non-compliance</span>
+            <ul class="space-y-3 text-gray-700 dark:text-gray-300 text-sm">
+              <li class="flex items-start gap-2">
+                <X class="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+                <span><strong class="text-red-600 dark:text-red-400">Up to 2% annual turnover</strong> in fines</span>
               </li>
-              <li class="flex items-start gap-3">
-                <X class="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
-                <span><strong class="text-red-600 dark:text-red-400">Explainable algorithms required</strong> - must show reasoning for every decision</span>
+              <li class="flex items-start gap-2">
+                <X class="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+                <span><strong class="text-red-600 dark:text-red-400">Explainable algorithms required</strong> - Article 17</span>
               </li>
-              <li class="flex items-start gap-3">
-                <X class="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
-                <span><strong class="text-red-600 dark:text-red-400">Audit trails mandatory</strong> for all automated fraud detection</span>
+              <li class="flex items-start gap-2">
+                <X class="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+                <span><strong class="text-red-600 dark:text-red-400">Audit trails mandatory</strong> for all automated decisions</span>
               </li>
-              <li class="flex items-start gap-3">
-                <X class="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
-                <span><strong class="text-red-600 dark:text-red-400">Enforcement active since January 2025</strong> - fines being issued now</span>
+              <li class="flex items-start gap-2">
+                <X class="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+                <span><strong class="text-red-600 dark:text-red-400">Enforcement active</strong> since January 2025</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- US Regulations Card -->
+        <div class="bg-white dark:bg-gray-900 rounded-2xl p-8 shadow-xl border border-blue-100 dark:border-blue-900/30 relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full -mr-16 -mt-16"></div>
+
+          <div class="relative z-10">
+            <div class="flex items-center gap-3 mb-6">
+              <AlertTriangle class="w-8 h-8 text-blue-500" />
+              <h3 class="text-2xl font-bold text-gray-900 dark:text-white">US Regulations</h3>
+            </div>
+
+            <ul class="space-y-3 text-gray-700 dark:text-gray-300 text-sm">
+              <li class="flex items-start gap-2">
+                <X class="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                <span><strong class="text-blue-600 dark:text-blue-400">NYDFS Part 500</strong> - Cybersecurity requirements</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <X class="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                <span><strong class="text-blue-600 dark:text-blue-400">CFPB Fair Lending</strong> - Explainability for AI/ML models</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <X class="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                <span><strong class="text-blue-600 dark:text-blue-400">GLBA & FFIEC</strong> - Operational resilience mandates</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <X class="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                <span><strong class="text-blue-600 dark:text-blue-400">Significant penalties</strong> for non-compliance</span>
               </li>
             </ul>
           </div>
@@ -86,7 +144,7 @@
         </blockquote>
 
         <div class="text-lg text-gray-600 dark:text-gray-300">
-          <strong>Article 22, GDPR</strong> + <strong>Basel III Requirements</strong> + <strong>DORA Mandate</strong>
+          <strong>EU:</strong> Article 22 GDPR + Basel III + <strong>DORA Article 17</strong> | <strong>US:</strong> CFPB Fair Lending + NYDFS Part 500 + FFIEC Guidelines
         </div>
       </div>
 
@@ -139,10 +197,10 @@
       <div class="mt-16 text-center">
         <div class="inline-flex items-center gap-2 px-6 py-3 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-full mb-6">
           <Clock class="w-5 h-5" />
-          <span class="font-semibold">DORA Enforcement Active Since January 2025</span>
+          <span class="font-semibold">DORA Enforcement Active Since January 2025 | US Regulations Ongoing</span>
         </div>
         <p class="text-xl text-gray-600 dark:text-gray-300 mb-8">
-          Banks are being audited now. Every day without explainable fraud detection increases your compliance risk.
+          Banks worldwide are being audited now. Every day without explainable fraud detection increases your compliance risk and potential fines.
         </p>
         <a href="#solution" class="btn-primary">
           See How We Solve This
@@ -154,7 +212,7 @@
 </template>
 
 <script setup lang="ts">
-import { AlertTriangle, X, EyeOff, Quote, Clock, ArrowRight } from 'lucide-vue-next'
+import { AlertTriangle, X, EyeOff, Quote, Clock, ArrowRight, Globe } from 'lucide-vue-next'
 </script>
 
 <style scoped>

@@ -1,8 +1,10 @@
-# Driftlock: Explainable Anomaly Detection for EU Banks
+# Driftlock: Explainable Anomaly Detection for Global Banks
 
-Stop €50M DORA fines with math-based fraud detection that auditors love.
+Stop multi-million dollar fines with math-based fraud detection that auditors love.
 
-EU banks face €50M fines starting Jan 2025 for black-box AI. When your ML flags a transaction as suspicious, regulators demand: "Show your work." Driftlock uses compression math (not AI) to detect fraud with explanations auditors can verify.
+Banks worldwide face massive fines for black-box algorithms. When your system flags a transaction as suspicious, regulators demand: "Show your work." Driftlock uses compression math (not ML) to detect fraud with explanations auditors can verify.
+
+**EU DORA**: Up to 2% of annual turnover in fines | **US Regulations**: CFPB Fair Lending, NYDFS Part 500, FFIEC Guidelines
 
 ![Demo Anomaly](screenshots/demo-anomaly-card.png)
 
@@ -26,12 +28,13 @@ open demo-output.html  # macOS
 # xdg-open demo-output.html  # Linux
 ```
 
-## €50M Fines Start January 2025
+## Multi-Million Dollar Fines Start January 2025
 
-EU regulators will audit bank AI systems for DORA compliance. Black-box fraud detection = automatic failure.
+Regulators worldwide are auditing bank mathematical systems for explainability compliance. Black-box fraud detection = automatic failure.
 
-- DORA requires explainable AI decisions for all automated fraud detection
-- Black-box models = automatic audit failure + €50M-€200M fines  
+- **EU DORA**: Requires explainable algorithms for all automated fraud detection (up to 2% annual turnover in fines)
+- **US Regulations**: CFPB Fair Lending, NYDFS Part 500, and FFIEC guidelines mandate explainability
+- Black-box models = automatic audit failure + massive fines
 - Driftlock provides compression-based analysis with human-readable explanations
 
 ## How It Works
@@ -66,9 +69,9 @@ The HTML includes a baseline comparison panel and similar normal examples for ea
 - ✅ 0% false negatives in demo (tuned for ~1.5% detection rate)
 - 🎯 **Next**: 3 pilot banks for Q1 2025
 
-**Target customers**: EU-regulated banks and PSPs replacing black-box ML anomaly detectors.
+**Target customers**: Regulated banks and PSPs worldwide replacing black-box ML anomaly detectors (EU DORA, US CFPB/NYDFS, global compliance).
 
-**We need**: Introductions to EU bank compliance teams facing DORA audits.
+**We need**: Introductions to bank compliance teams facing regulatory audits in EU, US, and other jurisdictions.
 
 ## Development
 

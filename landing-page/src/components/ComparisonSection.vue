@@ -120,11 +120,11 @@
               </tr>
 
               <tr>
-                <td class="py-6 px-4 font-medium text-gray-900 dark:text-white">DORA Ready</td>
+                <td class="py-6 px-4 font-medium text-gray-900 dark:text-white">Regulatory Compliance</td>
                 <td class="py-6 px-4 text-center">
                   <div class="flex items-center justify-center gap-2 text-green-600 dark:text-green-400">
                     <CheckCircle class="w-5 h-5" />
-                    <span>Yes</span>
+                    <span>DORA & US Ready</span>
                   </div>
                 </td>
                 <td class="py-6 px-4 text-center">
@@ -141,11 +141,11 @@
 
       <!-- Regulatory Compliance Comparison -->
       <div class="grid lg:grid-cols-2 gap-12 mb-16">
-        <!-- DORA Compliance Matrix -->
+        <!-- Regulatory Compliance Matrix -->
         <div class="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl p-8">
           <div class="flex items-center gap-3 mb-6">
             <CheckCircle class="w-8 h-8 text-green-600" />
-            <h3 class="text-2xl font-bold text-gray-900 dark:text-white">DORA Compliance Matrix</h3>
+            <h3 class="text-2xl font-bold text-gray-900 dark:text-white">Regulatory Compliance Matrix</h3>
           </div>
 
           <div class="space-y-4">
@@ -247,7 +247,7 @@
             </div>
             <h4 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Regulatory Proof</h4>
             <p class="text-gray-600 dark:text-gray-400">
-              Built specifically for DORA compliance. Audit trails, statistical significance, and regulator-ready reports.
+              Built for global regulatory compliance (DORA, US regulations). Audit trails, statistical significance, and regulator-ready reports.
             </p>
           </div>
 
@@ -270,7 +270,7 @@
           <span class="font-semibold">The Choice is Clear</span>
         </div>
         <p class="text-xl text-gray-600 dark:text-gray-300 mb-8">
-          Don't risk €50M fines. Choose explainable algorithms that regulators will actually approve.
+          Don't risk multi-million dollar fines. Choose explainable algorithms that regulators worldwide will approve.
         </p>
         <a href="#cta" class="btn-primary">
           Get Started Today

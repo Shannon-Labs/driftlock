@@ -27,7 +27,7 @@
         <div class="flex justify-center gap-4 mb-6">
           <div class="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2 flex items-center gap-2">
             <Shield class="w-4 h-4 text-white/80" />
-            <span class="text-white/80 text-sm">DORA Aligned</span>
+            <span class="text-white/80 text-sm">DORA & US Compliant</span>
           </div>
           <div class="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2 flex items-center gap-2">
             <Lock class="w-4 h-4 text-white/80" />
@@ -128,16 +128,11 @@
 
       <!-- Trust Indicators -->
       <div class="border-t border-white/20 pt-12">
-        <div class="grid md:grid-cols-3 gap-8 text-white">
+        <div class="grid md:grid-cols-2 gap-8 text-white">
           <div>
             <Shield class="w-12 h-12 mx-auto mb-4 text-white/80" />
-            <h3 class="text-xl font-bold mb-2">DORA Compliant</h3>
-            <p class="text-white/70">Built specifically for EU banking regulations</p>
-          </div>
-          <div>
-            <Users class="w-12 h-12 mx-auto mb-4 text-white/80" />
-            <h3 class="text-xl font-bold mb-2">Pilot Program</h3>
-            <p class="text-white/70">Join 3 banks already testing in Q1 2025</p>
+            <h3 class="text-xl font-bold mb-2">Global Compliance</h3>
+            <p class="text-white/70">Built for EU DORA, US regulations, and beyond</p>
           </div>
           <div>
             <Clock class="w-12 h-12 mx-auto mb-4 text-white/80" />
@@ -151,7 +146,7 @@
       <div class="mt-16 text-center">
         <div class="inline-flex items-center gap-2 px-6 py-3 bg-red-500/20 backdrop-blur-sm rounded-full mb-6">
           <AlertTriangle class="w-5 h-5 text-red-300" />
-          <span class="text-red-200 font-semibold">DORA Enforcement Active Since January 2025</span>
+          <span class="text-red-200 font-semibold">DORA Enforcement Active Since January 2025 | US Regulations Ongoing</span>
         </div>
         <p class="text-lg text-white/90 max-w-2xl mx-auto">
           Banks are being audited now. Every day without explainable fraud detection increases your compliance risk and potential fines.
@@ -163,7 +158,7 @@
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
-import { Mail, Phone, Shield, Users, Clock, AlertTriangle, CheckCircle, AlertCircle, Loader, Sparkles, Lock } from 'lucide-vue-next'
+import { Mail, Phone, Shield, Clock, AlertTriangle, CheckCircle, AlertCircle, Loader, Sparkles, Lock } from 'lucide-vue-next'
 
 const isSubmitting = ref(false)
 const showSuccess = ref(false)

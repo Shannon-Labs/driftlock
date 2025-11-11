@@ -15,29 +15,29 @@
 
     <div class="relative z-10 container-padding mx-auto text-center">
       <!-- Main Headline -->
-      <h1 class="text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold mb-6 animate-fade-in leading-tight">
-        <span class="gradient-text">Stop €50M</span>
+      <h1 class="text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold mb-8 animate-fade-in leading-tight tracking-tight">
+        <span class="gradient-text">Stop Multi-Million</span>
         <br />
-        <span class="text-gray-900 dark:text-white">DORA Fines</span>
+        <span class="text-gray-900 dark:text-white">Dollar Fines</span>
       </h1>
 
       <!-- Alpha Badge -->
-      <div class="mb-8 animate-fade-in">
-        <span class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white text-sm font-semibold rounded-full shadow-lg">
+      <div class="mb-10 animate-fade-in" style="animation-delay: 0.2s;">
+        <span class="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-orange-500 to-red-500 text-white text-sm font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
           <Sparkles class="w-4 h-4 mr-2" />
           Alpha Phase - Seeking Design Partners
         </span>
       </div>
 
       <!-- Subheadline -->
-      <p class="text-xl md:text-2xl lg:text-3xl text-gray-600 dark:text-gray-300 mb-12 max-w-4xl mx-auto animate-slide-up leading-relaxed font-light">
+      <p class="text-xl md:text-2xl lg:text-3xl text-gray-600 dark:text-gray-300 mb-16 max-w-4xl mx-auto animate-slide-up leading-relaxed font-light" style="animation-delay: 0.3s;">
         Mathematically explainable fraud detection that <strong class="font-semibold text-gray-900 dark:text-white">auditors love</strong>.
         <br class="hidden sm:block" />
-        Glass-box compliance with mathematical proof for every flagged transaction.
+        Glass-box compliance for EU DORA & US regulations with mathematical proof for every flagged transaction.
       </p>
 
       <!-- Key Benefits -->
-      <div class="grid md:grid-cols-3 gap-6 mb-16 max-w-5xl mx-auto">
+      <div class="grid md:grid-cols-3 gap-8 mb-20 max-w-5xl mx-auto">
         <div class="bg-white/90 dark:bg-gray-800/90 backdrop-blur-md rounded-2xl p-8 border border-gray-200 dark:border-gray-700 animate-slide-up card-hover premium-shadow" style="animation-delay: 0.2s;">
           <div class="bg-gradient-to-br from-blue-500 to-indigo-600 w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-6">
             <Shield class="w-8 h-8 text-white" />
@@ -87,15 +87,15 @@
       <!-- Urgency Banner -->
       <div class="mt-6 inline-flex items-center gap-2 px-4 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-full">
         <Clock class="w-4 h-4" />
-        <span class="text-sm font-semibold">DORA Enforcement Active Since January 2025</span>
+        <span class="text-sm font-semibold">DORA Enforcement Active Since January 2025 | US Regulations Ongoing</span>
       </div>
 
       <!-- Trust Indicators -->
       <div class="mt-24 pt-16 border-t border-gray-200 dark:border-gray-700">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
           <div class="text-center group">
-            <div class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-red-600 to-red-500 bg-clip-text text-transparent mb-2 transition-transform duration-300 group-hover:scale-110">€50M</div>
-            <div class="text-sm md:text-base text-gray-600 dark:text-gray-400 font-medium">Potential fines per bank</div>
+            <div class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-red-600 to-red-500 bg-clip-text text-transparent mb-2 transition-transform duration-300 group-hover:scale-110">Up to 2%</div>
+            <div class="text-sm md:text-base text-gray-600 dark:text-gray-400 font-medium">of annual turnover (DORA)</div>
           </div>
           <div class="text-center group">
             <div class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent mb-2 transition-transform duration-300 group-hover:scale-110">< 100ms</div>
@@ -122,7 +122,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Shield, Zap, FileText, ArrowRight, Play, ChevronDown, Sparkles } from 'lucide-vue-next'
+import { Shield, Zap, FileText, ArrowRight, Play, ChevronDown, Sparkles, Clock } from 'lucide-vue-next'
 
 const backgroundPattern = computed(() => ({
   backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%231a73e8' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,

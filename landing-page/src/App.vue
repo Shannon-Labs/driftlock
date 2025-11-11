@@ -1,71 +1,126 @@
 <template>
   <div id="app" :class="{ 'dark': isDarkMode }">
     <!-- Navigation -->
-    <nav class="fixed top-0 w-full bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 z-50 premium-shadow">
-      <div class="container-padding mx-auto">
+    <nav 
+      class="fixed top-0 left-0 right-0 w-full z-50 transition-all duration-300"
+      :class="{
+        'bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl shadow-lg': true,
+        'bg-white/80 dark:bg-gray-900/80': isScrolled
+      }"
+    >
+      <div class="absolute inset-0 bg-gradient-to-r from-blue-50/50 via-transparent to-cyan-50/50 dark:from-blue-950/20 dark:via-transparent dark:to-cyan-950/20 pointer-events-none"></div>
+      <div class="relative container-padding mx-auto">
         <div class="flex items-center justify-between h-20">
-          <div class="flex items-center space-x-3">
-            <div class="bg-gradient-to-br from-blue-600 to-indigo-600 p-2 rounded-xl">
+          <a href="#app" class="flex items-center space-x-3 group">
+            <div class="bg-gradient-to-br from-blue-600 to-indigo-600 p-2.5 rounded-xl shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all duration-300">
               <Shield class="w-6 h-6 text-white" />
             </div>
-            <span class="font-bold text-2xl bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">Driftlock</span>
-          </div>
+            <span class="font-bold text-2xl bg-gradient-to-r from-gray-900 via-blue-700 to-indigo-700 dark:from-white dark:via-blue-300 dark:to-indigo-300 bg-clip-text text-transparent group-hover:from-blue-600 group-hover:to-indigo-600 transition-all duration-300">Driftlock</span>
+          </a>
 
-          <div class="hidden md:flex items-center space-x-8">
-            <a href="#problem" class="text-gray-700 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400 transition-colors font-medium">
+          <div class="hidden md:flex items-center space-x-1">
+            <a 
+              href="#problem" 
+              class="px-4 py-2 text-gray-700 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400 transition-all duration-200 font-medium rounded-lg hover:bg-gray-100/50 dark:hover:bg-gray-800/50 relative group"
+            >
               Problem
+              <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-600 to-indigo-600 scale-x-0 group-hover:scale-x-100 transition-transform duration-200"></span>
             </a>
-            <a href="#solution" class="text-gray-700 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400 transition-colors font-medium">
+            <a 
+              href="#solution" 
+              class="px-4 py-2 text-gray-700 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400 transition-all duration-200 font-medium rounded-lg hover:bg-gray-100/50 dark:hover:bg-gray-800/50 relative group"
+            >
               Solution
+              <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-600 to-indigo-600 scale-x-0 group-hover:scale-x-100 transition-transform duration-200"></span>
             </a>
-            <a href="#proof" class="text-gray-700 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400 transition-colors font-medium">
+            <a 
+              href="#proof" 
+              class="px-4 py-2 text-gray-700 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400 transition-all duration-200 font-medium rounded-lg hover:bg-gray-100/50 dark:hover:bg-gray-800/50 relative group"
+            >
               Proof
+              <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-600 to-indigo-600 scale-x-0 group-hover:scale-x-100 transition-transform duration-200"></span>
             </a>
-            <a href="#cta" class="btn-primary px-6 py-3 rounded-xl">
+            <a 
+              href="#cta" 
+              class="btn-primary px-6 py-2.5 rounded-xl ml-2"
+            >
               Become a Partner
             </a>
           </div>
 
-          <div class="flex items-center space-x-4">
+          <div class="flex items-center space-x-3">
             <button
               @click="toggleDarkMode"
-              class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              class="p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 hover:scale-110 group"
               aria-label="Toggle dark mode"
             >
-              <Sun v-if="isDarkMode" class="w-5 h-5" />
-              <Moon v-else class="w-5 h-5" />
+              <Sun v-if="isDarkMode" class="w-5 h-5 text-gray-700 dark:text-gray-300 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors" />
+              <Moon v-else class="w-5 h-5 text-gray-700 dark:text-gray-300 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors" />
             </button>
 
-            <button class="md:hidden p-2" @click="isMobileMenuOpen = !isMobileMenuOpen">
-              <Menu class="w-6 h-6" />
+            <button 
+              class="md:hidden p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200" 
+              @click="isMobileMenuOpen = !isMobileMenuOpen"
+              aria-label="Toggle menu"
+            >
+              <Menu class="w-6 h-6 text-gray-700 dark:text-gray-300" />
             </button>
           </div>
         </div>
       </div>
 
       <!-- Mobile Menu -->
-      <div v-if="isMobileMenuOpen" class="md:hidden bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
-        <div class="container-padding mx-auto py-4 space-y-3">
-          <a href="#problem" class="block text-gray-600 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400">
-            Problem
-          </a>
-          <a href="#solution" class="block text-gray-600 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400">
-            Solution
-          </a>
-          <a href="#proof" class="block text-gray-600 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400">
-            Proof
-          </a>
-          <a href="#cta" class="btn-primary w-full text-center">
-            Become a Partner
-          </a>
+      <transition
+        enter-active-class="transition-all duration-300 ease-out"
+        enter-from-class="opacity-0 -translate-y-4"
+        enter-to-class="opacity-100 translate-y-0"
+        leave-active-class="transition-all duration-200 ease-in"
+        leave-from-class="opacity-100 translate-y-0"
+        leave-to-class="opacity-0 -translate-y-4"
+      >
+        <div 
+          v-if="isMobileMenuOpen" 
+          class="md:hidden bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-t border-gray-200/50 dark:border-gray-700/50 shadow-lg"
+        >
+          <div class="container-padding mx-auto py-4 space-y-2">
+            <a 
+              href="#problem" 
+              class="block px-4 py-3 text-gray-700 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400 rounded-lg hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-all duration-200 font-medium"
+              @click="isMobileMenuOpen = false"
+            >
+              Problem
+            </a>
+            <a 
+              href="#solution" 
+              class="block px-4 py-3 text-gray-700 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400 rounded-lg hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-all duration-200 font-medium"
+              @click="isMobileMenuOpen = false"
+            >
+              Solution
+            </a>
+            <a 
+              href="#proof" 
+              class="block px-4 py-3 text-gray-700 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400 rounded-lg hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-all duration-200 font-medium"
+              @click="isMobileMenuOpen = false"
+            >
+              Proof
+            </a>
+            <a 
+              href="#cta" 
+              class="btn-primary w-full text-center mt-4"
+              @click="isMobileMenuOpen = false"
+            >
+              Become a Partner
+            </a>
+          </div>
         </div>
-      </div>
+      </transition>
     </nav>
 
     <!-- Main Content -->
-    <main class="pt-16">
+    <main class="pt-20">
       <HeroSection />
       <ProblemSection />
+      <RegulatoryMapSection />
       <SolutionSection />
       <ProofSection />
       <ComparisonSection />
@@ -136,10 +191,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { Shield, Sun, Moon, Menu } from 'lucide-vue-next'
 import HeroSection from './components/HeroSection.vue'
 import ProblemSection from './components/ProblemSection.vue'
+import RegulatoryMapSection from './components/RegulatoryMapSection.vue'
 import SolutionSection from './components/SolutionSection.vue'
 import ProofSection from './components/ProofSection.vue'
 import ComparisonSection from './components/ComparisonSection.vue'
@@ -147,14 +203,21 @@ import CTASection from './components/CTASection.vue'
 
 const isDarkMode = ref(false)
 const isMobileMenuOpen = ref(false)
+const isScrolled = ref(false)
 
 const toggleDarkMode = () => {
   isDarkMode.value = !isDarkMode.value
   if (isDarkMode.value) {
     document.documentElement.classList.add('dark')
+    localStorage.setItem('theme', 'dark')
   } else {
     document.documentElement.classList.remove('dark')
+    localStorage.setItem('theme', 'light')
   }
+}
+
+const handleScroll = () => {
+  isScrolled.value = window.scrollY > 20
 }
 
 onMounted(() => {
@@ -164,6 +227,14 @@ onMounted(() => {
     isDarkMode.value = true
     document.documentElement.classList.add('dark')
   }
+  
+  // Handle scroll for navigation styling
+  window.addEventListener('scroll', handleScroll)
+  handleScroll()
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
 })
 </script>
 
