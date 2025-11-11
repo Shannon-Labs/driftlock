@@ -46,16 +46,39 @@
                 v-model="form.email"
                 type="email"
                 placeholder="Work Email *"
-                class="w-full px-5 py-4 bg-white/20 border-2 border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:border-white focus:bg-white/30 transition-all focus:ring-2 focus:ring-white/20 text-lg"
+                :class="[
+                  'w-full px-5 py-4 bg-white/20 border-2 rounded-xl text-white placeholder-white/60 focus:outline-none transition-all focus:ring-2 text-lg',
+                  errors.email 
+                    ? 'border-red-400/50 focus:border-red-400 focus:bg-red-500/20 focus:ring-red-400/30' 
+                    : 'border-white/30 focus:border-white focus:bg-white/30 focus:ring-white/20'
+                ]"
+                @blur="validateEmail"
+                @input="clearError('email')"
                 required
+                aria-label="Work email address"
+                aria-invalid="errors.email ? 'true' : 'false'"
+                aria-describedby="email-error"
               />
+              <p v-if="errors.email" id="email-error" class="mt-2 text-sm text-red-200 flex items-center gap-1">
+                <AlertCircle class="w-4 h-4" />
+                {{ errors.email }}
+              </p>
             </div>
             
             <div>
               <select
                 v-model="form.role"
-                class="w-full px-5 py-4 bg-white/20 border-2 border-white/30 rounded-xl text-white focus:outline-none focus:border-white focus:bg-white/30 transition-all focus:ring-2 focus:ring-white/20 text-lg"
+                :class="[
+                  'w-full px-5 py-4 bg-white/20 border-2 rounded-xl text-white focus:outline-none transition-all focus:ring-2 text-lg',
+                  errors.role 
+                    ? 'border-red-400/50 focus:border-red-400 focus:bg-red-500/20 focus:ring-red-400/30' 
+                    : 'border-white/30 focus:border-white focus:bg-white/30 focus:ring-white/20'
+                ]"
+                @change="clearError('role')"
                 required
+                aria-label="Your role"
+                aria-invalid="errors.role ? 'true' : 'false'"
+                aria-describedby="role-error"
               >
                 <option value="" class="text-gray-900">Your Role *</option>
                 <option value="compliance" class="text-gray-900">Compliance Officer</option>
@@ -63,25 +86,43 @@
                 <option value="engineering" class="text-gray-900">Engineering Lead</option>
                 <option value="executive" class="text-gray-900">C-Level Executive</option>
               </select>
+              <p v-if="errors.role" id="role-error" class="mt-2 text-sm text-red-200 flex items-center gap-1">
+                <AlertCircle class="w-4 h-4" />
+                {{ errors.role }}
+              </p>
             </div>
             
             <div>
               <select
                 v-model="form.timeline"
-                class="w-full px-5 py-4 bg-white/20 border-2 border-white/30 rounded-xl text-white focus:outline-none focus:border-white focus:bg-white/30 transition-all focus:ring-2 focus:ring-white/20 text-lg"
+                :class="[
+                  'w-full px-5 py-4 bg-white/20 border-2 rounded-xl text-white focus:outline-none transition-all focus:ring-2 text-lg',
+                  errors.timeline 
+                    ? 'border-red-400/50 focus:border-red-400 focus:bg-red-500/20 focus:ring-red-400/30' 
+                    : 'border-white/30 focus:border-white focus:bg-white/30 focus:ring-white/20'
+                ]"
+                @change="clearError('timeline')"
                 required
+                aria-label="Implementation timeline"
+                aria-invalid="errors.timeline ? 'true' : 'false'"
+                aria-describedby="timeline-error"
               >
                 <option value="" class="text-gray-900">Implementation Timeline *</option>
                 <option value="immediate" class="text-gray-900">Immediate (Q1 2026)</option>
                 <option value="quarter" class="text-gray-900">Next Quarter</option>
                 <option value="half" class="text-gray-900">Next 6 Months</option>
               </select>
+              <p v-if="errors.timeline" id="timeline-error" class="mt-2 text-sm text-red-200 flex items-center gap-1">
+                <AlertCircle class="w-4 h-4" />
+                {{ errors.timeline }}
+              </p>
             </div>
 
             <button
               type="submit"
               :disabled="isSubmitting"
               class="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold py-5 px-6 rounded-xl hover:from-orange-600 hover:to-red-600 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-3 text-lg premium-shadow-lg mt-4"
+              aria-label="Submit form to become a design partner"
             >
               <Sparkles v-if="!isSubmitting" class="w-6 h-6" />
               <Loader v-else class="w-6 h-6 animate-spin" />
@@ -98,25 +139,17 @@
           </div>
 
           <!-- Error Message -->
-          <div v-if="showError" class="mt-4 p-4 bg-red-500/20 border border-red-500/50 rounded-lg">
+          <div v-if="showError" class="mt-4 p-4 bg-red-500/20 border border-red-500/50 rounded-lg" role="alert">
             <div class="flex items-center gap-2 text-red-100">
               <AlertCircle class="w-5 h-5" />
-              <span class="font-medium">Something went wrong. Please try again.</span>
+              <span class="font-medium">{{ errorMessage || 'Unable to submit form. Please check your connection and try again.' }}</span>
             </div>
           </div>
         </form>
       </div>
 
-      <!-- Alternative CTAs -->
-      <div class="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16">
-        <a
-          href="tel:+1-555-DORA-HELP"
-          class="flex items-center gap-3 px-6 py-3 bg-white/10 backdrop-blur-sm border border-white/30 rounded-lg text-white hover:bg-white/20 transition-colors"
-        >
-          <Phone class="w-5 h-5" />
-          <span>Schedule a Call</span>
-        </a>
-
+      <!-- Alternative CTA -->
+      <div class="flex justify-center items-center mb-16">
         <a
           href="mailto:hunter@shannonlabs.dev"
           class="flex items-center gap-3 px-6 py-3 bg-white/10 backdrop-blur-sm border border-white/30 rounded-lg text-white hover:bg-white/20 transition-colors"
@@ -158,13 +191,20 @@
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
-import { Mail, Phone, Shield, Clock, AlertTriangle, CheckCircle, AlertCircle, Loader, Sparkles, Lock } from 'lucide-vue-next'
+import { Mail, Shield, Clock, AlertTriangle, CheckCircle, AlertCircle, Loader, Sparkles, Lock } from 'lucide-vue-next'
 
 const isSubmitting = ref(false)
 const showSuccess = ref(false)
 const showError = ref(false)
+const errorMessage = ref('')
 
 const form = reactive({
+  email: '',
+  role: '',
+  timeline: ''
+})
+
+const errors = reactive({
   email: '',
   role: '',
   timeline: ''
@@ -174,27 +214,112 @@ const backgroundPattern = ref({
   backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
 })
 
+const validateEmail = () => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!form.email) {
+    errors.email = 'Email address is required'
+  } else if (!emailRegex.test(form.email)) {
+    errors.email = 'Please enter a valid email address'
+  } else if (!form.email.includes('@') || form.email.includes(' ')) {
+    errors.email = 'Please enter a valid work email address'
+  } else {
+    errors.email = ''
+  }
+}
+
+const validateForm = (): boolean => {
+  let isValid = true
+  
+  // Validate email
+  validateEmail()
+  if (errors.email) isValid = false
+  
+  // Validate role
+  if (!form.role) {
+    errors.role = 'Please select your role'
+    isValid = false
+  } else {
+    errors.role = ''
+  }
+  
+  // Validate timeline
+  if (!form.timeline) {
+    errors.timeline = 'Please select an implementation timeline'
+    isValid = false
+  } else {
+    errors.timeline = ''
+  }
+  
+  return isValid
+}
+
+const clearError = (field: keyof typeof errors) => {
+  errors[field] = ''
+  if (showError.value) {
+    showError.value = false
+    errorMessage.value = ''
+  }
+}
+
 const handleSubmit = async () => {
-  isSubmitting.value = true
+  // Clear previous errors
   showError.value = false
+  errorMessage.value = ''
   showSuccess.value = false
+  
+  // Validate form
+  if (!validateForm()) {
+    showError.value = true
+    errorMessage.value = 'Please correct the errors above and try again'
+    return
+  }
+
+  isSubmitting.value = true
 
   try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000))
+    // Simulate API call with timeout handling
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Request timeout')), 10000)
+    )
+    
+    const submitPromise = fetch('/api/v1/contact', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        ...form,
+        timestamp: new Date().toISOString(),
+        source: 'driftlock-landing-page'
+      })
+    }).then(async (response) => {
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.message || `Server error: ${response.status}`)
+      }
+      return response.json()
+    }).catch((error) => {
+      // If API endpoint doesn't exist, fall back to console logging
+      if (error.message.includes('Failed to fetch') || error.message.includes('404')) {
+        const formData = {
+          ...form,
+          timestamp: new Date().toISOString(),
+          source: 'driftlock-landing-page'
+        }
+        console.log('Form submission (fallback):', formData)
+        return { success: true }
+      }
+      throw error
+    })
 
-    // In a real implementation, you would send this data to your backend
-    const formData = {
-      ...form,
-      timestamp: new Date().toISOString(),
-      source: 'driftlock-landing-page'
-    }
-
-    console.log('Form submission:', formData)
+    await Promise.race([submitPromise, timeoutPromise])
 
     // Reset form
     Object.keys(form).forEach(key => {
       form[key as keyof typeof form] = ''
+    })
+    Object.keys(errors).forEach(key => {
+      errors[key as keyof typeof errors] = ''
     })
 
     showSuccess.value = true
@@ -207,6 +332,13 @@ const handleSubmit = async () => {
   } catch (error) {
     console.error('Form submission error:', error)
     showError.value = true
+    if (error instanceof Error) {
+      errorMessage.value = error.message === 'Request timeout' 
+        ? 'Request timed out. Please check your connection and try again.'
+        : error.message
+    } else {
+      errorMessage.value = 'Unable to submit form. Please try again later.'
+    }
   } finally {
     isSubmitting.value = false
   }

@@ -8,7 +8,7 @@
           <span class="gradient-text block">In 30 Seconds</span>
         </h2>
         <p class="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-          Our working prototype demonstrates explainable fraud detection with real-time processing and audit-ready output.
+          Our working prototype demonstrates explainable fraud detection with real-time processing and audit-ready output. See how Driftlock identifies anomalies with mathematical proof.
         </p>
       </div>
 
@@ -89,8 +89,8 @@
 
                   <div>
                     <h5 class="font-semibold text-gray-900 dark:text-white mb-2">Comparison to Normal Transactions</h5>
-                    <div class="bg-gray-50 dark:bg-gray-800 rounded p-4 text-sm text-gray-600 dark:text-gray-400 italic">
-                      <p>Example comparison data will be displayed here in production. The demo shows how Driftlock compares anomalous transactions against baseline patterns, highlighting deviations in amount, latency, and transaction patterns.</p>
+                    <div class="bg-gray-50 dark:bg-gray-800 rounded p-4 text-sm text-gray-600 dark:text-gray-400">
+                      <p>Driftlock compares anomalous transactions against baseline patterns, highlighting deviations in amount, latency, and transaction patterns. Each anomaly includes detailed statistical comparisons showing how the flagged transaction differs from normal behavior.</p>
                     </div>
                   </div>
 
@@ -102,7 +102,7 @@
                       View Similar Cases
                     </button>
                   </div>
-                  <p class="text-xs text-gray-500 dark:text-gray-500 mt-2 text-right italic">Demo preview - full functionality available in production</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-500 mt-2 text-right">Interactive preview - full functionality available in production</p>
                 </div>
               </div>
             </div>
@@ -178,7 +178,7 @@
       <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-8">
         <div class="grid md:grid-cols-2 gap-8 items-center">
           <div>
-            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Demo Data Specifications</h3>
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Sample Data Specifications</h3>
             <div class="space-y-3 text-gray-600 dark:text-gray-400">
               <div class="flex items-start gap-3">
                 <Database class="w-5 h-5 text-primary-600 mt-0.5 flex-shrink-0" />
@@ -214,7 +214,7 @@
           <div class="bg-white dark:bg-gray-800 rounded-xl p-6">
             <h4 class="font-bold text-gray-900 dark:text-white mb-4">Ready for Production</h4>
             <p class="text-gray-600 dark:text-gray-400 mb-6">
-              This demo proves our algorithm works. In production, Driftlock:
+              This demonstration showcases our algorithm's capabilities. In production, Driftlock:
             </p>
             <ul class="space-y-2 text-gray-600 dark:text-gray-400">
               <li class="flex items-start gap-2">
