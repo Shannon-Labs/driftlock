@@ -75,15 +75,13 @@
           </span>
         </a>
         
-        <a
-          href="/playground"
-          target="_blank"
-          rel="noopener noreferrer"
+        <router-link
+          to="/playground"
           class="group px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-2xl transition-all duration-300 transform hover:scale-105 flex items-center gap-3 shadow-lg"
         >
           <Play class="w-5 h-5" />
           Try Playground
-        </a>
+        </router-link>
         
         <a
           href="#proof"

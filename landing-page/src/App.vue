@@ -11,12 +11,12 @@
       <div class="absolute inset-0 bg-gradient-to-r from-blue-50/50 via-transparent to-cyan-50/50 dark:from-blue-950/20 dark:via-transparent dark:to-cyan-950/20 pointer-events-none"></div>
       <div class="relative container-padding mx-auto">
         <div class="flex items-center justify-between h-20">
-          <a href="#app" class="flex items-center space-x-3 group">
+          <router-link to="/" class="flex items-center space-x-3 group">
             <div class="bg-gradient-to-br from-blue-600 to-indigo-600 p-2.5 rounded-xl shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all duration-300">
               <Shield class="w-6 h-6 text-white" />
             </div>
             <span class="font-bold text-2xl bg-gradient-to-r from-gray-900 via-blue-700 to-indigo-700 dark:from-white dark:via-blue-300 dark:to-indigo-300 bg-clip-text text-transparent group-hover:from-blue-600 group-hover:to-indigo-600 transition-all duration-300">Driftlock</span>
-          </a>
+          </router-link>
 
           <div class="hidden md:flex items-center space-x-1">
             <a 
@@ -40,15 +40,13 @@
               Proof
               <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-600 to-indigo-600 scale-x-0 group-hover:scale-x-100 transition-transform duration-200"></span>
             </a>
-            <a 
-              href="/playground"
-              target="_blank"
-              rel="noopener noreferrer"
+            <router-link 
+              to="/playground"
               class="px-4 py-2 text-gray-700 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400 transition-all duration-200 font-medium rounded-lg hover:bg-gray-100/50 dark:hover:bg-gray-800/50 relative group"
             >
               Playground
               <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-600 to-indigo-600 scale-x-0 group-hover:scale-x-100 transition-transform duration-200"></span>
-            </a>
+            </router-link>
             <a 
               href="#cta" 
               class="btn-primary px-6 py-2.5 rounded-xl ml-2"
@@ -113,13 +111,20 @@
             >
               Proof
             </a>
-            <a 
-              href="#cta" 
-              class="btn-primary w-full text-center mt-4"
-              @click="isMobileMenuOpen = false"
-            >
-              Become a Partner
-            </a>
+          <router-link 
+            to="/#cta" 
+            class="btn-primary w-full text-center mt-4"
+            @click="isMobileMenuOpen = false"
+          >
+            Become a Partner
+          </router-link>
+          <router-link 
+            to="/playground" 
+            class="block px-4 py-3 text-gray-700 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400 rounded-lg hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-all duration-200 font-medium"
+            @click="isMobileMenuOpen = false"
+          >
+            Playground
+          </router-link>
           </div>
         </div>
       </transition>
@@ -127,17 +132,11 @@
 
     <!-- Main Content -->
     <main class="pt-20">
-      <HeroSection />
-      <ProblemSection />
-      <RegulatoryMapSection />
-      <SolutionSection />
-      <ProofSection />
-      <ComparisonSection />
-      <CTASection />
+      <router-view />
     </main>
 
     <!-- Footer -->
-    <footer class="bg-gradient-to-b from-gray-50 to-white dark:from-gray-800 dark:to-gray-900 border-t border-gray-200 dark:border-gray-700">
+    <footer v-if="route.name === 'home'" class="bg-gradient-to-b from-gray-50 to-white dark:from-gray-800 dark:to-gray-900 border-t border-gray-200 dark:border-gray-700">
       <div class="container-padding mx-auto py-16">
         <div class="grid md:grid-cols-4 gap-12 mb-12">
           <div>
@@ -202,13 +201,9 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { Shield, Sun, Moon, Menu } from 'lucide-vue-next'
-import HeroSection from './components/HeroSection.vue'
-import ProblemSection from './components/ProblemSection.vue'
-import RegulatoryMapSection from './components/RegulatoryMapSection.vue'
-import SolutionSection from './components/SolutionSection.vue'
-import ProofSection from './components/ProofSection.vue'
-import ComparisonSection from './components/ComparisonSection.vue'
-import CTASection from './components/CTASection.vue'
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
 
 const isDarkMode = ref(false)
 const isMobileMenuOpen = ref(false)
