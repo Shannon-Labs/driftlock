@@ -1,0 +1,9 @@
+.git
+bin/
+cbad-core/target/
+node_modules/
+*.log
+*.tmp
+driftlock-demo
+driftlock-demo-debug
+.DS_Store

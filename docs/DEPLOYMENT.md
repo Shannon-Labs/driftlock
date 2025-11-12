@@ -1,11 +1,28 @@
 # Driftlock Deployment Guide
 
+## Quick Start with Docker Compose
+
+The fastest way to get started is with the unified `docker-compose.yml`:
+
+```bash
+# Start HTTP API server
+docker compose up -d driftlock-http
+
+# Verify it's running
+curl http://localhost:8080/healthz
+
+# Start with Kafka collector (optional)
+docker compose --profile kafka up -d
+```
+
+See [QUICKSTARTS.md](../QUICKSTARTS.md) for more examples.
+
 ## Prerequisites
 
 - Go 1.22 or later
-- PostgreSQL 15 or later
-- Docker (optional, for containerized deployment)
-- Node.js 18+ (for UI)
+- PostgreSQL 15 or later (optional, for full API features)
+- Docker 24+ (recommended for containerized deployment)
+- Node.js 18+ (for UI/playground)
 
 ## Local Development
 
@@ -72,17 +89,38 @@ Access UI at: http://localhost:3000
 
 ## Production Deployment
 
-### Docker
+### Docker Compose (Unified Setup)
+
+The unified `docker-compose.yml` includes both APIs:
 
 ```bash
-# Build API server image
-docker build -t driftlock-api:latest -f api-server/Dockerfile .
+# Start HTTP API server (default)
+docker compose up -d driftlock-http
 
-# Build UI image
-docker build -t driftlock-ui:latest -f ui/Dockerfile .
+# Start with Kafka collector (optional)
+docker compose --profile kafka up -d
 
-# Run with docker-compose
-docker-compose up -d
+# View logs
+docker compose logs -f driftlock-http
+
+# Stop services
+docker compose down
+```
+
+### Individual Docker Builds
+
+```bash
+# Build HTTP API server image
+docker build -t driftlock-http:latest -f collector-processor/cmd/driftlock-http/Dockerfile .
+
+# Build Kafka collector image
+docker build -t driftlock-collector:latest -f collector-processor/cmd/driftlock-collector/Dockerfile .
+
+# Run HTTP API
+docker run --rm -p 8080:8080 \
+  -e PORT=8080 \
+  -e CORS_ALLOW_ORIGINS=https://play.driftlock.net \
+  driftlock-http:latest
 ```
 
 ### Kubernetes with Helm

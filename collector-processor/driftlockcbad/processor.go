@@ -101,6 +101,13 @@ func (p *cbadProcessor) processMetrics(ctx context.Context, metrics pmetric.Metr
 			for k := 0; k < scopeMetrics.Metrics().Len(); k++ {
 				metric := scopeMetrics.Metrics().At(k)
 
+				// Publish the metric to Kafka if publisher is available
+				if p.kafkaPublisher != nil {
+					if err := p.kafkaPublisher.PublishMetric(ctx, metric); err != nil {
+						p.logger.Error("Failed to publish metric to Kafka", zap.Error(err))
+					}
+				}
+
 				// Convert metric to byte array for CBAD analysis
 				metricData := p.metricToBytes(metric)
 
