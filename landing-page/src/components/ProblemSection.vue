@@ -89,7 +89,7 @@
               </li>
               <li class="flex items-start gap-2">
                 <X class="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                <span><strong class="text-blue-600 dark:text-blue-400">CFPB Fair Lending</strong> - Explainability for AI/ML models</span>
+                <span><strong class="text-blue-600 dark:text-blue-400">CFPB Fair Lending</strong> - Explainability for algorithmic decision systems</span>
               </li>
               <li class="flex items-start gap-2">
                 <X class="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
@@ -140,7 +140,7 @@
         <Quote class="w-12 h-12 text-red-500 mx-auto mb-6" />
 
         <blockquote class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-6 max-w-4xl mx-auto">
-          "When your ML system flags a transaction as suspicious, regulators demand: <strong class="text-red-600 dark:text-red-400">'Show your work.'</strong> Black-box models can't answer that."
+          "When your detection system flags a transaction as suspicious, regulators demand: <strong class="text-red-600 dark:text-red-400">'Show your work.'</strong> Black-box models can't answer that."
         </blockquote>
 
         <div class="text-lg text-gray-600 dark:text-gray-300">

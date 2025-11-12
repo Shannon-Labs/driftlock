@@ -76,11 +76,21 @@
         </a>
         
         <a
+          href="/playground"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="group px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-2xl transition-all duration-300 transform hover:scale-105 flex items-center gap-3 shadow-lg"
+        >
+          <Play class="w-5 h-5" />
+          Try Playground
+        </a>
+        
+        <a
           href="#proof"
           class="group px-8 py-4 bg-white/80 dark:bg-gray-800/80 text-primary-600 dark:text-primary-400 font-semibold rounded-2xl border-2 border-gray-300 dark:border-gray-600 hover:border-primary-600 dark:hover:border-primary-400 transition-all duration-300 flex items-center gap-3"
         >
-          <Play class="w-5 h-5" />
-          Watch Demo (30s)
+          <FileText class="w-5 h-5" />
+          Learn More
         </a>
       </div>
 
@@ -107,7 +117,7 @@
           </div>
           <div class="text-center group">
             <div class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2 transition-transform duration-300 group-hover:scale-110">10x</div>
-            <div class="text-sm md:text-base text-gray-600 dark:text-gray-400 font-medium">Less storage than ML systems</div>
+          <div class="text-sm md:text-base text-gray-600 dark:text-gray-400 font-medium">Less storage than model-driven systems</div>
           </div>
         </div>
       </div>

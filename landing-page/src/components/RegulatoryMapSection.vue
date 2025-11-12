@@ -31,7 +31,7 @@
             <!-- US Federal Row -->
             <div class="text-gray-700 dark:text-gray-300 font-semibold">US Federal</div>
             <div class="text-gray-700 dark:text-gray-300">CFPB Fair Lending</div>
-            <div class="text-gray-600 dark:text-gray-400 text-sm">Explainability required for AI/ML models in credit decisions</div>
+            <div class="text-gray-600 dark:text-gray-400 text-sm">Explainability required for algorithmic decisioning in credit decisions</div>
             <div class="text-blue-600 dark:text-blue-400 font-semibold">Significant fines</div>
 
             <!-- NY Row -->
