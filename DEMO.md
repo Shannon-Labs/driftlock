@@ -10,7 +10,7 @@ make demo
 
 ### 1. The Problem
 
-"Last year, EU banks paid €2.8B in AI transparency fines. When your ML flags a transaction as suspicious, GDPR Article 22 and Basel III require you to explain WHY in human terms. Black-box models can't. That's €50M-€200M per violation. Driftlock can."
+"Last year, EU banks paid €2.8B in algorithmic transparency fines. When your detection system flags a transaction as suspicious, GDPR Article 22 and Basel III require you to explain WHY in human terms. Black-box models can't. That's €50M-€200M per violation. Driftlock can."
 
 ### 2. The Demo
 

@@ -16,12 +16,12 @@ A professional, market-ready landing page has been successfully implemented for 
 
 1. **Hero Section** (`HeroSection.vue`)
    - Main value proposition: "Stop €50M DORA fines"
-   - Key benefits: Glass-box AI, real-time detection, audit-ready reports
+   - Key benefits: Glass-box algorithms, real-time detection, audit-ready reports
    - Trust indicators: Performance metrics and statistics
 
 2. **Problem Section** (`ProblemSection.vue`)
    - DORA compliance challenges (€50M-€200M fines)
-   - Black-box AI problems and regulatory rejection
+   - Black-box model problems and regulatory rejection
    - Timeline visualization with January 2025 deadline
    - Compliance requirements and consequences
 
@@ -38,7 +38,7 @@ A professional, market-ready landing page has been successfully implemented for 
    - Demo commands and data specifications
 
 5. **Comparison Section** (`ComparisonSection.vue`)
-   - Glass-box vs black-box AI comparison table
+   - Glass-box vs black-box models comparison table
    - DORA compliance matrix
    - Risk assessment for traditional solutions
    - Key differentiators and value propositions

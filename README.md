@@ -69,7 +69,7 @@ The HTML includes a baseline comparison panel and similar normal examples for ea
 - ✅ 0% false negatives in demo (tuned for ~1.5% detection rate)
 - 🎯 **Next**: 3 pilot banks for Q1 2025
 
-**Target customers**: Regulated banks and PSPs worldwide replacing black-box ML anomaly detectors (EU DORA, US CFPB/NYDFS, global compliance).
+**Target customers**: Regulated banks and PSPs worldwide replacing black-box model-based anomaly detectors (EU DORA, US CFPB/NYDFS, global compliance).
 
 **We need**: Introductions to bank compliance teams facing regulatory audits in EU, US, and other jurisdictions.
 
@@ -87,7 +87,7 @@ The demo uses `test-data/financial-demo.json` containing 5,000 synthetic payment
 ## 📚 Learn More
 
 - **[DEMO.md](DEMO.md)** - 2-minute partner walkthrough with screenshots
-- **[docs/](docs/)** - Full documentation and AI agent history
+- **[docs/](docs/)** - Full documentation and agent automation history
 
 Visual proof (optional):
 - Run: `./scripts/capture-anomaly-card.sh` (macOS Safari) to auto‑capture the first anomaly card into `screenshots/demo-anomaly-card.png`. If it fails due to permissions, follow `docs/CAPTURE-ANOMALY-SCREENSHOT.md` for manual capture.

@@ -375,7 +375,7 @@ func generateHTMLReport(anomalies []AnomalyResult, allTransactions []Transaction
     <div class="container">
         <div class="header">
             <h1>🛡️ Driftlock</h1>
-            <div class="tagline">Regulator-Proof AI for DORA Compliance</div>
+            <div class="tagline">Regulator-Proof Algorithms for DORA Compliance</div>
             <p>Compression-based anomaly detection with mathematical explanations</p>
             
             <div class="stats">
@@ -452,7 +452,7 @@ func generateHTMLReport(anomalies []AnomalyResult, allTransactions []Transaction
 
         <div class="footer">
             <p>Driftlock - Patent-pending compression-based anomaly detection | Shannon Labs</p>
-            <p>Built with Rust CBAD core for transparent, regulator-friendly AI</p>
+            <p>Built with Rust CBAD core for transparent, regulator-friendly math</p>
         </div>
     </div>
 </body>
