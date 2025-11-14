@@ -14,6 +14,9 @@ Banks worldwide face massive fines for black-box algorithms. When your system fl
 git clone https://github.com/Shannon-Labs/driftlock.git
 cd driftlock
 
+# Initialize git submodules (OpenZL and its nested dependencies)
+git submodule update --init --recursive
+
 # Build CBAD core (Rust) and the demo (Go)
 make demo
 

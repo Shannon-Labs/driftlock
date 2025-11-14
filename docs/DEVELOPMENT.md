@@ -78,7 +78,22 @@ git clone https://github.com/Shannon-Labs/driftlock.git
 cd driftlock
 ```
 
-2. **Set up environment variables:**
+2. **Initialize git submodules:**
+```bash
+# OpenZL is included as a git submodule and has nested dependencies (zstd)
+# This must be run after cloning to get the OpenZL source code
+git submodule update --init --recursive
+```
+
+**Note:** If you're building with OpenZL support, you'll need to build the OpenZL library first:
+```bash
+# Build OpenZL library (optional, only needed if using --features openzl)
+cd openzl
+make lib
+cd ..
+```
+
+3. **Set up environment variables:**
 ```bash
 cp .env.example .env
 # Edit .env with your configuration

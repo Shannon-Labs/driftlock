@@ -5,12 +5,23 @@ These quickstarts help you try Driftlock across all surfaces: CLI, REST API, and
 ## Prerequisites
 - Docker 24+
 - Make, Go 1.24+ (optional for local builds)
+- Rust 1.70+ (for building CBAD core)
+
+**Important:** If cloning the repository, initialize git submodules first:
+```bash
+git clone https://github.com/Shannon-Labs/driftlock.git
+cd driftlock
+git submodule update --init --recursive  # Required for OpenZL support
+```
 
 ## 1) CLI
 
 Run on NDJSON or JSON array files using the streaming detector.
 
 ```bash
+# Ensure submodules are initialized (if not already done)
+git submodule update --init --recursive
+
 # Build binary inside the module
 cd collector-processor
 go build -o ../bin/driftlock-cli ./cmd/driftlock-cli

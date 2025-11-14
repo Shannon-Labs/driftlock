@@ -30,6 +30,9 @@ This document describes how to build the deterministic CBAD core and link it int
 git clone https://github.com/Shannon-Labs/driftlock.git
 cd driftlock
 
+# Initialize git submodules (OpenZL and nested dependencies)
+git submodule update --init --recursive
+
 # Build API server (basic version without CBAD integration)
 make run
 
@@ -41,6 +44,9 @@ curl http://localhost:8080/v1/version
 ### Full Build with CBAD Integration
 
 ```bash
+# Ensure git submodules are initialized (OpenZL and nested dependencies)
+git submodule update --init --recursive
+
 # Build all components
 make build
 
