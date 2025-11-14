@@ -1,6 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
-import PlaygroundView from '../views/PlaygroundView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -12,8 +11,7 @@ const router = createRouter({
     },
     {
       path: '/playground',
-      name: 'playground',
-      component: PlaygroundView
+      redirect: { path: '/', hash: '#playground' }
     }
   ],
   scrollBehavior(to, from, savedPosition) {

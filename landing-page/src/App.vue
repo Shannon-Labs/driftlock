@@ -41,7 +41,7 @@
               <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-600 to-indigo-600 scale-x-0 group-hover:scale-x-100 transition-transform duration-200"></span>
             </a>
             <router-link 
-              to="/playground"
+              :to="{ path: '/', hash: '#playground' }"
               class="px-4 py-2 text-gray-700 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400 transition-all duration-200 font-medium rounded-lg hover:bg-gray-100/50 dark:hover:bg-gray-800/50 relative group"
             >
               Playground
@@ -119,7 +119,7 @@
             Become a Partner
           </router-link>
           <router-link 
-            to="/playground" 
+            :to="{ path: '/', hash: '#playground' }" 
             class="block px-4 py-3 text-gray-700 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400 rounded-lg hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-all duration-200 font-medium"
             @click="isMobileMenuOpen = false"
           >
