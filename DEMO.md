@@ -72,3 +72,19 @@ Ready to pilot on your real payment data?"
 1. **Pilot**: Run on your historical payment data
 2. **Validate**: Compare our detection vs. your current system
 3. **Deploy**: Integrate with your payment gateway
+
+## Need the API Instead of the CLI?
+
+Spin up the HTTP engine (same CBAD core) in Docker:
+
+```bash
+# Build + run the HTTP API locally
+docker compose up --build driftlock-http
+
+# Hit the detector
+curl -X POST http://localhost:8080/v1/detect \
+  -H 'Content-Type: application/json' \
+  -d @test-data/financial-demo.json
+```
+
+`/healthz` reports the available compressors (zstd/lz4/gzip are always present; the optional OpenZL adapter appears when the proprietary library is mounted under `openzl/` or `OPENZL_LIB_DIR`).

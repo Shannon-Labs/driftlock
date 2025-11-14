@@ -13,9 +13,7 @@ jobs:
         working-directory: cbad-core
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-rust@v1
-        with:
-          rust-version: stable
+      - uses: dtolnay/rust-toolchain@stable
       - name: Build (release)
         run: cargo build --release
 
@@ -26,10 +24,22 @@ jobs:
         working-directory: collector-processor
     steps:
       - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build cbad-core (release)
+        working-directory: cbad-core
+        run: cargo build --release
       - uses: actions/setup-go@v5
         with:
           go-version: '1.24'
       - name: Test
         run: go test ./...
 
-
+  docker:
+    runs-on: ubuntu-latest
+    needs: [rust, go]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Docker build smoke tests
+        env:
+          ENABLE_OPENZL_BUILD: "false"
+        run: ./scripts/test-docker-build.sh

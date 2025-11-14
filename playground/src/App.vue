@@ -1,15 +1,41 @@
 <template>
   <div class="max-w-6xl mx-auto p-6">
-    <header class="mb-6">
-      <div class="flex items-center justify-between">
+    <header class="mb-8">
+      <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Driftlock Playground</h1>
-          <p class="text-gray-600 dark:text-gray-300">Upload or paste JSON/NDJSON, tune parameters, and run detection.</p>
+          <h1 class="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-600 bg-clip-text text-transparent mb-2">
+            Driftlock Playground
+          </h1>
+          <p class="text-gray-600 dark:text-gray-300">
+            Paste JSON/NDJSON or load a sample - Driftlock auto-tunes the baseline, runs detection, and explains every anomaly.
+          </p>
         </div>
-        <div class="flex items-center gap-2">
-          <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg border" :class="apiStatus === 'connected' ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : apiStatus === 'checking' ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'">
-            <div class="w-2 h-2 rounded-full" :class="apiStatus === 'connected' ? 'bg-green-500' : apiStatus === 'checking' ? 'bg-yellow-500 animate-pulse' : 'bg-red-500'"></div>
-            <span class="text-sm font-medium" :class="apiStatus === 'connected' ? 'text-green-700 dark:text-green-400' : apiStatus === 'checking' ? 'text-yellow-700 dark:text-yellow-400' : 'text-red-700 dark:text-red-400'">
+
+        <div class="flex items-center gap-3">
+          <div
+            class="flex items-center gap-2 px-4 py-2 rounded-lg border shadow-sm transition-all duration-200"
+            :class="apiStatus === 'connected'
+              ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+              : apiStatus === 'checking'
+                ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800'
+                : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'"
+          >
+            <div
+              class="w-2.5 h-2.5 rounded-full"
+              :class="apiStatus === 'connected'
+                ? 'bg-green-500 animate-pulse'
+                : apiStatus === 'checking'
+                  ? 'bg-yellow-500 animate-pulse'
+                  : 'bg-red-500'"
+            ></div>
+            <span
+              class="text-sm font-medium"
+              :class="apiStatus === 'connected'
+                ? 'text-green-700 dark:text-green-400'
+                : apiStatus === 'checking'
+                  ? 'text-yellow-700 dark:text-yellow-400'
+                  : 'text-red-700 dark:text-red-400'"
+            >
               {{ apiStatus === 'connected' ? 'API Connected' : apiStatus === 'checking' ? 'Checking...' : 'API Unavailable' }}
             </span>
           </div>
@@ -17,8 +43,8 @@
       </div>
     </header>
 
-    <section class="grid md:grid-cols-3 gap-6 mb-6">
-      <div class="md:col-span-2 space-y-4">
+    <section class="grid lg:grid-cols-3 gap-6 mb-6">
+      <div class="lg:col-span-2 space-y-6">
         <UploadPanel @data="onData" />
         <SamplePicker @load="onSample" />
       </div>
@@ -27,32 +53,66 @@
       </div>
     </section>
 
-    <section v-if="loading" class="mt-4 p-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-      <div class="flex items-center justify-center gap-3">
-        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-        <span class="text-gray-600 dark:text-gray-300">Processing detection...</span>
+    <section
+      v-if="loading"
+      class="mt-6 p-8 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm"
+    >
+      <div class="flex items-center justify-center gap-4">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <span class="text-gray-600 dark:text-gray-300 text-lg font-medium">Processing detection...</span>
       </div>
     </section>
 
-    <section v-if="response" class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-      <div class="flex items-center justify-between mb-3">
-        <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Results</h2>
+    <section
+      v-if="response"
+      class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm"
+    >
+      <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-4">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Results</h2>
         <CurlSnippet :curl="curlCmd" />
       </div>
-      <div class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-        <span class="mr-4">Total: {{ response.total_events }}</span>
-        <span class="mr-4">Anomalies: {{ response.anomaly_count }}</span>
-        <span class="mr-4">Algo: {{ response.compression_algo }}</span>
-        <span>Time: {{ response.processing_time }}</span>
+      <div class="flex flex-wrap gap-6 mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+        <div class="flex items-center gap-2">
+          <span class="text-sm text-gray-600 dark:text-gray-400">Total Events:</span>
+          <span class="text-lg font-semibold text-gray-900 dark:text-white">{{ response.total_events }}</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-sm text-gray-600 dark:text-gray-400">Anomalies:</span>
+          <span
+            class="text-lg font-semibold"
+            :class="response.anomaly_count > 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'"
+          >
+            {{ response.anomaly_count || 0 }}
+          </span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-sm text-gray-600 dark:text-gray-400">Algorithm:</span>
+          <span class="text-lg font-semibold text-gray-900 dark:text-white">{{ response.compression_algo }}</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-sm text-gray-600 dark:text-gray-400">Processing Time:</span>
+          <span class="text-lg font-semibold text-gray-900 dark:text-white">{{ response.processing_time }}</span>
+        </div>
       </div>
-      <ResultsTable :items="response.anomalies" />
-      <div class="mt-4">
-        <button class="px-3 py-2 text-sm bg-gray-100 dark:bg-gray-800 rounded border" @click="downloadJSON">Download JSON</button>
+      <ResultsTable :items="response.anomalies || []" />
+      <div class="mt-6">
+        <button
+          class="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg font-medium transition-all duration-200 transform hover:scale-105 shadow-sm"
+          @click="downloadJSON"
+        >
+          Download JSON Results
+        </button>
       </div>
     </section>
 
-    <section v-if="error" class="mt-4 p-3 rounded border border-red-300 bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300">
-      {{ error }}
+    <section
+      v-if="error"
+      class="mt-6 p-4 rounded-xl border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 shadow-sm"
+    >
+      <div class="flex items-center gap-2">
+        <span class="text-xl">⚠️</span>
+        <span class="font-medium">{{ error }}</span>
+      </div>
     </section>
   </div>
 </template>

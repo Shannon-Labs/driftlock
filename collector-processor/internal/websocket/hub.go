@@ -1,7 +1,6 @@
 package websocket
 
 import (
-	"encoding/json"
 	"log"
 	"sync"
 	"time"
@@ -13,19 +12,19 @@ import (
 type MessageType string
 
 const (
-	MessageTypeProgress  MessageType = "progress"
-	MessageTypeComplete  MessageType = "complete"
-	MessageTypeError     MessageType = "error"
-	MessageTypeStatus    MessageType = "status"
-	MessageTypePing      MessageType = "ping"
+	MessageTypeProgress MessageType = "progress"
+	MessageTypeComplete MessageType = "complete"
+	MessageTypeError    MessageType = "error"
+	MessageTypeStatus   MessageType = "status"
+	MessageTypePing     MessageType = "ping"
 )
 
 // WebSocketMessage represents a message sent over WebSocket
 type WebSocketMessage struct {
-	Type      MessageType      `json:"type"`
-	Timestamp time.Time        `json:"timestamp"`
-	Data      interface{}      `json:"data"`
-	RequestID string           `json:"request_id,omitempty"`
+	Type      MessageType `json:"type"`
+	Timestamp time.Time   `json:"timestamp"`
+	Data      interface{} `json:"data"`
+	RequestID string      `json:"request_id,omitempty"`
 }
 
 // ProgressData represents progress information
@@ -63,11 +62,11 @@ type StatusData struct {
 
 // Client represents a WebSocket client connection
 type Client struct {
-	ID       string
-	Conn     *websocket.Conn
-	Send     chan WebSocketMessage
+	ID        string
+	Conn      *websocket.Conn
+	Send      chan WebSocketMessage
 	RequestID string
-	Hub      *Hub
+	Hub       *Hub
 }
 
 // Hub maintains the set of active clients and broadcasts messages to them
@@ -242,8 +241,8 @@ func (h *Hub) GetStats() map[string]interface{} {
 	return map[string]interface{}{
 		"active_connections": len(h.clients),
 		"processing_jobs":    len(h.processingJobs),
-		"uptime":            h.getUptime(),
-		"started_at":        h.startTime,
+		"uptime":             h.getUptime(),
+		"started_at":         h.startTime,
 	}
 }
 

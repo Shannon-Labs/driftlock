@@ -6,9 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -17,23 +15,23 @@ import (
 type FileType string
 
 const (
-	FileTypeJSON     FileType = "json"
-	FileTypeNDJSON   FileType = "ndjson"
-	FileTypeCSV      FileType = "csv"
-	FileTypeLog      FileType = "log"
-	FileTypeCustom   FileType = "custom"
-	FileTypeUnknown  FileType = "unknown"
+	FileTypeJSON    FileType = "json"
+	FileTypeNDJSON  FileType = "ndjson"
+	FileTypeCSV     FileType = "csv"
+	FileTypeLog     FileType = "log"
+	FileTypeCustom  FileType = "custom"
+	FileTypeUnknown FileType = "unknown"
 )
 
 // FileInfo represents information about a parsed file
 type FileInfo struct {
-	Type        FileType     `json:"type"`
-	Size        int64        `json:"size"`
-	LineCount   int          `json:"line_count"`
-	Headers     []string     `json:"headers,omitempty"`
-	Encoding    string       `json:"encoding"`
-	ProcessedAt time.Time    `json:"processed_at"`
-	Metadata    interface{}  `json:"metadata,omitempty"`
+	Type        FileType    `json:"type"`
+	Size        int64       `json:"size"`
+	LineCount   int         `json:"line_count"`
+	Headers     []string    `json:"headers,omitempty"`
+	Encoding    string      `json:"encoding"`
+	ProcessedAt time.Time   `json:"processed_at"`
+	Metadata    interface{} `json:"metadata,omitempty"`
 }
 
 // ParseEvent represents a single parsed event from any file type
@@ -220,7 +218,7 @@ func (p *NDJSONParser) GetFileInfo() FileInfo {
 
 // CSVParser handles CSV files
 type CSVParser struct {
-	fileInfo FileInfo
+	fileInfo   FileInfo
 	hasHeaders bool
 }
 
@@ -355,8 +353,6 @@ func (p *LogParser) Parse(reader io.Reader, events chan<- ParseEvent) error {
 }
 
 func (p *LogParser) parseLogLine(line string) map[string]interface{} {
-	result := make(map[string]interface{})
-
 	// Common log format patterns
 	patterns := []struct {
 		name   string

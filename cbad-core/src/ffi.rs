@@ -1,5 +1,5 @@
 //! Enhanced C FFI exports for Go integration
-//! 
+//!
 //! This module provides production-ready C FFI exports that enable
 //! Go-based applications to use the complete CBAD anomaly detection
 //! engine with streaming capabilities and proper error handling.
@@ -27,7 +27,7 @@ pub struct CBADConfig {
     pub permutation_count: usize,
     pub seed: u64,
     pub require_statistical_significance: c_int, // 0 = false, 1 = true
-    pub compression_algorithm: *const c_char, // "zstd", "lz4", "gzip", "openzl"
+    pub compression_algorithm: *const c_char,    // "zstd", "lz4", "gzip", "openzl"
 }
 
 /// Enhanced metrics structure with additional fields
@@ -47,23 +47,31 @@ pub struct CBADEnhancedMetrics {
     pub explanation: *const c_char, // Owned by Rust, must be freed
 }
 
+/// Returns 1 when CBAD was compiled with OpenZL support, 0 otherwise
+#[no_mangle]
+pub extern "C" fn cbad_has_openzl() -> c_int {
+    if cfg!(feature = "openzl") {
+        1
+    } else {
+        0
+    }
+}
+
 /// Create a new anomaly detector with configuration
-/// 
+///
 /// # Safety
 /// This function is unsafe because it deals with raw pointers from C.
 /// Callers must ensure:
 /// - config_ptr is a valid pointer to a CBADConfig struct
 /// - compression_algorithm string is valid UTF-8 and null-terminated
 #[no_mangle]
-pub unsafe extern "C" fn cbad_detector_create(
-    config_ptr: *const CBADConfig,
-) -> CBADDetectorHandle {
+pub unsafe extern "C" fn cbad_detector_create(config_ptr: *const CBADConfig) -> CBADDetectorHandle {
     if config_ptr.is_null() {
         return ptr::null_mut();
     }
 
     let config = &*config_ptr;
-    
+
     // Parse compression algorithm
     let algo = if config.compression_algorithm.is_null() {
         CompressionAlgorithm::Zstd
@@ -107,7 +115,7 @@ pub unsafe extern "C" fn cbad_detector_create(
 }
 
 /// Destroy an anomaly detector and free its memory
-/// 
+///
 /// # Safety
 /// This function is unsafe because it deals with raw pointers from C.
 /// Callers must ensure:
@@ -120,7 +128,7 @@ pub unsafe extern "C" fn cbad_detector_destroy(handle: CBADDetectorHandle) {
 }
 
 /// Add data to the anomaly detector
-/// 
+///
 /// # Safety
 /// This function is unsafe because it deals with raw pointers from C.
 /// Callers must ensure:
@@ -139,17 +147,23 @@ pub unsafe extern "C" fn cbad_detector_add_data(
 
     let detector = &*handle;
     let data = slice::from_raw_parts(data_ptr, data_len);
-    
+
     let event = DataEvent::new(data.to_vec());
-    
+
     match detector.add_event(event) {
-        Ok(added) => if added { 1 } else { 0 },
+        Ok(added) => {
+            if added {
+                1
+            } else {
+                0
+            }
+        }
         Err(_) => -2, // Internal error
     }
 }
 
 /// Check if the detector has enough data for analysis
-/// 
+///
 /// # Safety
 /// This function is unsafe because it deals with raw pointers from C.
 /// Callers must ensure:
@@ -161,21 +175,27 @@ pub unsafe extern "C" fn cbad_detector_is_ready(handle: CBADDetectorHandle) -> c
     }
 
     let detector = &*handle;
-    
+
     match detector.is_ready() {
-        Ok(ready) => if ready { 1 } else { 0 },
+        Ok(ready) => {
+            if ready {
+                1
+            } else {
+                0
+            }
+        }
         Err(_) => -2, // Internal error
     }
 }
 
 /// Perform anomaly detection and get results
-/// 
+///
 /// # Safety
 /// This function is unsafe because it deals with raw pointers from C.
 /// Callers must ensure:
 /// - handle is a valid pointer returned by cbad_detector_create
 /// - metrics_ptr points to a valid CBADEnhancedMetrics struct that can be written to
-/// 
+///
 /// Returns:
 /// - 1 if anomaly detected
 /// - 0 if no anomaly detected
@@ -191,11 +211,11 @@ pub unsafe extern "C" fn cbad_detector_detect_anomaly(
     }
 
     let detector = &*handle;
-    
+
     match detector.detect_anomaly() {
         Ok(Some(result)) => {
             let metrics = &mut *metrics_ptr;
-            
+
             // Fill in the metrics
             metrics.ncd = result.metrics.ncd;
             metrics.p_value = result.metrics.p_value;
@@ -205,24 +225,32 @@ pub unsafe extern "C" fn cbad_detector_detect_anomaly(
             metrics.window_entropy = result.metrics.window_entropy;
             metrics.is_anomaly = if result.is_anomaly { 1 } else { 0 };
             metrics.confidence_level = result.confidence_level;
-            metrics.is_statistically_significant = if result.is_statistically_significant { 1 } else { 0 };
+            metrics.is_statistically_significant = if result.is_statistically_significant {
+                1
+            } else {
+                0
+            };
             metrics.compression_ratio_change = result.metrics.compression_ratio_change;
             metrics.entropy_change = result.metrics.entropy_change;
-            
+
             // Create explanation string (caller must free this)
             let explanation = CString::new(result.metrics.explanation.clone())
                 .unwrap_or_else(|_| CString::new("Error generating explanation").unwrap());
             metrics.explanation = explanation.into_raw();
-            
-            if result.is_anomaly { 1 } else { 0 }
-        },
+
+            if result.is_anomaly {
+                1
+            } else {
+                0
+            }
+        }
         Ok(None) => -1, // Not enough data
         Err(_) => -2,   // Internal error
     }
 }
 
 /// Free the explanation string returned by cbad_detector_detect_anomaly
-/// 
+///
 /// # Safety
 /// This function is unsafe because it deals with raw pointers from C.
 /// Callers must ensure:
@@ -235,7 +263,7 @@ pub unsafe extern "C" fn cbad_free_explanation(explanation_ptr: *mut c_char) {
 }
 
 /// Get current detector statistics
-/// 
+///
 /// # Safety
 /// This function is unsafe because it deals with raw pointers from C.
 /// Callers must ensure:
@@ -251,7 +279,7 @@ pub unsafe extern "C" fn cbad_detector_get_stats(
     }
 
     let detector = &*handle;
-    
+
     match detector.get_stats() {
         Ok(stats) => {
             let stats_array = slice::from_raw_parts_mut(stats_ptr, 3);
@@ -259,7 +287,7 @@ pub unsafe extern "C" fn cbad_detector_get_stats(
             stats_array[1] = stats.memory_usage;
             stats_array[2] = if stats.is_ready { 1 } else { 0 };
             0 // Success
-        },
+        }
         Err(_) => -2, // Internal error
     }
 }
@@ -279,7 +307,14 @@ pub unsafe extern "C" fn cbad_compute_metrics_legacy(
     seed: u64,
     permutations: usize,
 ) -> crate::CBADMetrics {
-    crate::cbad_compute_metrics(baseline_ptr, baseline_len, window_ptr, window_len, seed, permutations)
+    crate::cbad_compute_metrics(
+        baseline_ptr,
+        baseline_len,
+        window_ptr,
+        window_len,
+        seed,
+        permutations,
+    )
 }
 
 #[cfg(test)]
@@ -326,7 +361,7 @@ mod tests {
             // Test anomaly detection
             let mut metrics = std::mem::MaybeUninit::<CBADEnhancedMetrics>::uninit();
             let anomaly_result = cbad_detector_detect_anomaly(handle, metrics.as_mut_ptr());
-            
+
             // Should either detect anomaly or not, but not error
             assert!(anomaly_result >= 0);
 

@@ -28,6 +28,23 @@ open demo-output.html  # macOS
 # xdg-open demo-output.html  # Linux
 ```
 
+## Run the HTTP API with Docker
+
+The Go HTTP service (`cmd/driftlock-http`) is the canonical API for integrating pilot workloads. Build it locally or use Docker:
+
+```bash
+# Build the Rust core + Go binary into a container
+make docker-http
+
+# Or run the full compose stack (HTTP API only)
+docker compose up --build driftlock-http
+
+# Verify health and available compressors (OpenZL is optional and reported separately)
+curl -s http://localhost:8080/healthz | jq
+```
+
+The GitHub Actions `CI` workflow now runs `scripts/test-docker-build.sh` to guarantee the Dockerfiles stay in sync with `cbad-core`. OpenZL-enhanced images remain opt-in; set `USE_OPENZL=true` (and provide the private `openzl/` artifacts) to enable the feature flag.
+
 ## Multi-Million Dollar Fines Start January 2025
 
 Regulators worldwide are auditing bank mathematical systems for explainability compliance. Black-box fraud detection = automatic failure.
@@ -76,6 +93,12 @@ The HTML includes a baseline comparison panel and similar normal examples for ea
 ## Development
 
 Built with modern tooling; transparent development process documented in [docs/ai-agents/](docs/ai-agents/).
+
+Helpful commands:
+
+- `make demo` — build Rust core + Go CLI demo.
+- `make docker-http` — build the containerized HTTP engine locally.
+- `make docker-test` — run Docker smoke tests (generic compressors by default; set `ENABLE_OPENZL_BUILD=true` to cover the optional OpenZL images when libraries are present).
 
 ## 📊 Demo Data
 

@@ -38,6 +38,8 @@ extern CBADMetrics cbad_compute_metrics(
 );
 
 extern double cbad_compute_metrics_len(const uint8_t* data, size_t len);
+
+extern int cbad_has_openzl();
 */
 import "C"
 
@@ -115,4 +117,9 @@ func ValidateLibrary() error {
 	}
 
 	return nil
+}
+
+// HasOpenZL returns true when the linked Rust library was built with the optional OpenZL feature.
+func HasOpenZL() bool {
+	return C.cbad_has_openzl() == 1
 }

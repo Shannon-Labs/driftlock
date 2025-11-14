@@ -18,3 +18,8 @@ func ComputeMetricsQuick(baseline []byte, window []byte) (*Metrics, error) {
 func ValidateLibrary() error {
 	return fmt.Errorf("cbad: ValidateLibrary requires CGO and the CBAD library (remove driftlock_no_cbad if set)")
 }
+
+// HasOpenZL always reports false when the Rust core is unavailable.
+func HasOpenZL() bool {
+	return false
+}

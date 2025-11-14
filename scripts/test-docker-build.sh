@@ -1,7 +1,7 @@
 #!/bin/bash
 # Test Docker builds for all Driftlock services
 
-set -e
+set -euo pipefail
 
 echo "🐳 Testing Docker builds for Driftlock services..."
 echo ""
@@ -15,6 +15,35 @@ NC='\033[0m' # No Color
 # Track results
 FAILED=0
 PASSED=0
+
+detect_openzl() {
+    if [ -n "${OPENZL_LIB_DIR:-}" ] && [ -f "$OPENZL_LIB_DIR/libopenzl.a" ]; then
+        return 0
+    fi
+    if [ -d "openzl" ] && ls openzl/libopenzl.a >/dev/null 2>&1; then
+        return 0
+    fi
+    if ls cbad-core/openzl/libopenzl.a >/dev/null 2>&1; then
+        return 0
+    fi
+    return 1
+}
+
+ENABLE_OPENZL_BUILD=${ENABLE_OPENZL_BUILD:-auto}
+OPENZL_TESTS_ENABLED=0
+case "$ENABLE_OPENZL_BUILD" in
+    true|TRUE|1)
+        OPENZL_TESTS_ENABLED=1
+        ;;
+    false|FALSE|0)
+        OPENZL_TESTS_ENABLED=0
+        ;;
+    *)
+        if detect_openzl; then
+            OPENZL_TESTS_ENABLED=1
+        fi
+        ;;
+esac
 
 # Function to test a build
 test_build() {
@@ -30,13 +59,7 @@ test_build() {
         
         # Get image size
         SIZE=$(docker images "driftlock-$name:test" --format "{{.Size}}" | head -1)
-        echo "  Image size: $SIZE"
-        
-        # Check if size is reasonable (< 500MB)
-        SIZE_MB=$(echo $SIZE | sed 's/[^0-9.]//g')
-        if (( $(echo "$SIZE_MB > 500" | bc -l) )); then
-            echo -e "  ${YELLOW}⚠ Warning: Image size exceeds 500MB${NC}"
-        fi
+        [ -n "$SIZE" ] && echo "  Image size: $SIZE"
     else
         echo -e "${RED}✗ FAILED${NC}"
         echo "  See /tmp/docker-build-$name.log for details"
@@ -50,16 +73,28 @@ echo "=== Testing driftlock-http (USE_OPENZL=false) ==="
 test_build "http" "collector-processor/cmd/driftlock-http/Dockerfile" "--build-arg USE_OPENZL=false"
 
 # Test driftlock-http (with OpenZL)
-echo "=== Testing driftlock-http (USE_OPENZL=true) ==="
-test_build "http-openzl" "collector-processor/cmd/driftlock-http/Dockerfile" "--build-arg USE_OPENZL=true"
+if [ "$OPENZL_TESTS_ENABLED" -eq 1 ]; then
+    echo "=== Testing driftlock-http (USE_OPENZL=true) ==="
+    test_build "http-openzl" "collector-processor/cmd/driftlock-http/Dockerfile" "--build-arg USE_OPENZL=true"
+else
+    echo "=== Skipping driftlock-http OpenZL build (libraries not detected) ==="
+fi
 
 # Test driftlock-collector (default, no OpenZL)
 echo "=== Testing driftlock-collector (USE_OPENZL=false) ==="
 test_build "collector" "collector-processor/cmd/driftlock-collector/Dockerfile" "--build-arg USE_OPENZL=false"
 
 # Test driftlock-collector (with OpenZL)
-echo "=== Testing driftlock-collector (USE_OPENZL=true) ==="
-test_build "collector-openzl" "collector-processor/cmd/driftlock-collector/Dockerfile" "--build-arg USE_OPENZL=true"
+if [ "$OPENZL_TESTS_ENABLED" -eq 1 ]; then
+    echo "=== Testing driftlock-collector (USE_OPENZL=true) ==="
+    test_build "collector-openzl" "collector-processor/cmd/driftlock-collector/Dockerfile" "--build-arg USE_OPENZL=true"
+else
+    echo "=== Skipping driftlock-collector OpenZL build (libraries not detected) ==="
+fi
+
+if [ "$OPENZL_TESTS_ENABLED" -eq 0 ]; then
+    echo "Note: Set ENABLE_OPENZL_BUILD=true and provide libopenzl.a to test OpenZL images."
+fi
 
 # Summary
 echo "=== Build Test Summary ==="
@@ -71,4 +106,3 @@ else
     echo -e "${GREEN}All builds passed!${NC}"
     exit 0
 fi
-

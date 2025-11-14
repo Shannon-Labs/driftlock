@@ -22,47 +22,47 @@ import (
 )
 
 type config struct {
-	MaxBodyBytes        int64
-	ReadTimeout         time.Duration
-	WriteTimeout        time.Duration
-	IdleTimeout         time.Duration
-	DefaultBaseline     int
-	DefaultWindow       int
-	DefaultHop          int
-	DefaultAlgo         string
-	PValueThreshold     float64
-	NCDThreshold        float64
-	PermutationCount    int
-	Seed                uint64
+	MaxBodyBytes     int64
+	ReadTimeout      time.Duration
+	WriteTimeout     time.Duration
+	IdleTimeout      time.Duration
+	DefaultBaseline  int
+	DefaultWindow    int
+	DefaultHop       int
+	DefaultAlgo      string
+	PValueThreshold  float64
+	NCDThreshold     float64
+	PermutationCount int
+	Seed             uint64
 }
 
 func loadConfig() config {
 	return config{
-		MaxBodyBytes:        int64(envInt("MAX_BODY_MB", 10)) * 1024 * 1024,
-		ReadTimeout:         time.Duration(envInt("READ_TIMEOUT_SEC", 15)) * time.Second,
-		WriteTimeout:        time.Duration(envInt("WRITE_TIMEOUT_SEC", 30)) * time.Second,
-		IdleTimeout:         time.Duration(envInt("IDLE_TIMEOUT_SEC", 60)) * time.Second,
-		DefaultBaseline:     envInt("DEFAULT_BASELINE", 400),
-		DefaultWindow:       envInt("DEFAULT_WINDOW", 1),
-		DefaultHop:          envInt("DEFAULT_HOP", 1),
-		DefaultAlgo:         env("DEFAULT_ALGO", "zstd"),
-		PValueThreshold:     envFloat("PVALUE_THRESHOLD", 0.05),
-		NCDThreshold:        envFloat("NCD_THRESHOLD", 0.3),
-		PermutationCount:    envInt("PERMUTATION_COUNT", 1000),
-		Seed:                envInt64("SEED", 42),
+		MaxBodyBytes:     int64(envInt("MAX_BODY_MB", 10)) * 1024 * 1024,
+		ReadTimeout:      time.Duration(envInt("READ_TIMEOUT_SEC", 15)) * time.Second,
+		WriteTimeout:     time.Duration(envInt("WRITE_TIMEOUT_SEC", 30)) * time.Second,
+		IdleTimeout:      time.Duration(envInt("IDLE_TIMEOUT_SEC", 60)) * time.Second,
+		DefaultBaseline:  envInt("DEFAULT_BASELINE", 400),
+		DefaultWindow:    envInt("DEFAULT_WINDOW", 1),
+		DefaultHop:       envInt("DEFAULT_HOP", 1),
+		DefaultAlgo:      env("DEFAULT_ALGO", "zstd"),
+		PValueThreshold:  envFloat("PVALUE_THRESHOLD", 0.05),
+		NCDThreshold:     envFloat("NCD_THRESHOLD", 0.3),
+		PermutationCount: envInt("PERMUTATION_COUNT", 1000),
+		Seed:             envInt64("SEED", 42),
 	}
 }
 
 type detectResponse struct {
-	Success         bool                             `json:"success"`
-	TotalEvents     int                              `json:"total_events,omitempty"`
-	AnomalyCount    int                              `json:"anomaly_count,omitempty"`
-	ProcessingTime  string                           `json:"processing_time,omitempty"`
-	CompressionAlg  string                           `json:"compression_algo,omitempty"`
-	FallbackFromAlg string                           `json:"fallback_from_algo,omitempty"`
-	Anomalies       []anomalyOutput                  `json:"anomalies,omitempty"`
-	RequestID       string                           `json:"request_id"`
-	Error           string                           `json:"error,omitempty"`
+	Success         bool            `json:"success"`
+	TotalEvents     int             `json:"total_events,omitempty"`
+	AnomalyCount    int             `json:"anomaly_count,omitempty"`
+	ProcessingTime  string          `json:"processing_time,omitempty"`
+	CompressionAlg  string          `json:"compression_algo,omitempty"`
+	FallbackFromAlg string          `json:"fallback_from_algo,omitempty"`
+	Anomalies       []anomalyOutput `json:"anomalies,omitempty"`
+	RequestID       string          `json:"request_id"`
+	Error           string          `json:"error,omitempty"`
 }
 
 type anomalyOutput struct {
@@ -133,12 +133,13 @@ func main() {
 }
 
 type healthResponse struct {
-	Success         bool   `json:"success"`
-	RequestID       string `json:"request_id"`
-	Error           string `json:"error,omitempty"`
-	LibraryStatus   string `json:"library_status"`
-	Version         string `json:"version,omitempty"`
+	Success         bool     `json:"success"`
+	RequestID       string   `json:"request_id"`
+	Error           string   `json:"error,omitempty"`
+	LibraryStatus   string   `json:"library_status"`
+	Version         string   `json:"version,omitempty"`
 	AvailableAlgos  []string `json:"available_algos,omitempty"`
+	OpenZLAvailable bool     `json:"openzl_available"`
 }
 
 func healthHandler(w http.ResponseWriter, r *http.Request) {
@@ -147,12 +148,15 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	openzlEnabled := driftlockcbad.HasOpenZL()
+
 	resp := healthResponse{
-		Success:       true,
-		RequestID:     requestIDFrom(r.Context()),
-		LibraryStatus: "healthy",
-		Version:       "1.0.0",
-		AvailableAlgos: []string{"zstd", "lz4", "gzip"},
+		Success:         true,
+		RequestID:       requestIDFrom(r.Context()),
+		LibraryStatus:   "healthy",
+		Version:         "1.0.0",
+		AvailableAlgos:  []string{"zstd", "lz4", "gzip"},
+		OpenZLAvailable: openzlEnabled,
 	}
 
 	if err := driftlockcbad.ValidateLibrary(); err != nil {
@@ -163,14 +167,7 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Try to detect if OpenZL is available by creating a test detector
-	if _, err := driftlockcbad.NewDetector(driftlockcbad.DetectorConfig{
-		CompressionAlgorithm: "openzl",
-		BaselineSize:         10,
-		WindowSize:           1,
-		HopSize:              1,
-		MaxCapacity:          100,
-	}); err == nil {
+	if openzlEnabled {
 		resp.AvailableAlgos = append(resp.AvailableAlgos, "openzl")
 	}
 
@@ -188,13 +185,18 @@ func detectHandler(w http.ResponseWriter, r *http.Request, cfg config) {
 	r.Body = http.MaxBytesReader(w, r.Body, cfg.MaxBodyBytes)
 
 	algo := queryString(r, "algo", cfg.DefaultAlgo)
-	usedAlgo := strings.ToLower(algo)
+	fallbackFrom := ""
+	requestedAlgo := strings.ToLower(algo)
+	usedAlgo := requestedAlgo
+	if usedAlgo == "openzl" && !driftlockcbad.HasOpenZL() {
+		fallbackFrom = usedAlgo
+		usedAlgo = "zstd"
+	}
 	format := queryString(r, "format", "")
 	baseline := queryInt(r, "baseline", cfg.DefaultBaseline)
 	window := queryInt(r, "window", cfg.DefaultWindow)
 	hop := queryInt(r, "hop", cfg.DefaultHop)
 
-	fallbackFrom := ""
 	requestCounter.Inc()
 	detector, err := driftlockcbad.NewDetector(driftlockcbad.DetectorConfig{
 		BaselineSize:         baseline,

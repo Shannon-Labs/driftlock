@@ -176,111 +176,10 @@
             </div>
         </section>
 
-        <!-- Live Playground Section (Recreated from screenshot) -->
+        <!-- Live Playground Section -->
         <section id="playground" class="py-24 sm:py-32">
             <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <div class="mx-auto max-w-3xl text-center">
-                    <h2 class="text-base font-sans font-semibold leading-7 text-blue-600">Try It Now</h2>
-                    <p class="mt-2 text-4xl font-mono font-bold tracking-tight text-gray-900 sm:text-5xl">Live Playground</p>
-                    <p class="mt-6 text-lg leading-8 font-sans text-gray-700">
-                        Paste JSON/NDJSON or load a sample. Driftlock auto-tunes the baseline, runs detection, and explains every anomaly.
-                    </p>
-                </div>
-                
-                <!-- Playground Component (Layout based on your screenshot) -->
-                <div class="mt-16 mx-auto max-w-6xl">
-                    <div class="rounded-2xl border border-gray-200 bg-white shadow-2xl overflow-hidden">
-                        <div class="flex justify-between items-center p-4 border-b border-gray-200 bg-gray-50">
-                            <h3 class="text-lg font-mono font-semibold text-gray-900">Driftlock Playground</h3>
-                            <div class="flex items-center space-x-2 rounded-full bg-green-100 px-3 py-1">
-                                <span class="relative flex h-2 w-2">
-                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                                    <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                                </span>
-                                <span class="text-sm font-sans font-medium text-green-700">API Connected</span>
-                            </div>
-                        </div>
-                        
-                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-0">
-                            <!-- Left: Data Input -->
-                            <div class="lg:col-span-2 p-6 border-r-0 lg:border-r border-gray-200">
-                                <!-- Data Header -->
-                                <div class="flex justify-between items-center mb-4">
-                                    <label for="data" class="block text-sm font-sans font-medium text-gray-700">Data</label>
-                                    <div class="flex items-center space-x-2">
-                                        <span class="text-sm font-sans text-gray-500">Format:</span>
-                                        <select class="rounded-md border-gray-300 shadow-sm text-sm font-sans focus:border-blue-500 focus:ring-blue-500">
-                                            <option>NDJSON</option>
-                                            <option>JSON Array</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <!-- Text Area -->
-                                <textarea 
-                                    rows="12" 
-                                    class="w-full rounded-md border-gray-300 shadow-sm p-4 font-mono text-sm focus:border-blue-500 focus:ring-blue-500"
-                                    placeholder="Paste NDJSON or JSON array..."></textarea>
-                                <!-- File Upload & Use Data -->
-                                <div class="mt-4 flex items-center space-x-4">
-                                    <button class="flex-1 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-sans font-medium text-gray-700 shadow-sm hover:bg-gray-50">
-                                        Choose File
-                                    </button>
-                                    <button class="flex-1 rounded-md bg-blue-600 px-4 py-2 text-sm font-sans font-medium text-white shadow-sm hover:bg-blue-700">
-                                        Use Data
-                                    </button>
-                                </div>
-                                <!-- Sample Data -->
-                                <div class="mt-6">
-                                    <label class="block text-sm font-sans font-medium text-gray-700 mb-2">Sample Data</label>
-                                    <div class="grid grid-cols-2 gap-4">
-                                        <button class="rounded-md border border-gray-300 bg-gray-50 px-4 py-2 text-sm font-sans font-medium text-gray-700 hover:bg-gray-100">
-                                            NDJSON (small)
-                                        </button>
-                                        <button class="rounded-md border border-gray-300 bg-gray-50 px-4 py-2 text-sm font-sans font-medium text-gray-700 hover:bg-gray-100">
-                                            JSON Array (small)
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Right: Parameters -->
-                            <div class="lg:col-span-1 p-6 bg-gray-50/70 border-t lg:border-t-0 border-gray-200">
-                                <h4 class="text-sm font-sans font-medium text-gray-900 mb-4">Parameters</h4>
-                                <div class="space-y-5">
-                                    <!-- Baseline -->
-                                    <div>
-                                        <label class="block text-xs font-sans font-medium text-gray-600">Baseline</label>
-                                        <input type="number" value="400" class="mt-1 w-full rounded-md border-gray-300 shadow-sm text-sm font-sans focus:border-blue-500 focus:ring-blue-500">
-                                    </div>
-                                    <!-- Window Hop -->
-                                    <div>
-                                        <label class="block text-xs font-sans font-medium text-gray-600">Window Hop</label>
-                                        <input type="number" value="1" class="mt-1 w-full rounded-md border-gray-300 shadow-sm text-sm font-sans focus:border-blue-500 focus:ring-blue-500">
-                                    </div>
-                                    <!-- Algorithm -->
-                                    <div>
-                                        <label class="block text-xs font-sans font-medium text-gray-600">Algorithm</label>
-                                        <select class="mt-1 w-full rounded-md border-gray-300 shadow-sm text-sm font-sans focus:border-blue-500 focus:ring-blue-500">
-                                            <option>zstd</option>
-                                            <option>gzip</option>
-                                            <option>flate</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <!-- Action Buttons -->
-                                <div class="mt-8 pt-6 border-t border-gray-300 flex flex-col space-y-4">
-                                    <button class="w-full rounded-md bg-blue-600 px-4 py-2.5 text-sm font-sans font-semibold text-white shadow-sm hover:bg-blue-700">
-                                        Run Detection
-                                    </button>
-                                    <button class="w-full rounded-md border border-gray-300 bg-white px-4 py-2.5 text-sm font-sans font-semibold text-gray-900 shadow-sm hover:bg-gray-50">
-                                        Reset
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
+                <PlaygroundShell variant="embedded" />
             </div>
         </section>
 
@@ -307,3 +206,7 @@
         </section>
     </main>
 </template>
+
+<script setup lang="ts">
+import PlaygroundShell from '../components/playground/PlaygroundShell.vue'
+</script>

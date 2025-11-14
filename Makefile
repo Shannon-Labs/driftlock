@@ -12,6 +12,15 @@ demo: cbad-core
 	@echo "Building Go demo ..."
 	@go build -o driftlock-demo cmd/demo/main.go
 
+.PHONY: docker-http docker-test
+
+docker-http:
+	@echo "Building driftlock-http Docker image ..."
+	@docker build -t driftlock-http:dev -f collector-processor/cmd/driftlock-http/Dockerfile .
+
+docker-test:
+	@./scripts/test-docker-build.sh
+
 verify: demo
 	@echo "Running verification script ..."
 	@./verify-yc-ready.sh

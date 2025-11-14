@@ -1,15 +1,29 @@
 // Build script for cbad-core
 // Handles linking OpenZL C library when openzl feature is enabled
 
-use std::env;
-use std::path::PathBuf;
+#[cfg(feature = "openzl")]
+use std::{env, path::PathBuf};
 
 fn main() {
     #[cfg(feature = "openzl")]
     {
         let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
-        let openzl_dir = manifest_dir.parent().expect("parent directory exists").join("openzl");
-        
+        let openzl_dir = if let Ok(dir) = env::var("OPENZL_LIB_DIR") {
+            PathBuf::from(dir)
+        } else {
+            manifest_dir
+                .parent()
+                .expect("parent directory exists")
+                .join("openzl")
+        };
+
+        if !openzl_dir.exists() {
+            panic!(
+                "OpenZL feature enabled but no libraries found. Place libopenzl artifacts under {}/ or set OPENZL_LIB_DIR. See docs/OPENZL_ANALYSIS.md.",
+                openzl_dir.display()
+            );
+        }
+
         // Find the actual static library location
         let lib_dir = if openzl_dir.join("libopenzl.a").exists() {
             openzl_dir.clone()
@@ -35,10 +49,20 @@ fn main() {
             }
         };
 
+        if !lib_dir.join("libopenzl.a").exists() {
+            panic!(
+                "OpenZL feature enabled but libopenzl.a not found in {}",
+                lib_dir.display()
+            );
+        }
+
         println!("cargo:rerun-if-changed={}", lib_dir.display());
-        
+
         // Print the library location for debugging
-        println!("cargo:warning=OpenZL static library found at: {}", lib_dir.display());
+        println!(
+            "cargo:warning=OpenZL static library found at: {}",
+            lib_dir.display()
+        );
 
         // Link search path for OpenZL library
         println!("cargo:rustc-link-search=native={}", lib_dir.display());
@@ -49,7 +73,7 @@ fn main() {
         // Link zstd library - try system first, then bundled
         let system_zstd = PathBuf::from("/opt/homebrew/Cellar/zstd/1.5.7/lib");
         let bundled_zstd = openzl_dir.join("deps/zstd/lib");
-        
+
         if system_zstd.exists() {
             println!("cargo:rustc-link-search=native={}", system_zstd.display());
             println!("cargo:rustc-link-lib=dylib=zstd");
