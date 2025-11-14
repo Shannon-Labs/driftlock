@@ -9,6 +9,14 @@ ARG USE_OPENZL
 RUN apt-get update && apt-get install -y --no-install-recommends pkg-config clang make ca-certificates && rm -rf /var/lib/apt/lists/*
 WORKDIR /src
 COPY cbad-core /src/cbad-core
+COPY openzl /src/openzl
+RUN if [ "${USE_OPENZL}" = "true" ]; then \
+      echo "Building OpenZL library..."; \
+      if [ ! -d "/src/openzl/deps/zstd" ]; then \
+        echo "Warning: OpenZL nested submodule (zstd) not found. Ensure CI uses 'submodules: recursive' or run 'git submodule update --init --recursive' locally."; \
+      fi; \
+      make -C /src/openzl lib; \
+    fi
 WORKDIR /src/cbad-core
 RUN if [ "${USE_OPENZL}" = "true" ]; then \
       cargo build --release --features openzl; \

@@ -22,7 +22,7 @@ RUN mkdir -p cbad-core/src && \
     echo "pub fn _placeholder() {}" > cbad-core/src/lib.rs
 WORKDIR /app/cbad-core
 RUN if [ "${USE_OPENZL}" = "true" ]; then \
-      cargo build --release --features openzl || true; \
+      echo "Skipping dependency cache warmup for OpenZL build"; \
     else \
       cargo build --release || true; \
     fi
@@ -30,6 +30,14 @@ RUN if [ "${USE_OPENZL}" = "true" ]; then \
 # Now copy real sources and build
 WORKDIR /app
 COPY cbad-core ./cbad-core
+COPY openzl ./openzl
+RUN if [ "${USE_OPENZL}" = "true" ]; then \
+      echo "Building OpenZL library..."; \
+      if [ ! -d "/app/openzl/deps/zstd" ]; then \
+        echo "Warning: OpenZL nested submodule (zstd) not found. Ensure CI uses 'submodules: recursive' or run 'git submodule update --init --recursive' locally."; \
+      fi; \
+      make -C /app/openzl lib; \
+    fi
 WORKDIR /app/cbad-core
 RUN if [ "${USE_OPENZL}" = "true" ]; then \
       echo "Building with OpenZL feature enabled"; \
@@ -58,4 +66,3 @@ ENV LD_LIBRARY_PATH=/usr/local/lib:${LD_LIBRARY_PATH}
 RUN test -f /usr/local/lib/libcbad_core.so || test -f /usr/local/lib/libcbad_core.a
 
 CMD ["/bin/sh", "-c", "echo 'cbad_core runtime image ready'; sleep infinity"]
-

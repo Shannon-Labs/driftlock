@@ -13,6 +13,8 @@ jobs:
         working-directory: cbad-core
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - uses: dtolnay/rust-toolchain@stable
       - name: Build (release)
         run: cargo build --release
@@ -26,6 +28,8 @@ jobs:
       LD_LIBRARY_PATH: ${{ github.workspace }}/cbad-core/target/release:${LD_LIBRARY_PATH}
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - uses: dtolnay/rust-toolchain@stable
       - name: Build cbad-core (release)
         working-directory: cbad-core
@@ -41,6 +45,8 @@ jobs:
     needs: [rust, go]
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - name: Run Docker build smoke tests
         env:
           ENABLE_OPENZL_BUILD: "false"
