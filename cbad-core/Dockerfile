@@ -36,6 +36,9 @@ RUN if [ "${USE_OPENZL}" = "true" ]; then \
       if [ ! -d "/app/openzl/deps/zstd" ]; then \
         echo "Warning: OpenZL nested submodule (zstd) not found. Ensure CI uses 'submodules: recursive' or run 'git submodule update --init --recursive' locally."; \
       fi; \
+      echo "Applying -fPIC fix to libopenzl.a build..."; \
+      sed -i.tmp 's/^libopenzl\.a:$$/libopenzl.a: CFLAGS += -fPIC/' /app/openzl/Makefile; \
+      rm -f /app/openzl/Makefile.tmp; \
       make -C /app/openzl lib; \
     fi
 WORKDIR /app/cbad-core
