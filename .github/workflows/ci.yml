@@ -22,6 +22,8 @@ jobs:
     defaults:
       run:
         working-directory: collector-processor
+    env:
+      LD_LIBRARY_PATH: ${{ github.workspace }}/cbad-core/target/release:${LD_LIBRARY_PATH}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable

@@ -99,6 +99,7 @@ Helpful commands:
 - `make demo` — build Rust core + Go CLI demo.
 - `make docker-http` — build the containerized HTTP engine locally.
 - `make docker-test` — run Docker smoke tests (generic compressors by default; set `ENABLE_OPENZL_BUILD=true` to cover the optional OpenZL images when libraries are present).
+- `LD_LIBRARY_PATH=cbad-core/target/release go test ./...` (from `collector-processor/`) — run Go unit + FFI integration tests after `cargo build --release`.
 
 ## 📊 Demo Data
 
