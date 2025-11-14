@@ -1,0 +1,108 @@
+openapi: 3.0.3
+info:
+  title: Driftlock HTTP API
+  version: 0.1.0
+  description: Compression-based anomaly detection over JSON/NDJSON.
+servers:
+  - url: https://api.driftlock.net
+    description: Production API (when deployed)
+  - url: http://localhost:8080
+    description: Local development API
+paths:
+  /healthz:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+  /v1/detect:
+    post:
+      summary: Detect anomalies in a batch of events
+      parameters:
+        - in: query
+          name: format
+          schema:
+            type: string
+            enum: [json, ndjson]
+          description: Input format (auto-detected if omitted)
+        - in: query
+          name: algo
+          schema:
+            type: string
+            enum: [zstd, lz4, gzip, openzl]
+          description: Compression algorithm
+        - in: query
+          name: baseline
+          schema:
+            type: integer
+          description: Baseline size (events)
+        - in: query
+          name: window
+          schema:
+            type: integer
+          description: Window size (events)
+        - in: query
+          name: hop
+          schema:
+            type: integer
+          description: Hop size (events)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: array
+                  description: JSON array of events
+                  items:
+                    type: object
+                - type: string
+                  description: NDJSON payload (one JSON object per line)
+      responses:
+        '200':
+          description: Detection results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_events:
+                    type: integer
+                  anomaly_count:
+                    type: integer
+                  processing_time:
+                    type: string
+                  compression_algo:
+                    type: string
+                  anomalies:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        index:
+                          type: integer
+                        detected:
+                          type: boolean
+                        why:
+                          type: string
+                        event:
+                          type: object
+                        metrics:
+                          type: object
+                          properties:
+                            ncd: { type: number }
+                            p_value: { type: number }
+                            baseline_compression_ratio: { type: number }
+                            window_compression_ratio: { type: number }
+                            baseline_entropy: { type: number }
+                            window_entropy: { type: number }
+                            confidence_level: { type: number }
+
+

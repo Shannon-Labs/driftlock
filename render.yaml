@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: driftlock-api
+    env: docker
+    dockerfilePath: ./collector-processor/cmd/driftlock-http/Dockerfile
+    dockerContext: .
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: CORS_ALLOW_ORIGINS
+        value: https://driftlock.net,https://www.driftlock.net
+      - key: LOG_LEVEL
+        value: info
+    healthCheckPath: /healthz
+    plan: starter  # Free tier, upgrade as needed
+
