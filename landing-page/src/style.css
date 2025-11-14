@@ -9,6 +9,7 @@
 
   body {
     @apply bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100;
+    font-family: 'Inter', sans-serif;
     font-feature-settings: 'cv11', 'ss01', 'ss02';
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -16,6 +17,10 @@
 }
 
 @layer components {
+  .cta-gradient {
+    background: linear-gradient(90deg, #0284c7 0%, #3b82f6 100%);
+  }
+
   .gradient-text {
     @apply bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-600 bg-clip-text text-transparent;
     background-size: 200% auto;
