@@ -16,10 +16,11 @@ OpenZL is an **optional**, open-source compression adapter (BSD licensed, availa
    ```bash
    git submodule update --init --recursive openzl
    ```
-2. **Build OpenZL** from source (the repository is included as a git submodule at `openzl/`). You'll need to build `libopenzl.a` and ensure headers are available:
+2. **Build OpenZL** from source (the repository is included as a git submodule at `openzl/`). You'll need to build `libopenzl.a` and ensure headers are available. Because Driftlock links the static archive into a shared library, force position-independent code during the build:
    ```bash
-   (cd openzl && make lib)
+   (cd openzl && CFLAGS="-fPIC ${CFLAGS:-}" make lib)
    ```
+   (The Dockerfiles under `cbad-core/` and `collector-processor/cmd/` patch this automatically; for manual builds you must pass `-fPIC` yourself.)
 3. The build system will look for OpenZL under `openzl/` at the repository root _or_ you can set `OPENZL_LIB_DIR=/absolute/path/to/openzl`.
 4. Build the Rust core with the feature enabled:
    ```bash

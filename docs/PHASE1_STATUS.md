@@ -439,7 +439,7 @@ Add OpenZL build instructions:
    cd deps
    git clone https://github.com/facebook/openzl.git
    cd openzl
-   make lib BUILD_TYPE=OPT -j$(nproc)
+   CFLAGS="-fPIC ${CFLAGS:-}" make lib BUILD_TYPE=OPT -j$(nproc)
    ```
 
 2. **Build cbad-core:**
@@ -457,7 +457,7 @@ Add OpenZL build instructions:
 
 - **Link error:** Ensure `deps/openzl/libopenzl.a` exists
 - **C++ symbol errors:** Make sure to link `stdc++` or `c++` library
-- **Missing symbols:** Rebuild OpenZL with `make clean && make lib`
+- **Missing symbols:** Rebuild OpenZL with `make clean && CFLAGS="-fPIC ${CFLAGS:-}" make lib`
 ```
 
 ---

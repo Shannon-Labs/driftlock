@@ -89,7 +89,7 @@ git submodule update --init --recursive
 ```bash
 # Build OpenZL library (optional, only needed if using --features openzl)
 cd openzl
-make lib
+CFLAGS="-fPIC ${CFLAGS:-}" make lib
 cd ..
 ```
 
