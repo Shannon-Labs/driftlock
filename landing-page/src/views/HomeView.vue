@@ -11,21 +11,69 @@
                         Alpha Phase - Seeking Design Partners
                     </span>
                     <h1 class="mt-6 text-5xl font-mono font-extrabold tracking-tight text-white sm:text-7xl">
-                        Stop Multi-Million Dollar Fines.
+                        Spin Up Driftlock in Minutes.
                     </h1>
                     <p class="mt-6 text-lg leading-8 font-sans text-gray-200 sm:text-xl">
-                        Driftlock is regulator-proof, explainable anomaly detection for global banks. Pass EU DORA & US regulatory audits with <strong class="font-semibold text-white">math-based proof</strong>, not black-box ML.
+                        Launch the HTTP API + Postgres demo locally, hit <code class="text-white">/v1/detect</code>, and show regulators persisted anomalies with compression math—not black-box ML. Deterministic evidence for EU DORA & US audits.
                     </p>
                     <div class="mt-10 flex items-center justify-center gap-x-6">
-                        <a href="#contact" class="rounded-md cta-gradient px-6 py-3 text-base font-sans font-semibold text-white shadow-lg transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">
-                            Request Private Demo
+                        <a href="#api-demo" class="rounded-md cta-gradient px-6 py-3 text-base font-sans font-semibold text-white shadow-lg transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">
+                            Run the API Demo
                         </a>
-                        <a href="#playground" class="group flex items-center gap-x-2 rounded-md border border-gray-300 bg-white px-6 py-3 text-base font-sans font-semibold text-gray-900 shadow-sm hover:bg-gray-50">
-                            See Live Playground
+                        <a href="#contact" class="group flex items-center gap-x-2 rounded-md border border-blue-200 bg-white/90 px-6 py-3 text-base font-sans font-semibold text-gray-900 shadow-sm hover:bg-gray-50">
+                            Request Private Pilot
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
                             </svg>
                         </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- API Demo Section -->
+        <section id="api-demo" class="bg-slate-950 text-white py-20">
+            <div class="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+                <div class="grid gap-12 lg:grid-cols-2 lg:items-center">
+                    <div>
+                        <p class="text-sm font-semibold uppercase tracking-[0.2em] text-blue-400">New onboarding</p>
+                        <h2 class="mt-3 text-4xl font-mono font-bold">HTTP API Demo with Docker + Postgres</h2>
+                        <p class="mt-4 text-lg text-slate-200">
+                            The README, docs, and YC narrative now lead with a real API experience. Prospects run one script, provision a tenant/key, hit <code>/v1/detect</code>, and inspect anomalies in Postgres—no black-box magic.
+                        </p>
+                        <ol class="mt-6 space-y-4 text-slate-100">
+                            <li class="flex items-start gap-3">
+                                <span class="mt-1 inline-flex h-8 w-8 items-center justify-center rounded-full bg-blue-500/30 text-blue-200 font-bold">1</span>
+                                <div>
+                                    <p class="font-semibold">Clone, build, run</p>
+                                    <p class="text-sm text-slate-300"><code>git clone</code>, <code>cargo build --release</code>, then <code>DRIFTLOCK_DEV_MODE=true ./scripts/run-api-demo.sh</code>.</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="mt-1 inline-flex h-8 w-8 items-center justify-center rounded-full bg-blue-500/30 text-blue-200 font-bold">2</span>
+                                <div>
+                                    <p class="font-semibold">Script output = live instructions</p>
+                                    <p class="text-sm text-slate-300">We print <code>curl</code> + <code>psql</code> snippets so visitors can replay <code>/v1/detect</code>, fetch <code>/v1/anomalies/{id}</code>, and verify <code>/healthz</code> showing license + queue + DB status.</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="mt-1 inline-flex h-8 w-8 items-center justify-center rounded-full bg-blue-500/30 text-blue-200 font-bold">3</span>
+                                <div>
+                                    <p class="font-semibold">Proof in Postgres</p>
+                                    <p class="text-sm text-slate-300">`psql` output shows anomalies persisted with NCD, p-values, and explanations—ready for compliance teams.</p>
+                                </div>
+                            </li>
+                        </ol>
+                        <p class="mt-8 text-sm text-slate-400">Dev mode bypass (`DRIFTLOCK_DEV_MODE=true`) is local-only. Production needs real keys; `/healthz` reports violations.</p>
+                    </div>
+                    <div class="space-y-6">
+                        <video src="/api-demo-demo.mp4" autoplay muted loop playsinline controls poster="/api-demo-terminal.png" class="w-full rounded-2xl shadow-2xl border border-white/10">
+                            Sorry, your browser doesn't support embedded videos. Watch the terminal capture in the README.
+                        </video>
+                        <div class="grid gap-4 sm:grid-cols-2">
+                            <img src="/api-demo-detect.png" alt="Sample /v1/detect response" class="rounded-2xl shadow-xl border border-white/5" />
+                            <img src="/api-demo-psql.png" alt="psql anomalies view" class="rounded-2xl shadow-xl border border-white/5" />
+                        </div>
                     </div>
                 </div>
             </div>

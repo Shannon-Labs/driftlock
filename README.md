@@ -8,45 +8,149 @@ Banks worldwide face massive fines for black-box algorithms. When your system fl
 
 ![Demo Anomaly](screenshots/demo-anomaly-card.png)
 
-## Try It: Detect Payment Fraud in 30 Seconds
+## Try Driftlock via the HTTP API (Docker + Postgres)
+
+1. Clone the repo and pull submodules:
+
+   ```bash
+   git clone https://github.com/Shannon-Labs/driftlock.git
+   cd driftlock
+   git submodule update --init --recursive
+   ```
+
+2. Build the cbad-core artifacts (required for all Go FFI binaries):
+
+   ```bash
+   cargo build --release
+   ```
+
+3. Run the end-to-end API demo. The script builds `driftlock-http`, starts Postgres via Docker Compose, runs migrations, creates a tenant + API key, and hits `/v1/detect`, `/v1/anomalies/{id}`, and the export stubs. Dev mode is enabled automatically if no license key is present.
+
+   ```bash
+   DRIFTLOCK_DEV_MODE=true ./scripts/run-api-demo.sh
+   ```
+
+   The script prints ready-to-run `curl`, `psql`, and `/healthz` commands so you can continue exploring the API immediately.
+
+![API demo terminal output](screenshots/api-demo-terminal.png)
+
+**See the persisted outputs:**
+
+- `/v1/detect` and `/v1/anomalies/{id}` return the same anomaly evidence that powered the CLI HTML report—now backed by Postgres.
+
+  ![/v1/detect response with anomalies](screenshots/api-demo-detect.png)
+
+- Use `psql` (or Supabase Studio in cloud mode) to inspect the saved anomalies.
+
+  ![psql anomalies screenshot](screenshots/api-demo-psql.png)
+
+🎥 **Watch the full run** — the terminal session below shows `./scripts/run-api-demo.sh` provisioning Postgres, creating a tenant, calling `/v1/detect`, and surfacing the follow-up curl/psql commands:
+
+![Animated API demo](screenshots/api-demo-demo.gif)
+
+4. Prefer to run the commands manually? Follow [docs/API-DEMO-WALKTHROUGH.md](docs/API-DEMO-WALKTHROUGH.md) for the step-by-step version (docker compose up, `driftlock-http migrate up`, `create-tenant`, `curl /v1/detect`, `psql` queries, etc.).
+
+## Manual HTTP API Walkthrough
+
+The Go HTTP service (`cmd/driftlock-http`) is still the canonical API for integrating pilot workloads. The commands below mirror what `scripts/run-api-demo.sh` automates when you need to drive each step yourself:
 
 ```bash
-git clone https://github.com/Shannon-Labs/driftlock.git
-cd driftlock
+# Required for all API flows
+export DRIFTLOCK_LICENSE_KEY="<signed license from Shannon Labs>"
+export DATABASE_URL="postgres://driftlock:driftlock@localhost:7543/driftlock?sslmode=disable"
 
-# Initialize git submodules (OpenZL and its nested dependencies)
-git submodule update --init --recursive
+# Or use dev mode locally (bypasses license validation, not for production)
+export DRIFTLOCK_DEV_MODE=true
 
-# Build CBAD core (Rust) and the demo (Go)
-make demo
-
-# Or build the demo directly (no Makefile)
-go build -o driftlock-demo cmd/demo/main.go
-
-# Run the demo
-./driftlock-demo test-data/financial-demo.json
-
-# Open the results
-open demo-output.html  # macOS
-# xdg-open demo-output.html  # Linux
-```
-
-## Run the HTTP API with Docker
-
-The Go HTTP service (`cmd/driftlock-http`) is the canonical API for integrating pilot workloads. Build it locally or use Docker:
-
-```bash
-# Build the Rust core + Go binary into a container
-make docker-http
-
-# Or run the full compose stack (HTTP API only)
-docker compose up --build driftlock-http
+docker compose up -d driftlock-postgres    # managed Postgres container
+./bin/driftlock-http migrate up            # apply goose migrations
+./bin/driftlock-http create-tenant --name "Demo" --key-role admin --json
+docker compose up --build driftlock-http   # HTTP API
 
 # Verify health and available compressors (OpenZL is optional and reported separately)
 curl -s http://localhost:8080/healthz | jq
+# Run /v1/detect, fetch anomalies, and query Postgres as shown in docs/API-DEMO-WALKTHROUGH.md
+```
+
+### Demo Environment Variables
+
+| Variable | Purpose | When to set |
+|----------|---------|-------------|
+| `DRIFTLOCK_DEV_MODE=true` | Bypasses license enforcement for local demos. `/healthz` reports `license.status="dev_mode"`. | Local development only. Production deployments **must** use `DRIFTLOCK_LICENSE_KEY`. |
+| `DRIFTLOCK_LICENSE_KEY` | Signed evaluation or commercial key. Enables production mode licensing. | Required outside of dev mode (CI, pilots, prod). |
+| `DATABASE_URL` | Connection string for Postgres (default `postgres://driftlock:driftlock@localhost:7543/driftlock?sslmode=disable`). | Always. Point to Compose, Supabase, or your managed Postgres. |
+| `INTEGRATION_API_PORT` | Force the API port for `scripts/test-integration.sh` / `run-api-demo.sh` (defaults to a random free port). | Optional—use when firewall rules or demos require a fixed port. |
+| `INTEGRATION_PRESERVE_POSTGRES=true` | Skip the automatic `docker compose rm -sf driftlock-postgres` cleanup after the integration script finishes. | Optional for long-running demos. |
+
+### Legacy CLI HTML Demo (Still Available)
+
+The CLI report is still shipped for backwards compatibility and offline screenshots. Treat it as the legacy/secondary path:
+
+```bash
+make demo                              # builds Rust core + Go CLI
+./driftlock-demo test-data/financial-demo.json
+open demo-output.html                  # macOS (use xdg-open on Linux)
+```
+
+`./verify-yc-ready.sh` exercises the same CLI pipeline end-to-end and remains part of CI, but all new onboarding now goes through the HTTP API.
+
+If the license key is missing or expired, the server exits on startup and `/healthz` reports the invalid status.
+
+### Admin CLI
+
+`driftlock-http` now exposes management commands for migrations and tenant onboarding. Run them with the same binary used for the HTTP service:
+
+```bash
+# Apply pending goose migrations
+./driftlock-http migrate up
+
+# Inspect migration state
+./driftlock-http migrate status
+
+# Create a tenant, default stream, and API key
+./driftlock-http create-tenant \
+  --name "Bank Alpha" \
+  --key-role admin
+
+# List and revoke API keys
+./driftlock-http list-keys --tenant bank-alpha
+./driftlock-http revoke-key --id 8f97f374-...
+```
+
+All commands require `DATABASE_URL` (and `DRIFTLOCK_LICENSE_KEY` when running the server). Keys are printed once at creation; store them securely.
+
+Pass `--json` to `create-tenant` when you need machine-readable output for scripts:
+
+```bash
+./driftlock-http create-tenant \
+  --name "CI Tenant" \
+  --key-role stream \
+  --json | jq
 ```
 
 The GitHub Actions `CI` workflow now runs `scripts/test-docker-build.sh` to guarantee the Dockerfiles stay in sync with `cbad-core`. OpenZL-enhanced images remain opt-in; set `USE_OPENZL=true` (and provide the private `openzl/` artifacts) to enable the feature flag.
+
+### Integration Tests (API + Postgres)
+
+- `./scripts/run-api-demo.sh` — human-friendly onboarding script described above. Prints the generated tenant/key, curl snippets, and Postgres queries.
+- `./scripts/test-integration.sh` — CI-grade helper invoked by the wrapper. Provision Postgres via Docker Compose, run goose migrations, create a tenant/key, and exercise `/v1/detect`, `/v1/anomalies/{id}`, plus the export stubs. Accepts `INTEGRATION_*` env vars for automation.
+
+Prerequisites (for both scripts):
+
+1. `cargo build --release` (installs `cbad-core` artifacts under `cbad-core/target/release`)
+2. Either:
+   - `export DRIFTLOCK_LICENSE_KEY="<signed key from Shannon Labs>"` (production/pilot)
+   - OR `export DRIFTLOCK_DEV_MODE=true` (development - bypasses license validation)
+3. `export LD_LIBRARY_PATH=cbad-core/target/release:$LD_LIBRARY_PATH`
+4. Docker, `jq`, `psql`, `curl`, `base64`
+
+Run it manually when you need raw logs:
+
+```bash
+USE_OPENZL=false ./scripts/test-integration.sh
+```
+
+`INTEGRATION_PRESERVE_POSTGRES=true` keeps the Compose container running for deeper analysis; otherwise the container is removed on exit. `/healthz` now reports license status, queue backend, and database reachability for compliance logging.
 
 ## Multi-Million Dollar Fines Start January 2025
 
@@ -102,7 +206,16 @@ Helpful commands:
 - `make demo` — build Rust core + Go CLI demo.
 - `make docker-http` — build the containerized HTTP engine locally.
 - `make docker-test` — run Docker smoke tests (generic compressors by default; set `ENABLE_OPENZL_BUILD=true` to cover the optional OpenZL images when libraries are present).
-- `LD_LIBRARY_PATH=cbad-core/target/release go test ./...` (from `collector-processor/`) — run Go unit + FFI integration tests after `cargo build --release`.
+- `./scripts/run-api-demo.sh` — guided HTTP API onboarding (build + Postgres + /v1/detect + anomaly detail + psql checks).
+- `USE_OPENZL=false LD_LIBRARY_PATH=cbad-core/target/release go test ./...` (from `collector-processor/`) — run Go unit + FFI integration tests after rebuilding the Rust core with generic compressors only:
+
+```bash
+cd cbad-core
+USE_OPENZL=false cargo clean
+USE_OPENZL=false cargo build --release
+cd ..
+USE_OPENZL=false LD_LIBRARY_PATH=cbad-core/target/release go test ./collector-processor/...
+```
 
 ## 📊 Demo Data
 
@@ -114,6 +227,7 @@ The demo uses `test-data/financial-demo.json` containing 5,000 synthetic payment
 ## 📚 Learn More
 
 - **[DEMO.md](DEMO.md)** - 2-minute partner walkthrough with screenshots
+- **[docs/API-DEMO-WALKTHROUGH.md](docs/API-DEMO-WALKTHROUGH.md)** - Manual API commands mirroring the onboarding script
 - **[docs/](docs/)** - Full documentation and agent automation history
 
 Visual proof (optional):
