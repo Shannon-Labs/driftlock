@@ -62,5 +62,8 @@ ENV LD_LIBRARY_PATH="/usr/local/lib:${LD_LIBRARY_PATH}"
 COPY --from=cbad /src/cbad-core/target/release/libcbad_core.so /usr/local/lib/libcbad_core.so
 COPY --from=cbad /src/cbad-core/target/release/libcbad_core.a /usr/local/lib/libcbad_core.a
 COPY --from=builder /workspace/bin/driftlock-http /usr/local/bin/driftlock-http
+# Copy migrations directory so they're available at runtime
+COPY --from=builder /workspace/api/migrations /usr/local/share/driftlock/migrations
+ENV MIGRATIONS_DIR=/usr/local/share/driftlock/migrations
 EXPOSE 8080
 CMD ["/usr/local/bin/driftlock-http"]
