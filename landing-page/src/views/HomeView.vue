@@ -234,21 +234,115 @@
         <!-- CTA Section -->
         <section id="contact" class="bg-gray-900">
             <div class="container mx-auto max-w-7xl px-4 py-24 sm:px-6 sm:py-32 lg:px-8">
-                <div class="mx-auto max-w-3xl text-center">
-                    <h2 class="text-3xl font-mono font-bold tracking-tight text-white sm:text-4xl">
-                        Don't Risk Your Next Audit.
-                        <br>
-                        Pilot Driftlock for Q1 2026.
-                    </h2>
-                    <p class="mt-6 text-lg leading-8 font-sans text-gray-300">
-                        We are actively seeking <strong class="font-semibold text-white">3 pilot banks</strong> for Q1 2026 to validate real-world performance. Be one of the first to have a regulator-proof, explainable fraud detection system. We need introductions to bank compliance teams facing regulatory audits.
-                    </p>
-                    <div class="mt-10">
-                        <a href="mailto:hunter@shannonlabs.dev?subject=Driftlock Pilot Program Inquiry" class="rounded-md cta-gradient px-8 py-3 text-lg font-sans font-semibold text-white shadow-lg transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">
-                            Contact Us for a Pilot
-                        </a>
-                        <p class="mt-4 text-sm font-sans text-gray-400">Or reach out at hunter@shannonlabs.dev</p>
+                <div class="grid gap-12 lg:grid-cols-2 lg:items-start">
+                    <div>
+                        <p class="text-sm font-semibold uppercase tracking-[0.2em] text-blue-400">Pilot Program</p>
+                        <h2 class="mt-4 text-3xl font-mono font-bold tracking-tight text-white sm:text-4xl">
+                            Don't Risk Your Next Audit.
+                            <br>
+                            Pilot Driftlock for Q1 2026.
+                        </h2>
+                        <p class="mt-6 text-lg leading-8 font-sans text-gray-300">
+                            We are actively seeking <strong class="font-semibold text-white">3 pilot banks</strong> for Q1 2026 to validate real-world performance. Be one of the first to have a regulator-proof, explainable fraud detection system. Introductions to compliance and risk owners are especially helpful.
+                        </p>
+                        <div class="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 text-gray-200">
+                            <h3 class="text-lg font-semibold text-white">What to expect</h3>
+                            <ul class="mt-4 space-y-3 text-sm font-sans text-gray-300">
+                                <li class="flex items-start gap-3">
+                                    <span class="mt-0.5 inline-flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-blue-500/30 text-xs font-bold text-blue-200">1</span>
+                                    <span>Qualify your dataset + compliance needs. We sign mutual NDA if required.</span>
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <span class="mt-0.5 inline-flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-blue-500/30 text-xs font-bold text-blue-200">2</span>
+                                    <span>Deploy HTTP API + Postgres demo in your sandbox (guided runbook included).</span>
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <span class="mt-0.5 inline-flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-blue-500/30 text-xs font-bold text-blue-200">3</span>
+                                    <span>Review anomalies + math proof with compliance teams and plan production pilot.</span>
+                                </li>
+                            </ul>
+                            <p class="mt-4 text-sm text-gray-400">Prefer email? <a :href="fallbackMailto" class="font-semibold text-white underline underline-offset-4">hunter@shannonlabs.dev</a></p>
+                        </div>
                     </div>
+                    <form @submit.prevent="handleContactSubmit" class="rounded-3xl bg-white p-8 shadow-2xl" novalidate>
+                        <fieldset :disabled="isSubmitting" class="space-y-6">
+                            <legend class="text-2xl font-mono font-bold text-gray-900">Tell us about your team</legend>
+                            <div class="grid gap-6 md:grid-cols-2">
+                                <div>
+                                    <label for="contact-name" class="block text-sm font-sans font-semibold text-gray-700">Full Name *</label>
+                                    <input
+                                        id="contact-name"
+                                        v-model="contactForm.name"
+                                        type="text"
+                                        required
+                                        autocomplete="name"
+                                        class="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-base font-sans text-gray-900 shadow-sm focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                                        placeholder="Alex Compliance"
+                                    />
+                                </div>
+                                <div>
+                                    <label for="contact-email" class="block text-sm font-sans font-semibold text-gray-700">Work Email *</label>
+                                    <input
+                                        id="contact-email"
+                                        v-model="contactForm.email"
+                                        type="email"
+                                        required
+                                        autocomplete="email"
+                                        class="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-base font-sans text-gray-900 shadow-sm focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                                        placeholder="alex@bank.com"
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label for="contact-company" class="block text-sm font-sans font-semibold text-gray-700">Company</label>
+                                <input
+                                    id="contact-company"
+                                    v-model="contactForm.company"
+                                    type="text"
+                                    autocomplete="organization"
+                                    class="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-base font-sans text-gray-900 shadow-sm focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                                    placeholder="Global Bank Corp"
+                                />
+                            </div>
+                            <div>
+                                <label for="contact-message" class="block text-sm font-sans font-semibold text-gray-700">How can we help? *</label>
+                                <textarea
+                                    id="contact-message"
+                                    v-model="contactForm.message"
+                                    required
+                                    rows="4"
+                                    class="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-base font-sans text-gray-900 shadow-sm focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                                    placeholder="We need help preparing for a DORA readiness audit..."
+                                ></textarea>
+                            </div>
+                            <div class="flex items-center justify-between gap-3">
+                                <button
+                                    type="submit"
+                                    :disabled="!isFormValid || isSubmitting"
+                                    class="inline-flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 text-base font-sans font-semibold text-white shadow-lg transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                    <svg v-if="isSubmitting" class="mr-3 h-5 w-5 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                                    </svg>
+                                    {{ isSubmitting ? 'Sending...' : 'Request a Pilot Call' }}
+                                </button>
+                            </div>
+                            <p class="text-xs font-sans text-gray-500">By submitting, you agree to be contacted about Driftlock pilots. No spam.</p>
+                        </fieldset>
+                        <div class="mt-6 min-h-[48px]" aria-live="polite">
+                            <div v-if="submissionState === 'success'" class="flex items-center rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-sans text-green-900">
+                                <svg class="mr-2 h-5 w-5 text-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-7.778 7.778a1 1 0 01-1.414 0L3.293 9.293a1 1 0 011.414-1.414l3.102 3.102 7.071-7.071a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                </svg>
+                                Thanks! We received your note and will respond within 1 business day.
+                            </div>
+                            <div v-else-if="submissionState === 'error'" class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-sans text-red-900">
+                                {{ submissionMessage }}
+                                <span class="block text-xs text-red-700">Or email <a :href="fallbackMailto" class="underline font-semibold">hunter@shannonlabs.dev</a></span>
+                            </div>
+                        </div>
+                    </form>
                 </div>
             </div>
         </section>
@@ -256,5 +350,74 @@
 </template>
 
 <script setup lang="ts">
+import { computed, reactive, ref } from 'vue'
 import PlaygroundShell from '../components/playground/PlaygroundShell.vue'
+
+const contactEndpoint = '/api/v1/contact'
+const fallbackMailto = 'mailto:hunter@shannonlabs.dev?subject=Driftlock Pilot Program Inquiry'
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+const contactForm = reactive({
+    name: '',
+    email: '',
+    company: '',
+    message: '',
+})
+
+const isSubmitting = ref(false)
+const submissionState = ref<'idle' | 'success' | 'error'>('idle')
+const submissionMessage = ref('')
+
+const isFormValid = computed(() => {
+    return (
+        contactForm.name.trim().length >= 2 &&
+        emailRegex.test(contactForm.email.trim()) &&
+        contactForm.message.trim().length >= 20
+    )
+})
+
+const resetForm = () => {
+    contactForm.name = ''
+    contactForm.email = ''
+    contactForm.company = ''
+    contactForm.message = ''
+}
+
+const handleContactSubmit = async () => {
+    if (!isFormValid.value) {
+        submissionState.value = 'error'
+        submissionMessage.value = 'Please fill out the required fields before submitting.'
+        return
+    }
+
+    isSubmitting.value = true
+    submissionState.value = 'idle'
+    submissionMessage.value = ''
+
+    try {
+        const response = await fetch(contactEndpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name: contactForm.name.trim(),
+                email: contactForm.email.trim(),
+                company: contactForm.company.trim(),
+                message: contactForm.message.trim(),
+            }),
+        })
+
+        if (!response.ok) {
+            throw new Error(`Request failed with status ${response.status}`)
+        }
+
+        submissionState.value = 'success'
+        resetForm()
+    } catch (error) {
+        console.error('Contact form submission failed', error)
+        submissionState.value = 'error'
+        submissionMessage.value = 'Something went wrong. Please try again or reach out via email.'
+    } finally {
+        isSubmitting.value = false
+    }
+}
 </script>

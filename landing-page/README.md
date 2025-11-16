@@ -165,11 +165,26 @@ Main content is organized in components:
 
 ### Forms
 
-The CTA section includes a lead capture form. To integrate with your backend:
+The contact CTA now submits to `/api/v1/contact`, handled by a Cloudflare Pages Function (`functions/api/v1/contact.ts`). To configure it:
 
-1. Update the `handleSubmit` function in `CTASection.vue`
-2. Add your API endpoint URL
-3. Configure webhooks or email notifications
+- **Step 1:** Deploy the Pages Function and set Cloudflare env variables such as `CRM_WEBHOOK_URL` (CRM/webhook endpoint) and, optionally, `CONTACT_LOG_KV` (KV namespace for logging submissions when no webhook exists).
+- **Step 2:** Update `wrangler.toml` or the Cloudflare dashboard so the KV binding (if configured) is available to the function.
+- **Step 3:** Customize the UI copy or fields inside `src/views/HomeView.vue` if you need additional data points.
+
+Frontend validation lives in `handleContactSubmit` within `HomeView.vue`, mirroring the server-side checks so visitors get instant feedback. When no webhook is configured, the function logs submissions but still returns a friendly success state.
+
+### Cloudflare Contact Proxy
+
+- **File**: `functions/api/v1/contact.ts`
+- **Behavior**: Validates payloads, forwards them to `CRM_WEBHOOK_URL` when set, otherwise logs to KV/console so the UX never fails.
+- **Extensibility**: You can extend this file to send emails (e.g., via SendGrid) or enrich payloads with geolocation data provided by Cloudflare.
+
+### QA Workflow (Manual)
+
+1. **Type checking/build** – `npm run type-check && npm run build` before opening a PR.
+2. **Lighthouse** – Use Chrome DevTools → Lighthouse → Run (Mobile + Desktop) to capture Performance/Accessibility/Best Practices/SEO scores. Attach JSON to the PR if scores change.
+3. **DevTools Recorder** – Record a flow that tabs through nav, opens dark mode, and submits the contact form (happy + error paths). Export the flow for future Playwright automation.
+4. **Smoke test** – Use the Cloudflare preview deployment and confirm `/api/v1/contact` returns `{"ok": true}` when `CRM_WEBHOOK_URL` is unset.
 
 ## Performance
 
