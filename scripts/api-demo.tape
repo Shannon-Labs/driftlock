@@ -3,7 +3,7 @@ Set Shell zsh
 Set FontSize 28
 Set Width 1200
 Set Height 900
-Set TypingSpeed 120ms
+Set TypingSpeed 60ms
 
 Type 'cd /Volumes/VIXinSSD/driftlock'
 Enter
@@ -15,10 +15,10 @@ Type 'export DATABASE_URL="postgres://driftlock:driftlock@localhost:7543/driftlo
 Enter
 Type 'curl -s $BASE_URL/healthz | jq'
 Enter
-Sleep 4s
+Sleep 2s
 Type 'jq ".[0:600]" test-data/financial-demo.json | curl -sS -X POST -H "X-Api-Key: $API_KEY" -H "Content-Type: application/json" --data @- $BASE_URL/v1/detect | jq ".anomalies[0]"'
 Enter
-Sleep 8s
+Sleep 3s
 Type 'psql "$DATABASE_URL" -c "SELECT id, stream_id, ncd, p_value::numeric, confidence::numeric FROM anomalies ORDER BY detected_at DESC LIMIT 5;"'
 Enter
-Sleep 6s
+Sleep 3s
