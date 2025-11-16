@@ -14,7 +14,10 @@
                         Spin Up Driftlock in Minutes.
                     </h1>
                     <p class="mt-6 text-lg leading-8 font-sans text-gray-200 sm:text-xl">
-                        Launch the HTTP API + Postgres demo locally, hit <code class="text-white">/v1/detect</code>, and show regulators persisted anomalies with compression math—not black-box ML. Deterministic evidence for EU DORA & US audits.
+                        Launch the HTTP API + Postgres demo locally, hit <code class="text-white">/v1/detect</code>, and show regulators persisted anomalies with compression math—not black-box ML. Deterministic evidence for EU DORA &amp; US audits.
+                    </p>
+                    <p class="mt-4 text-base leading-7 font-sans text-gray-200/90 max-w-3xl mx-auto">
+                        Designed as a <strong class="font-semibold">developer-first anomaly API</strong>: a simple HTTPS endpoint with a generous free tier and usage-based pricing that targets roughly <span class="font-mono">$1 per million anomaly checks</span>, with volume discounts and enterprise plans in the low-thousands per month.
                     </p>
                     <div class="mt-10 flex items-center justify-center gap-x-6">
                         <a href="#api-demo" class="rounded-md cta-gradient px-6 py-3 text-base font-sans font-semibold text-white shadow-lg transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">
@@ -231,6 +234,136 @@
             </div>
         </section>
 
+        <!-- ROI Calculator Section -->
+        <section id="roi" class="py-24 sm:py-32 bg-slate-950 text-white">
+            <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div class="mx-auto max-w-3xl text-center">
+                    <h2 class="text-base font-sans font-semibold leading-7 text-blue-300">Financial Impact</h2>
+                    <p class="mt-2 text-4xl font-mono font-bold tracking-tight text-white sm:text-5xl">Rough ROI, In Plain Numbers</p>
+                    <p class="mt-4 text-base font-sans text-slate-200">
+                        This is a directional model, not a quote. It helps you reason about how anomaly detection that actually explains itself compares to fraud losses, compliance fines, and legacy tooling.
+                    </p>
+                </div>
+                <div class="mt-12 grid gap-10 lg:grid-cols-2 lg:items-start">
+                    <!-- Inputs -->
+                    <div class="rounded-3xl bg-slate-900/70 p-8 shadow-2xl border border-white/10">
+                        <h3 class="text-xl font-mono font-semibold text-white">Your Assumptions</h3>
+                        <p class="mt-2 text-sm font-sans text-slate-300">Adjust these to match your environment. We never send this data anywhere.</p>
+                        <div class="mt-6 space-y-6">
+                            <div>
+                                <label for="roi-events" class="flex items-center justify-between text-sm font-sans font-semibold text-slate-200">
+                                    <span>Events per month monitored</span>
+                                    <span class="text-xs font-mono text-slate-400">{{ roiInputs.eventsPerMonth.toLocaleString() }}</span>
+                                </label>
+                                <input
+                                    id="roi-events"
+                                    v-model.number="roiInputs.eventsPerMonth"
+                                    type="range"
+                                    min="1000000"
+                                    max="1000000000"
+                                    step="1000000"
+                                    class="mt-2 w-full accent-blue-500"
+                                />
+                            </div>
+                            <div>
+                                <label for="roi-fraud" class="flex items-center justify-between text-sm font-sans font-semibold text-slate-200">
+                                    <span>Annual fraud / operational loss at risk (USD)</span>
+                                    <span class="text-xs font-mono text-slate-400">${{ roiInputs.annualLoss.toLocaleString() }}</span>
+                                </label>
+                                <input
+                                    id="roi-fraud"
+                                    v-model.number="roiInputs.annualLoss"
+                                    type="range"
+                                    min="500000"
+                                    max="50000000"
+                                    step="500000"
+                                    class="mt-2 w-full accent-blue-500"
+                                />
+                            </div>
+                            <div>
+                                <label for="roi-reduction" class="flex items-center justify-between text-sm font-sans font-semibold text-slate-200">
+                                    <span>Expected reduction in losses with Driftlock</span>
+                                    <span class="text-xs font-mono text-slate-400">{{ roiInputs.lossReductionPct }}%</span>
+                                </label>
+                                <input
+                                    id="roi-reduction"
+                                    v-model.number="roiInputs.lossReductionPct"
+                                    type="range"
+                                    min="1"
+                                    max="30"
+                                    step="1"
+                                    class="mt-2 w-full accent-blue-500"
+                                />
+                            </div>
+                            <div>
+                                <label for="roi-fine" class="flex items-center justify-between text-sm font-sans font-semibold text-slate-200">
+                                    <span>Probabilistic annual fine exposure (USD)</span>
+                                    <span class="text-xs font-mono text-slate-400">${{ roiInputs.fineExposure.toLocaleString() }}</span>
+                                </label>
+                                <input
+                                    id="roi-fine"
+                                    v-model.number="roiInputs.fineExposure"
+                                    type="range"
+                                    min="0"
+                                    max="100000000"
+                                    step="1000000"
+                                    class="mt-2 w-full accent-blue-500"
+                                />
+                            </div>
+                            <div>
+                                <label for="roi-price" class="flex items-center justify-between text-sm font-sans font-semibold text-slate-200">
+                                    <span>Assumed Driftlock price per 1M anomaly checks</span>
+                                    <span class="text-xs font-mono text-slate-400">${{ roiInputs.pricePerMillion.toFixed(2) }}</span>
+                                </label>
+                                <input
+                                    id="roi-price"
+                                    v-model.number="roiInputs.pricePerMillion"
+                                    type="range"
+                                    min="0.5"
+                                    max="3"
+                                    step="0.1"
+                                    class="mt-2 w-full accent-blue-500"
+                                />
+                            </div>
+                        </div>
+                        <p class="mt-4 text-xs font-sans text-slate-500">All values are illustrative. Actual pricing and discounts are set by contract.</p>
+                    </div>
+
+                    <!-- Outputs -->
+                    <div class="rounded-3xl bg-slate-900/70 p-8 shadow-2xl border border-blue-500/40">
+                        <h3 class="text-xl font-mono font-semibold text-white">Modeled Impact (Annual)</h3>
+                        <div class="mt-6 grid gap-6 sm:grid-cols-2">
+                            <div class="rounded-2xl bg-slate-900 p-4 border border-white/10">
+                                <p class="text-xs font-sans uppercase tracking-[0.18em] text-slate-400">Estimated Driftlock spend</p>
+                                <p class="mt-2 text-3xl font-mono font-bold text-blue-300">${{ roiOutputs.annualDriftlockSpend.toLocaleString() }}</p>
+                                <p class="mt-2 text-xs font-sans text-slate-400">Based on your events/month and assumed price per 1M anomaly checks.</p>
+                            </div>
+                            <div class="rounded-2xl bg-slate-900 p-4 border border-white/10">
+                                <p class="text-xs font-sans uppercase tracking-[0.18em] text-slate-400">Losses avoided</p>
+                                <p class="mt-2 text-3xl font-mono font-bold text-emerald-300">${{ roiOutputs.lossesAvoided.toLocaleString() }}</p>
+                                <p class="mt-2 text-xs font-sans text-slate-400">Annual fraud/operational losses avoided if Driftlock reduces losses by your chosen percentage.</p>
+                            </div>
+                            <div class="rounded-2xl bg-slate-900 p-4 border border-white/10">
+                                <p class="text-xs font-sans uppercase tracking-[0.18em] text-slate-400">Fine exposure considered</p>
+                                <p class="mt-2 text-3xl font-mono font-bold text-amber-300">${{ roiOutputs.fineExposureConsidered.toLocaleString() }}</p>
+                                <p class="mt-2 text-xs font-sans text-slate-400">You can treat this as expected regulatory downside in a given year.</p>
+                            </div>
+                            <div class="rounded-2xl bg-slate-900 p-4 border border-white/10">
+                                <p class="text-xs font-sans uppercase tracking-[0.18em] text-slate-400">Modeled net benefit</p>
+                                <p class="mt-2 text-3xl font-mono font-bold" :class="roiOutputs.netBenefit >= 0 ? 'text-emerald-300' : 'text-red-300'">
+                                    ${{ roiOutputs.netBenefit.toLocaleString() }}
+                                </p>
+                                <p class="mt-2 text-xs font-sans text-slate-400">(Losses avoided + fine exposure) − Driftlock spend. Positive values suggest the math is in your favor.</p>
+                            </div>
+                        </div>
+                        <div class="mt-8 rounded-2xl border border-white/10 bg-slate-900 p-4 text-xs font-sans text-slate-300">
+                            <p><strong class="text-white">Disclaimer:</strong> This is a simplified model using your assumptions. It is not financial advice and not a binding price quote. For real pricing, talk to us about your data, risk profile, and regulatory requirements.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- CTA Section -->
         <section id="contact" class="bg-gray-900">
             <div class="container mx-auto max-w-7xl px-4 py-24 sm:px-6 sm:py-32 lg:px-8">
@@ -420,4 +553,32 @@ const handleContactSubmit = async () => {
         isSubmitting.value = false
     }
 }
+
+// ROI calculator state (purely client-side, illustrative only)
+const roiInputs = reactive({
+    eventsPerMonth: 50_000_000,
+    annualLoss: 5_000_000,
+    lossReductionPct: 10,
+    fineExposure: 10_000_000,
+    pricePerMillion: 1.0,
+})
+
+const roiOutputs = computed(() => {
+    const eventsPerMonth = Math.max(1_000_000, roiInputs.eventsPerMonth || 0)
+    const annualEvents = eventsPerMonth * 12
+    const millions = annualEvents / 1_000_000
+    const annualDriftlockSpend = Math.round(millions * (roiInputs.pricePerMillion || 0))
+
+    const lossesAvoided = Math.round((roiInputs.annualLoss || 0) * (Math.max(0, roiInputs.lossReductionPct || 0) / 100))
+    const fineExposureConsidered = Math.round(roiInputs.fineExposure || 0)
+
+    const netBenefit = lossesAvoided + fineExposureConsidered - annualDriftlockSpend
+
+    return {
+        annualDriftlockSpend: Math.max(0, annualDriftlockSpend),
+        lossesAvoided: Math.max(0, lossesAvoided),
+        fineExposureConsidered: Math.max(0, fineExposureConsidered),
+        netBenefit,
+    }
+})
 </script>

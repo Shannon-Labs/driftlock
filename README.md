@@ -48,7 +48,7 @@ Banks worldwide face massive fines for black-box algorithms. When your system fl
 
 ![Animated API demo](screenshots/api-demo-demo.gif)
 
-4. Prefer to run the commands manually? Follow [docs/API-DEMO-WALKTHROUGH.md](docs/API-DEMO-WALKTHROUGH.md) for the step-by-step version (docker compose up, `driftlock-http migrate up`, `create-tenant`, `curl /v1/detect`, `psql` queries, etc.).
+1. Prefer to run the commands manually? Follow [docs/API-DEMO-WALKTHROUGH.md](docs/API-DEMO-WALKTHROUGH.md) for the step-by-step version (docker compose up, `driftlock-http migrate up`, `create-tenant`, `curl /v1/detect`, `psql` queries, etc.).
 
 ## Manual HTTP API Walkthrough
 
@@ -179,7 +179,21 @@ The HTML includes a baseline comparison panel and similar normal examples for ea
 3. **Audit-ready reports** in 1 click
 4. **Works with existing data** - no infrastructure changes
 
+## Developer-First Anomaly API & Pricing Direction
+
+Driftlock is designed to be a **developer-first anomaly detection API**: a simple HTTP endpoint you can drop into payment gateways, risk engines, and AI training/monitoring pipelines.
+
+We are still tuning formal pricing, but the direction is:
+
+- **Generous free tier** so teams can run pilots and CI checks without talking to sales.
+- **Usage-based developer API** that targets pricing on the order of **~$1 per million anomaly checks**, with volume discounts at higher event counts.
+- **Data-based options** that are **meaningfully cheaper per GB** than full-stack observability platforms, because Driftlock focuses on explainable anomaly signals rather than storing everything forever.
+- **Enterprise compliance plans** that start in the **low thousands per month**, tuned to stay below the combined cost of fines, existing monitoring tools, and manual audit preparation.
+
+These numbers are directional, not a binding price sheet. The goal is simple: **keep unit prices clearly below traditional observability/ML add-ons while preserving healthy margin**, so Driftlock can remain sustainable even when embedded deeply into mission-critical pipelines.
+
 ## What This Demo Proves
+
 - ✅ Core algorithm works (compression distance + statistical testing)
 - ✅ Generates explainable, audit-friendly output
 - ✅ Processes 2,000 transactions in 4-6 seconds
@@ -220,6 +234,7 @@ USE_OPENZL=false LD_LIBRARY_PATH=cbad-core/target/release go test ./collector-pr
 ## 📊 Demo Data
 
 The demo uses `test-data/financial-demo.json` containing 5,000 synthetic payment transactions with:
+
 - **Normal pattern**: 50–100ms processing, US/UK origins, `/v1/charges` endpoint
 - **Anomalies**: Latency spikes up to 8000ms and a handful of malformed endpoints
 - **Detection**: Demo tuned to flag ~30 anomalies from 2,000 processed events (~1.5% detection rate).
@@ -231,6 +246,7 @@ The demo uses `test-data/financial-demo.json` containing 5,000 synthetic payment
 - **[docs/](docs/)** - Full documentation and agent automation history
 
 Visual proof (optional):
+
 - Run: `./scripts/capture-anomaly-card.sh` (macOS Safari) to auto‑capture the first anomaly card into `screenshots/demo-anomaly-card.png`. If it fails due to permissions, follow `docs/CAPTURE-ANOMALY-SCREENSHOT.md` for manual capture.
 
 ---
