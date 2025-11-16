@@ -1,14 +1,16 @@
 # OpenZL Integration Status
 
-_Last updated: 2025-03-XX_
+_Last updated: 2025-01-27_
 
-OpenZL is an **optional**, open-source compression adapter (BSD licensed, available at https://github.com/facebook/openzl). Driftlock ships with deterministic fallback compressors (zstd, lz4, gzip) enabled everywhere. The OpenZL path is now first-class again but strictly opt-in.
+**IMPORTANT: OpenZL is optional and experimental.** Driftlock works with generic compressors (zstd, lz4, gzip) by default, which are always available and sufficient for all demo and production use cases. OpenZL is a format-aware compression adapter (BSD licensed, available at https://github.com/facebook/openzl) that can provide better compression ratios but is **disabled by default** (`USE_OPENZL=false` in all demo scripts). The OpenZL path is strictly opt-in and requires building the submodule.
 
 ## Current Behavior
 
-- `cbad-core` builds without OpenZL by default. The new FFI call `cbad_has_openzl()` exposes whether the feature flag was compiled in. Go bindings surface this via `driftlockcbad.HasOpenZL()`.
-- `cmd/driftlock-http`’s `/healthz` endpoint reports `openzl_available: true/false` and only lists `openzl` in `available_algos` when the Rust core includes those symbols.
-- Requests that specify `algo=openzl` automatically fall back to `zstd` when OpenZL isn’t compiled in; the HTTP response includes `"fallback_from_algo": "openzl"` so operators can see the downgrade.
+- **OpenZL is disabled by default** - all builds and demos use generic compressors (zstd, lz4, gzip) unless explicitly enabled.
+- `cbad-core` builds without OpenZL by default. The FFI call `cbad_has_openzl()` exposes whether the feature flag was compiled in. Go bindings surface this via `driftlockcbad.HasOpenZL()`.
+- `cmd/driftlock-http`'s `/healthz` endpoint reports `openzl_available: true/false` and only lists `openzl` in `available_algos` when the Rust core includes those symbols.
+- Requests that specify `algo=openzl` automatically fall back to `zstd` when OpenZL isn't compiled in; the HTTP response includes `"fallback_from_algo": "openzl"` so operators can see the downgrade.
+- **All demo scripts use `USE_OPENZL=false`** - the default user experience does not require or use OpenZL.
 
 ## How to Enable OpenZL Locally
 
@@ -45,8 +47,9 @@ OpenZL is an **optional**, open-source compression adapter (BSD licensed, availa
 
 ## Operator Guidance
 
-- Production deployments should treat OpenZL like an accelerator: enable it where the library can be built and installed; otherwise rely on zstd.
+- **Default behavior: OpenZL is disabled.** All demos, CI, and default builds use generic compressors only.
+- Production deployments should treat OpenZL as an experimental accelerator: enable it only where the library can be built and installed; otherwise rely on zstd (which is the default and recommended path).
 - `/healthz` plus Prometheus metrics expose whether OpenZL is active so SREs can alert on misconfigured hosts.
-- Documentation and customer deliverables must continue to describe OpenZL as optional; deterministic fallbacks are the supported baseline.
+- **Documentation and customer deliverables must clearly state that OpenZL is optional and experimental.** Generic compressors (zstd, lz4, gzip) are the supported baseline and work for all use cases.
 
 For additional details or troubleshooting steps, see the [OpenZL documentation](https://github.com/facebook/openzl) or coordinate with Shannon Labs engineering. The OpenZL source is included as a git submodule and can be built from source.

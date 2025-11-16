@@ -14,7 +14,7 @@
                         Explainable Anomalies, Ready in Minutes.
                     </h1>
                     <p class="mt-6 text-lg leading-8 font-sans text-gray-200 sm:text-xl">
-                        Clone the repo, run <code class="text-white">cargo build --release</code>, then <code class="text-white">DRIFTLOCK_DEV_MODE=true ./scripts/run-api-demo.sh</code>—the same quickstart documented in the README. You’ll mint a tenant, hit <code class="text-white">/v1/detect</code>, and inspect persisted anomalies with compression math instead of black-box ML.
+                        Clone the repo, run <code class="text-white">cd cbad-core && cargo build --release && cd ..</code>, then <code class="text-white">DRIFTLOCK_DEV_MODE=true ./scripts/run-api-demo.sh</code>—the same quickstart documented in the README. You'll mint a tenant, hit <code class="text-white">/v1/detect</code>, and inspect persisted anomalies with compression math instead of black-box ML.
                     </p>
                     <p class="mt-4 text-base leading-7 font-sans text-gray-200/90 max-w-3xl mx-auto">
                         Everything here mirrors the repo: API walkthrough, screenshots, and the ROI calculator that assumes the <span class="font-mono">~$1 per million anomaly checks</span> pricing direction (with volume discounts and enterprise plans in the low thousands per month).
@@ -49,7 +49,7 @@
                                 <span class="mt-1 inline-flex h-8 w-8 items-center justify-center rounded-full bg-blue-500/30 text-blue-200 font-bold">1</span>
                                 <div>
                                     <p class="font-semibold">Clone, build, run</p>
-                                    <p class="text-sm text-slate-300"><code>git clone</code>, <code>cargo build --release</code>, then <code>DRIFTLOCK_DEV_MODE=true ./scripts/run-api-demo.sh</code>.</p>
+                                    <p class="text-sm text-slate-300"><code>git clone</code>, <code>cd cbad-core && cargo build --release && cd ..</code>, then <code>DRIFTLOCK_DEV_MODE=true ./scripts/run-api-demo.sh</code>.</p>
                                 </div>
                             </li>
                             <li class="flex items-start gap-3">

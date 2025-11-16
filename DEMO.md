@@ -2,7 +2,7 @@
 git clone https://github.com/Shannon-Labs/driftlock.git
 cd driftlock
 git submodule update --init --recursive
-cargo build --release
+cd cbad-core && cargo build --release && cd ..
 DRIFTLOCK_DEV_MODE=true ./scripts/run-api-demo.sh
 ```
 
@@ -53,7 +53,7 @@ Walk through a single `/v1/anomalies/{id}` response. Highlight:
 
 ## Legacy CLI HTML Demo (Backup Flow)
 
-Still need the standalone HTML for screenshots?
+Still need the standalone HTML for screenshots? (Note: This uses generic compressors by default; OpenZL is optional and disabled.)
 
 ```bash
 make demo

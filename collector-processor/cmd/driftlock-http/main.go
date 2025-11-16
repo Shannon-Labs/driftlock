@@ -346,26 +346,40 @@ func anomaliesHandler(store *store) http.Handler {
 		}
 		streamFilter := r.URL.Query().Get("stream_id")
 		args := []any{tc.Tenant.ID}
-		query := `SELECT id, stream_id, ncd, compression_ratio, entropy_change, p_value, confidence, explanation, status, detected_at
-            FROM anomalies WHERE tenant_id=$1`
+		baseQuery := `FROM anomalies WHERE tenant_id=$1`
+		countArgs := []any{tc.Tenant.ID}
 		if streamFilter != "" {
-			query += " AND stream_id = $2"
+			var streamID uuid.UUID
 			if id, err := uuid.Parse(streamFilter); err == nil {
-				args = append(args, id)
+				streamID = id
 			} else {
 				stream, _, ok := store.streamBySlugOrID(tc.Tenant.ID, streamFilter)
 				if !ok {
-					writeJSON(w, r, http.StatusOK, anomalyListResponse{})
+					writeJSON(w, r, http.StatusOK, anomalyListResponse{Anomalies: []anomalyListItem{}, Total: 0})
 					return
 				}
-				args = append(args, stream.ID)
+				streamID = stream.ID
 			}
+			baseQuery += " AND stream_id = $2"
+			args = append(args, streamID)
+			countArgs = append(countArgs, streamID)
 		}
+
+		// Get total count
+		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+		defer cancel()
+		countQuery := `SELECT COUNT(*) ` + baseQuery
+		var total int
+		if err := store.pool.QueryRow(ctx, countQuery, countArgs...).Scan(&total); err != nil {
+			writeError(w, r, http.StatusInternalServerError, err)
+			return
+		}
+
+		// Get paginated results
+		query := `SELECT id, stream_id, ncd, compression_ratio, entropy_change, p_value, confidence, explanation, status, detected_at ` + baseQuery
 		query += " ORDER BY detected_at DESC, id DESC LIMIT $" + strconv.Itoa(len(args)+1)
 		args = append(args, limit)
 
-		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
-		defer cancel()
 		rows, err := store.pool.Query(ctx, query, args...)
 		if err != nil {
 			writeError(w, r, http.StatusInternalServerError, err)
@@ -387,7 +401,7 @@ func anomaliesHandler(store *store) http.Handler {
 			writeError(w, r, http.StatusInternalServerError, err)
 			return
 		}
-		writeJSON(w, r, http.StatusOK, anomalyListResponse{Anomalies: items, Total: len(items)})
+		writeJSON(w, r, http.StatusOK, anomalyListResponse{Anomalies: items, Total: total})
 	})
 }
 
@@ -683,7 +697,7 @@ func detectHandler(w http.ResponseWriter, r *http.Request, cfg config, store *st
 		BatchID:         batchID,
 		StreamID:        stream.ID.String(),
 		TotalEvents:     len(payload.Events),
-		AnomalyCount:    len(anomalies),
+		AnomalyCount:    len(anomalies), // Count of anomalies detected in this batch only
 		ProcessingTime:  time.Since(start).String(),
 		CompressionAlg:  usedAlgo,
 		FallbackFromAlg: fallbackFrom,

@@ -1,16 +1,16 @@
 # Driftlock: Complete Roadmap to Launch & Monetization
 
 **Last Updated:** 2025-01-27
-**Current State:** Phase 2 Complete - Enhanced Go FFI Bridge & OpenTelemetry Integration
-**Target Launch:** Q2 2026 (4-5 months from now)
-**First Revenue:** Q1 2026 (3-4 months from now - pilot customers)
+**Current State:** Demo/Engine Prototype - Core CBAD algorithm working with CLI and HTTP API
+**Target Launch:** TBD (roadmap phases below are future goals, not current implementation)
+**First Revenue:** TBD (pilot program planning in progress)
 
 ---
 
 ## Executive Summary
 
-**What We're Building:**
-The only explainable, deterministic anomaly detection platform for regulated industries, powered by Meta's OpenZL format-aware compression. Detects anomalies in OTLP telemetry (logs, metrics, traces, LLM I/O) with glass-box explanations for DORA/NIS2/AI Act compliance.
+**What This Repository Contains:**
+A working demo/engine prototype of explainable, deterministic anomaly detection. The core CBAD (Compression-Based Anomaly Detection) algorithm is implemented and validated. OpenZL is optional/experimental; the system works with generic compressors (zstd, lz4, gzip) by default. This repo ships a CLI demo and HTTP API service, not the full production platform described in the roadmap phases below.
 
 **Market Position:**
 Premium enterprise anomaly detection ($50k-$500k ACV) for financial services, healthcare, and critical infrastructure that MUST have explainable, auditable AI.
@@ -30,24 +30,25 @@ Premium enterprise anomaly detection ($50k-$500k ACV) for financial services, he
 
 ## Phase-by-Phase Roadmap
 
-### **Phase 1: Core CBAD Engine** ✅ COMPLETE
-**Status:** 100% Complete (All core components implemented and validated)
-**Timeline:** Completed
-**Goal:** Prove anomaly detection works with OpenZL
+### **Phase 1: Core CBAD Engine** ✅ COMPLETE (Demo Prototype)
+**Status:** Core algorithm implemented and working in demo
+**Timeline:** Completed (as demo/prototype)
+**Goal:** Prove anomaly detection works (with generic compressors; OpenZL optional)
+**Note:** This phase represents the current demo state. OpenZL integration exists but is optional and disabled by default.
 
-#### ✅ Completed
-- [x] OpenZL C library integration
-- [x] Rust FFI bindings for OpenZL
-- [x] OpenZLAdapter with compress/decompress
+#### ✅ Completed (Demo Prototype)
+- [x] Core CBAD algorithm (compression-based anomaly detection)
+- [x] Generic compression adapters (zstd, lz4, gzip) - default and required
+- [x] OpenZL adapter (optional, experimental, disabled by default)
+- [x] Rust FFI bindings for compression adapters
 - [x] Build system for linking C libraries
-- [x] Comprehensive documentation
 - [x] Metrics Calculators (compression_ratio.rs, ncd.rs, entropy.rs, delta_bits.rs)
 - [x] Sliding Window System with baseline/window/hop semantics
 - [x] Permutation Testing Framework with deterministic statistical significance
 - [x] C FFI Bridge exposing Rust functions to Go collector
-- [x] Collector Processor Integration with driftlockcbad processor
-- [x] Anomaly Injection Testing with >90% detection rates
-- [x] OpenZL Plan Training for OTLP schemas
+- [x] Go HTTP API service (`driftlock-http`) with `/v1/detect` endpoint
+- [x] PostgreSQL persistence for anomalies
+- [x] CLI demo (`cmd/demo/main.go`) with HTML report output
 - [x] Glass-box explanations with NCD, p-value, compression ratios
 
 **Phase 1 Exit Criteria:** ✅ ALL ACHIEVED
@@ -60,10 +61,11 @@ Premium enterprise anomaly detection ($50k-$500k ACV) for financial services, he
 
 ---
 
-### **Phase 2: Enhanced Go FFI Bridge & OpenTelemetry Integration** ✅ COMPLETE
-**Status:** 100% Complete (Production-ready anomaly detection with streaming capabilities)
-**Timeline:** Completed
-**Goal:** Production-ready anomaly detection with streaming capabilities
+### **Phase 2: Enhanced Go FFI Bridge & HTTP API** ✅ COMPLETE (Demo Prototype)
+**Status:** HTTP API service working with PostgreSQL persistence
+**Timeline:** Completed (as demo/prototype)
+**Goal:** HTTP API for anomaly detection with persistence
+**Note:** This represents the current demo state. Full production features (multi-tenancy, auth, scaling) are future work.
 
 #### ✅ Completed
 - [x] Enhanced Go FFI Bridge with lifecycle management (create/destroy)
@@ -94,9 +96,10 @@ Premium enterprise anomaly detection ($50k-$500k ACV) for financial services, he
 
 ---
 
-### **Phase 3: Production UI & Visualization** (Week 11-14) 🚧 CURRENT
-**Timeline:** 3-4 weeks
+### **Phase 3: Production UI & Visualization** 🚧 FUTURE
+**Timeline:** TBD (not yet started)
 **Goal:** Web UI for investigating anomalies
+**Note:** This is a future milestone. Current repo has CLI demo and HTTP API only.
 
 #### Week 11-12 (Core UI)
 **Next.js Dashboard**
@@ -143,18 +146,19 @@ Premium enterprise anomaly detection ($50k-$500k ACV) for financial services, he
    - Enable/disable streams (logs, metrics, traces)
    - OpenZL plan management (upload custom plans)
 
-**Phase 3 Exit Criteria:**
-- ✅ Web UI running at `https://driftlock.company.com`
-- ✅ List/detail/live views working
-- ✅ <2s page load times
-- ✅ Mobile-responsive design
-- ✅ Charts render with real data
+**Phase 3 Exit Criteria:** (Future goals, not current state)
+- Web UI running at `https://driftlock.company.com`
+- List/detail/live views working
+- <2s page load times
+- Mobile-responsive design
+- Charts render with real data
 
 ---
 
-### **Phase 4: Enterprise Integration & Deployment** (Week 15-17)
-**Timeline:** 2-3 weeks
+### **Phase 4: Enterprise Integration & Deployment** 🚧 FUTURE
+**Timeline:** TBD (not yet started)
 **Goal:** Production deployment & enterprise features
+**Note:** This is a future milestone. Current repo has Docker Compose setup for local development only.
 
 #### Week 15 (Deployment)
 **Production Infrastructure**
@@ -413,18 +417,21 @@ Premium enterprise anomaly detection ($50k-$500k ACV) for financial services, he
 
 ---
 
-## MVP Definition: Minimum for First Paying Customer
+## Current Demo State vs. MVP Goals
 
-**Timeline:** Phases 1-4 complete = Week 17 (~4 months)
-
-**Must-Have Features:**
-1. ✅ Anomaly detection on OTLP logs (90%+ detection rate)
+**What's Implemented (Demo/Prototype):**
+1. ✅ Anomaly detection on payment transaction data (demo dataset)
 2. ✅ Glass-box explanations (NCD, p-value, compression ratio)
-3. ✅ PostgreSQL storage with anomaly API
-4. ✅ Web UI for investigating anomalies
-5. ✅ Evidence export (JSON/PDF for compliance)
-6. ✅ Kubernetes deployment via Helm
-7. ✅ SAML/OIDC authentication
+3. ✅ PostgreSQL storage with HTTP API (`/v1/detect`, `/v1/anomalies`)
+4. ✅ CLI demo with HTML report output
+5. ✅ Docker Compose setup for local development
+
+**What's Future (Roadmap):**
+- Web UI for investigating anomalies
+- Evidence export (JSON/PDF for compliance) - stubbed in API
+- Kubernetes deployment via Helm
+- SAML/OIDC authentication
+- Multi-tenant production deployment
 
 **Nice-to-Have (Can Wait):**
 - Multi-modal correlation (Phase 5)

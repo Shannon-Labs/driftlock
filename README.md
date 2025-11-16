@@ -18,7 +18,7 @@ Run the same flow we show in YC and pilot calls. It builds the Rust core, the Go
 git clone https://github.com/Shannon-Labs/driftlock.git
 cd driftlock
 git submodule update --init --recursive
-cargo build --release
+cd cbad-core && cargo build --release && cd ..
 DRIFTLOCK_DEV_MODE=true ./scripts/run-api-demo.sh
 ```
 
@@ -39,7 +39,9 @@ If you prefer to step through what `./scripts/run-api-demo.sh` automates, run ea
 2. Build the cbad-core artifacts (required for all Go FFI binaries):
 
    ```bash
+   cd cbad-core
    cargo build --release
+   cd ..
    ```
 
 3. Run the end-to-end API demo. The script builds `driftlock-http`, starts Postgres via Docker Compose, runs migrations, creates a tenant + API key, and hits `/v1/detect`, `/v1/anomalies/{id}`, and the export stubs. Dev mode is enabled automatically if no license key is present.
@@ -136,7 +138,7 @@ Pass `--json` to `create-tenant` when you need machine-readable output for scrip
   --json | jq
 ```
 
-The GitHub Actions `CI` workflow now runs `scripts/test-docker-build.sh` to guarantee the Dockerfiles stay in sync with `cbad-core`. OpenZL-enhanced images remain opt-in; set `USE_OPENZL=true` (and provide the private `openzl/` artifacts) to enable the feature flag.
+The GitHub Actions `CI` workflow now runs `scripts/test-docker-build.sh` to guarantee the Dockerfiles stay in sync with `cbad-core`. **OpenZL is optional and experimental** - it is disabled by default (`USE_OPENZL=false` in all demo scripts). The system works with generic compressors (zstd, lz4, gzip) which are always available. To enable OpenZL, set `USE_OPENZL=true` and ensure the `openzl/` submodule is built (see `docs/OPENZL_ANALYSIS.md` for details).
 
 ### Integration Tests (API + Postgres)
 
@@ -145,7 +147,7 @@ The GitHub Actions `CI` workflow now runs `scripts/test-docker-build.sh` to guar
 
 Prerequisites (for both scripts):
 
-1. `cargo build --release` (installs `cbad-core` artifacts under `cbad-core/target/release`)
+1. `cd cbad-core && cargo build --release && cd ..` (installs `cbad-core` artifacts under `cbad-core/target/release`)
 2. Either:
    - `export DRIFTLOCK_LICENSE_KEY="<signed key from Shannon Labs>"` (production/pilot)
    - OR `export DRIFTLOCK_DEV_MODE=true` (development - bypasses license validation)
@@ -229,7 +231,7 @@ Helpful commands:
 - `make docker-http` — build the containerized HTTP engine locally.
 - `make docker-test` — run Docker smoke tests (generic compressors by default; set `ENABLE_OPENZL_BUILD=true` to cover the optional OpenZL images when libraries are present).
 - `./scripts/run-api-demo.sh` — guided HTTP API onboarding (build + Postgres + /v1/detect + anomaly detail + psql checks).
-- `USE_OPENZL=false LD_LIBRARY_PATH=cbad-core/target/release go test ./...` (from `collector-processor/`) — run Go unit + FFI integration tests after rebuilding the Rust core with generic compressors only:
+- `USE_OPENZL=false LD_LIBRARY_PATH=cbad-core/target/release go test ./...` (from `collector-processor/`) — run Go unit + FFI integration tests after rebuilding the Rust core with generic compressors only (OpenZL is optional and disabled by default):
 
 ```bash
 cd cbad-core
