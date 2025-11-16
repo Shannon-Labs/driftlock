@@ -11,6 +11,8 @@ services:
         value: https://driftlock.net,https://www.driftlock.net
       - key: LOG_LEVEL
         value: info
+      - key: DRIFTLOCK_DEV_MODE
+        value: "true"
     healthCheckPath: /healthz
     plan: starter  # Free tier, upgrade as needed
 
