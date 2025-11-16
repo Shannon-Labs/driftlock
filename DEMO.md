@@ -21,7 +21,7 @@ DRIFTLOCK_DEV_MODE=true ./scripts/run-api-demo.sh
 3. Use the printed API key to `curl /v1/detect` or `curl /v1/anomalies/{id}` live.
 4. Open a terminal tab with `psql ... -c "SELECT id, stream_id, ncd, p_value FROM anomalies ..."` to prove persistence.
 
-![API demo terminal output](screenshots/api-demo-terminal.png)
+![Driftlock API demo – terminal session](screenshots/api-demo-demo.gif)
 
 Optional: run the manual commands from [docs/API-DEMO-WALKTHROUGH.md](docs/API-DEMO-WALKTHROUGH.md) for screen recordings.
 
@@ -63,4 +63,4 @@ open demo-output.html
 
 ![Legacy HTML anomaly card](screenshots/demo-anomaly-card.png)
 
-Use it for static visuals, but lead with the HTTP API during partner conversations.
+Use it for static visuals, but lead with the HTTP API during partner conversations. The anomaly metrics and confidence levels in partner demos should match the API/terminal outputs shown in the GIF above.

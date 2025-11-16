@@ -8,16 +8,16 @@
             <div class="relative z-10 container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div class="mx-auto max-w-3xl text-center">
                     <span class="rounded-full bg-blue-500 px-4 py-1 text-sm font-sans font-medium text-white">
-                        Alpha Phase - Seeking Design Partners
+                        Alpha Phase — Developer-First API
                     </span>
                     <h1 class="mt-6 text-5xl font-mono font-extrabold tracking-tight text-white sm:text-7xl">
-                        Spin Up Driftlock in Minutes.
+                        Explainable Anomalies, Ready in Minutes.
                     </h1>
                     <p class="mt-6 text-lg leading-8 font-sans text-gray-200 sm:text-xl">
-                        Launch the HTTP API + Postgres demo locally, hit <code class="text-white">/v1/detect</code>, and show regulators persisted anomalies with compression math—not black-box ML. Deterministic evidence for EU DORA &amp; US audits.
+                        Clone the repo, run <code class="text-white">cargo build --release</code>, then <code class="text-white">DRIFTLOCK_DEV_MODE=true ./scripts/run-api-demo.sh</code>—the same quickstart documented in the README. You’ll mint a tenant, hit <code class="text-white">/v1/detect</code>, and inspect persisted anomalies with compression math instead of black-box ML.
                     </p>
                     <p class="mt-4 text-base leading-7 font-sans text-gray-200/90 max-w-3xl mx-auto">
-                        Designed as a <strong class="font-semibold">developer-first anomaly API</strong>: a simple HTTPS endpoint with a generous free tier and usage-based pricing that targets roughly <span class="font-mono">$1 per million anomaly checks</span>, with volume discounts and enterprise plans in the low-thousands per month.
+                        Everything here mirrors the repo: API walkthrough, screenshots, and the ROI calculator that assumes the <span class="font-mono">~$1 per million anomaly checks</span> pricing direction (with volume discounts and enterprise plans in the low thousands per month).
                     </p>
                     <div class="mt-10 flex items-center justify-center gap-x-6">
                         <a href="#api-demo" class="rounded-md cta-gradient px-6 py-3 text-base font-sans font-semibold text-white shadow-lg transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">
@@ -42,7 +42,7 @@
                         <p class="text-sm font-semibold uppercase tracking-[0.2em] text-blue-400">New onboarding</p>
                         <h2 class="mt-3 text-4xl font-mono font-bold">HTTP API Demo with Docker + Postgres</h2>
                         <p class="mt-4 text-lg text-slate-200">
-                            The README, docs, and YC narrative now lead with a real API experience. Prospects run one script, provision a tenant/key, hit <code>/v1/detect</code>, and inspect anomalies in Postgres—no black-box magic.
+                            This is the exact flow from the README quickstart and <code>docs/API-DEMO-WALKTHROUGH.md</code>. Run one script, provision a tenant/key, hit <code>/v1/detect</code>, and inspect anomalies in Postgres—no black-box magic.
                         </p>
                         <ol class="mt-6 space-y-4 text-slate-100">
                             <li class="flex items-start gap-3">
@@ -67,7 +67,7 @@
                                 </div>
                             </li>
                         </ol>
-                        <p class="mt-8 text-sm text-slate-400">Dev mode bypass (`DRIFTLOCK_DEV_MODE=true`) is local-only. Production needs real keys; `/healthz` reports violations.</p>
+                        <p class="mt-8 text-sm text-slate-400">Dev mode bypass (`DRIFTLOCK_DEV_MODE=true`) is local-only. Production needs real keys; `/healthz` reports violations, just like the README describes.</p>
                     </div>
                     <div class="space-y-6">
                         <video src="/api-demo-demo.mp4" autoplay muted loop playsinline controls poster="/api-demo-terminal.png" class="w-full rounded-2xl shadow-2xl border border-white/10">
@@ -241,7 +241,7 @@
                     <h2 class="text-base font-sans font-semibold leading-7 text-blue-300">Financial Impact</h2>
                     <p class="mt-2 text-4xl font-mono font-bold tracking-tight text-white sm:text-5xl">Rough ROI, In Plain Numbers</p>
                     <p class="mt-4 text-base font-sans text-slate-200">
-                        This is a directional model, not a quote. It helps you reason about how anomaly detection that actually explains itself compares to fraud losses, compliance fines, and legacy tooling.
+                        This uses the same directional assumptions as the README: generous free tier, usage-based pricing that targets about <span class="font-mono">$1 per million anomaly checks</span>, and enterprise plans in the low thousands per month. Treat it as a reasoning aid, not a quote.
                     </p>
                 </div>
                 <div class="mt-12 grid gap-10 lg:grid-cols-2 lg:items-start">
@@ -324,9 +324,10 @@
                                     step="0.1"
                                     class="mt-2 w-full accent-blue-500"
                                 />
+                                <p class="mt-1 text-xs font-sans text-slate-400">README pricing direction centers on ~$1 per 1M checks with automatic discounts.</p>
                             </div>
                         </div>
-                        <p class="mt-4 text-xs font-sans text-slate-500">All values are illustrative. Actual pricing and discounts are set by contract.</p>
+                        <p class="mt-4 text-xs font-sans text-slate-500">All values are illustrative. Actual pricing, discounts, and compliance add-ons are set by contract.</p>
                     </div>
 
                     <!-- Outputs -->
@@ -357,7 +358,7 @@
                             </div>
                         </div>
                         <div class="mt-8 rounded-2xl border border-white/10 bg-slate-900 p-4 text-xs font-sans text-slate-300">
-                            <p><strong class="text-white">Disclaimer:</strong> This is a simplified model using your assumptions. It is not financial advice and not a binding price quote. For real pricing, talk to us about your data, risk profile, and regulatory requirements.</p>
+                            <p><strong class="text-white">Disclaimer:</strong> This uses the same directional numbers described in the README &amp; docs/SALES-MODELING.md. It is not financial advice and not a binding price quote—reach out with your data, risk profile, and regulatory requirements for a proposal.</p>
                         </div>
                     </div>
                 </div>

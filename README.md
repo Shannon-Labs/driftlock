@@ -1,14 +1,32 @@
 # Driftlock: Explainable Anomaly Detection for Global Banks
 
-Stop multi-million dollar fines with math-based fraud detection that auditors love.
+Driftlock ships today as a deterministic, compression-based anomaly engine with a guided API demo, CLI report, and ROI story that make sense to YC reviewers, senior engineers, and developers alike.
 
-Banks worldwide face massive fines for black-box algorithms. When your system flags a transaction as suspicious, regulators demand: "Show your work." Driftlock uses compression math (not ML) to detect fraud with explanations auditors can verify.
+- **YC reviewers / investors** see a live pipeline: Rust core + Go API + Postgres + HTML evidence, all reproducible via scripts and CI.
+- **Senior engineers** get a math-first detector that exposes NCD, compression ratios, entropy, p-value, confidence, and explanations for every anomaly.
+- **Developers** run a single script to mint a tenant, hit `/v1/detect`, and inspect persisted anomalies—no black-box ML or vendor lock-in.
 
 **EU DORA**: Up to 2% of annual turnover in fines | **US Regulations**: CFPB Fair Lending, NYDFS Part 500, FFIEC Guidelines
 
-![Demo Anomaly](screenshots/demo-anomaly-card.png)
+![Driftlock API demo – terminal session](screenshots/api-demo-demo.gif)
+
+## Quickstart — HTTP API Demo (Docker + Postgres)
+
+Run the same flow we show in YC and pilot calls. It builds the Rust core, the Go HTTP API, and a dockerized Postgres, then walks you through `/v1/detect`, `/v1/anomalies/{id}`, and `/healthz`.
+
+```bash
+git clone https://github.com/Shannon-Labs/driftlock.git
+cd driftlock
+git submodule update --init --recursive
+cargo build --release
+DRIFTLOCK_DEV_MODE=true ./scripts/run-api-demo.sh
+```
+
+The script prints ready-to-run `curl`, `psql`, and `/healthz` commands so you can keep exploring immediately. Prefer a manual walkthrough? See [docs/API-DEMO-WALKTHROUGH.md](docs/API-DEMO-WALKTHROUGH.md) or watch the landing-page video (`landing-page/public/api-demo-demo.mp4`) for the same flow.
 
 ## Try Driftlock via the HTTP API (Docker + Postgres)
+
+If you prefer to step through what `./scripts/run-api-demo.sh` automates, run each command yourself:
 
 1. Clone the repo and pull submodules:
 
@@ -32,21 +50,9 @@ Banks worldwide face massive fines for black-box algorithms. When your system fl
 
    The script prints ready-to-run `curl`, `psql`, and `/healthz` commands so you can continue exploring the API immediately.
 
-![API demo terminal output](screenshots/api-demo-terminal.png)
+🎥 **Watch the full run** — the terminal session below shows `./scripts/run-api-demo.sh` provisioning Postgres, creating a tenant, calling `/v1/detect`, and surfacing the follow-up curl/psql commands. The responses in the recording use the latest anomaly metrics (NCD, compression ratios, entropy change, p-value, confidence, and explanations):
 
-**See the persisted outputs:**
-
-- `/v1/detect` and `/v1/anomalies/{id}` return the same anomaly evidence that powered the CLI HTML report—now backed by Postgres.
-
-  ![/v1/detect response with anomalies](screenshots/api-demo-detect.png)
-
-- Use `psql` (or Supabase Studio in cloud mode) to inspect the saved anomalies.
-
-  ![psql anomalies screenshot](screenshots/api-demo-psql.png)
-
-🎥 **Watch the full run** — the terminal session below shows `./scripts/run-api-demo.sh` provisioning Postgres, creating a tenant, calling `/v1/detect`, and surfacing the follow-up curl/psql commands:
-
-![Animated API demo](screenshots/api-demo-demo.gif)
+![Driftlock API demo – terminal session](screenshots/api-demo-demo.gif)
 
 1. Prefer to run the commands manually? Follow [docs/API-DEMO-WALKTHROUGH.md](docs/API-DEMO-WALKTHROUGH.md) for the step-by-step version (docker compose up, `driftlock-http migrate up`, `create-tenant`, `curl /v1/detect`, `psql` queries, etc.).
 
@@ -93,6 +99,8 @@ open demo-output.html                  # macOS (use xdg-open on Linux)
 ```
 
 `./verify-yc-ready.sh` exercises the same CLI pipeline end-to-end and remains part of CI, but all new onboarding now goes through the HTTP API.
+
+Legacy HTML screenshots such as `screenshots/demo-anomaly-card.png` reflect this CLI report only; the canonical confidence and anomaly metrics are the API/terminal outputs shown in the demo GIF above.
 
 If the license key is missing or expired, the server exits on startup and `/healthz` reports the invalid status.
 
@@ -181,16 +189,16 @@ The HTML includes a baseline comparison panel and similar normal examples for ea
 
 ## Developer-First Anomaly API & Pricing Direction
 
-Driftlock is designed to be a **developer-first anomaly detection API**: a simple HTTP endpoint you can drop into payment gateways, risk engines, and AI training/monitoring pipelines.
+Driftlock is designed to be a **developer-first anomaly detection API**: drop a deterministic `/v1/detect` endpoint into payment gateways, risk engines, or AI monitoring pipelines and get glass-box evidence back.
 
-We are still tuning formal pricing, but the direction is:
+Formal pricing will be published with pilot feedback, but per [docs/SALES-MODELING.md](docs/SALES-MODELING.md) the direction is:
 
-- **Generous free tier** so teams can run pilots and CI checks without talking to sales.
-- **Usage-based developer API** that targets pricing on the order of **~$1 per million anomaly checks**, with volume discounts at higher event counts.
-- **Data-based options** that are **meaningfully cheaper per GB** than full-stack observability platforms, because Driftlock focuses on explainable anomaly signals rather than storing everything forever.
-- **Enterprise compliance plans** that start in the **low thousands per month**, tuned to stay below the combined cost of fines, existing monitoring tools, and manual audit preparation.
+- **Generous free tier** so individuals and CI pipelines can experiment without a sales call.
+- **Usage-based API** targeting roughly **$1 per million anomaly checks** with automatic volume discounts as event counts grow.
+- **Data-based options** priced **meaningfully below legacy observability per-GB rates**, because Driftlock delivers math-backed anomaly signals instead of storing every log forever.
+- **Enterprise compliance plans** that start in the **low thousands per month** so regulated teams stay under the combined cost of fines, legacy tooling, and manual audit prep.
 
-These numbers are directional, not a binding price sheet. The goal is simple: **keep unit prices clearly below traditional observability/ML add-ons while preserving healthy margin**, so Driftlock can remain sustainable even when embedded deeply into mission-critical pipelines.
+All numbers remain illustrative, not a binding quote. The ROI calculator on the landing page uses the same assumptions so YC reviewers, engineers, and finance partners can reason about value while we continue to tune costs with pilot data. The goal stays constant: beat black-box tooling on price-per-proof while keeping enough margin to support mission-critical deployments.
 
 ## What This Demo Proves
 
