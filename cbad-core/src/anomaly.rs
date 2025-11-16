@@ -71,7 +71,8 @@ impl AnomalyResult {
     /// Create a new anomaly result
     pub fn new(metrics: AnomalyMetrics) -> Self {
         let is_statistically_significant = metrics.p_value < 0.05;
-        let confidence_level = 1.0 - metrics.p_value;
+        // Use the confidence level already calculated in metrics (which considers both NCD and p-value)
+        let confidence_level = metrics.confidence_level;
         
         let summary = if metrics.is_anomaly {
             format!(

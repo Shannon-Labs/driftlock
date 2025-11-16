@@ -216,7 +216,25 @@ pub fn compute_metrics(
     };
     
     metrics.p_value = perm_result.p_value;
-    metrics.confidence_level = 1.0 - perm_result.p_value;
+    // Calculate confidence level that considers both NCD and p-value
+    // Strategy:
+    // 1. If statistically significant (p < 0.05): use p-value based confidence (high confidence)
+    // 2. If not significant but NCD is high (> 0.5): use NCD as confidence (there's a clear difference)
+    // 3. Otherwise: use weighted combination
+    let p_value_confidence = 1.0 - perm_result.p_value;
+    let ncd_confidence = metrics.ncd.min(1.0); // NCD is already 0-1, use it directly
+    
+    if perm_result.p_value < 0.05 {
+        // Statistically significant: use p-value based confidence
+        metrics.confidence_level = p_value_confidence;
+    } else if metrics.ncd > 0.5 {
+        // Not statistically significant but high NCD indicates clear difference
+        // Use NCD as confidence, but cap it to show it's not statistically proven
+        metrics.confidence_level = (ncd_confidence * 0.75).min(0.85); // Cap at 85% when not statistically significant
+    } else {
+        // Low NCD and not significant: use weighted combination
+        metrics.confidence_level = (p_value_confidence * 0.6 + ncd_confidence * 0.4).min(1.0).max(0.0);
+    }
     metrics.permutation_count = permutation_count;
     
     // Determine if this is an anomaly (typically p < 0.05)
