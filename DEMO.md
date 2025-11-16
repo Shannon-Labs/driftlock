@@ -1,90 +1,66 @@
 ```bash
 git clone https://github.com/Shannon-Labs/driftlock.git
 cd driftlock
-make demo
+git submodule update --init --recursive
+cargo build --release
+DRIFTLOCK_DEV_MODE=true ./scripts/run-api-demo.sh
 ```
 
 # Driftlock Demo Walkthrough
 
-## The 2-Minute Partner Script
+## The 2-Minute Partner Script (API-First)
 
 ### 1. The Problem
 
 "Last year, EU banks paid €2.8B in algorithmic transparency fines. When your detection system flags a transaction as suspicious, GDPR Article 22 and Basel III require you to explain WHY in human terms. Black-box models can't. That's €50M-€200M per violation. Driftlock can."
 
-### 2. The Demo
+### 2. The Demo (live API + Postgres)
 
-No Docker needed. Build and run the local demo:
+1. Run `./scripts/run-api-demo.sh`. It builds the Go API, starts dockerized Postgres, runs migrations, creates a tenant/key, and calls `/v1/detect`.
+2. Show `/healthz` returning `license`, `database`, and `queue` status.
+3. Use the printed API key to `curl /v1/detect` or `curl /v1/anomalies/{id}` live.
+4. Open a terminal tab with `psql ... -c "SELECT id, stream_id, ncd, p_value FROM anomalies ..."` to prove persistence.
+
+![API demo terminal output](screenshots/api-demo-terminal.png)
+
+Optional: run the manual commands from [docs/API-DEMO-WALKTHROUGH.md](docs/API-DEMO-WALKTHROUGH.md) for screen recordings.
+
+### 3. What You'll Narrate
+
+- **Multi-tenant**: Tenant + API key is minted in front of the user.
+- **Explainable outputs**: `/v1/detect` returns NCD, compression ratios, entropy deltas, p-values, and human-language `explanation` strings.
+- **Persistence**: PSQL query shows anomalies saved with ids, metrics, and timestamps.
+- **Exports**: `/v1/anomalies/export` responds `202 Accepted` (stub queue today, job workers in roadmap).
+
+### 4. Magic Moment
+
+Walk through a single `/v1/anomalies/{id}` response. Highlight:
+
+- Explanation text referencing compression deltas
+- NCD, p-value, entropy change, confidence
+- Raw event snippet + baseline/window snapshots
+
+### 5. Close
+
+"You just saw Driftlock provision a tenant, detect anomalies, and persist evidence in Postgres—all deterministic, no black-box ML. Export this audit trail, submit to regulators, avoid €50M fines."
+
+### 6. Production Deployment Talking Points
+
+- Drop-in with your existing payment gateway telemetry
+- Deterministic streaming detection (same math as demo)
+- `/healthz` surfaces license + queue + DB for compliance logging
+- Docker Compose today, Helm/Supabase/SaaS on the roadmap
+
+## Legacy CLI HTML Demo (Backup Flow)
+
+Still need the standalone HTML for screenshots?
 
 ```bash
-make demo               # builds Rust core + Go demo
+make demo
 ./driftlock-demo test-data/financial-demo.json
-
-# Open the HTML report
-open demo-output.html   # macOS
-# xdg-open demo-output.html  # Linux
+open demo-output.html
 ```
 
-### 3. What You'll See
+![Legacy HTML anomaly card](screenshots/demo-anomaly-card.png)
 
-**What Compliance Officers See:**
-- **Risk level**: High/Medium/Low with clear reasoning
-- **Regulatory explanation**: Plain English why this transaction is suspicious
-- **Audit trail**: Timestamped decision log with mathematical proof
-- **Similar cases**: 2-3 legitimate transactions for comparison
-- **Export ready**: One-click PDF for regulator submission
-
-### 4. The Magic Moment
-
-Click any flagged transaction → see the **regulatory explanation** with:
-- **Plain English reasoning**: "This payment is 47x larger than customer's typical transactions"
-- **Audit trail ID**: Unique identifier for regulator review
-- **Mathematical proof**: Compression-based analysis (industry standard method)
-- **Export button**: Generate compliance report in 3 seconds
-
-### 5. The Close
-
-"Export this audit trail, submit to regulators, avoid €50M fines. That's explainable fraud detection that actually works. No black boxes. No regulatory risk. Just compliance."
-
-### 6. Production Deployment
-
-"This demo proves our algorithm works. In production, Driftlock:
-- **Integrates without code changes** (protects your existing payment systems)
-- **Detects fraud in real-time** (prevents losses before they happen)
-- **Alerts your team immediately** (no compliance surprises)
-- **Stores immutable audit trails** (regulator-ready documentation)
-- **Generates compliance reports** (saves weeks of manual work)
-
-Ready to pilot on your real payment data?"
-
-## Screenshot Reference
-
-![Demo Anomaly](screenshots/demo-anomaly-card.png)
-
-## What To Look For
-
-- The HTML shows total processed transactions and anomalies detected.
-- Each anomaly has a red badge and an explanation panel with key metrics.
-- Use this page as the talking point; no extra setup required.
-
-## Next Steps
-
-1. **Pilot**: Run on your historical payment data
-2. **Validate**: Compare our detection vs. your current system
-3. **Deploy**: Integrate with your payment gateway
-
-## Need the API Instead of the CLI?
-
-Spin up the HTTP engine (same CBAD core) in Docker:
-
-```bash
-# Build + run the HTTP API locally
-docker compose up --build driftlock-http
-
-# Hit the detector
-curl -X POST http://localhost:8080/v1/detect \
-  -H 'Content-Type: application/json' \
-  -d @test-data/financial-demo.json
-```
-
-`/healthz` reports the available compressors (zstd/lz4/gzip are always present; the optional OpenZL adapter appears when the proprietary library is mounted under `openzl/` or `OPENZL_LIB_DIR`).
+Use it for static visuals, but lead with the HTTP API during partner conversations.

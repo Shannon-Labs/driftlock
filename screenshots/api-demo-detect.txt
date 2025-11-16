@@ -1,0 +1,32 @@
+$ jq '.[0:600]' test-data/financial-demo.json \\
+>   | curl -sS -X POST \\
+>       -H "X-Api-Key: dlk_demo_key_xxxx" \\
+>       -H 'Content-Type: application/json' \\
+>       --data @- \\
+>       http://localhost:57324/v1/detect | jq '{anomaly_count, anomalies: [.anomalies[0]]}'
+{
+  "anomaly_count": 151,
+  "anomalies": [
+    {
+      "id": "53eda076-1b9b-4168-b8e0-0c6b94f75178",
+      "metrics": {
+        "NCD": 0.8574,
+        "p_value": 1,
+        "compression_ratio": {
+          "baseline": 9.53,
+          "window": 8.29
+        },
+        "entropy_change": -0.0006,
+        "confidence": 0.0
+      },
+      "explanation": "High NCD score indicates substantial dissimilarity from baseline patterns.",
+      "event": {
+        "timestamp": "2025-11-10T02:14:42Z",
+        "transaction_id": "txn_1ce48e5615e8916696c84cec",
+        "processing_ms": 74,
+        "origin_country": "UK",
+        "api_endpoint": "/v1/charges"
+      }
+    }
+  ]
+}

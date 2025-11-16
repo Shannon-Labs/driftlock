@@ -1,0 +1,99 @@
+✨ This script will:
+   1. Build driftlock-http (Go + cbad-core FFI)
+   2. Start Postgres via docker compose (and reuse it if already running)
+   3. Apply migrations, create a tenant/key, and hit /v1/detect
+   4. Show you commands to inspect the anomalies in the API + database
+
+Dependencies: docker, go, jq, curl, psql, base64
+
+✨ Running integration workflow...
+🔧 Checking prerequisites...
+🔧 Building driftlock-http...
+🔧 Reusing running Postgres container (ad0eddc565b5cd174c042c3a026ba20fd1159dff163f8606973ec2d662c6521c)
+🔧 Waiting for Postgres to accept connections...
+🔧 Running goose migrations...
+migrate up succeeded
+🔧 Creating integration tenant via CLI...
+🔧 Starting API server on http://localhost:57324...
+🔧 Waiting for /healthz...
+✅ Health check reports license=valid, db=connected
+🔧 Posting /v1/detect payload...
+✅ /v1/detect produced 151 anomalies
+🔧 Verifying database persistence...
+✅ Database rows present (batches=11, anomalies=1661)
+🔧 Fetching anomaly detail...
+✅ Anomaly detail retrieved (status=new)
+🔧 Exercising export stubs...
+✅ Export jobs accepted (stubbed)
+✅ Integration test completed successfully.
+
+✅ Driftlock API demo is ready.
+
+Tenant stream: 416d6c1d-8c14-4357-9ea7-e1bce07d1003
+API key (admin scope): dlk_demo_key_xxxx
+API base URL: http://localhost:57324
+Database URL: postgres://driftlock:driftlock@localhost:7543/driftlock?sslmode=disable
+Detected anomalies: 151
+
+Replay /v1/detect in another terminal:
+
+  jq '.[0:600]' test-data/financial-demo.json \
+    | curl -sS -X POST \
+        -H "X-Api-Key: dlk_demo_key_xxxx" \
+        -H 'Content-Type: application/json' \
+        --data @- \
+        http://localhost:57324/v1/detect | jq '.anomalies[0]'
+
+Inspect the anomaly we fetched during the run:
+
+  curl -sS -H "X-Api-Key: dlk_demo_key_xxxx" \
+    http://localhost:57324/v1/anomalies/53eda076-1b9b-4168-b8e0-0c6b94f75178 | jq '{id, ncd, p_value, explanation}'
+
+View persisted rows via psql:
+
+  psql "postgres://driftlock:driftlock@localhost:7543/driftlock?sslmode=disable" \
+    -c "SELECT id, stream_id, ROUND(ncd::numeric, 4) AS ncd, ROUND(p_value::numeric, 4) AS p_value FROM anomalies ORDER BY detected_at DESC LIMIT 5;"
+
+Health probe (expects license + DB + queue status):
+
+  curl -sS http://localhost:57324/healthz | jq
+
+To keep the Postgres container running for manual explorations, rerun this
+script with --keep-postgres. Otherwise, docker compose will clean up any
+containers it started once the script exits.
+
+✨ Sample detect response excerpt:
+{
+  "anomaly_count": 151,
+  "anomalies": [
+    {
+      "id": "53eda076-1b9b-4168-b8e0-0c6b94f75178",
+      "index": 449,
+      "metrics": {
+        "NCD": 0.8574114108468841,
+        "PValue": 1,
+        "BaselineCompressionRatio": 9.535106682958924,
+        "WindowCompressionRatio": 8.293193717277488,
+        "BaselineEntropy": 4.6779929466071275,
+        "WindowEntropy": 4.675251467274341,
+        "IsAnomaly": true,
+        "ConfidenceLevel": 0,
+        "IsStatisticallySignificant": false,
+        "CompressionRatioChange": -0.13024636293802297,
+        "EntropyChange": -0.0005860375088369008,
+        "Explanation": "Anomaly DETECTED with 0.0% confidence (p=1.000):\n\nCOMPRESSION EVIDENCE:\n- Baseline compression ratio: 9.5x (normal pattern)\n- Window compression ratio: 8.3x (current pattern)\n- Change: -13% compression efficiency\n\nENTROPY EVIDENCE:\n- Baseline entropy: 4.7 bits/byte (structured data)\n- Window entropy: 4.7 bits/byte (current randomness)\n- Change: -0% randomness\n\nNCD SCORE: 0.86 (high dissimilarity)\n\nINTERPRETATION: High NCD score indicates substantial dissimilarity from baseline patterns."
+      },
+      "event": {
+        "timestamp": "2025-11-10T02:14:42Z",
+        "transaction_id": "txn_1ce48e5615e8916696c84cec",
+        "amount_usd": 348.31,
+        "processing_ms": 74,
+        "origin_country": "UK",
+        "api_endpoint": "/v1/charges",
+        "status": "success"
+      },
+      "why": "CBAD Analysis: NCD=0.857 (not statistically significant), confidence=0.0%, entropy change=-0.1%, Anomaly DETECTED with 0.0% confidence (p=1.000):\n\nCOMPRESSION EVIDENCE:\n- Baseline compression ratio: 9.5x (normal pattern)\n- Window compression ratio: 8.3x (current pattern)\n- Change: -13% compression efficiency\n\nENTROPY EVIDENCE:\n- Baseline entropy: 4.7 bits/byte (structured data)\n- Window entropy: 4.7 bits/byte (current randomness)\n- Change: -0% randomness\n\nNCD SCORE: 0.86 (high dissimilarity)\n\nINTERPRETATION: High NCD score indicates substantial dissimilarity from baseline patterns.",
+      "detected": true
+    }
+  ]
+}

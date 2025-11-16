@@ -1,0 +1,10 @@
+$ psql "postgres://driftlock:driftlock@localhost:7543/driftlock?sslmode=disable" \
+>   -c "SELECT id, stream_id, ROUND(ncd::numeric, 4) AS ncd, ROUND(p_value::numeric, 4) AS p_value FROM anomalies ORDER BY detected_at DESC LIMIT 5;"
+                  id                  |              stream_id               |  ncd   | p_value 
+--------------------------------------+--------------------------------------+--------+---------
+ c2951900-2a6b-4a7b-9905-4167545d9657 | 416d6c1d-8c14-4357-9ea7-e1bce07d1003 | 0.9755 |  1.0000
+ 926d74ca-927d-4ced-8a60-c1cd9cf3a679 | 416d6c1d-8c14-4357-9ea7-e1bce07d1003 | 0.9753 |  1.0000
+ 5c0b9437-4e22-4e32-85d1-62624de76142 | 416d6c1d-8c14-4357-9ea7-e1bce07d1003 | 0.9772 |  1.0000
+ eb817544-2533-4baf-ac53-5880099d83e8 | 416d6c1d-8c14-4357-9ea7-e1bce07d1003 | 0.9763 |  1.0000
+ 34719d2a-288e-40c8-9a9b-ca4ecc637d05 | 416d6c1d-8c14-4357-9ea7-e1bce07d1003 | 0.9763 |  1.0000
+(5 rows)
