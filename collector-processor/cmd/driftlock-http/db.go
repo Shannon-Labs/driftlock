@@ -66,6 +66,15 @@ func (s *store) Close() {
 	}
 }
 
+func (s *store) checkTenantEmail(ctx context.Context, email string) (bool, error) {
+	var exists bool
+	err := s.pool.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM tenants WHERE email = $1)`, email).Scan(&exists)
+	if err != nil {
+		return false, fmt.Errorf("failed to check email: %w", err)
+	}
+	return exists, nil
+}
+
 func runMigrations(ctx context.Context, action string) error {
 	dbURL := env("DATABASE_URL", "")
 	if dbURL == "" {
@@ -97,7 +106,7 @@ func (s *store) loadCache(ctx context.Context) error {
             FROM stream_configs
             ORDER BY stream_id, version DESC
         )
-        SELECT t.id, t.slug, t.name, t.default_compressor, t.rate_limit_rps,
+        SELECT t.id, t.slug, t.name, t.plan, t.default_compressor, t.rate_limit_rps,
                s.id, s.slug, s.type, s.seed, s.compressor, s.retention_days,
                COALESCE(lc.config, '{}'::jsonb)
         FROM tenants t
@@ -119,7 +128,7 @@ func (s *store) loadCache(ctx context.Context) error {
 			stream streamRecord
 			cfgRaw []byte
 		)
-		if err := rows.Scan(&tenant.ID, &tenant.Slug, &tenant.Name, &tenant.DefaultCompressor, &tenant.RateLimitRPS,
+		if err := rows.Scan(&tenant.ID, &tenant.Slug, &tenant.Name, &tenant.Plan, &tenant.DefaultCompressor, &tenant.RateLimitRPS,
 			&stream.ID, &stream.Slug, &stream.Type, &stream.Seed, &stream.Compressor, &stream.RetentionDays, &cfgRaw); err != nil {
 			return err
 		}
@@ -207,8 +216,14 @@ func (s *store) createTenantWithKey(ctx context.Context, params tenantCreatePara
 	}
 	defer tx.Rollback(ctx)
 
-	_, err = tx.Exec(ctx, `INSERT INTO tenants (id, name, slug, plan, default_compressor, rate_limit_rps) VALUES ($1,$2,$3,$4,$5,$6)`,
-		tenantID, params.Name, slug, params.Plan, params.DefaultCompressor, params.TenantRateLimit)
+	now := time.Now()
+	status := params.Status
+	if status == "" {
+		status = "active"
+	}
+	_, err = tx.Exec(ctx, `INSERT INTO tenants (id, name, slug, plan, default_compressor, rate_limit_rps, email, signup_ip, signup_source, created_at, verification_token, status) 
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
+		tenantID, params.Name, slug, params.Plan, params.DefaultCompressor, params.TenantRateLimit, params.Email, params.SignupIP, params.Source, now, params.VerificationToken, status)
 	if err != nil {
 		return nil, err
 	}
@@ -240,14 +255,192 @@ func (s *store) createTenantWithKey(ctx context.Context, params tenantCreatePara
 	// refresh cache
 	_ = s.loadCache(ctx)
 
-	return &tenantCreateResult{
+	result := &tenantCreateResult{
 		TenantID:   tenantID,
 		TenantSlug: slug,
 		StreamID:   streamID,
 		StreamSlug: streamSlug,
 		APIKey:     key,
 		APIKeyID:   keyID,
-	}, nil
+	}
+	result.Tenant.ID = tenantID
+	result.Tenant.Name = params.Name
+	result.Tenant.Slug = slug
+	result.Tenant.Plan = params.Plan
+	result.Tenant.CreatedAt = now
+
+	return result, nil
+}
+
+func (s *store) createPendingTenant(ctx context.Context, params tenantCreateParams) (*tenantCreateResult, error) {
+	if params.Name == "" {
+		return nil, fmt.Errorf("tenant name required")
+	}
+
+	slug := params.Slug
+	if slug == "" {
+		slug = slugify(params.Name)
+	}
+	streamSlug := params.StreamSlug
+	if streamSlug == "" {
+		streamSlug = "default"
+	}
+
+	tenantID := uuid.New()
+	streamID := uuid.New()
+	cfg := streamSettings{
+		BaselineSize:     params.DefaultBaseline,
+		WindowSize:       params.DefaultWindow,
+		HopSize:          params.DefaultHop,
+		NCDThreshold:     params.NCDThreshold,
+		PValueThreshold:  params.PValueThreshold,
+		PermutationCount: params.PermutationCount,
+		Compressor:       params.DefaultCompressor,
+	}
+
+	tx, err := s.pool.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.Serializable})
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(ctx)
+
+	now := time.Now()
+	status := "pending_verification"
+
+	_, err = tx.Exec(ctx, `INSERT INTO tenants (id, name, slug, plan, default_compressor, rate_limit_rps, email, signup_ip, signup_source, created_at, verification_token, status) 
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
+		tenantID, params.Name, slug, params.Plan, params.DefaultCompressor, params.TenantRateLimit, params.Email, params.SignupIP, params.Source, now, params.VerificationToken, status)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = tx.Exec(ctx, `INSERT INTO streams (id, tenant_id, slug, type, description, seed, compressor, queue_mode, retention_days)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+		streamID, tenantID, streamSlug, params.StreamType, params.StreamDescription, params.Seed, params.DefaultCompressor, "memory", params.StreamRetentionDays)
+	if err != nil {
+		return nil, err
+	}
+
+	cfgJSON, _ := json.Marshal(cfg)
+	_, err = tx.Exec(ctx, `INSERT INTO stream_configs (id, stream_id, version, config, created_by) VALUES ($1,$2,$3,$4,$5)`,
+		uuid.New(), streamID, 1, cfgJSON, "onboarding")
+	if err != nil {
+		return nil, err
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return nil, err
+	}
+
+	// refresh cache
+	_ = s.loadCache(ctx)
+
+	result := &tenantCreateResult{
+		TenantID:   tenantID,
+		TenantSlug: slug,
+		StreamID:   streamID,
+		StreamSlug: streamSlug,
+		// No API Key for pending tenant
+	}
+	result.Tenant.ID = tenantID
+	result.Tenant.Name = params.Name
+	result.Tenant.Slug = slug
+	result.Tenant.Plan = params.Plan
+	result.Tenant.CreatedAt = now
+
+	return result, nil
+}
+
+func (s *store) verifyAndActivateTenant(ctx context.Context, token string) (*tenantCreateResult, error) {
+	var tenantID uuid.UUID
+	var tenantName, tenantSlug, tenantPlan, tenantCompressor string
+	var tenantRateLimit int
+	var createdAt time.Time
+
+	// 1. Find pending tenant by token
+	err := s.pool.QueryRow(ctx, `SELECT id, name, slug, plan, default_compressor, rate_limit_rps, created_at 
+		FROM tenants WHERE verification_token = $1 AND status = 'pending_verification'`, token).Scan(
+		&tenantID, &tenantName, &tenantSlug, &tenantPlan, &tenantCompressor, &tenantRateLimit, &createdAt)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, fmt.Errorf("invalid or expired verification token")
+		}
+		return nil, err
+	}
+
+	// 2. Generate API Key
+	key, keyID, err := generateAPIKey()
+	if err != nil {
+		return nil, err
+	}
+	hashedKey, err := hashAPIKey(key)
+	if err != nil {
+		return nil, err
+	}
+
+	// 3. Find default stream ID (needed for API key)
+	var streamID uuid.UUID
+	var streamSlug string
+	err = s.pool.QueryRow(ctx, `SELECT id, slug FROM streams WHERE tenant_id = $1 AND slug = 'default'`, tenantID).Scan(&streamID, &streamSlug)
+	if err != nil {
+		// Fallback to any stream if default doesn't exist (shouldn't happen)
+		err = s.pool.QueryRow(ctx, `SELECT id, slug FROM streams WHERE tenant_id = $1 LIMIT 1`, tenantID).Scan(&streamID, &streamSlug)
+		if err != nil {
+			return nil, fmt.Errorf("tenant has no streams")
+		}
+	}
+
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(ctx)
+
+	// 4. Update status
+	_, err = tx.Exec(ctx, `UPDATE tenants SET status = 'active', verified_at = NOW(), verification_token = NULL WHERE id = $1`, tenantID)
+	if err != nil {
+		return nil, err
+	}
+
+	// 5. Insert API Key
+	// Defaults for onboarding key
+	keyName := "onboarding-key"
+	keyRole := "admin"
+	// Use tenant rate limit or default
+	keyRateLimit := tenantRateLimit
+	if keyRateLimit == 0 {
+		keyRateLimit = 60
+	}
+
+	_, err = tx.Exec(ctx, `INSERT INTO api_keys (id, tenant_id, name, role, key_hash, stream_id, rate_limit_rps) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+		keyID, tenantID, keyName, keyRole, hashedKey, streamID, keyRateLimit)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return nil, err
+	}
+
+	// Refresh cache
+	_ = s.loadCache(ctx)
+
+	result := &tenantCreateResult{
+		TenantID:   tenantID,
+		TenantSlug: tenantSlug,
+		StreamID:   streamID,
+		StreamSlug: streamSlug,
+		APIKey:     key,
+		APIKeyID:   keyID,
+	}
+	result.Tenant.ID = tenantID
+	result.Tenant.Name = tenantName
+	result.Tenant.Slug = tenantSlug
+	result.Tenant.Plan = tenantPlan
+	result.Tenant.CreatedAt = createdAt
+
+	return result, nil
 }
 
 func (s *store) listKeys(ctx context.Context, tenantSlug string) ([]apiKeyInfo, error) {
@@ -352,6 +545,30 @@ func (s *store) insertAnomalies(ctx context.Context, batchID uuid.UUID, tenantID
 		}
 	}
 	return ids, nil
+}
+
+func (s *store) incrementUsage(ctx context.Context, tenantID, streamID uuid.UUID, eventCount, requestCount, anomalyCount int) error {
+	_, err := s.pool.Exec(ctx, `
+		INSERT INTO usage_metrics (tenant_id, stream_id, date, event_count, api_request_count, anomaly_count)
+		VALUES ($1, $2, CURRENT_DATE, $3, $4, $5)
+		ON CONFLICT (tenant_id, stream_id, date)
+		DO UPDATE SET
+			event_count = usage_metrics.event_count + EXCLUDED.event_count,
+			api_request_count = usage_metrics.api_request_count + EXCLUDED.api_request_count,
+			anomaly_count = usage_metrics.anomaly_count + EXCLUDED.anomaly_count`,
+		tenantID, streamID, eventCount, requestCount, anomalyCount)
+	return err
+}
+
+func (s *store) getMonthlyUsage(ctx context.Context, tenantID uuid.UUID) (int64, error) {
+	// Sum events for current calendar month
+	var total int64
+	err := s.pool.QueryRow(ctx, `
+		SELECT COALESCE(SUM(event_count), 0)
+		FROM usage_metrics
+		WHERE tenant_id = $1 AND date_trunc('month', date) = date_trunc('month', CURRENT_DATE)`,
+		tenantID).Scan(&total)
+	return total, err
 }
 
 func (s *store) fetchAnomaly(ctx context.Context, tenantID uuid.UUID, anomalyID uuid.UUID) (anomalyDetailRecord, []anomalyEvidenceRecord, error) {
@@ -512,6 +729,7 @@ type tenantRecord struct {
 	ID                uuid.UUID
 	Name              string
 	Slug              string
+	Plan              string
 	DefaultCompressor string
 	RateLimitRPS      int
 }
@@ -666,10 +884,15 @@ type tenantCreateParams struct {
 	DefaultWindow       int
 	DefaultHop          int
 	NCDThreshold        float64
+	Email               string
+	SignupIP            string
+	Source              string
 	PValueThreshold     float64
 	PermutationCount    int
 	DefaultCompressor   string
 	Seed                int64
+	VerificationToken   string
+	Status              string
 }
 
 type tenantCreateResult struct {
@@ -679,6 +902,13 @@ type tenantCreateResult struct {
 	StreamSlug string
 	APIKeyID   uuid.UUID
 	APIKey     string
+	Tenant     struct {
+		ID        uuid.UUID
+		Name      string
+		Slug      string
+		Plan      string
+		CreatedAt time.Time
+	}
 }
 
 type apiKeyInfo struct {

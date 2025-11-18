@@ -20,17 +20,30 @@
                         Everything here mirrors the repo: API walkthrough, screenshots, and the ROI calculator that assumes the <span class="font-mono">~$1 per million anomaly checks</span> pricing direction (with volume discounts and enterprise plans in the low thousands per month).
                     </p>
                     <div class="mt-10 flex items-center justify-center gap-x-6">
-                        <a href="#api-demo" class="rounded-md cta-gradient px-6 py-3 text-base font-sans font-semibold text-white shadow-lg transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">
-                            Run the API Demo
+                        <a href="#signup" class="rounded-md cta-gradient px-6 py-3 text-base font-sans font-semibold text-white shadow-lg transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">
+                            Start Free Trial →
                         </a>
-                        <a href="#contact" class="group flex items-center gap-x-2 rounded-md border border-blue-200 bg-white/90 px-6 py-3 text-base font-sans font-semibold text-gray-900 shadow-sm hover:bg-gray-50">
-                            Request Private Pilot
+                        <a href="#api-demo" class="group flex items-center gap-x-2 rounded-md border border-blue-200 bg-white/90 px-6 py-3 text-base font-sans font-semibold text-gray-900 shadow-sm hover:bg-gray-50">
+                            View API Demo
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
                             </svg>
                         </a>
                     </div>
                 </div>
+            </div>
+        </section>
+
+        <!-- Signup Section -->
+        <section id="signup" class="py-24 bg-gradient-to-b from-white to-blue-50">
+            <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-4xl font-mono font-bold text-gray-900 sm:text-5xl">Get Started in Minutes</h2>
+                    <p class="mt-4 text-lg font-sans text-gray-700">
+                        Create your account and receive your API key instantly. No credit card required.
+                    </p>
+                </div>
+                <SignupForm />
             </div>
         </section>
 
@@ -486,6 +499,7 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue'
 import PlaygroundShell from '../components/playground/PlaygroundShell.vue'
+import SignupForm from '../components/cta/SignupForm.vue'
 
 const contactEndpoint = '/api/v1/contact'
 const fallbackMailto = 'mailto:hunter@shannonlabs.dev?subject=Driftlock Pilot Program Inquiry'

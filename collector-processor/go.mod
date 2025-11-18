@@ -11,6 +11,7 @@ require (
 	github.com/jackc/pgx/v5 v5.7.6
 	github.com/pressly/goose/v3 v3.26.0
 	github.com/prometheus/client_golang v1.20.5
+	github.com/sendgrid/sendgrid-go v3.16.1+incompatible
 	github.com/stretchr/testify v1.11.1
 	go.opentelemetry.io/collector/component v1.44.0
 	go.opentelemetry.io/collector/consumer/consumertest v0.138.0
@@ -18,6 +19,7 @@ require (
 	go.opentelemetry.io/collector/processor v1.44.0
 	go.uber.org/zap v1.27.0
 	golang.org/x/crypto v0.43.0
+	golang.org/x/time v0.14.0
 )
 
 replace github.com/Shannon-Labs/driftlock/collector-processor/driftlockcbad => ./driftlockcbad
@@ -47,6 +49,7 @@ require (
 	github.com/prometheus/common v0.55.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/segmentio/kafka-go v0.4.48 // indirect
+	github.com/sendgrid/rest v2.6.9+incompatible // indirect
 	github.com/sethvargo/go-retry v0.3.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
 	go.opentelemetry.io/collector/component/componenttest v0.138.0 // indirect

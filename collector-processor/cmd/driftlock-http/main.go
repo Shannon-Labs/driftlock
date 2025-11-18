@@ -227,7 +227,10 @@ func main() {
 
 	queue := newMemoryQueue(cfg.QueueCapacity)
 	limiter := newTenantRateLimiter(cfg.DefaultRateLimit())
-	handler := buildHTTPHandler(cfg, store, queue, limiter)
+	emailer := newEmailService()
+	tracker := newUsageTracker(store, emailer)
+
+	handler := buildHTTPHandler(cfg, store, queue, limiter, emailer, tracker)
 
 	addr := env("PORT", "8080")
 	log.Printf("driftlock-http listening on :%s", addr)
@@ -262,12 +265,17 @@ func main() {
 	}
 }
 
-func buildHTTPHandler(cfg config, store *store, queue jobQueue, limiter *tenantRateLimiter) http.Handler {
+func buildHTTPHandler(cfg config, store *store, queue jobQueue, limiter *tenantRateLimiter, emailer *emailService, tracker *usageTracker) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", healthHandler(store, queue))
 	mux.Handle("/metrics", promhttp.Handler())
+
+	// Onboarding endpoints
+	mux.HandleFunc("/v1/onboard/signup", onboardSignupHandler(cfg, store, emailer))
+	mux.HandleFunc("/v1/onboard/verify", verifyHandler(store, emailer))
+
 	mux.Handle("/v1/detect", withAuth(store, limiter, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		detectHandler(w, r, cfg, store)
+		detectHandler(w, r, cfg, store, tracker)
 	})))
 	mux.Handle("/v1/anomalies", withAuth(store, limiter, anomaliesHandler(store)))
 	mux.Handle("/v1/anomalies/", withAuth(store, limiter, anomalyRouter(cfg, store, queue)))
@@ -609,7 +617,7 @@ func decodeExportRequest(r *http.Request, maxBody int64) (exportRequest, error) 
 	return req, nil
 }
 
-func detectHandler(w http.ResponseWriter, r *http.Request, cfg config, store *store) {
+func detectHandler(w http.ResponseWriter, r *http.Request, cfg config, store *store, tracker *usageTracker) {
 	if r.Method == http.MethodOptions {
 		handlePreflight(w, r)
 		return
@@ -691,6 +699,9 @@ func detectHandler(w http.ResponseWriter, r *http.Request, cfg config, store *st
 			anomalies[i].ID = anomalyIDs[i]
 		}
 	}
+
+	// Track usage asynchronously
+	go tracker.track(context.Background(), tc.Tenant.ID, stream.ID, tc.Tenant.Plan, len(payload.Events), len(anomalies))
 
 	resp := detectResponse{
 		Success:         true,
@@ -1004,6 +1015,10 @@ func envFloat(key string, def float64) float64 {
 }
 
 func parseAllowedOrigins(v string) []string {
+	v = strings.ReplaceAll(v, "%2C", ",")
+	v = strings.ReplaceAll(v, "%2c", ",")
+	v = strings.ReplaceAll(v, "|", ",")
+	v = strings.ReplaceAll(v, ";", ",")
 	parts := strings.Split(v, ",")
 	out := make([]string, 0, len(parts))
 	for _, p := range parts {
