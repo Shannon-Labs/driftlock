@@ -5,7 +5,7 @@ info:
   description: Compression-based anomaly detection over JSON/NDJSON.
 servers:
   - url: https://api.driftlock.net
-    description: Production API (when deployed)
+    description: Production API
   - url: http://localhost:8080
     description: Local development API
 paths:
@@ -21,6 +21,10 @@ paths:
                 type: object
                 properties:
                   ok:
+                    type: boolean
+                  library_status:
+                    type: string
+                  openzl_available:
                     type: boolean
   /v1/detect:
     post:
@@ -38,21 +42,6 @@ paths:
             type: string
             enum: [zstd, lz4, gzip, openzl]
           description: Compression algorithm
-        - in: query
-          name: baseline
-          schema:
-            type: integer
-          description: Baseline size (events)
-        - in: query
-          name: window
-          schema:
-            type: integer
-          description: Window size (events)
-        - in: query
-          name: hop
-          schema:
-            type: integer
-          description: Hop size (events)
       requestBody:
         required: true
         content:
@@ -60,49 +49,63 @@ paths:
             schema:
               oneOf:
                 - type: array
-                  description: JSON array of events
-                  items:
-                    type: object
+                  items: { type: object }
                 - type: string
-                  description: NDJSON payload (one JSON object per line)
       responses:
         '200':
           description: Detection results
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  total_events:
-                    type: integer
-                  anomaly_count:
-                    type: integer
-                  processing_time:
-                    type: string
-                  compression_algo:
-                    type: string
-                  anomalies:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        index:
-                          type: integer
-                        detected:
-                          type: boolean
-                        why:
-                          type: string
-                        event:
-                          type: object
-                        metrics:
-                          type: object
-                          properties:
-                            ncd: { type: number }
-                            p_value: { type: number }
-                            baseline_compression_ratio: { type: number }
-                            window_compression_ratio: { type: number }
-                            baseline_entropy: { type: number }
-                            window_entropy: { type: number }
-                            confidence_level: { type: number }
+                $ref: '#/components/schemas/DetectResponse'
 
+  /v1/stream/anomalies:
+    get:
+      summary: Real-time anomaly stream (SSE)
+      description: Connect to this endpoint to receive Server-Sent Events (SSE) for new anomalies.
+      parameters:
+        - in: query
+          name: api_key
+          schema:
+            type: string
+          required: false
+          description: API Key for authentication (alternative to X-Api-Key header)
+      responses:
+        '200':
+          description: SSE Stream
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                example: |
+                  event: anomaly
+                  data: {"id": "...", "ncd": 0.45}
 
+components:
+  schemas:
+    DetectResponse:
+      type: object
+      properties:
+        total_events: { type: integer }
+        anomaly_count: { type: integer }
+        processing_time: { type: string }
+        compression_algo: { type: string }
+        anomalies:
+          type: array
+          items:
+            $ref: '#/components/schemas/Anomaly'
+
+    Anomaly:
+      type: object
+      properties:
+        index: { type: integer }
+        detected: { type: boolean }
+        why: { type: string }
+        event: { type: object }
+        metrics:
+          type: object
+          properties:
+            ncd: { type: number }
+            p_value: { type: number }
+            confidence_level: { type: number }
+            explanation: { type: string }

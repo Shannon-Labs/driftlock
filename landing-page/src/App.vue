@@ -2,6 +2,7 @@
   <div id="app" :class="{ 'dark': isDarkMode }">
     <!-- Navigation -->
     <nav 
+      v-if="!route.meta.hideNavbar"
       class="fixed top-0 left-0 right-0 w-full z-50 transition-all duration-300"
       :class="{
         'bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl shadow-lg': true,
@@ -132,12 +133,12 @@
     </nav>
 
     <!-- Main Content -->
-    <main class="pt-20">
+    <main :class="{ 'pt-20': !route.meta.hideNavbar }">
       <router-view />
     </main>
 
     <!-- Footer -->
-    <footer class="bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+    <footer v-if="!route.meta.hideFooter" class="bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
         <div class="container-padding mx-auto py-12">
             <div class="flex flex-col items-center justify-between gap-4 md:flex-row md:items-center">
                 <div class="flex items-center space-x-2">

@@ -10,6 +10,18 @@ const router = createRouter({
       component: HomeView
     },
     {
+      path: '/dashboard',
+      name: 'dashboard',
+      component: () => import('../views/DashboardView.vue'),
+      meta: { hideNavbar: true, hideFooter: true }
+    },
+    {
+      path: '/docs',
+      name: 'docs',
+      component: () => import('../views/DocsView.vue'),
+      meta: { hideNavbar: true, hideFooter: true }
+    },
+    {
       path: '/playground',
       redirect: { path: '/', hash: '#playground' }
     }

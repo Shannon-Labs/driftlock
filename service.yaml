@@ -1,0 +1,23 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: driftlock-api
+  labels:
+    cloud.googleapis.com/location: us-central1
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: "0"
+        autoscaling.knative.dev/maxScale: "100"
+    spec:
+      containers:
+        - image: gcr.io/PROJECT_ID/driftlock-http:latest
+          env:
+            - name: LOG_LEVEL
+              value: "info"
+            - name: DRIFTLOCK_ENV
+              value: "production"
+          ports:
+            - containerPort: 8080
+

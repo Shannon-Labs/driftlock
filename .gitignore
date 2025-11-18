@@ -71,3 +71,8 @@ temp/
 # Build artifacts
 build/
 .cache/
+
+# Proprietary Source Code (Hidden)
+cbad-core/
+cmd/
+collector-processor/

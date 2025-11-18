@@ -1,113 +1,50 @@
-# Driftlock
+# Driftlock: The Safety Layer for Autonomous Agents
 
-Deterministic, compression-based anomaly detection with a small, reproducible demo.
+**Real-time Streaming Telemetry + Explainable Anomaly Detection**
 
-This repository ships a **proof-of-concept CLI demo** plus an **experimental HTTP API**.  
-For an authoritative description of what is actually implemented, see `FINAL-STATUS.md`.
+Driftlock provides the mathematical guardrails for autonomous AI agents. When your agents operate at speed, Driftlock monitors their behavior (tool calls, thought traces, outputs) and locks in "normal" patterns. If an agent drifts into hallucinations or rogue behavior, Driftlock flags it instantly with a mathematical explanation.
 
----
+## The Innovation: Two APIs Working Together
 
-## What this repo contains
+1.  **Streaming API**: Ingest agent telemetry in real-time via WebSocket/SSE.
+2.  **Detection API**: Analyze every event against a baseline using compression math (NCD).
 
-- **Rust core** (`cbad-core/`): compression-based anomaly detection library.
-- **Go CLI demo** (`cmd/demo/`): reads synthetic payment data and produces an HTML report.
-- **Synthetic data** (`test-data/financial-demo.json`): 5,000 payment-like events with injected anomalies.
-- **Optional HTTP API prototype** (`collector-processor/cmd/driftlock-http`): JSON `/v1/detect` endpoint backed by Postgres.
+**Why Math?**
+Black-box ML models can hallucinate too. Driftlock uses **Normalized Compression Distance (NCD)** to provide a verifiable, deterministic proof for every anomaly. "Show your work" is built-in.
 
-The only path we rely on for verification and CI is the **CLI demo** described below.
+## Deployment
 
----
+Driftlock is designed as a modern SaaS platform that you can self-host or use via our managed service.
 
-## Quickstart: CLI HTML demo (single binary)
+### Architecture
+- **Frontend**: Vue 3 app deployed to **Firebase Hosting**.
+- **Backend**: Go API service deployed to **Google Cloud Run**.
+- **Streaming**: Server-Sent Events (SSE) for real-time alerts.
 
-This is the simplest, fully-supported way to see Driftlock work end-to-end.
+### Quick Start
 
-```bash
-git clone https://github.com/Shannon-Labs/driftlock.git
-cd driftlock
-make demo
-./driftlock-demo test-data/financial-demo.json
-open demo-output.html  # use xdg-open on Linux
-```
+1.  **Deploy**:
+    ```bash
+    ./deploy.sh
+    ```
 
-What you should see:
+2.  **Connect your Agent**:
+    ```bash
+    # Send telemetry to the API
+    curl -X POST https://your-api-url/v1/detect -d @event.json
+    ```
 
-- First ~400 events build the baseline.
-- The next 1,600 events are scanned for anomalies.
-- The HTML report highlights ~10–30 anomalies with compression-based metrics and explanations.
+3.  **Watch Live**:
+    Go to your dashboard to see real-time anomaly streams.
 
-You can re-run the demo as many times as you like; outputs are deterministic for the same input.
+## Documentation
 
----
-
-## Experimental HTTP API prototype
-
-There is an in-repo HTTP service that exposes the same core algorithm over JSON.  
-It is useful for local experiments but **not a hardened product**.
-
-High-level steps:
-
-1. Build the Rust core (needed for all Go binaries):
-
-   ```bash
-   cd cbad-core
-   cargo build --release
-   cd ..
-   ```
-
-2. Start Postgres with Docker Compose and run the API demo script:
-
-   ```bash
-   export DRIFTLOCK_DEV_MODE=true  # dev-only, bypasses licensing
-   ./scripts/run-api-demo.sh
-   ```
-
-The script:
-
-- Builds the `driftlock-http` binary.
-- Starts a local Postgres instance.
-- Applies migrations and creates a demo tenant + API key.
-- Calls `/v1/detect` with synthetic data and prints follow-up `curl` and `psql` commands.
-
-For the manual, step-by-step version see `docs/API-DEMO-WALKTHROUGH.md`.  
-For the HTTP API schema, see `docs/API.md`.
-
-**OpenZL note:** OpenZL integration is optional and experimental. All demos and default builds use generic compressors (zstd, lz4, gzip). See `docs/OPENZL_ANALYSIS.md` if you want to opt in.
-
----
-
-## How the demo works (conceptually)
-
-At a high level, both the CLI and HTTP flows do the same thing:
-
-1. Build a baseline from normal events.
-2. Compare new events to that baseline using compression distance (NCD).
-3. Run permutation testing to estimate p-values / confidence.
-4. Emit anomalies with:
-   - NCD
-   - compression ratios
-   - entropy change
-   - p-value and confidence
-   - a short explanation string.
-
-The math and implementation details are documented in `docs/ALGORITHMS.md`.
-
----
-
-## Project status
-
-See `FINAL-STATUS.md` for the current repository status. As of that file’s last update:
-
-- ✅ Rust + Go CLI demo is stable and exercised in CI via `./verify-yc-ready.sh`.
-- ✅ Synthetic dataset and HTML report are suitable for screenshots and quick demos.
-- ⚠️ HTTP API, multi-tenant flows, and pricing/ROI language are **prototype only** and may change.
-
-If you are evaluating Driftlock for anything beyond local experiments, treat this repo as an engine prototype rather than a finished product.
-
----
+- [Cloud Run Setup](docs/deployment/cloud-run-setup.md)
+- [Firebase Hosting Setup](docs/deployment/firebase-hosting-setup.md)
+- [Streaming API Guide](docs/STREAMING.md)
+- [Architecture Overview](docs/ARCHITECTURE.md)
 
 ## License
 
-Apache 2.0 for the open-source portions of this repository.  
-See `LICENSE` and `LICENSE-COMMERCIAL.md` for details.
-
+Driftlock Core (Rust) is Apache 2.0.
+API Service & Dashboard are source-available (see LICENSE-COMMERCIAL).

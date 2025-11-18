@@ -3,29 +3,28 @@
         <!-- Hero Section -->
         <section class="relative overflow-hidden py-24 sm:py-32" style="background-image: url('/hero-driftlock.jpg'); background-size: cover; background-position: center;">
             <!-- Overlay -->
-            <div class="absolute inset-0 bg-gray-900/70" aria-hidden="true"></div>
+            <div class="absolute inset-0 bg-gray-900/80" aria-hidden="true"></div>
             
             <div class="relative z-10 container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div class="mx-auto max-w-3xl text-center">
-                    <span class="rounded-full bg-blue-500 px-4 py-1 text-sm font-sans font-medium text-white">
-                        Alpha Phase — Developer-First API
+                    <span class="rounded-full bg-blue-500/20 px-4 py-1 text-sm font-sans font-medium text-blue-200 ring-1 ring-inset ring-blue-500/40">
+                        Agentic AI Ready — Developer Preview
                     </span>
                     <h1 class="mt-6 text-5xl font-mono font-extrabold tracking-tight text-white sm:text-7xl">
-                        Explainable Anomalies, Ready in Minutes.
+                        The Safety Layer for Autonomous Agents.
                     </h1>
                     <p class="mt-6 text-lg leading-8 font-sans text-gray-200 sm:text-xl">
-                        Clone the repo, run <code class="text-white">cd cbad-core && cargo build --release && cd ..</code>, then <code class="text-white">DRIFTLOCK_DEV_MODE=true ./scripts/run-api-demo.sh</code>—the same quickstart documented in the README. You'll mint a tenant, hit <code class="text-white">/v1/detect</code>, and inspect persisted anomalies with compression math instead of black-box ML.
-                    </p>
-                    <p class="mt-4 text-base leading-7 font-sans text-gray-200/90 max-w-3xl mx-auto">
-                        Everything here mirrors the repo: API walkthrough, screenshots, and the ROI calculator that assumes the <span class="font-mono">~$1 per million anomaly checks</span> pricing direction (with volume discounts and enterprise plans in the low thousands per month).
+                        Two APIs working in perfect sync: <strong>Real-time Streaming Telemetry</strong> meets <strong>Explainable Anomaly Detection</strong>.
+                        <br class="hidden sm:block">
+                        Rogue AI agents operate at speeds humans can't monitor. Lock it in when things drift.
                     </p>
                     <div class="mt-10 flex items-center justify-center gap-x-6">
-                        <a href="#api-demo" class="rounded-md cta-gradient px-6 py-3 text-base font-sans font-semibold text-white shadow-lg transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">
-                            Run the API Demo
+                        <a href="/dashboard" class="rounded-md cta-gradient px-6 py-3 text-base font-sans font-semibold text-white shadow-lg transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">
+                            Get API Key
                         </a>
-                        <a href="#contact" class="group flex items-center gap-x-2 rounded-md border border-blue-200 bg-white/90 px-6 py-3 text-base font-sans font-semibold text-gray-900 shadow-sm hover:bg-gray-50">
-                            Request Private Pilot
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <a href="/docs" class="group flex items-center gap-x-2 rounded-md border border-blue-200 bg-white/10 px-6 py-3 text-base font-sans font-semibold text-white shadow-sm hover:bg-white/20">
+                            Read Documentation
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-200 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
                             </svg>
                         </a>
@@ -39,75 +38,70 @@
             <div class="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
                 <div class="grid gap-12 lg:grid-cols-2 lg:items-center">
                     <div>
-                        <p class="text-sm font-semibold uppercase tracking-[0.2em] text-blue-400">New onboarding</p>
-                        <h2 class="mt-3 text-4xl font-mono font-bold">HTTP API Demo with Docker + Postgres</h2>
+                        <p class="text-sm font-semibold uppercase tracking-[0.2em] text-blue-400">The Innovation</p>
+                        <h2 class="mt-3 text-4xl font-mono font-bold">Streaming Telemetry + Explainable Math</h2>
                         <p class="mt-4 text-lg text-slate-200">
-                            This is the exact flow from the README quickstart and <code>docs/API-DEMO-WALKTHROUGH.md</code>. Run one script, provision a tenant/key, hit <code>/v1/detect</code>, and inspect anomalies in Postgres—no black-box magic.
+                            Driftlock isn't just a log analyzer. It's a real-time safety layer that sits between your agents and the world.
                         </p>
                         <ol class="mt-6 space-y-4 text-slate-100">
                             <li class="flex items-start gap-3">
                                 <span class="mt-1 inline-flex h-8 w-8 items-center justify-center rounded-full bg-blue-500/30 text-blue-200 font-bold">1</span>
                                 <div>
-                                    <p class="font-semibold">Clone, build, run</p>
-                                    <p class="text-sm text-slate-300"><code>git clone</code>, <code>cd cbad-core && cargo build --release && cd ..</code>, then <code>DRIFTLOCK_DEV_MODE=true ./scripts/run-api-demo.sh</code>.</p>
+                                    <p class="font-semibold">Streaming API</p>
+                                    <p class="text-sm text-slate-300">Ingest tool calls, thought traces, and outputs via WebSocket/SSE or HTTP.</p>
                                 </div>
                             </li>
                             <li class="flex items-start gap-3">
                                 <span class="mt-1 inline-flex h-8 w-8 items-center justify-center rounded-full bg-blue-500/30 text-blue-200 font-bold">2</span>
                                 <div>
-                                    <p class="font-semibold">Script output = live instructions</p>
-                                    <p class="text-sm text-slate-300">We print <code>curl</code> + <code>psql</code> snippets so visitors can replay <code>/v1/detect</code>, fetch <code>/v1/anomalies/{id}</code>, and verify <code>/healthz</code> showing license + queue + DB status.</p>
+                                    <p class="font-semibold">Detection API</p>
+                                    <p class="text-sm text-slate-300">Instantly compare new events against the baseline using compression math.</p>
                                 </div>
                             </li>
                             <li class="flex items-start gap-3">
                                 <span class="mt-1 inline-flex h-8 w-8 items-center justify-center rounded-full bg-blue-500/30 text-blue-200 font-bold">3</span>
                                 <div>
-                                    <p class="font-semibold">Proof in Postgres</p>
-                                    <p class="text-sm text-slate-300">`psql` output shows anomalies persisted with NCD, p-values, and explanations—ready for compliance teams.</p>
+                                    <p class="font-semibold">Unified Guardrails</p>
+                                    <p class="text-sm text-slate-300">Stop rogue agents in milliseconds with explainable proof (NCD scores).</p>
                                 </div>
                             </li>
                         </ol>
-                        <p class="mt-8 text-sm text-slate-400">Dev mode bypass (`DRIFTLOCK_DEV_MODE=true`) is local-only. Production needs real keys; `/healthz` reports violations, just like the README describes.</p>
                     </div>
                     <div class="space-y-6">
                         <video src="/api-demo-demo.mp4" autoplay muted loop playsinline controls poster="/api-demo-terminal.png" class="w-full rounded-2xl shadow-2xl border border-white/10">
-                            Sorry, your browser doesn't support embedded videos. Watch the terminal capture in the README.
+                            Sorry, your browser doesn't support embedded videos.
                         </video>
-                        <div class="grid gap-4 sm:grid-cols-2">
-                            <img src="/api-demo-detect.png" alt="Sample /v1/detect response" class="rounded-2xl shadow-xl border border-white/5" />
-                            <img src="/api-demo-psql.png" alt="psql anomalies view" class="rounded-2xl shadow-xl border border-white/5" />
-                        </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Problem Section (The $ Risk) -->
+        <!-- Problem Section -->
         <section id="problem" class="py-24 sm:py-32 bg-gray-50">
             <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div class="mx-auto max-w-3xl text-center">
-                    <h2 class="text-base font-sans font-semibold leading-7 text-blue-600">The Problem</h2>
-                    <p class="mt-2 text-4xl font-mono font-bold tracking-tight text-gray-900 sm:text-5xl">Your Black Box is an Audit Failure.</p>
+                    <h2 class="text-base font-sans font-semibold leading-7 text-blue-600">The Risk</h2>
+                    <p class="mt-2 text-4xl font-mono font-bold tracking-tight text-gray-900 sm:text-5xl">Agents Go Rogue.</p>
                     <p class="mt-6 text-lg leading-8 font-sans text-gray-700">
-                        Regulators worldwide are auditing bank systems for explainability. When your system flags a transaction, they demand: <strong class="font-semibold">"Show your work."</strong> Black-box ML models are an automatic failure, leading to massive fines.
+                        AI agents are powerful, but unpredictable. They can hallucinate, get hijacked by bad actors, or simply drift into dangerous behavior patterns that rule-based systems miss.
                     </p>
                 </div>
-                <!-- Regulation Cards -->
+                <!-- Use Cases -->
                 <div class="mt-16 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
                     <div class="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
-                        <h3 class="text-xl font-mono font-semibold leading-7 text-gray-900">EU DORA</h3>
-                        <p class="mt-4 text-3xl font-mono font-bold tracking-tight text-red-600">Up to 2%</p>
-                        <p class="mt-1 text-base font-sans text-gray-600">of annual global turnover in fines for non-compliance. Article 15 requires full explainability for all automated fraud detection.</p>
+                        <h3 class="text-xl font-mono font-semibold leading-7 text-gray-900">Agent Reliability</h3>
+                        <p class="mt-4 text-3xl font-mono font-bold tracking-tight text-blue-600">Hallucinations</p>
+                        <p class="mt-1 text-base font-sans text-gray-600">Detect when your agent starts outputting nonsense or repetitive loops. Compression distance reveals the breakdown of logic.</p>
                     </div>
                     <div class="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
-                        <h3 class="text-xl font-mono font-semibold leading-7 text-gray-900">US Regulations</h3>
-                        <p class="mt-4 text-3xl font-mono font-bold tracking-tight text-red-600">CFPB, NYDFS, FFIEC</p>
-                        <p class="mt-1 text-base font-sans text-gray-600">Fair Lending, Part 500, and FFIEC guidelines all mandate model explainability, auditability, and fairness. Black boxes are a direct violation.</p>
+                        <h3 class="text-xl font-mono font-semibold leading-7 text-gray-900">Security</h3>
+                        <p class="mt-4 text-3xl font-mono font-bold tracking-tight text-blue-600">Prompt Injection</p>
+                        <p class="mt-1 text-base font-sans text-gray-600">Identify when bad actors try to hijack your agent's context. Anomalous inputs stand out immediately against the baseline.</p>
                     </div>
                     <div class="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm md:col-span-2 lg:col-span-1">
-                        <h3 class="text-xl font-mono font-semibold leading-7 text-gray-900">The Compliance Gap</h3>
-                        <p class="mt-4 text-3xl font-mono font-bold tracking-tight text-red-600">Automatic Failure</p>
-                        <p class="mt-1 text-base font-sans text-gray-600">If you can't provide a mathematical proof for why a transaction was flagged, you have already failed your audit. Fines start January 2025.</p>
+                        <h3 class="text-xl font-mono font-semibold leading-7 text-gray-900">Control</h3>
+                        <p class="mt-4 text-3xl font-mono font-bold tracking-tight text-blue-600">Guardrails</p>
+                        <p class="mt-1 text-base font-sans text-gray-600">Lock in known-good behavior. If the agent drifts, Driftlock flags it so you can intervene automatically.</p>
                     </div>
                 </div>
             </div>
@@ -227,12 +221,14 @@
             </div>
         </section>
 
-        <!-- Live Playground Section -->
+        <!-- Live Playground Section (Temporarily Disabled for IP Protection) -->
+        <!-- 
         <section id="playground" class="py-24 sm:py-32">
             <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <PlaygroundShell variant="embedded" />
             </div>
-        </section>
+        </section> 
+        -->
 
         <!-- ROI Calculator Section -->
         <section id="roi" class="py-24 sm:py-32 bg-slate-950 text-white">

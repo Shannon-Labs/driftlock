@@ -14,9 +14,11 @@
     "analyze": "npm run build && npx vite-bundle-analyzer dist"
   },
   "dependencies": {
+    "@tanstack/vue-query": "^5.0.0",
     "@vueuse/core": "^10.7.0",
     "@vueuse/head": "^2.0.0",
     "lucide-vue-next": "^0.303.0",
+    "pinia": "^2.1.7",
     "vue": "^3.4.0",
     "vue-router": "^4.6.3"
   },
