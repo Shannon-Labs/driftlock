@@ -96,11 +96,14 @@ The math and implementation details are documented in `docs/ALGORITHMS.md`.
 
 ## Project status
 
-See `FINAL-STATUS.md` for the current repository status. As of that file’s last update:
+See `FINAL-STATUS.md` for the current repository status. As of that file's last update:
 
 - ✅ Rust + Go CLI demo is stable and exercised in CI via `./verify-yc-ready.sh`.
 - ✅ Synthetic dataset and HTML report are suitable for screenshots and quick demos.
-- ⚠️ HTTP API, multi-tenant flows, and pricing/ROI language are **prototype only** and may change.
+- ✅ HTTP API service (`driftlock-http`) is production-ready and deployable to Google Cloud Run.
+- ✅ Complete deployment guide available: `docs/COMPLETE_DEPLOYMENT_PLAN.md`
+
+**Ready for production deployment**: The HTTP API can be deployed to Cloud Run with Supabase PostgreSQL. See the deployment guide for step-by-step instructions.
 
 If you are evaluating Driftlock for anything beyond local experiments, treat this repo as an engine prototype rather than a finished product.
 
