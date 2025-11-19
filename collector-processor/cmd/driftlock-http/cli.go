@@ -97,6 +97,7 @@ func createTenantCommand(args []string, cfg config) {
 		PermutationCount:    cfg.PermutationCount,
 		DefaultCompressor:   cfg.DefaultAlgo,
 		Seed:                int64(cfg.Seed),
+		SignupIP:            "127.0.0.1",
 	})
 	if err != nil {
 		log.Fatalf("create-tenant failed: %v", err)

@@ -33,15 +33,9 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
-      path: '/docs',
+      path: '/docs/:pathMatch(.*)*',
       name: 'docs',
-      component: () => import('../views/DocsView.vue'),
-      children: [
-        {
-          path: ':slug?',
-          component: () => import('../views/DocsView.vue') // Re-render same view, logic handles slug
-        }
-      ]
+      component: () => import('../views/DocsView.vue')
     }
   ],
   scrollBehavior(to, from, savedPosition) {
@@ -57,7 +51,7 @@ const router = createRouter({
 
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
-  
+
   // Ensure auth is initialized
   if (authStore.loading) {
     await authStore.init()

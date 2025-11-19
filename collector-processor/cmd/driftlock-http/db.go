@@ -106,7 +106,8 @@ func (s *store) loadCache(ctx context.Context) error {
             FROM stream_configs
             ORDER BY stream_id, version DESC
         )
-        SELECT t.id, t.slug, t.name, t.plan, t.default_compressor, t.rate_limit_rps,
+               SELECT t.id, t.slug, t.name, t.plan, t.default_compressor, t.rate_limit_rps,
+               t.stripe_customer_id, t.stripe_subscription_id, t.stripe_status,
                s.id, s.slug, s.type, s.seed, s.compressor, s.retention_days,
                COALESCE(lc.config, '{}'::jsonb)
         FROM tenants t
@@ -129,6 +130,7 @@ func (s *store) loadCache(ctx context.Context) error {
 			cfgRaw []byte
 		)
 		if err := rows.Scan(&tenant.ID, &tenant.Slug, &tenant.Name, &tenant.Plan, &tenant.DefaultCompressor, &tenant.RateLimitRPS,
+			&tenant.StripeCustomerID, &tenant.StripeSubscriptionID, &tenant.StripeStatus,
 			&stream.ID, &stream.Slug, &stream.Type, &stream.Seed, &stream.Compressor, &stream.RetentionDays, &cfgRaw); err != nil {
 			return err
 		}
@@ -731,7 +733,10 @@ type tenantRecord struct {
 	Slug              string
 	Plan              string
 	DefaultCompressor string
-	RateLimitRPS      int
+	RateLimitRPS         int
+	StripeCustomerID     *string
+	StripeSubscriptionID *string
+	StripeStatus         *string
 }
 
 type streamRecord struct {

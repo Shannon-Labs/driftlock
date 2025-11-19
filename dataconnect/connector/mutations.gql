@@ -1,0 +1,156 @@
+# User mutations
+mutation CreateUser($displayName: String!, $email: String, $photoUrl: String, $createdAt: Timestamp!) @auth(level: USER) {
+  user_insert(data: {
+    displayName: $displayName
+    email: $email
+    photoUrl: $photoUrl
+    createdAt: $createdAt
+  })
+}
+
+mutation UpdateUser($id: UUID!, $displayName: String, $email: String, $photoUrl: String) @auth(level: USER) {
+  user_update(id: $id, data: {
+    displayName: $displayName
+    email: $email
+    photoUrl: $photoUrl
+  })
+}
+
+# Dataset mutations
+mutation CreateDataset(
+  $userId: UUID!
+  $name: String!
+  $filename: String!
+  $fileLocation: String!
+  $status: String!
+  $uploadDate: Timestamp!
+  $description: String
+  $columnInfo: String
+) @auth(level: USER) {
+  dataset_insert(data: {
+    userId: $userId
+    name: $name
+    filename: $filename
+    fileLocation: $fileLocation
+    status: $status
+    description: $description
+    columnInfo: $columnInfo
+    uploadDate: $uploadDate
+  })
+}
+
+mutation UpdateDatasetStatus($id: UUID!, $status: String!) @auth(level: USER) {
+  dataset_update(id: $id, data: {
+    status: $status
+  })
+}
+
+mutation UpdateDataset(
+  $id: UUID!
+  $name: String
+  $description: String
+  $status: String
+  $columnInfo: String
+) @auth(level: USER) {
+  dataset_update(id: $id, data: {
+    name: $name
+    description: $description
+    status: $status
+    columnInfo: $columnInfo
+  })
+}
+
+# Model Configuration mutations
+mutation CreateModelConfiguration(
+  $userId: UUID!
+  $name: String!
+  $algorithmType: String!
+  $createdAt: Timestamp!
+  $parameters: String
+  $description: String
+) @auth(level: USER) {
+  modelConfiguration_insert(data: {
+    userId: $userId
+    name: $name
+    algorithmType: $algorithmType
+    parameters: $parameters
+    description: $description
+    createdAt: $createdAt
+  })
+}
+
+mutation UpdateModelConfiguration(
+  $id: UUID!
+  $name: String
+  $parameters: String
+  $description: String
+) @auth(level: USER) {
+  modelConfiguration_update(id: $id, data: {
+    name: $name
+    parameters: $parameters
+    description: $description
+  })
+}
+
+# Detection Task mutations
+mutation CreateDetectionTask(
+  $userId: UUID!
+  $datasetId: UUID!
+  $modelConfigurationId: UUID!
+  $taskName: String!
+  $status: String!
+  $startDate: Timestamp!
+  $notes: String
+) @auth(level: USER) {
+  detectionTask_insert(data: {
+    userId: $userId
+    datasetId: $datasetId
+    modelConfigurationId: $modelConfigurationId
+    taskName: $taskName
+    status: $status
+    notes: $notes
+    startDate: $startDate
+  })
+}
+
+mutation UpdateDetectionTask(
+  $id: UUID!
+  $status: String
+  $resultsLocation: String
+  $notes: String
+  $endDate: Timestamp
+) @auth(level: USER) {
+  detectionTask_update(id: $id, data: {
+    status: $status
+    resultsLocation: $resultsLocation
+    notes: $notes
+    endDate: $endDate
+  })
+}
+
+mutation CompleteDetectionTask($id: UUID!, $resultsLocation: String!, $endDate: Timestamp!) @auth(level: USER) {
+  detectionTask_update(id: $id, data: {
+    status: "completed"
+    resultsLocation: $resultsLocation
+    endDate: $endDate
+  })
+}
+
+# Anomaly mutations
+mutation CreateAnomaly(
+  $detectionTaskId: UUID!
+  $dataPointIdentifier: String!
+  $anomalyScore: Float!
+  $isAnomaly: Boolean!
+  $explanation: String
+  $timestamp: Timestamp
+) @auth(level: USER) {
+  anomaly_insert(data: {
+    detectionTaskId: $detectionTaskId
+    dataPointIdentifier: $dataPointIdentifier
+    anomalyScore: $anomalyScore
+    isAnomaly: $isAnomaly
+    explanation: $explanation
+    timestamp: $timestamp
+  })
+}
