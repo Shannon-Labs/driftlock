@@ -202,8 +202,7 @@ func (a *DailyUsageAggregator) Run(ctx context.Context) error {
 	// Get all tenants
 	rows, err := a.store.pool.Query(ctx, `
 		SELECT id, name, email, plan, created_at
-		FROM tenants
-		WHERE status = 'active'`)
+		FROM tenants`)
 	if err != nil {
 		return err
 	}
