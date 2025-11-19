@@ -1,5 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
+import LoginView from '../views/LoginView.vue'
+import LoginFinishView from '../views/LoginFinishView.vue'
+import { useAuthStore } from '../stores/auth'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -10,25 +13,29 @@ const router = createRouter({
       component: HomeView
     },
     {
-      path: '/dashboard',
-      name: 'dashboard',
-      component: () => import('../views/DashboardView.vue'),
-      meta: { hideNavbar: true, hideFooter: true }
-    },
-    {
-      path: '/docs',
-      name: 'docs',
-      component: () => import('../views/DocsView.vue'),
-      meta: { hideNavbar: true, hideFooter: true }
-    },
-    {
       path: '/playground',
       redirect: { path: '/', hash: '#playground' }
     },
     {
-      path: '/admin',
-      name: 'admin',
-      component: () => import('../views/AdminDashboard.vue')
+      path: '/login',
+      name: 'login',
+      component: LoginView
+    },
+    {
+      path: '/login/finish',
+      name: 'login-finish',
+      component: LoginFinishView
+    },
+    {
+      path: '/dashboard',
+      name: 'dashboard',
+      component: () => import('../views/DashboardView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/docs/:pathMatch(.*)*',
+      name: 'docs',
+      component: () => import('../views/DocsView.vue')
     }
   ],
   scrollBehavior(to, from, savedPosition) {
@@ -42,5 +49,19 @@ const router = createRouter({
   }
 })
 
-export default router
+router.beforeEach(async (to, from, next) => {
+  const authStore = useAuthStore()
 
+  // Ensure auth is initialized
+  if (authStore.loading) {
+    await authStore.init()
+  }
+
+  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+    next('/login')
+  } else {
+    next()
+  }
+})
+
+export default router

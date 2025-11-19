@@ -8,10 +8,16 @@ dist/
 *.test
 *.out
 
+# Compiled libraries
+lib/
+*.a
+
 # Large compiled binaries (should never be committed)
 anomaly-pipeline
 driftlock-api*
 synthetic
+collector-processor/driftlock-http
+collector-processor/driftlock-http-*
 
 # Env
 .env

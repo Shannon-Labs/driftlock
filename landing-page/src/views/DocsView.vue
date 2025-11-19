@@ -1,91 +1,177 @@
-<template>
-  <div class="min-h-screen bg-white">
-    <!-- Navigation -->
-    <nav class="border-b border-gray-200 bg-white sticky top-0 z-50">
-      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex h-16 justify-between">
-          <div class="flex">
-            <div class="flex flex-shrink-0 items-center">
-              <a href="/" class="text-xl font-mono font-bold text-gray-900">Driftlock Docs</a>
-            </div>
-            <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
-              <a href="#quickstart" class="inline-flex items-center border-b-2 border-blue-500 px-1 pt-1 text-sm font-medium text-gray-900">Quick Start</a>
-              <a href="#api" class="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700">API Reference</a>
-              <a href="#agents" class="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700">AI Agents</a>
-            </div>
-          </div>
-          <div class="flex items-center">
-             <a href="/dashboard" class="text-sm font-semibold leading-6 text-gray-900">Dashboard <span aria-hidden="true">&rarr;</span></a>
-          </div>
-        </div>
-      </div>
-    </nav>
+<script setup lang="ts">
+import { ref, watch, onMounted, nextTick } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { marked } from 'marked';
+import hljs from 'highlight.js';
+import 'highlight.js/styles/atom-one-dark.css';
+import DocsSidebar from '../components/docs/DocsSidebar.vue';
 
-    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <div class="mx-auto max-w-4xl">
-        
-        <section id="quickstart" class="mb-16">
-          <h1 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl mb-6">Quick Start</h1>
-          <p class="text-lg leading-8 text-gray-600 mb-8">
-            Get up and running with Driftlock in less than 5 minutes.
-          </p>
+const route = useRoute();
+const router = useRouter();
+const content = ref('');
+const loading = ref(true);
+const error = ref<string | null>(null);
 
-          <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-200 font-mono text-sm">
-            <div class="flex items-center justify-between mb-4 border-b border-slate-700 pb-2">
-              <span>bash</span>
-            </div>
-            <p class="whitespace-pre-wrap"># 1. Install the CLI (Hypothetical)
-npm install -g driftlock-cli
+// Configure marked
+marked.setOptions({
+  gfm: true,
+  breaks: true
+});
 
-# 2. Login and get your key
-driftlock login
-
-# 3. Start monitoring
-driftlock watch --url http://localhost:8000</p>
-          </div>
-
-          <p class="text-gray-600 mb-4">
-            Alternatively, use the HTTP API directly:
-          </p>
-        </section>
-
-        <section id="api" class="mb-16">
-          <h2 class="text-2xl font-bold tracking-tight text-gray-900 mb-6">API Reference</h2>
-          
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">POST /v1/detect</h3>
-          <p class="text-gray-600 mb-4">Send a transaction or event log to be analyzed.</p>
-          
-          <div class="bg-slate-900 rounded-xl p-6 mb-8 text-slate-200 font-mono text-sm">
-             <p>curl -X POST https://api.driftlock.net/v1/detect \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "event_type": "agent_tool_call",
-    "payload": {
-      "tool": "stripe_charge",
-      "amount": 50000,
-      "currency": "usd"
+const fetchDoc = async (path: string) => {
+  loading.value = true;
+  error.value = null;
+  
+  try {
+    // Remove '/docs' prefix and ensure .md extension
+    let docPath = path.replace(/^\/docs/, '');
+    if (docPath === '' || docPath === '/') docPath = '/README';
+    if (!docPath.endsWith('.md')) docPath += '.md';
+    
+    const response = await fetch(`/docs${docPath}`);
+    
+    if (!response.ok) {
+      throw new Error(`Documentation not found: ${docPath}`);
     }
-  }'</p>
-          </div>
-        </section>
+    
+    const text = await response.text();
+    content.value = await marked(text);
+    
+    // Scroll to top
+    window.scrollTo(0, 0);
+    
+    // Highlight code blocks after render
+    nextTick(() => {
+      document.querySelectorAll('pre code').forEach((block) => {
+        hljs.highlightElement(block as HTMLElement);
+      });
+    });
+    
+  } catch (err) {
+    console.error(err);
+    error.value = 'Failed to load documentation. Please try again later.';
+  } finally {
+    loading.value = false;
+  }
+};
 
-        <section id="agents" class="mb-16">
-           <h2 class="text-2xl font-bold tracking-tight text-gray-900 mb-6">Integration with AI Agents</h2>
-           <p class="text-gray-600 mb-4">
-             Driftlock is designed to be the safety layer for autonomous agents built with LangChain, AutoGPT, or custom loops.
-           </p>
-           <p class="text-gray-600 mb-4">
-             <strong>Why monitor agents?</strong> Agents can "drift" into repetitive loops, hallucinate arguments, or be hijacked. Driftlock catches this by analyzing the compression distance of the agent's output stream against its "normal" baseline.
-           </p>
-        </section>
+watch(() => route.path, (newPath) => {
+  if (newPath.startsWith('/docs')) {
+    fetchDoc(newPath);
+  }
+}, { immediate: true });
 
-      </div>
+</script>
+
+<template>
+  <div class="min-h-screen bg-white dark:bg-gray-900 pt-16">
+    <div class="flex max-w-8xl mx-auto">
+      <!-- Sidebar -->
+      <DocsSidebar />
+      
+      <!-- Main Content -->
+      <main class="flex-1 min-w-0 px-4 sm:px-6 lg:px-8 py-10">
+        <div v-if="loading" class="flex justify-center py-20">
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+        
+        <div v-else-if="error" class="text-center py-20">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">404 - Not Found</h2>
+          <p class="text-gray-600 dark:text-gray-400">{{ error }}</p>
+          <router-link to="/docs" class="text-blue-600 hover:underline mt-4 inline-block">
+            Return to Documentation Home
+          </router-link>
+        </div>
+        
+        <div v-else class="prose prose-blue dark:prose-invert max-w-4xl mx-auto">
+          <div v-html="content"></div>
+        </div>
+      </main>
     </div>
   </div>
 </template>
 
-<script setup lang="ts">
-// No script needed for static docs view
-</script>
+<style>
+/* Custom styles for markdown content */
+.prose pre {
+  background-color: #282c34;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  overflow-x: auto;
+}
 
+.prose code {
+  color: #e06c75;
+  background-color: rgba(40, 44, 52, 0.1);
+  padding: 0.2em 0.4em;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+}
+
+.dark .prose code {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.prose pre code {
+  color: inherit;
+  background-color: transparent;
+  padding: 0;
+  font-size: 0.875em;
+}
+
+.prose h1 {
+  font-size: 2.25rem;
+  font-weight: 800;
+  margin-bottom: 2rem;
+  background: linear-gradient(90deg, #0284c7 0%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.prose h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 0.5rem;
+}
+
+.dark .prose h2 {
+  border-color: #374151;
+}
+
+.prose a {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.prose a:hover {
+  text-decoration: underline;
+}
+
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+}
+
+.prose th, .prose td {
+  padding: 0.75rem;
+  border: 1px solid #e5e7eb;
+  text-align: left;
+}
+
+.dark .prose th, .dark .prose td {
+  border-color: #374151;
+}
+
+.prose th {
+  background-color: #f9fafb;
+  font-weight: 600;
+}
+
+.dark .prose th {
+  background-color: #1f2937;
+}
+</style>

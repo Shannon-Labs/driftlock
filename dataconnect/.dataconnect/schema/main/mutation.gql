@@ -1,0 +1,562 @@
+extend type Mutation {
+  """
+  ✨ Insert a single `Anomaly` into the table and return its key. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  anomaly_insert(
+    """
+    Data object to insert into the table.
+    """
+    data: Anomaly_Data!
+  ): Anomaly_KeyOutput! @fdc_generated(from: "Anomaly", purpose: INSERT_SINGLE)
+  """
+  ✨ Insert a single `Dataset` into the table and return its key. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  dataset_insert(
+    """
+    Data object to insert into the table.
+    """
+    data: Dataset_Data!
+  ): Dataset_KeyOutput! @fdc_generated(from: "Dataset", purpose: INSERT_SINGLE)
+  """
+  ✨ Insert a single `DetectionTask` into the table and return its key. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  detectionTask_insert(
+    """
+    Data object to insert into the table.
+    """
+    data: DetectionTask_Data!
+  ): DetectionTask_KeyOutput! @fdc_generated(from: "DetectionTask", purpose: INSERT_SINGLE)
+  """
+  ✨ Insert a single `ModelConfiguration` into the table and return its key. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  modelConfiguration_insert(
+    """
+    Data object to insert into the table.
+    """
+    data: ModelConfiguration_Data!
+  ): ModelConfiguration_KeyOutput! @fdc_generated(from: "ModelConfiguration", purpose: INSERT_SINGLE)
+  """
+  ✨ Insert a single `User` into the table and return its key. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  user_insert(
+    """
+    Data object to insert into the table.
+    """
+    data: User_Data!
+  ): User_KeyOutput! @fdc_generated(from: "User", purpose: INSERT_SINGLE)
+  """
+  ✨ Insert `Anomaly` objects into the table and return their keys. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  anomaly_insertMany(
+    """
+    List of data objects to insert into the table.
+    """
+    data: [Anomaly_Data!]!
+  ): [Anomaly_KeyOutput!]! @fdc_generated(from: "Anomaly", purpose: INSERT_MULTIPLE)
+  """
+  ✨ Insert `Dataset` objects into the table and return their keys. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  dataset_insertMany(
+    """
+    List of data objects to insert into the table.
+    """
+    data: [Dataset_Data!]!
+  ): [Dataset_KeyOutput!]! @fdc_generated(from: "Dataset", purpose: INSERT_MULTIPLE)
+  """
+  ✨ Insert `DetectionTask` objects into the table and return their keys. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  detectionTask_insertMany(
+    """
+    List of data objects to insert into the table.
+    """
+    data: [DetectionTask_Data!]!
+  ): [DetectionTask_KeyOutput!]! @fdc_generated(from: "DetectionTask", purpose: INSERT_MULTIPLE)
+  """
+  ✨ Insert `ModelConfiguration` objects into the table and return their keys. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  modelConfiguration_insertMany(
+    """
+    List of data objects to insert into the table.
+    """
+    data: [ModelConfiguration_Data!]!
+  ): [ModelConfiguration_KeyOutput!]! @fdc_generated(from: "ModelConfiguration", purpose: INSERT_MULTIPLE)
+  """
+  ✨ Insert `User` objects into the table and return their keys. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  user_insertMany(
+    """
+    List of data objects to insert into the table.
+    """
+    data: [User_Data!]!
+  ): [User_KeyOutput!]! @fdc_generated(from: "User", purpose: INSERT_MULTIPLE)
+  """
+  ✨ Insert or update a single `Anomaly` into the table, based on the primary key. Returns the key of the newly inserted or existing updated `Anomaly`.
+  """
+  anomaly_upsert(
+    """
+    Data object to insert or update if it already exists.
+    """
+    data: Anomaly_Data!
+  ): Anomaly_KeyOutput! @fdc_generated(from: "Anomaly", purpose: UPSERT_SINGLE)
+  """
+  ✨ Insert or update a single `Dataset` into the table, based on the primary key. Returns the key of the newly inserted or existing updated `Dataset`.
+  """
+  dataset_upsert(
+    """
+    Data object to insert or update if it already exists.
+    """
+    data: Dataset_Data!
+  ): Dataset_KeyOutput! @fdc_generated(from: "Dataset", purpose: UPSERT_SINGLE)
+  """
+  ✨ Insert or update a single `DetectionTask` into the table, based on the primary key. Returns the key of the newly inserted or existing updated `DetectionTask`.
+  """
+  detectionTask_upsert(
+    """
+    Data object to insert or update if it already exists.
+    """
+    data: DetectionTask_Data!
+  ): DetectionTask_KeyOutput! @fdc_generated(from: "DetectionTask", purpose: UPSERT_SINGLE)
+  """
+  ✨ Insert or update a single `ModelConfiguration` into the table, based on the primary key. Returns the key of the newly inserted or existing updated `ModelConfiguration`.
+  """
+  modelConfiguration_upsert(
+    """
+    Data object to insert or update if it already exists.
+    """
+    data: ModelConfiguration_Data!
+  ): ModelConfiguration_KeyOutput! @fdc_generated(from: "ModelConfiguration", purpose: UPSERT_SINGLE)
+  """
+  ✨ Insert or update a single `User` into the table, based on the primary key. Returns the key of the newly inserted or existing updated `User`.
+  """
+  user_upsert(
+    """
+    Data object to insert or update if it already exists.
+    """
+    data: User_Data!
+  ): User_KeyOutput! @fdc_generated(from: "User", purpose: UPSERT_SINGLE)
+  """
+  ✨ Insert or update `Anomaly` objects into the table, based on the primary key. Returns the key of the newly inserted or existing updated `Anomaly`.
+  """
+  anomaly_upsertMany(
+    """
+    List of data objects to insert or update if it already exists.
+    """
+    data: [Anomaly_Data!]!
+  ): [Anomaly_KeyOutput!]! @fdc_generated(from: "Anomaly", purpose: UPSERT_MULTIPLE)
+  """
+  ✨ Insert or update `Dataset` objects into the table, based on the primary key. Returns the key of the newly inserted or existing updated `Dataset`.
+  """
+  dataset_upsertMany(
+    """
+    List of data objects to insert or update if it already exists.
+    """
+    data: [Dataset_Data!]!
+  ): [Dataset_KeyOutput!]! @fdc_generated(from: "Dataset", purpose: UPSERT_MULTIPLE)
+  """
+  ✨ Insert or update `DetectionTask` objects into the table, based on the primary key. Returns the key of the newly inserted or existing updated `DetectionTask`.
+  """
+  detectionTask_upsertMany(
+    """
+    List of data objects to insert or update if it already exists.
+    """
+    data: [DetectionTask_Data!]!
+  ): [DetectionTask_KeyOutput!]! @fdc_generated(from: "DetectionTask", purpose: UPSERT_MULTIPLE)
+  """
+  ✨ Insert or update `ModelConfiguration` objects into the table, based on the primary key. Returns the key of the newly inserted or existing updated `ModelConfiguration`.
+  """
+  modelConfiguration_upsertMany(
+    """
+    List of data objects to insert or update if it already exists.
+    """
+    data: [ModelConfiguration_Data!]!
+  ): [ModelConfiguration_KeyOutput!]! @fdc_generated(from: "ModelConfiguration", purpose: UPSERT_MULTIPLE)
+  """
+  ✨ Insert or update `User` objects into the table, based on the primary key. Returns the key of the newly inserted or existing updated `User`.
+  """
+  user_upsertMany(
+    """
+    List of data objects to insert or update if it already exists.
+    """
+    data: [User_Data!]!
+  ): [User_KeyOutput!]! @fdc_generated(from: "User", purpose: UPSERT_MULTIPLE)
+  """
+  ✨ Update a single `Anomaly` based on `id`, `key` or `first`, setting columns specified in `data`. Returns the key of the updated `Anomaly` or `null` if not found.
+  """
+  anomaly_update(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Anomaly_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Anomaly_FirstRow
+
+    """
+    Data object containing fields to be updated.
+    """
+    data: Anomaly_Data!
+  ): Anomaly_KeyOutput @fdc_generated(from: "Anomaly", purpose: UPDATE_SINGLE)
+  """
+  ✨ Update a single `Dataset` based on `id`, `key` or `first`, setting columns specified in `data`. Returns the key of the updated `Dataset` or `null` if not found.
+  """
+  dataset_update(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Dataset_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Dataset_FirstRow
+
+    """
+    Data object containing fields to be updated.
+    """
+    data: Dataset_Data!
+  ): Dataset_KeyOutput @fdc_generated(from: "Dataset", purpose: UPDATE_SINGLE)
+  """
+  ✨ Update a single `DetectionTask` based on `id`, `key` or `first`, setting columns specified in `data`. Returns the key of the updated `DetectionTask` or `null` if not found.
+  """
+  detectionTask_update(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: DetectionTask_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: DetectionTask_FirstRow
+
+    """
+    Data object containing fields to be updated.
+    """
+    data: DetectionTask_Data!
+  ): DetectionTask_KeyOutput @fdc_generated(from: "DetectionTask", purpose: UPDATE_SINGLE)
+  """
+  ✨ Update a single `ModelConfiguration` based on `id`, `key` or `first`, setting columns specified in `data`. Returns the key of the updated `ModelConfiguration` or `null` if not found.
+  """
+  modelConfiguration_update(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: ModelConfiguration_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: ModelConfiguration_FirstRow
+
+    """
+    Data object containing fields to be updated.
+    """
+    data: ModelConfiguration_Data!
+  ): ModelConfiguration_KeyOutput @fdc_generated(from: "ModelConfiguration", purpose: UPDATE_SINGLE)
+  """
+  ✨ Update a single `User` based on `id`, `key` or `first`, setting columns specified in `data`. Returns the key of the updated `User` or `null` if not found.
+  """
+  user_update(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: User_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: User_FirstRow
+
+    """
+    Data object containing fields to be updated.
+    """
+    data: User_Data!
+  ): User_KeyOutput @fdc_generated(from: "User", purpose: UPDATE_SINGLE)
+  """
+  ✨ Update `Anomaly` objects matching `where` conditions (or `all`, if true) according to `data`. Returns the number of rows updated.
+  """
+  anomaly_updateMany(
+    """
+    Filter condition to specify which rows to update.
+    """
+    where: Anomaly_Filter
+
+    """
+    Set to true to update all rows.
+    """
+    all: Boolean = false
+
+    """
+    Data object containing fields to update.
+    """
+    data: Anomaly_Data!
+  ): Int! @fdc_generated(from: "Anomaly", purpose: UPDATE_MULTIPLE)
+  """
+  ✨ Update `Dataset` objects matching `where` conditions (or `all`, if true) according to `data`. Returns the number of rows updated.
+  """
+  dataset_updateMany(
+    """
+    Filter condition to specify which rows to update.
+    """
+    where: Dataset_Filter
+
+    """
+    Set to true to update all rows.
+    """
+    all: Boolean = false
+
+    """
+    Data object containing fields to update.
+    """
+    data: Dataset_Data!
+  ): Int! @fdc_generated(from: "Dataset", purpose: UPDATE_MULTIPLE)
+  """
+  ✨ Update `DetectionTask` objects matching `where` conditions (or `all`, if true) according to `data`. Returns the number of rows updated.
+  """
+  detectionTask_updateMany(
+    """
+    Filter condition to specify which rows to update.
+    """
+    where: DetectionTask_Filter
+
+    """
+    Set to true to update all rows.
+    """
+    all: Boolean = false
+
+    """
+    Data object containing fields to update.
+    """
+    data: DetectionTask_Data!
+  ): Int! @fdc_generated(from: "DetectionTask", purpose: UPDATE_MULTIPLE)
+  """
+  ✨ Update `ModelConfiguration` objects matching `where` conditions (or `all`, if true) according to `data`. Returns the number of rows updated.
+  """
+  modelConfiguration_updateMany(
+    """
+    Filter condition to specify which rows to update.
+    """
+    where: ModelConfiguration_Filter
+
+    """
+    Set to true to update all rows.
+    """
+    all: Boolean = false
+
+    """
+    Data object containing fields to update.
+    """
+    data: ModelConfiguration_Data!
+  ): Int! @fdc_generated(from: "ModelConfiguration", purpose: UPDATE_MULTIPLE)
+  """
+  ✨ Update `User` objects matching `where` conditions (or `all`, if true) according to `data`. Returns the number of rows updated.
+  """
+  user_updateMany(
+    """
+    Filter condition to specify which rows to update.
+    """
+    where: User_Filter
+
+    """
+    Set to true to update all rows.
+    """
+    all: Boolean = false
+
+    """
+    Data object containing fields to update.
+    """
+    data: User_Data!
+  ): Int! @fdc_generated(from: "User", purpose: UPDATE_MULTIPLE)
+  """
+  ✨ Delete a single `Anomaly` based on `id`, `key` or `first` and return its key (or `null` if not found).
+  """
+  anomaly_delete(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Anomaly_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Anomaly_FirstRow
+  ): Anomaly_KeyOutput @fdc_generated(from: "Anomaly", purpose: DELETE_SINGLE)
+  """
+  ✨ Delete a single `Dataset` based on `id`, `key` or `first` and return its key (or `null` if not found).
+  """
+  dataset_delete(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Dataset_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Dataset_FirstRow
+  ): Dataset_KeyOutput @fdc_generated(from: "Dataset", purpose: DELETE_SINGLE)
+  """
+  ✨ Delete a single `DetectionTask` based on `id`, `key` or `first` and return its key (or `null` if not found).
+  """
+  detectionTask_delete(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: DetectionTask_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: DetectionTask_FirstRow
+  ): DetectionTask_KeyOutput @fdc_generated(from: "DetectionTask", purpose: DELETE_SINGLE)
+  """
+  ✨ Delete a single `ModelConfiguration` based on `id`, `key` or `first` and return its key (or `null` if not found).
+  """
+  modelConfiguration_delete(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: ModelConfiguration_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: ModelConfiguration_FirstRow
+  ): ModelConfiguration_KeyOutput @fdc_generated(from: "ModelConfiguration", purpose: DELETE_SINGLE)
+  """
+  ✨ Delete a single `User` based on `id`, `key` or `first` and return its key (or `null` if not found).
+  """
+  user_delete(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: User_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: User_FirstRow
+  ): User_KeyOutput @fdc_generated(from: "User", purpose: DELETE_SINGLE)
+  """
+  ✨ Delete `Anomaly` objects matching `where` conditions (or `all`, if true). Returns the number of rows deleted.
+  """
+  anomaly_deleteMany(
+    """
+    Filter condition to specify which rows to delete.
+    """
+    where: Anomaly_Filter
+
+    """
+    Set to true to delete all rows.
+    """
+    all: Boolean = false
+  ): Int! @fdc_generated(from: "Anomaly", purpose: DELETE_MULTIPLE)
+  """
+  ✨ Delete `Dataset` objects matching `where` conditions (or `all`, if true). Returns the number of rows deleted.
+  """
+  dataset_deleteMany(
+    """
+    Filter condition to specify which rows to delete.
+    """
+    where: Dataset_Filter
+
+    """
+    Set to true to delete all rows.
+    """
+    all: Boolean = false
+  ): Int! @fdc_generated(from: "Dataset", purpose: DELETE_MULTIPLE)
+  """
+  ✨ Delete `DetectionTask` objects matching `where` conditions (or `all`, if true). Returns the number of rows deleted.
+  """
+  detectionTask_deleteMany(
+    """
+    Filter condition to specify which rows to delete.
+    """
+    where: DetectionTask_Filter
+
+    """
+    Set to true to delete all rows.
+    """
+    all: Boolean = false
+  ): Int! @fdc_generated(from: "DetectionTask", purpose: DELETE_MULTIPLE)
+  """
+  ✨ Delete `ModelConfiguration` objects matching `where` conditions (or `all`, if true). Returns the number of rows deleted.
+  """
+  modelConfiguration_deleteMany(
+    """
+    Filter condition to specify which rows to delete.
+    """
+    where: ModelConfiguration_Filter
+
+    """
+    Set to true to delete all rows.
+    """
+    all: Boolean = false
+  ): Int! @fdc_generated(from: "ModelConfiguration", purpose: DELETE_MULTIPLE)
+  """
+  ✨ Delete `User` objects matching `where` conditions (or `all`, if true). Returns the number of rows deleted.
+  """
+  user_deleteMany(
+    """
+    Filter condition to specify which rows to delete.
+    """
+    where: User_Filter
+
+    """
+    Set to true to delete all rows.
+    """
+    all: Boolean = false
+  ): Int! @fdc_generated(from: "User", purpose: DELETE_MULTIPLE)
+}

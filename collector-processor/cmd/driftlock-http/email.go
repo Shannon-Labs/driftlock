@@ -1,283 +1,121 @@
 package main
 
 import (
-	"bytes"
-	"context"
-	"encoding/json"
 	"fmt"
 	"log"
-	"net/http"
-	"text/template"
-	"time"
+	"os"
+
+	"github.com/sendgrid/sendgrid-go"
+	"github.com/sendgrid/sendgrid-go/helpers/mail"
 )
 
-// Email service for SendGrid integration
-
 type emailService struct {
-	apiKey   string
-	fromAddr string
-	fromName string
-	enabled  bool
+	client      *sendgrid.Client
+	fromAddress string
+	fromName    string
 }
 
 func newEmailService() *emailService {
-	apiKey := env("SENDGRID_API_KEY", "")
-	return &emailService{
-		apiKey:   apiKey,
-		fromAddr: env("EMAIL_FROM_ADDRESS", "noreply@driftlock.net"),
-		fromName: env("EMAIL_FROM_NAME", "Driftlock"),
-		enabled:  apiKey != "",
-	}
-}
-
-// SendGrid API types
-type sendgridEmail struct {
-	Personalizations []sendgridPersonalization `json:"personalizations"`
-	From             sendgridAddress           `json:"from"`
-	Subject          string                    `json:"subject"`
-	Content          []sendgridContent         `json:"content"`
-}
-
-type sendgridPersonalization struct {
-	To []sendgridAddress `json:"to"`
-}
-
-type sendgridAddress struct {
-	Email string `json:"email"`
-	Name  string `json:"name,omitempty"`
-}
-
-type sendgridContent struct {
-	Type  string `json:"type"`
-	Value string `json:"value"`
-}
-
-// Send email via SendGrid API
-func (e *emailService) Send(ctx context.Context, to, subject, htmlContent string) error {
-	if !e.enabled {
-		log.Printf("[email] SendGrid not configured, skipping email to %s: %s", to, subject)
+	apiKey := os.Getenv("SENDGRID_API_KEY")
+	if apiKey == "" {
+		log.Println("WARNING: SENDGRID_API_KEY not set, email service disabled")
 		return nil
 	}
-
-	payload := sendgridEmail{
-		Personalizations: []sendgridPersonalization{
-			{
-				To: []sendgridAddress{{Email: to}},
-			},
-		},
-		From:    sendgridAddress{Email: e.fromAddr, Name: e.fromName},
-		Subject: subject,
-		Content: []sendgridContent{
-			{Type: "text/html", Value: htmlContent},
-		},
+	return &emailService{
+		client:      sendgrid.NewSendClient(apiKey),
+		fromAddress: env("EMAIL_FROM_ADDRESS", "noreply@driftlock.net"),
+		fromName:    env("EMAIL_FROM_NAME", "Driftlock"),
 	}
-
-	body, err := json.Marshal(payload)
-	if err != nil {
-		return fmt.Errorf("marshal email payload: %w", err)
-	}
-
-	req, err := http.NewRequestWithContext(ctx, "POST", "https://api.sendgrid.com/v3/mail/send", bytes.NewReader(body))
-	if err != nil {
-		return fmt.Errorf("create request: %w", err)
-	}
-
-	req.Header.Set("Authorization", "Bearer "+e.apiKey)
-	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{Timeout: 30 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		return fmt.Errorf("send request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode >= 400 {
-		return fmt.Errorf("sendgrid returned status %d", resp.StatusCode)
-	}
-
-	log.Printf("[email] Sent email to %s: %s", to, subject)
-	return nil
 }
 
-// SendWelcome sends welcome email with API key
-func (e *emailService) SendWelcome(ctx context.Context, to, companyName, apiKey string) error {
-	data := struct {
-		CompanyName string
-		APIKey      string
-		DocsURL     string
-	}{
-		CompanyName: companyName,
-		APIKey:      apiKey,
-		DocsURL:     env("DOCS_URL", "https://driftlock.net"),
+func (s *emailService) sendWelcomeEmail(toEmail, companyName, apiKey string) {
+	if s == nil {
+		log.Printf("MOCK EMAIL: Welcome to %s (%s). API Key: %s...", toEmail, companyName, apiKey[:5])
+		return
 	}
 
-	html, err := renderTemplate(welcomeEmailTemplate, data)
-	if err != nil {
-		return fmt.Errorf("render welcome email: %w", err)
-	}
+	from := mail.NewEmail(s.fromName, s.fromAddress)
+	subject := "Welcome to Driftlock!"
+	to := mail.NewEmail(companyName, toEmail)
+	
+	plainTextContent := fmt.Sprintf(`Welcome to Driftlock, %s!
 
-	return e.Send(ctx, to, "Welcome to Driftlock - Your API Key", html)
-}
+Your API Key is: %s
 
-// SendVerification sends email verification with token
-func (e *emailService) SendVerification(ctx context.Context, to, token string) error {
-	verifyURL := fmt.Sprintf("%s/api/v1/onboard/verify?token=%s", env("APP_URL", "https://driftlock.net"), token)
-	data := struct {
-		VerifyURL string
-	}{
-		VerifyURL: verifyURL,
-	}
+You can use this key to start sending events to our API.
+Documentation: https://driftlock.net/docs
 
-	html, err := renderTemplate(verificationEmailTemplate, data)
-	if err != nil {
-		return fmt.Errorf("render verification email: %w", err)
-	}
+Happy Detecting!
+The Driftlock Team`, companyName, apiKey)
 
-	return e.Send(ctx, to, "Verify your Driftlock account", html)
-}
+	htmlContent := fmt.Sprintf(`
+		<div style="font-family: sans-serif; color: #333;">
+			<h2>Welcome to Driftlock!</h2>
+			<p>Hi %s,</p>
+			<p>Thanks for signing up. Here is your API key to get started:</p>
+			<div style="background: #f4f4f4; padding: 15px; border-radius: 5px; font-family: monospace; margin: 20px 0;">
+				%s
+			</div>
+			<p>You can view our <a href="https://driftlock.net/docs">documentation</a> to learn how to integrate.</p>
+			<p>Happy Detecting!<br>The Driftlock Team</p>
+		</div>
+	`, companyName, apiKey)
 
-// SendTrialExpiring sends trial expiration warning
-func (e *emailService) SendTrialExpiring(ctx context.Context, to, companyName string, daysRemaining int) error {
-	data := struct {
-		CompanyName   string
-		DaysRemaining int
-		UpgradeURL    string
-	}{
-		CompanyName:   companyName,
-		DaysRemaining: daysRemaining,
-		UpgradeURL:    fmt.Sprintf("%s/pricing", env("APP_URL", "https://driftlock.net")),
-	}
-
-	html, err := renderTemplate(trialExpiringTemplate, data)
-	if err != nil {
-		return fmt.Errorf("render trial expiring email: %w", err)
-	}
-
-	return e.Send(ctx, to, fmt.Sprintf("Your Driftlock trial expires in %d days", daysRemaining), html)
-}
-
-// SendAsync sends email asynchronously
-func (e *emailService) SendAsync(to, subject, htmlContent string) {
+	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
+	
 	go func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-		defer cancel()
-		if err := e.Send(ctx, to, subject, htmlContent); err != nil {
-			log.Printf("[email] async send failed: %v", err)
+		response, err := s.client.Send(message)
+		if err != nil {
+			log.Printf("ERROR: Failed to send welcome email to %s: %v", toEmail, err)
+		} else if response.StatusCode >= 400 {
+			log.Printf("ERROR: SendGrid API returned %d for welcome email to %s: %s", response.StatusCode, toEmail, response.Body)
+		} else {
+			log.Printf("Sent welcome email to %s", toEmail)
 		}
 	}()
 }
 
-func renderTemplate(tmpl string, data any) (string, error) {
-	t, err := template.New("email").Parse(tmpl)
-	if err != nil {
-		return "", err
+func (s *emailService) sendVerificationEmail(toEmail, companyName, token string) {
+	if s == nil {
+		log.Printf("MOCK EMAIL: Verification for %s (%s). Token: %s", toEmail, companyName, token)
+		return
 	}
-	var buf bytes.Buffer
-	if err := t.Execute(&buf, data); err != nil {
-		return "", err
-	}
-	return buf.String(), nil
+
+	verifyLink := fmt.Sprintf("https://driftlock.net/verify?token=%s", token)
+
+	from := mail.NewEmail(s.fromName, s.fromAddress)
+	subject := "Verify your Driftlock account"
+	to := mail.NewEmail(companyName, toEmail)
+	
+	plainTextContent := fmt.Sprintf(`Welcome to Driftlock!
+
+Please verify your email address by clicking the link below:
+%s
+
+If you didn't sign up for Driftlock, you can ignore this email.`, verifyLink)
+
+	htmlContent := fmt.Sprintf(`
+		<div style="font-family: sans-serif; color: #333;">
+			<h2>Verify your email</h2>
+			<p>Welcome to Driftlock! Please verify your email address to activate your account.</p>
+			<p>
+				<a href="%s" style="background: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Verify Email</a>
+			</p>
+			<p style="font-size: 12px; color: #666;">Or paste this link in your browser: %s</p>
+		</div>
+	`, verifyLink, verifyLink)
+
+	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
+
+	go func() {
+		response, err := s.client.Send(message)
+		if err != nil {
+			log.Printf("ERROR: Failed to send verification email to %s: %v", toEmail, err)
+		} else if response.StatusCode >= 400 {
+			log.Printf("ERROR: SendGrid API returned %d for verification email to %s: %s", response.StatusCode, toEmail, response.Body)
+		} else {
+			log.Printf("Sent verification email to %s", toEmail)
+		}
+	}()
 }
 
-// Email templates
-const welcomeEmailTemplate = `<!DOCTYPE html>
-<html>
-<head>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background: #1e3a5f; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
-        .content { background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; }
-        .api-key { background: #1f2937; color: #10b981; padding: 15px; border-radius: 8px; font-family: monospace; word-break: break-all; margin: 20px 0; }
-        .cta { display: inline-block; background: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 20px; }
-        .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 12px; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>Welcome to Driftlock</h1>
-        </div>
-        <div class="content">
-            <p>Hi {{.CompanyName}},</p>
-            <p>Your Driftlock account has been created successfully. Here's your API key:</p>
-            <div class="api-key">{{.APIKey}}</div>
-            <p><strong>Important:</strong> Save this API key securely. It won't be shown again.</p>
-            <p>Your free trial includes:</p>
-            <ul>
-                <li>10,000 events per month</li>
-                <li>14 days of access</li>
-                <li>Full API access</li>
-            </ul>
-            <a href="{{.DocsURL}}" class="cta">View Documentation</a>
-        </div>
-        <div class="footer">
-            <p>&copy; 2024 Shannon Labs. All rights reserved.</p>
-        </div>
-    </div>
-</body>
-</html>`
-
-const verificationEmailTemplate = `<!DOCTYPE html>
-<html>
-<head>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background: #1e3a5f; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
-        .content { background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; }
-        .cta { display: inline-block; background: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 20px; }
-        .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 12px; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>Verify Your Email</h1>
-        </div>
-        <div class="content">
-            <p>Please click the button below to verify your email address and activate your Driftlock account:</p>
-            <a href="{{.VerifyURL}}" class="cta">Verify Email</a>
-            <p style="margin-top: 20px; font-size: 12px; color: #6b7280;">
-                If the button doesn't work, copy and paste this link into your browser:<br>
-                <code>{{.VerifyURL}}</code>
-            </p>
-        </div>
-        <div class="footer">
-            <p>&copy; 2024 Shannon Labs. All rights reserved.</p>
-        </div>
-    </div>
-</body>
-</html>`
-
-const trialExpiringTemplate = `<!DOCTYPE html>
-<html>
-<head>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background: #f59e0b; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
-        .content { background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; }
-        .cta { display: inline-block; background: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 20px; }
-        .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 12px; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>Trial Expiring Soon</h1>
-        </div>
-        <div class="content">
-            <p>Hi {{.CompanyName}},</p>
-            <p>Your Driftlock trial expires in <strong>{{.DaysRemaining}} days</strong>.</p>
-            <p>To continue using Driftlock's explainable anomaly detection, please upgrade your plan:</p>
-            <a href="{{.UpgradeURL}}" class="cta">View Pricing</a>
-            <p style="margin-top: 20px;">Questions? Reply to this email and we'll help you find the right plan.</p>
-        </div>
-        <div class="footer">
-            <p>&copy; 2024 Shannon Labs. All rights reserved.</p>
-        </div>
-    </div>
-</body>
-</html>`

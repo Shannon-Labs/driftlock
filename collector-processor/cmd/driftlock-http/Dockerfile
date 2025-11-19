@@ -9,7 +9,7 @@ ARG USE_OPENZL
 RUN apt-get update && apt-get install -y --no-install-recommends pkg-config clang make ca-certificates && rm -rf /var/lib/apt/lists/*
 WORKDIR /src
 COPY cbad-core /src/cbad-core
-COPY openzl /src/openzl
+# COPY openzl /src/openzl
 RUN if [ "${USE_OPENZL}" = "true" ]; then \
       echo "Building OpenZL library..."; \
       if [ ! -d "/src/openzl/deps/zstd" ]; then \
