@@ -2,22 +2,66 @@ apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
   name: driftlock-api
-  labels:
-    cloud.googleapis.com/location: us-central1
+  annotations:
+    run.googleapis.com/ingress: all
+    run.googleapis.com/launch-stage: BETA
 spec:
   template:
     metadata:
       annotations:
-        autoscaling.knative.dev/minScale: "0"
-        autoscaling.knative.dev/maxScale: "100"
+        autoscaling.knative.dev/minScale: "1"
+        autoscaling.knative.dev/maxScale: "10"
+        run.googleapis.com/cpu-throttling: "false"
+        run.googleapis.com/execution-environment: gen2
+        run.googleapis.com/cloudsql-instances: driftlock:us-central1:driftlock-db
     spec:
+      containerConcurrency: 80
+      timeoutSeconds: 300
       containers:
-        - image: gcr.io/PROJECT_ID/driftlock-http:latest
-          env:
-            - name: LOG_LEVEL
-              value: "info"
-            - name: DRIFTLOCK_ENV
-              value: "production"
-          ports:
-            - containerPort: 8080
-
+      - image: gcr.io/driftlock/driftlock-api:amd64-v1
+        ports:
+        - name: http1
+          containerPort: 8080
+        env:
+        - name: DRIFTLOCK_DEV_MODE
+          value: "true"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: driftlock-db-url
+              key: latest
+        - name: DRIFTLOCK_LICENSE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: driftlock-license-key
+              key: latest
+        - name: CORS_ALLOW_ORIGINS
+          value: "https://driftlock.net,https://www.driftlock.net"
+        - name: LOG_LEVEL
+          value: "info"
+        resources:
+          limits:
+            cpu: "2"
+            memory: 2Gi
+          requests:
+            cpu: "1"
+            memory: 1Gi
+        startupProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 10
+          timeoutSeconds: 5
+          periodSeconds: 5
+          failureThreshold: 3
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 15
+          timeoutSeconds: 5
+          periodSeconds: 10
+          failureThreshold: 3
+  traffic:
+  - percent: 100
+    latestRevision: true

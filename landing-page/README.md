@@ -109,8 +109,40 @@ npm run deploy
 
 #### Environment Variables
 
-- `CLOUDFLARE_ACCOUNT_ID`: Your Cloudflare account ID
-- `CLOUDFLARE_API_TOKEN`: Your Cloudflare API token
+The landing page requires Firebase environment variables for authentication. Set these in Cloudflare Pages:
+
+**Required Firebase Variables:**
+- `VITE_FIREBASE_API_KEY`
+- `VITE_FIREBASE_AUTH_DOMAIN`
+- `VITE_FIREBASE_PROJECT_ID`
+- `VITE_FIREBASE_STORAGE_BUCKET`
+- `VITE_FIREBASE_MESSAGING_SENDER_ID`
+- `VITE_FIREBASE_APP_ID`
+- `VITE_FIREBASE_MEASUREMENT_ID` (optional, for Analytics)
+
+**Setup Options:**
+
+1. **Automatic Setup (Recommended):**
+   ```bash
+   ./scripts/setup-cloudflare-env.sh
+   ```
+
+2. **Manual Setup via Wrangler CLI:**
+   ```bash
+   wrangler pages secret put VITE_FIREBASE_API_KEY --project-name="driftlock"
+   wrangler pages secret put VITE_FIREBASE_AUTH_DOMAIN --project-name="driftlock"
+   # ... repeat for each variable
+   ```
+
+3. **Manual Setup via Cloudflare Dashboard:**
+   - Go to Dashboard → Pages → driftlock → Settings → Environment Variables
+   - Add each `VITE_FIREBASE_*` variable with values from your Firebase Console
+
+**Getting Firebase Values:**
+1. Go to Firebase Console → Project Settings → General → Your apps
+2. Copy the config values from the "SDK setup and configuration" section
+
+After setting environment variables, redeploy the site to apply changes.
 
 ### DNS Configuration
 
