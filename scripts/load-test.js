@@ -32,14 +32,6 @@ export const options = {
 const BASE_URL = __ENV.API_URL || 'http://localhost:8080';
 const API_KEY = __ENV.API_KEY || 'dlk_test-key';
 
-// Sample events for detection
-const sampleEvents = [
-  { timestamp: '2024-01-01T00:00:00Z', level: 'info', message: 'User logged in', user_id: '123' },
-  { timestamp: '2024-01-01T00:00:01Z', level: 'info', message: 'User viewed dashboard', user_id: '123' },
-  { timestamp: '2024-01-01T00:00:02Z', level: 'info', message: 'User created report', user_id: '123' },
-  { timestamp: '2024-01-01T00:00:03Z', level: 'warn', message: 'Rate limit warning', user_id: '123' },
-  { timestamp: '2024-01-01T00:00:04Z', level: 'info', message: 'User exported data', user_id: '123' },
-];
 
 // Generate baseline events (normal pattern)
 function generateBaselineEvents(count) {
