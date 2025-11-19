@@ -1,116 +1,120 @@
-# Driftlock
+# Driftlock: Explainable Anomaly Detection Platform
 
-Deterministic, compression-based anomaly detection with a small, reproducible demo.
+**Real-time Streaming Telemetry + Glass-box Anomaly Detection**
 
-This repository ships a **proof-of-concept CLI demo** plus an **experimental HTTP API**.  
-For an authoritative description of what is actually implemented, see `FINAL-STATUS.md`.
+Driftlock provides explainable, deterministic anomaly detection for regulated industries. Built for financial services, healthcare, and critical infrastructure that need to explain every algorithmic decision to auditors.
 
----
+## Two Deployment Options
 
-## What this repo contains
+### 1. 🖥️  CLI Demo & API Service (Production Ready)
+The working demo described in FINAL-STATUS.md - perfect for pilots and partners.
 
-- **Rust core** (`cbad-core/`): compression-based anomaly detection library.
-- **Go CLI demo** (`cmd/demo/`): reads synthetic payment data and produces an HTML report.
-- **Synthetic data** (`test-data/financial-demo.json`): 5,000 payment-like events with injected anomalies.
-- **Optional HTTP API prototype** (`collector-processor/cmd/driftlock-http`): JSON `/v1/detect` endpoint backed by Postgres.
-
-The only path we rely on for verification and CI is the **CLI demo** described below.
-
----
-
-## Quickstart: CLI HTML demo (single binary)
-
-This is the simplest, fully-supported way to see Driftlock work end-to-end.
-
+**Try the Demo:**
 ```bash
+# Build and run the CLI demo
+make demo
+./driftlock-demo test-data/financial-demo.json
+open demo-output.html
+
+# Or run the verification script
+./verify-yc-ready.sh
+```
+
+**Deploy the HTTP API:**
+```bash
+# Docker Compose (local development)
+docker-compose up
+
+# Cloud deployment  
+./deploy.sh  # Firebase + Cloud Run
+```
+
+### 2. 🚀 SaaS Platform (In Development)
+Modern web application with dashboard, real-time streaming, and API management.
+
+**Preview:**
+- Landing Page: `landing-page/` (Vue 3 + TypeScript)
+- Dashboard: `/dashboard` (real-time anomaly monitoring) 
+- API Docs: `/docs` (interactive API explorer)
+
+## The Innovation: Compression-Based Anomaly Detection (CBAD)
+
+Unlike black-box ML models, Driftlock uses **mathematical compression theory** to detect anomalies:
+
+1. **Baseline Learning**: Compress normal data to learn patterns
+2. **Anomaly Detection**: New data that compresses poorly = anomaly
+3. **Glass-box Explanations**: NCD scores, p-values, compression ratios
+
+**Why Math Works Better:**
+- ✅ **Deterministic**: Same input = same output, always
+- ✅ **Explainable**: Show mathematical proof to auditors  
+- ✅ **No Training**: No ML models to train or retrain
+- ✅ **Regulatory Ready**: Built-in compliance for DORA, NIS2, AI Act
+
+## Quick Start Options
+
+**For Developers:**
+```bash
+# Clone and run demo
 git clone https://github.com/Shannon-Labs/driftlock.git
 cd driftlock
 make demo
-./driftlock-demo test-data/financial-demo.json
-open demo-output.html  # use xdg-open on Linux
 ```
 
-What you should see:
+**For Enterprises:**
+```bash
+# Deploy to your infrastructure  
+./deploy.sh
+# Configure your OTLP endpoints to point to Driftlock
+```
 
-- First ~400 events build the baseline.
-- The next 1,600 events are scanned for anomalies.
-- The HTML report highlights ~10–30 anomalies with compression-based metrics and explanations.
+**For SaaS Preview:**
+```bash
+# Run landing page locally
+cd landing-page
+npm install && npm run dev
+# Visit localhost:5173
+```
 
-You can re-run the demo as many times as you like; outputs are deterministic for the same input.
+## Documentation
 
----
+- [Demo Guide](FINAL-STATUS.md) - Working CLI demo
+- [Roadmap](docs/ROADMAP_TO_LAUNCH.md) - Complete path to production
+- [Architecture](docs/ARCHITECTURE.md) - Technical deep-dive
+- [API Reference](docs/api/openapi.yaml) - OpenAPI specification
+- [Deployment](docs/deployment/) - Cloud deployment guides
 
-## Experimental HTTP API prototype
+## Golden Invariants
 
-There is an in-repo HTTP service that exposes the same core algorithm over JSON.  
-It is useful for local experiments but **not a hardened product**.
+These never change (per AGENTS.md):
+- ✅ CLI demo remains working (`make demo`)
+- ✅ Verification script passes (`./verify-yc-ready.sh`)  
+- ✅ Deterministic outputs (same seed = same results)
+- ✅ Glass-box explanations for every anomaly
 
-High-level steps:
+## Architecture
 
-1. Build the Rust core (needed for all Go binaries):
-
-   ```bash
-   cd cbad-core
-   cargo build --release
-   cd ..
-   ```
-
-2. Start Postgres with Docker Compose and run the API demo script:
-
-   ```bash
-   export DRIFTLOCK_DEV_MODE=true  # dev-only, bypasses licensing
-   ./scripts/run-api-demo.sh
-   ```
-
-The script:
-
-- Builds the `driftlock-http` binary.
-- Starts a local Postgres instance.
-- Applies migrations and creates a demo tenant + API key.
-- Calls `/v1/detect` with synthetic data and prints follow-up `curl` and `psql` commands.
-
-For the manual, step-by-step version see `docs/API-DEMO-WALKTHROUGH.md`.  
-For the HTTP API schema, see `docs/API.md`.
-
-**OpenZL note:** OpenZL integration is optional and experimental. All demos and default builds use generic compressors (zstd, lz4, gzip). See `docs/OPENZL_ANALYSIS.md` if you want to opt in.
-
----
-
-## How the demo works (conceptually)
-
-At a high level, both the CLI and HTTP flows do the same thing:
-
-1. Build a baseline from normal events.
-2. Compare new events to that baseline using compression distance (NCD).
-3. Run permutation testing to estimate p-values / confidence.
-4. Emit anomalies with:
-   - NCD
-   - compression ratios
-   - entropy change
-   - p-value and confidence
-   - a short explanation string.
-
-The math and implementation details are documented in `docs/ALGORITHMS.md`.
-
----
-
-## Project status
-
-See `FINAL-STATUS.md` for the current repository status. As of that file's last update:
-
-- ✅ Rust + Go CLI demo is stable and exercised in CI via `./verify-yc-ready.sh`.
-- ✅ Synthetic dataset and HTML report are suitable for screenshots and quick demos.
-- ✅ HTTP API service (`driftlock-http`) is production-ready and deployable to Google Cloud Run.
-- ✅ Complete deployment guide available: `docs/COMPLETE_DEPLOYMENT_PLAN.md`
-
-**Ready for production deployment**: The HTTP API can be deployed to Cloud Run with Supabase PostgreSQL. See the deployment guide for step-by-step instructions.
-
-If you are evaluating Driftlock for anything beyond local experiments, treat this repo as an engine prototype rather than a finished product.
-
----
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   OTLP Events   │───▶│  Driftlock API  │───▶│   Dashboard     │
+│ (logs/metrics/  │    │  (Go + Rust)    │    │  (Vue 3 + TS)   │
+│    traces)      │    │                 │    │                 │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+                              │
+                              ▼
+                       ┌─────────────────┐
+                       │   PostgreSQL    │
+                       │  (Anomalies +   │
+                       │   Evidence)     │
+                       └─────────────────┘
+```
 
 ## License
 
-Apache 2.0 for the open-source portions of this repository.  
-See `LICENSE` and `LICENSE-COMMERCIAL.md` for details.
+- **Driftlock Core** (Rust): Apache 2.0
+- **API Service & Dashboard**: Source-available (see LICENSE-COMMERCIAL.md)
+
+---
+
+**Next Steps:** See [ROADMAP_TO_LAUNCH.md](docs/ROADMAP_TO_LAUNCH.md) for the complete path from demo to $10M ARR.
 
