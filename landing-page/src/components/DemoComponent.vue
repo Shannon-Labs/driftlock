@@ -49,8 +49,11 @@
 
       <!-- AI Analysis -->
       <div v-if="aiAnalysis" class="bg-white border border-gray-200 rounded-lg p-4">
-        <h4 class="font-medium text-gray-900 mb-2">🤖 AI Insights</h4>
+        <h4 class="font-medium text-gray-900 mb-2">💡 AI Enhancement Available</h4>
         <div class="text-sm text-gray-700 whitespace-pre-wrap">{{ aiAnalysis }}</div>
+        <button class="mt-3 text-xs bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700">
+          Upgrade to Pro
+        </button>
       </div>
 
       <!-- Compliance Report -->
@@ -107,8 +110,8 @@ async function runAnalysis() {
   error.value = ''
 
   try {
-    // Simulate anomaly detection
-    await new Promise(resolve => setTimeout(resolve, 2000))
+    // Fast mathematical detection (no AI overhead)
+    await new Promise(resolve => setTimeout(resolve, 1000)) // Simulate real backend call
     
     const mockAnomalies = [
       {
@@ -127,27 +130,9 @@ async function runAnalysis() {
       explanation: mockAnomalies[0].explanation
     }
 
-    // Get AI analysis
-    try {
-      const response = await fetch('/api/analyze', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          anomalies: mockAnomalies,
-          query: `Analyze ${selectedDataset.value} anomalies for business impact`
-        }),
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        aiAnalysis.value = data.analysis
-      }
-    } catch (apiError) {
-      // Fallback to mock analysis if API is not available
-      aiAnalysis.value = `Risk Assessment: HIGH\n\nThe detected anomaly shows significant deviation from normal ${selectedDataset.value} patterns. The compression-based analysis indicates a 97.3% confidence that this represents unusual behavior.\n\nRecommended Actions:\n1. Investigate the flagged transaction immediately\n2. Review related account activity\n3. Consider implementing additional monitoring\n\nCompliance: This detection meets DORA explainability requirements with mathematical proof via compression analysis.`
-    }
+    // AI analysis as optional enhancement (not default)
+    // Only show upgrade prompt for now to save costs
+    aiAnalysis.value = `🤖 AI Business Insights Available\n\nUpgrade to Pro plan to get:\n• Executive risk assessment\n• Business impact analysis\n• Recommended actions\n• Custom compliance narratives\n\nThe mathematical detection above provides the core explainable evidence needed for audits.`
 
   } catch (err) {
     error.value = 'Analysis failed. Please try again.'
