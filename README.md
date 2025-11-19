@@ -1,29 +1,45 @@
 # Driftlock
 
-Deterministic, compression-based anomaly detection with a small, reproducible demo.
+Driftlock is a **developer-first anomaly detection platform**: we use deterministic compression math (cbad-core) to flag weird behaviour in milliseconds, then optionally hand the anomaly off to Gemini to explain it in plain English. The repo contains everything needed to ship that experience as a SaaS product: core engine, HTTP service, landing page + dashboard, Firebase Auth, Stripe hooks, and deployment runbooks.
 
-This repository ships a **proof-of-concept CLI demo** plus an **experimental HTTP API**.  
-For an authoritative description of what is actually implemented, see `FINAL-STATUS.md`.
+For an authoritative description of what ships today, see `FINAL-STATUS.md`. The short version:
 
-**🚀 Ready for SaaS Launch:** Complete deployment guides and launch materials available in `docs/LAUNCH_SUMMARY.md`.
+- ✅ Math engine + CLI demo for deterministic verification
+- ✅ Multi-tenant HTTP API (`/v1/detect`) with Firebase Auth
+- ✅ Landing page + dashboard (Vue 3 + Tailwind + Pinia)
+- ✅ Pricing tiers (Developer free, Starter $25, Pro custom) wired to Stripe and the dashboard usage endpoints
+- ✅ Gemini-based explainability layer ready to be toggled on per anomaly
+
+**🚀 Ready for SaaS Launch:** Full Cloud SQL + Firebase Auth deployment setup available in `CLOUDSQL_FIREBASE_SETUP_GUIDE.md`.
 
 ---
 
 ## What this repo contains
 
-- **Rust core** (`cbad-core/`): compression-based anomaly detection library.
-- **Go CLI demo** (`cmd/demo/`): reads synthetic payment data and produces an HTML report.
-- **Synthetic data** (`test-data/financial-demo.json`): 5,000 payment-like events with injected anomalies.
-- **HTTP API prototype** (`collector-processor/cmd/driftlock-http`): JSON `/v1/detect` endpoint backed by Postgres.
-- **Landing page** (`landing-page/`): Vue.js + Cloudflare Pages frontend.
+- **Rust core** (`cbad-core/`): compression-based anomaly detection library (FFI boundary to Go). The math is deterministic and seeded for reproducibility.
+- **Go HTTP API service** (`collector-processor/cmd/driftlock-http`): multi-tenant `/v1/detect`, `/v1/anomalies`, `/v1/me/*` endpoints with Firebase Auth + Cloud SQL.
+- **Usage tracker + pricing hooks** (`collector-processor/cmd/driftlock-http/dashboard.go`): exposes current plan limits so the dashboard and billing flows stay in sync.
+- **Vue landing page + dashboard** (`landing-page/`): marketing site, signup flow, pricing section (Developer/Starter/Pro), dashboard with API keys + usage, docs viewer.
+- **CLI demo** (`cmd/demo/`): reproducible HTML report for quick verification and CI.
+- **Synthetic data** (`test-data/financial-demo.json`): 5,000 payment-like events with injected anomalies (used by both CLI + HTTP scripts).
+- **Docs and runbooks** (`docs/`): launch plans, compliance positioning, `USE_CASES.md`, deployment guides.
 
-The only path we rely on for verification and CI is the **CLI demo** described below.
+The CLI demo remains the fastest path to verify the engine locally, but the **primary product surface is the hosted HTTP API + dashboard**.
 
 ---
 
-## Quickstart: CLI HTML demo (single binary)
+## Product Overview
 
-This is the simplest, fully-supported way to see Driftlock work end-to-end.
+Driftlock is purpose-built for teams who need **provable anomaly detection** without training data:
+
+- **Math detects it**: cbad-core builds a baseline from your first ~400 events, then scores every new event using Normalized Compression Distance (NCD), permutation tests, and entropy deltas.
+- **AI explains it**: when an anomaly survives the math, we optionally send the evidence payload + metrics to Gemini Flash. The response becomes the \"plain English\" field in dashboards, email alerts, or Slack posts.
+- **Dev-first ergonomics**: deterministic CLI demo, REST API, Vue dashboard, Firebase Auth, Stripe billing, Cloud SQL deployment scripts.
+- **Use cases**: financial compliance (EU DORA, FFIEC), DDOS/API abuse, AI agent monitoring, IoT/smart-home telemetry. See `docs/USE_CASES.md`.
+
+## Quickstart: CLI HTML demo (deterministic)
+
+Still the fastest way to convince yourself the math works.
 
 ```bash
 git clone https://github.com/Shannon-Labs/driftlock.git
@@ -45,8 +61,7 @@ You can re-run the demo as many times as you like; outputs are deterministic for
 
 ## HTTP API Service
 
-There is an in-repo HTTP service that exposes the same core algorithm over JSON.  
-It is useful for local experiments and **ready for production deployment**.
+The HTTP layer is the canonical product surface. It wraps the Rust detector with tenant-aware auth, usage tracking, and pricing guardrails.
 
 ### Local Development
 
@@ -59,14 +74,14 @@ export DRIFTLOCK_DEV_MODE=true  # dev-only, bypasses licensing
 The script:
 
 - Builds the `driftlock-http` binary.
-- Starts a local Postgres instance.
+- Starts a local Postgres instance (matching Cloud SQL schema).
 - Applies migrations and creates a demo tenant + API key.
-- Calls `/v1/detect` with synthetic data and prints follow-up `curl` and `psql` commands.
+- Calls `/v1/detect` with synthetic data, prints follow-up `curl` + `psql` commands, and shows how Gemini explainability would be triggered.
 
 For the manual, step-by-step version see `docs/API-DEMO-WALKTHROUGH.md`.  
 For the HTTP API schema, see `docs/API.md`.
 
-**OpenZL note:** OpenZL integration is optional and experimental. All demos and default builds use generic compressors (zstd, lz4, gzip). See `docs/OPENZL_ANALYSIS.md` if you want to opt in.
+**OpenZL note:** OpenZL integration is optional/experimental. All default builds ship with zstd/lz4/gzip; flip the feature flag only if you have OpenZL available (see `docs/OPENZL_ANALYSIS.md`).
 
 ---
 
@@ -74,27 +89,24 @@ For the HTTP API schema, see `docs/API.md`.
 
 **Driftlock is ready to deploy as a SaaS product.**
 
-### Quick Deploy (30 minutes)
+### Quick Deploy (30 minutes) - Cloud SQL + Firebase Auth
 
 ```bash
-# 1. Database: Set up Supabase and run migrations
-#    Copy: api/migrations/20250301120000_initial_schema.sql
+# 1. Set up Cloud SQL + Firebase Auth infrastructure
+./scripts/setup-gcp-cloudsql-firebase.sh
 
-# 2. API: Deploy to Google Cloud Run
-gcloud builds submit --config=cloudbuild.yaml
+# 2. Deploy to production
+./scripts/deploy-production-cloudsql-firebase.sh
 
-# 3. Frontend: Deploy to Cloudflare Pages
-cd landing-page && npm run build && wrangler pages deploy dist
-
-# 4. Test
-curl https://driftlock.net/api/v1/healthz | jq
+# 3. Test the deployment
+./scripts/test-deployment-complete.sh
 ```
 
 ### Complete Launch Guide
 
 For a **comprehensive step-by-step deployment plan**, see:
-- **`docs/COMPLETE_DEPLOYMENT_PLAN.md`** - Full infrastructure setup
-- **`docs/DEPLOYMENT_QUICKSTART.md`** - TL;DR version
+- **`CLOUDSQL_FIREBASE_SETUP_GUIDE.md`** - Complete Cloud SQL + Firebase Auth setup
+- **`docs/COMPLETE_DEPLOYMENT_PLAN.md`** - Legacy Supabase setup (deprecated)
 
 ### Launch Readiness
 
@@ -103,11 +115,24 @@ To launch Driftlock as a SaaS product, see:
 - **`docs/LAUNCH_CHECKLIST.md`** - Day-by-day launch plan
 - **`scripts/test-deployment.sh`** - Validate deployment before launch
 
-**Current Status:** Infrastructure is production-ready. Remaining work:
-- User onboarding endpoint (4-6 hours)
-- Landing page signup form (2-3 hours)
-- Manual email verification (1 hour)
-- Stripe integration (2-4 hours, can be deferred)
+**Current Status:** Infrastructure is production-ready and fully wired to the new landing page/dashboard. Remaining work before GA:
+- Harden onboarding verification emails (optional; Firebase handles most flows)
+- Expand Gemini explainability presets (today it’s manual per deployment)
+- Finish Stripe self-serve upgrade UX (backend endpoints exist; UI CTA shipping in Starter tier)
+
+### Billing & Stripe Integration
+
+Driftlock includes built-in Stripe support for subscription management.
+
+**Required Secrets:**
+- `STRIPE_SECRET_KEY`: Your Stripe Secret Key (`sk_...`)
+- `STRIPE_PRICE_ID_PRO`: Price ID for the Pro plan (`price_...`)
+
+**Setup:**
+1. Create a Stripe account and a Product with a Price (Recurring).
+2. Add secrets to Google Cloud Secret Manager (see `docs/GCP_SECRETS_CHECKLIST.md`).
+3. Deploy using `cloudbuild.yaml`.
+
 
 ---
 
