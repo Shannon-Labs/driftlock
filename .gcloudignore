@@ -1,0 +1,14 @@
+.git
+.gitignore
+node_modules
+target
+dist
+landing-page/node_modules
+landing-page/dist
+playground/node_modules
+playground/dist
+test-data
+screenshots
+*.mp4
+*.gif
+

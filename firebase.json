@@ -1,0 +1,24 @@
+{
+  "hosting": {
+    "public": "landing-page/dist",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "/v1/**",
+        "run": {
+          "serviceId": "driftlock-api",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}
+
