@@ -8,16 +8,16 @@
             <div class="relative z-10 container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div class="mx-auto max-w-3xl text-center">
                     <span class="rounded-full bg-blue-500 px-4 py-1 text-sm font-sans font-medium text-white">
-                        Regulatory Compliance Made Simple
+                        The Only Explainable Anomaly Detection Platform
                     </span>
                     <h1 class="mt-6 text-5xl font-mono font-extrabold tracking-tight text-white sm:text-7xl">
-                        Explainable Anomaly Detection
+                        Find What Doesn't Belong
                     </h1>
                     <p class="mt-6 text-lg leading-8 font-sans text-gray-200 sm:text-xl">
-                        The only anomaly detection platform that can explain every alert with mathematical rigor. Built for regulated industries that need audit-ready evidence, not black-box predictions.
+                        Detect anomalies in financial transactions, security events, user behavior, system logs, and any data stream. Get mathematical explanations that pass audits, not black-box predictions you can't defend.
                     </p>
                     <p class="mt-4 text-base leading-7 font-sans text-gray-200/90 max-w-3xl mx-auto">
-                        Powered by compression mathematics and AI analysis, Driftlock provides glass-box explanations that pass regulatory audits for DORA, NIS2, and EU AI Act compliance.
+                        From fraud detection to system monitoring, from financial analysis to security alerts - Driftlock finds the anomalies that matter with mathematical proof you can trust.
                     </p>
                     <div class="mt-10 flex items-center justify-center gap-x-6">
                         <a href="#demo" class="rounded-md cta-gradient px-6 py-3 text-base font-sans font-semibold text-white shadow-lg transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">
@@ -381,10 +381,10 @@
                 <div class="grid gap-12 lg:grid-cols-2 lg:items-center">
                     <div>
                         <h2 class="text-4xl font-mono font-bold tracking-tight text-gray-900 sm:text-5xl">
-                            Ready to Start Detecting Anomalies?
+                            Ready to Find What Matters?
                         </h2>
                         <p class="mt-6 text-lg leading-8 font-sans text-gray-700">
-                            Join financial institutions and healthcare companies already using Driftlock for regulatory compliance.
+                            Join teams across finance, security, healthcare, e-commerce, and manufacturing who trust Driftlock for explainable anomaly detection.
                         </p>
                         <div class="mt-8 space-y-4">
                             <div class="flex items-center gap-3">
@@ -401,7 +401,7 @@
                                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                                     </svg>
                                 </div>
-                                <span class="font-sans text-gray-700">Instant API key - no credit card required</span>
+                                <span class="font-sans text-gray-700">Mathematical explanations you can defend</span>
                             </div>
                             <div class="flex items-center gap-3">
                                 <div class="flex-shrink-0 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
@@ -409,7 +409,7 @@
                                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                                     </svg>
                                 </div>
-                                <span class="font-sans text-gray-700">DORA & NIS2 compliant from day one</span>
+                                <span class="font-sans text-gray-700">Works on any data: fraud, security, IoT, behavior</span>
                             </div>
                         </div>
                     </div>
