@@ -7,7 +7,8 @@ import {
   type User,
   sendSignInLinkToEmail,
   isSignInWithEmailLink,
-  signInWithEmailLink
+  signInWithEmailLink,
+  type Auth
 } from 'firebase/auth'
 import { auth } from '../firebase'
 
@@ -21,6 +22,13 @@ export const useAuthStore = defineStore('auth', () => {
   // Initialize auth listener
   const init = () => {
     return new Promise<void>((resolve) => {
+      if (!auth) {
+        console.warn('Firebase auth not initialized. Please check your Firebase configuration.')
+        loading.value = false
+        resolve()
+        return
+      }
+      
       onAuthStateChanged(auth, (u) => {
         user.value = u
         loading.value = false
@@ -31,6 +39,11 @@ export const useAuthStore = defineStore('auth', () => {
 
   // Magic Link Login (Passwordless)
   const sendMagicLink = async (email: string) => {
+    if (!auth) {
+      error.value = 'Firebase auth not initialized. Please check your configuration.'
+      throw new Error(error.value)
+    }
+
     loading.value = true
     error.value = null
     try {
@@ -51,6 +64,11 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   const completeMagicLinkLogin = async () => {
+    if (!auth) {
+      error.value = 'Firebase auth not initialized. Please check your configuration.'
+      return false
+    }
+
     if (!isSignInWithEmailLink(auth, window.location.href)) {
       return false
     }
@@ -77,6 +95,11 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   const logout = async () => {
+    if (!auth) {
+      user.value = null
+      return
+    }
+    
     await firebaseSignOut(auth)
     user.value = null
   }

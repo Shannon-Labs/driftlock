@@ -14,7 +14,7 @@ services:
       - LOG_LEVEL=${LOG_LEVEL:-info}
       - DATABASE_URL=postgres://${POSTGRES_USER:-driftlock}:${POSTGRES_PASSWORD:-driftlock}@driftlock-postgres:5432/${POSTGRES_DB:-driftlock}?sslmode=disable
       - DRIFTLOCK_LICENSE_KEY=${DRIFTLOCK_LICENSE_KEY}
-      - DRIFTLOCK_DEV_MODE=${DRIFTLOCK_DEV_MODE:-}
+      - DRIFTLOCK_DEV_MODE=${DRIFTLOCK_DEV_MODE:-true}
       - USE_OPENZL=${USE_OPENZL:-false}
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8080/healthz || exit 1"]

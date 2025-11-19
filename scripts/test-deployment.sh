@@ -2,7 +2,7 @@
 # Comprehensive deployment testing script
 # Tests all components before launch
 
-set -e
+# set -e
 
 # Configuration
 ENV=${ENV:-"production"}
@@ -48,12 +48,12 @@ test_database() {
         pass "Database connection successful"
         
         # Check tables exist
-        tables=$(psql "$DATABASE_URL" -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name IN ('tenants', 'streams', 'api_keys', 'anomalies');" | xargs)
+        tables=$(psql "$DATABASE_URL" -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name IN ('tenants', 'streams', 'api_keys', 'anomalies');" | xargs) || true
         
         if [ "$tables" = "4" ]; then
             pass "All core tables exist"
         else
-            fail "Missing core tables (found: $tables, expected: 4)"
+            fail "Missing core tables (found: '$tables', expected: 4)"
         fi
     else
         fail "Database connection failed"
@@ -117,8 +117,8 @@ test_detection() {
     if [ -n "$DEMO_API_KEY" ]; then
         # Use sample data from test-data directory
         if [ -f "test-data/financial-demo.json" ]; then
-            # Extract first 100 events for testing
-            sample_data=$(head -n 100 test-data/financial-demo.json | jq -c '{events: .[:10], window_size: 5}')
+            # Extract first 10 events for testing
+            sample_data=$(cat test-data/financial-demo.json | jq -c '{events: .[:10], window_size: 5}')
             
             response=$(curl -s -w "\n%{http_code}" -X POST \
                 "$API_URL/v1/detect" \

@@ -221,6 +221,18 @@ func main() {
 	if err := store.loadCache(ctx); err != nil {
 		log.Fatalf("load configs failed: %v", err)
 	}
+
+	// Initialize Firebase Auth
+	if os.Getenv("FIREBASE_SERVICE_ACCOUNT_KEY") != "" {
+		if err := initFirebaseAuth(); err != nil {
+			log.Printf("WARNING: Failed to init Firebase Auth: %v. Dashboard endpoints will fail.", err)
+		} else {
+			log.Printf("Firebase Auth initialized")
+		}
+	} else {
+		log.Printf("WARNING: FIREBASE_SERVICE_ACCOUNT_KEY not set. Dashboard endpoints disabled.")
+	}
+
 	defer store.Close()
 
 	registerMetrics()
@@ -279,6 +291,16 @@ func buildHTTPHandler(cfg config, store *store, queue jobQueue, limiter *tenantR
 	})))
 	mux.Handle("/v1/anomalies", withAuth(store, limiter, anomaliesHandler(store)))
 	mux.Handle("/v1/anomalies/", withAuth(store, limiter, anomalyRouter(cfg, store, queue)))
+
+	// Billing endpoints
+	mux.Handle("/v1/billing/checkout", withAuth(store, limiter, billingCheckoutHandler(store)))
+	mux.Handle("/v1/billing/portal", withFirebaseAuth(store, billingPortalHandler(store)))
+	mux.HandleFunc("/v1/billing/webhook", billingWebhookHandler(store))
+
+	// Dashboard/User endpoints (Firebase Auth)
+	mux.Handle("/v1/me/keys", withFirebaseAuth(store, http.HandlerFunc(handleListKeys(store))))
+	mux.Handle("/v1/me/usage", withFirebaseAuth(store, http.HandlerFunc(handleGetUsage(store))))
+
 	return withCommon(withRequestContext(mux))
 }
 

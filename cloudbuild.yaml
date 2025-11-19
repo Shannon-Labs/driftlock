@@ -26,7 +26,7 @@ steps:
       - '--all-tags'
       - 'gcr.io/$PROJECT_ID/driftlock-api'
 
-  # Deploy to Cloud Run
+  # Deploy to Cloud Run with Cloud SQL and Firebase Auth
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     id: 'deploy-cloud-run'
     entrypoint: 'gcloud'
@@ -41,10 +41,12 @@ steps:
       - 'us-central1'
       - '--platform'
       - 'managed'
+      - '--add-cloudsql-instances'
+      - '$PROJECT_ID:us-central1:driftlock-db'
       - '--set-env-vars'
-      - 'DRIFTLOCK_DEV_MODE=true,CORS_ALLOW_ORIGINS=https://driftlock.net%2Chttps://www.driftlock.net,LOG_LEVEL=info'
+      - 'DRIFTLOCK_DEV_MODE=true,CORS_ALLOW_ORIGINS=https://driftlock.net%2Chttps://www.driftlock.net,LOG_LEVEL=info,FIREBASE_PROJECT_ID=driftlock,FIREBASE_AUTH_ENABLED=true'
       - '--set-secrets'
-      - 'DATABASE_URL=driftlock-db-url:latest,DRIFTLOCK_LICENSE_KEY=driftlock-license-key:latest,SENDGRID_API_KEY=sendgrid-api-key:latest'
+      - 'DATABASE_URL=driftlock-db-url:latest,DRIFTLOCK_LICENSE_KEY=driftlock-license-key:latest,FIREBASE_SERVICE_ACCOUNT_KEY=firebase-service-account-key:latest,SENDGRID_API_KEY=sendgrid-api-key:latest,STRIPE_SECRET_KEY=stripe-secret-key:latest,STRIPE_PRICE_ID_PRO=stripe-price-id-pro:latest,DRIFTLOCK_API_KEY=driftlock-api-key:latest'
       - '--memory'
       - '2Gi'
       - '--cpu'
@@ -57,6 +59,17 @@ steps:
       - '300'
       - '--concurrency'
       - '80'
+
+  # Grant Cloud Run service account Cloud SQL Client role
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'grant-cloudsql-access'
+    entrypoint: 'gcloud'
+    args:
+      - 'projects'
+      - 'add-iam-policy-binding'
+      - '$PROJECT_ID'
+      - '--member=serviceAccount:$PROJECT_ID-compute@developer.gserviceaccount.com'
+      - '--role=roles/cloudsql.client'
 
 images:
   - 'gcr.io/$PROJECT_ID/driftlock-api:latest'

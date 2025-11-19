@@ -1,0 +1,54 @@
+extend type Anomaly {
+  """
+  ✨ Implicit primary key field. It's a UUID column default to a generated new value. See `@table` for how to customize it.
+  """
+  id: UUID! @default(expr: "uuidV4()") @fdc_generated(from: "Anomaly", purpose: IMPLICIT_KEY_FIELD)
+  """
+  ✨ Implicit foreign key field based on `Anomaly`.`detectionTask`. It must match the value of `DetectionTask`.`id`. See `@ref` for how to customize it.
+  """
+  detectionTaskId: UUID! @fdc_generated(from: "Anomaly.detectionTask", purpose: IMPLICIT_REF_FIELD)
+}
+extend type Dataset {
+  """
+  ✨ Implicit primary key field. It's a UUID column default to a generated new value. See `@table` for how to customize it.
+  """
+  id: UUID! @default(expr: "uuidV4()") @fdc_generated(from: "Dataset", purpose: IMPLICIT_KEY_FIELD)
+  """
+  ✨ Implicit foreign key field based on `Dataset`.`user`. It must match the value of `User`.`id`. See `@ref` for how to customize it.
+  """
+  userId: UUID! @fdc_generated(from: "Dataset.user", purpose: IMPLICIT_REF_FIELD)
+}
+extend type DetectionTask {
+  """
+  ✨ Implicit primary key field. It's a UUID column default to a generated new value. See `@table` for how to customize it.
+  """
+  id: UUID! @default(expr: "uuidV4()") @fdc_generated(from: "DetectionTask", purpose: IMPLICIT_KEY_FIELD)
+  """
+  ✨ Implicit foreign key field based on `DetectionTask`.`dataset`. It must match the value of `Dataset`.`id`. See `@ref` for how to customize it.
+  """
+  datasetId: UUID! @fdc_generated(from: "DetectionTask.dataset", purpose: IMPLICIT_REF_FIELD)
+  """
+  ✨ Implicit foreign key field based on `DetectionTask`.`modelConfiguration`. It must match the value of `ModelConfiguration`.`id`. See `@ref` for how to customize it.
+  """
+  modelConfigurationId: UUID! @fdc_generated(from: "DetectionTask.modelConfiguration", purpose: IMPLICIT_REF_FIELD)
+  """
+  ✨ Implicit foreign key field based on `DetectionTask`.`user`. It must match the value of `User`.`id`. See `@ref` for how to customize it.
+  """
+  userId: UUID! @fdc_generated(from: "DetectionTask.user", purpose: IMPLICIT_REF_FIELD)
+}
+extend type ModelConfiguration {
+  """
+  ✨ Implicit primary key field. It's a UUID column default to a generated new value. See `@table` for how to customize it.
+  """
+  id: UUID! @default(expr: "uuidV4()") @fdc_generated(from: "ModelConfiguration", purpose: IMPLICIT_KEY_FIELD)
+  """
+  ✨ Implicit foreign key field based on `ModelConfiguration`.`user`. It must match the value of `User`.`id`. See `@ref` for how to customize it.
+  """
+  userId: UUID! @fdc_generated(from: "ModelConfiguration.user", purpose: IMPLICIT_REF_FIELD)
+}
+extend type User {
+  """
+  ✨ Implicit primary key field. It's a UUID column default to a generated new value. See `@table` for how to customize it.
+  """
+  id: UUID! @default(expr: "uuidV4()") @fdc_generated(from: "User", purpose: IMPLICIT_KEY_FIELD)
+}

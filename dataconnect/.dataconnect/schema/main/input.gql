@@ -1,0 +1,1693 @@
+"""
+✨ `Anomaly_KeyOutput` returns the primary key fields of table type `Anomaly`.
+
+It has the same format as `Anomaly_Key`, but is only used as mutation return value.
+"""
+scalar Anomaly_KeyOutput
+"""
+✨ `Dataset_KeyOutput` returns the primary key fields of table type `Dataset`.
+
+It has the same format as `Dataset_Key`, but is only used as mutation return value.
+"""
+scalar Dataset_KeyOutput
+"""
+✨ `DetectionTask_KeyOutput` returns the primary key fields of table type `DetectionTask`.
+
+It has the same format as `DetectionTask_Key`, but is only used as mutation return value.
+"""
+scalar DetectionTask_KeyOutput
+"""
+✨ `ModelConfiguration_KeyOutput` returns the primary key fields of table type `ModelConfiguration`.
+
+It has the same format as `ModelConfiguration_Key`, but is only used as mutation return value.
+"""
+scalar ModelConfiguration_KeyOutput
+"""
+✨ `User_KeyOutput` returns the primary key fields of table type `User`.
+
+It has the same format as `User_Key`, but is only used as mutation return value.
+"""
+scalar User_KeyOutput
+"""
+✨ Generated data input type for table 'Anomaly'. It includes all necessary fields for creating or upserting rows into table.
+"""
+input Anomaly_Data {
+  """
+  ✨ Generated from Field `Anomaly`.`id` of type `UUID!`
+  """
+  id: UUID
+  """
+  ✨ `_expr` server value variant of `id` (✨ Generated from Field `Anomaly`.`id` of type `UUID!`)
+  """
+  id_expr: UUID_Expr
+  """
+  ✨ Generated from Field `Anomaly`.`detectionTaskId` of type `UUID!`
+  """
+  detectionTaskId: UUID
+  """
+  ✨ `_expr` server value variant of `detectionTaskId` (✨ Generated from Field `Anomaly`.`detectionTaskId` of type `UUID!`)
+  """
+  detectionTaskId_expr: UUID_Expr
+  """
+  ✨ Generated from Field `Anomaly`.`detectionTask` of type `DetectionTask!`
+  """
+  detectionTask: DetectionTask_Key
+  """
+  ✨ Generated from Field `Anomaly`.`anomalyScore` of type `Float!`
+  """
+  anomalyScore: Float
+  """
+  ✨ `_expr` server value variant of `anomalyScore` (✨ Generated from Field `Anomaly`.`anomalyScore` of type `Float!`)
+  """
+  anomalyScore_expr: Float_Expr
+  """
+  ✨ `_update` server value variant of `anomalyScore` (✨ Generated from Field `Anomaly`.`anomalyScore` of type `Float!`)
+  """
+  anomalyScore_update: [Float_Update!]
+  """
+  ✨ Generated from Field `Anomaly`.`dataPointIdentifier` of type `String!`
+  """
+  dataPointIdentifier: String
+  """
+  ✨ `_expr` server value variant of `dataPointIdentifier` (✨ Generated from Field `Anomaly`.`dataPointIdentifier` of type `String!`)
+  """
+  dataPointIdentifier_expr: String_Expr
+  """
+  ✨ Generated from Field `Anomaly`.`explanation` of type `String`
+  """
+  explanation: String
+  """
+  ✨ `_expr` server value variant of `explanation` (✨ Generated from Field `Anomaly`.`explanation` of type `String`)
+  """
+  explanation_expr: String_Expr
+  """
+  ✨ Generated from Field `Anomaly`.`isAnomaly` of type `Boolean!`
+  """
+  isAnomaly: Boolean
+  """
+  ✨ `_expr` server value variant of `isAnomaly` (✨ Generated from Field `Anomaly`.`isAnomaly` of type `Boolean!`)
+  """
+  isAnomaly_expr: Boolean_Expr
+  """
+  ✨ Generated from Field `Anomaly`.`timestamp` of type `Timestamp`
+  """
+  timestamp: Timestamp
+  """
+  ✨ `_expr` server value variant of `timestamp` (✨ Generated from Field `Anomaly`.`timestamp` of type `Timestamp`)
+  """
+  timestamp_expr: Timestamp_Expr
+  """
+  ✨ `_time` server value variant of `timestamp` (✨ Generated from Field `Anomaly`.`timestamp` of type `Timestamp`)
+  """
+  timestamp_time: Timestamp_Relative
+  """
+  ✨ `_update` server value variant of `timestamp` (✨ Generated from Field `Anomaly`.`timestamp` of type `Timestamp`)
+  """
+  timestamp_update: [Timestamp_Update!]
+}
+"""
+✨ Generated filter input type for table 'Anomaly'. This input allows filtering objects using various conditions. Use `_or`, `_and`, and `_not` to compose complex filters.
+"""
+input Anomaly_Filter {
+  """
+  Apply multiple filter conditions using `AND` logic.
+  """
+  _and: [Anomaly_Filter!]
+  """
+  Negate the result of the provided filter condition.
+  """
+  _not: Anomaly_Filter
+  """
+  Apply multiple filter conditions using `OR` logic.
+  """
+  _or: [Anomaly_Filter!]
+  """
+  ✨ Generated from Field `Anomaly`.`id` of type `UUID!`
+  """
+  id: UUID_Filter
+  """
+  ✨ Generated from Field `Anomaly`.`detectionTaskId` of type `UUID!`
+  """
+  detectionTaskId: UUID_Filter
+  """
+  ✨ Generated from Field `Anomaly`.`detectionTask` of type `DetectionTask!`
+  """
+  detectionTask: DetectionTask_Filter
+  """
+  ✨ Generated from Field `Anomaly`.`anomalyScore` of type `Float!`
+  """
+  anomalyScore: Float_Filter
+  """
+  ✨ Generated from Field `Anomaly`.`dataPointIdentifier` of type `String!`
+  """
+  dataPointIdentifier: String_Filter
+  """
+  ✨ Generated from Field `Anomaly`.`explanation` of type `String`
+  """
+  explanation: String_Filter
+  """
+  ✨ Generated from Field `Anomaly`.`isAnomaly` of type `Boolean!`
+  """
+  isAnomaly: Boolean_Filter
+  """
+  ✨ Generated from Field `Anomaly`.`timestamp` of type `Timestamp`
+  """
+  timestamp: Timestamp_Filter
+}
+"""
+✨ Generated first-row input type for table 'Anomaly'. This input selects the first row matching the filter criteria, ordered according to the specified conditions.
+"""
+input Anomaly_FirstRow {
+  """
+  Order the result by the specified fields.
+  """
+  orderBy: [Anomaly_Order!]
+  """
+  Filters rows based on the specified conditions.
+  """
+  where: Anomaly_Filter
+}
+"""
+✨ Generated having input type for table 'Anomaly'. This input allows you to filter groups during aggregate queries using various conditions. Use `_or`, `_and`, and `_not` to compose complex filters.
+"""
+input Anomaly_Having {
+  """
+  Apply multiple Having conditions using `AND` logic.
+  """
+  _and: [Anomaly_Having!]
+  """
+  Whether to apply DISTINCT to the aggregate function.
+  """
+  _distinct: Boolean
+  """
+  Negate the result of the provided Having condition.
+  """
+  _not: Anomaly_Having
+  """
+  Apply multiple Having conditions using `OR` logic.
+  """
+  _or: [Anomaly_Having!]
+  """
+  ✨ Generated from Field `Anomaly`.`_count` of type `Int!`
+  """
+  _count: Int_Filter
+  """
+  ✨ Generated from Field `Anomaly`.`anomalyScore_count` of type `Int!`
+  """
+  anomalyScore_count: Int_Filter
+  """
+  ✨ Generated from Field `Anomaly`.`dataPointIdentifier_count` of type `Int!`
+  """
+  dataPointIdentifier_count: Int_Filter
+  """
+  ✨ Generated from Field `Anomaly`.`detectionTaskId_count` of type `Int!`
+  """
+  detectionTaskId_count: Int_Filter
+  """
+  ✨ Generated from Field `Anomaly`.`explanation_count` of type `Int!`
+  """
+  explanation_count: Int_Filter
+  """
+  ✨ Generated from Field `Anomaly`.`id_count` of type `Int!`
+  """
+  id_count: Int_Filter
+  """
+  ✨ Generated from Field `Anomaly`.`isAnomaly_count` of type `Int!`
+  """
+  isAnomaly_count: Int_Filter
+  """
+  ✨ Generated from Field `Anomaly`.`timestamp_count` of type `Int!`
+  """
+  timestamp_count: Int_Filter
+  """
+  ✨ Generated from Field `Anomaly`.`anomalyScore_sum` of type `Float`
+  """
+  anomalyScore_sum: Float_Filter
+  """
+  ✨ Generated from Field `Anomaly`.`anomalyScore_avg` of type `Float`
+  """
+  anomalyScore_avg: Float_Filter
+  """
+  ✨ Generated from Field `Anomaly`.`anomalyScore_min` of type `Float`
+  """
+  anomalyScore_min: Float_Filter
+  """
+  ✨ Generated from Field `Anomaly`.`timestamp_min` of type `Timestamp`
+  """
+  timestamp_min: Timestamp_Filter
+  """
+  ✨ Generated from Field `Anomaly`.`anomalyScore_max` of type `Float`
+  """
+  anomalyScore_max: Float_Filter
+  """
+  ✨ Generated from Field `Anomaly`.`timestamp_max` of type `Timestamp`
+  """
+  timestamp_max: Timestamp_Filter
+}
+"""
+✨ Generated key input type for table 'Anomaly'. It represents the primary key fields used to uniquely identify a row in the table.
+"""
+input Anomaly_Key {
+  """
+  ✨ Generated from Field `Anomaly`.`id` of type `UUID!`
+  """
+  id: UUID
+  """
+  ✨ `_expr` server value variant of `id` (✨ Generated from Field `Anomaly`.`id` of type `UUID!`)
+  """
+  id_expr: UUID_Expr
+}
+"""
+✨ Generated list filter input type for table 'Anomaly'. This input applies filtering logic based on the count or existence of related objects that matches certain criteria.
+"""
+input Anomaly_ListFilter {
+  """
+  The desired number of objects that match the condition (defaults to at least one).
+  """
+  count: Int_Filter = {gt:0}
+  """
+  Condition of the related objects to filter for.
+  """
+  exist: Anomaly_Filter
+}
+"""
+✨ Generated order input type for table 'Anomaly'. This input defines the sorting order of rows in query results based on one or more fields.
+"""
+input Anomaly_Order {
+  """
+  ✨ Generated from Field `Anomaly`.`id` of type `UUID!`
+  """
+  id: OrderDirection
+  """
+  ✨ Generated from Field `Anomaly`.`detectionTaskId` of type `UUID!`
+  """
+  detectionTaskId: OrderDirection
+  """
+  ✨ Generated from Field `Anomaly`.`detectionTask` of type `DetectionTask!`
+  """
+  detectionTask: DetectionTask_Order
+  """
+  ✨ Generated from Field `Anomaly`.`anomalyScore` of type `Float!`
+  """
+  anomalyScore: OrderDirection
+  """
+  ✨ Generated from Field `Anomaly`.`dataPointIdentifier` of type `String!`
+  """
+  dataPointIdentifier: OrderDirection
+  """
+  ✨ Generated from Field `Anomaly`.`explanation` of type `String`
+  """
+  explanation: OrderDirection
+  """
+  ✨ Generated from Field `Anomaly`.`isAnomaly` of type `Boolean!`
+  """
+  isAnomaly: OrderDirection
+  """
+  ✨ Generated from Field `Anomaly`.`timestamp` of type `Timestamp`
+  """
+  timestamp: OrderDirection
+  """
+  ✨ Generated from Field `Anomaly`.`_count` of type `Int!`
+  """
+  _count: OrderDirection
+  """
+  ✨ Generated from Field `Anomaly`.`anomalyScore_count` of type `Int!`
+  """
+  anomalyScore_count: OrderDirection
+  """
+  ✨ Generated from Field `Anomaly`.`dataPointIdentifier_count` of type `Int!`
+  """
+  dataPointIdentifier_count: OrderDirection
+  """
+  ✨ Generated from Field `Anomaly`.`detectionTaskId_count` of type `Int!`
+  """
+  detectionTaskId_count: OrderDirection
+  """
+  ✨ Generated from Field `Anomaly`.`explanation_count` of type `Int!`
+  """
+  explanation_count: OrderDirection
+  """
+  ✨ Generated from Field `Anomaly`.`id_count` of type `Int!`
+  """
+  id_count: OrderDirection
+  """
+  ✨ Generated from Field `Anomaly`.`isAnomaly_count` of type `Int!`
+  """
+  isAnomaly_count: OrderDirection
+  """
+  ✨ Generated from Field `Anomaly`.`timestamp_count` of type `Int!`
+  """
+  timestamp_count: OrderDirection
+  """
+  ✨ Generated from Field `Anomaly`.`anomalyScore_sum` of type `Float`
+  """
+  anomalyScore_sum: OrderDirection
+  """
+  ✨ Generated from Field `Anomaly`.`anomalyScore_avg` of type `Float`
+  """
+  anomalyScore_avg: OrderDirection
+  """
+  ✨ Generated from Field `Anomaly`.`anomalyScore_min` of type `Float`
+  """
+  anomalyScore_min: OrderDirection
+  """
+  ✨ Generated from Field `Anomaly`.`timestamp_min` of type `Timestamp`
+  """
+  timestamp_min: OrderDirection
+  """
+  ✨ Generated from Field `Anomaly`.`anomalyScore_max` of type `Float`
+  """
+  anomalyScore_max: OrderDirection
+  """
+  ✨ Generated from Field `Anomaly`.`timestamp_max` of type `Timestamp`
+  """
+  timestamp_max: OrderDirection
+}
+"""
+✨ Generated data input type for table 'Dataset'. It includes all necessary fields for creating or upserting rows into table.
+"""
+input Dataset_Data {
+  """
+  ✨ Generated from Field `Dataset`.`id` of type `UUID!`
+  """
+  id: UUID
+  """
+  ✨ `_expr` server value variant of `id` (✨ Generated from Field `Dataset`.`id` of type `UUID!`)
+  """
+  id_expr: UUID_Expr
+  """
+  ✨ Generated from Field `Dataset`.`userId` of type `UUID!`
+  """
+  userId: UUID
+  """
+  ✨ `_expr` server value variant of `userId` (✨ Generated from Field `Dataset`.`userId` of type `UUID!`)
+  """
+  userId_expr: UUID_Expr
+  """
+  ✨ Generated from Field `Dataset`.`user` of type `User!`
+  """
+  user: User_Key
+  """
+  ✨ Generated from Field `Dataset`.`columnInfo` of type `String`
+  """
+  columnInfo: String
+  """
+  ✨ `_expr` server value variant of `columnInfo` (✨ Generated from Field `Dataset`.`columnInfo` of type `String`)
+  """
+  columnInfo_expr: String_Expr
+  """
+  ✨ Generated from Field `Dataset`.`description` of type `String`
+  """
+  description: String
+  """
+  ✨ `_expr` server value variant of `description` (✨ Generated from Field `Dataset`.`description` of type `String`)
+  """
+  description_expr: String_Expr
+  """
+  ✨ Generated from Field `Dataset`.`fileLocation` of type `String!`
+  """
+  fileLocation: String
+  """
+  ✨ `_expr` server value variant of `fileLocation` (✨ Generated from Field `Dataset`.`fileLocation` of type `String!`)
+  """
+  fileLocation_expr: String_Expr
+  """
+  ✨ Generated from Field `Dataset`.`filename` of type `String!`
+  """
+  filename: String
+  """
+  ✨ `_expr` server value variant of `filename` (✨ Generated from Field `Dataset`.`filename` of type `String!`)
+  """
+  filename_expr: String_Expr
+  """
+  ✨ Generated from Field `Dataset`.`name` of type `String!`
+  """
+  name: String
+  """
+  ✨ `_expr` server value variant of `name` (✨ Generated from Field `Dataset`.`name` of type `String!`)
+  """
+  name_expr: String_Expr
+  """
+  ✨ Generated from Field `Dataset`.`status` of type `String!`
+  """
+  status: String
+  """
+  ✨ `_expr` server value variant of `status` (✨ Generated from Field `Dataset`.`status` of type `String!`)
+  """
+  status_expr: String_Expr
+  """
+  ✨ Generated from Field `Dataset`.`uploadDate` of type `Timestamp!`
+  """
+  uploadDate: Timestamp
+  """
+  ✨ `_expr` server value variant of `uploadDate` (✨ Generated from Field `Dataset`.`uploadDate` of type `Timestamp!`)
+  """
+  uploadDate_expr: Timestamp_Expr
+  """
+  ✨ `_time` server value variant of `uploadDate` (✨ Generated from Field `Dataset`.`uploadDate` of type `Timestamp!`)
+  """
+  uploadDate_time: Timestamp_Relative
+  """
+  ✨ `_update` server value variant of `uploadDate` (✨ Generated from Field `Dataset`.`uploadDate` of type `Timestamp!`)
+  """
+  uploadDate_update: [Timestamp_Update!]
+}
+"""
+✨ Generated filter input type for table 'Dataset'. This input allows filtering objects using various conditions. Use `_or`, `_and`, and `_not` to compose complex filters.
+"""
+input Dataset_Filter {
+  """
+  Apply multiple filter conditions using `AND` logic.
+  """
+  _and: [Dataset_Filter!]
+  """
+  Negate the result of the provided filter condition.
+  """
+  _not: Dataset_Filter
+  """
+  Apply multiple filter conditions using `OR` logic.
+  """
+  _or: [Dataset_Filter!]
+  """
+  ✨ Generated from Field `Dataset`.`id` of type `UUID!`
+  """
+  id: UUID_Filter
+  """
+  ✨ Generated from Field `Dataset`.`userId` of type `UUID!`
+  """
+  userId: UUID_Filter
+  """
+  ✨ Generated from Field `Dataset`.`user` of type `User!`
+  """
+  user: User_Filter
+  """
+  ✨ Generated from Field `Dataset`.`columnInfo` of type `String`
+  """
+  columnInfo: String_Filter
+  """
+  ✨ Generated from Field `Dataset`.`description` of type `String`
+  """
+  description: String_Filter
+  """
+  ✨ Generated from Field `Dataset`.`fileLocation` of type `String!`
+  """
+  fileLocation: String_Filter
+  """
+  ✨ Generated from Field `Dataset`.`filename` of type `String!`
+  """
+  filename: String_Filter
+  """
+  ✨ Generated from Field `Dataset`.`name` of type `String!`
+  """
+  name: String_Filter
+  """
+  ✨ Generated from Field `Dataset`.`status` of type `String!`
+  """
+  status: String_Filter
+  """
+  ✨ Generated from Field `Dataset`.`uploadDate` of type `Timestamp!`
+  """
+  uploadDate: Timestamp_Filter
+  """
+  ✨ Generated from Field `Dataset`.`detectionTasks_on_dataset` of type `[DetectionTask!]!`
+  """
+  detectionTasks_on_dataset: DetectionTask_ListFilter
+}
+"""
+✨ Generated first-row input type for table 'Dataset'. This input selects the first row matching the filter criteria, ordered according to the specified conditions.
+"""
+input Dataset_FirstRow {
+  """
+  Order the result by the specified fields.
+  """
+  orderBy: [Dataset_Order!]
+  """
+  Filters rows based on the specified conditions.
+  """
+  where: Dataset_Filter
+}
+"""
+✨ Generated having input type for table 'Dataset'. This input allows you to filter groups during aggregate queries using various conditions. Use `_or`, `_and`, and `_not` to compose complex filters.
+"""
+input Dataset_Having {
+  """
+  Apply multiple Having conditions using `AND` logic.
+  """
+  _and: [Dataset_Having!]
+  """
+  Whether to apply DISTINCT to the aggregate function.
+  """
+  _distinct: Boolean
+  """
+  Negate the result of the provided Having condition.
+  """
+  _not: Dataset_Having
+  """
+  Apply multiple Having conditions using `OR` logic.
+  """
+  _or: [Dataset_Having!]
+  """
+  ✨ Generated from Field `Dataset`.`_count` of type `Int!`
+  """
+  _count: Int_Filter
+  """
+  ✨ Generated from Field `Dataset`.`columnInfo_count` of type `Int!`
+  """
+  columnInfo_count: Int_Filter
+  """
+  ✨ Generated from Field `Dataset`.`description_count` of type `Int!`
+  """
+  description_count: Int_Filter
+  """
+  ✨ Generated from Field `Dataset`.`fileLocation_count` of type `Int!`
+  """
+  fileLocation_count: Int_Filter
+  """
+  ✨ Generated from Field `Dataset`.`filename_count` of type `Int!`
+  """
+  filename_count: Int_Filter
+  """
+  ✨ Generated from Field `Dataset`.`id_count` of type `Int!`
+  """
+  id_count: Int_Filter
+  """
+  ✨ Generated from Field `Dataset`.`name_count` of type `Int!`
+  """
+  name_count: Int_Filter
+  """
+  ✨ Generated from Field `Dataset`.`status_count` of type `Int!`
+  """
+  status_count: Int_Filter
+  """
+  ✨ Generated from Field `Dataset`.`uploadDate_count` of type `Int!`
+  """
+  uploadDate_count: Int_Filter
+  """
+  ✨ Generated from Field `Dataset`.`userId_count` of type `Int!`
+  """
+  userId_count: Int_Filter
+  """
+  ✨ Generated from Field `Dataset`.`uploadDate_min` of type `Timestamp`
+  """
+  uploadDate_min: Timestamp_Filter
+  """
+  ✨ Generated from Field `Dataset`.`uploadDate_max` of type `Timestamp`
+  """
+  uploadDate_max: Timestamp_Filter
+}
+"""
+✨ Generated key input type for table 'Dataset'. It represents the primary key fields used to uniquely identify a row in the table.
+"""
+input Dataset_Key {
+  """
+  ✨ Generated from Field `Dataset`.`id` of type `UUID!`
+  """
+  id: UUID
+  """
+  ✨ `_expr` server value variant of `id` (✨ Generated from Field `Dataset`.`id` of type `UUID!`)
+  """
+  id_expr: UUID_Expr
+}
+"""
+✨ Generated list filter input type for table 'Dataset'. This input applies filtering logic based on the count or existence of related objects that matches certain criteria.
+"""
+input Dataset_ListFilter {
+  """
+  The desired number of objects that match the condition (defaults to at least one).
+  """
+  count: Int_Filter = {gt:0}
+  """
+  Condition of the related objects to filter for.
+  """
+  exist: Dataset_Filter
+}
+"""
+✨ Generated order input type for table 'Dataset'. This input defines the sorting order of rows in query results based on one or more fields.
+"""
+input Dataset_Order {
+  """
+  ✨ Generated from Field `Dataset`.`id` of type `UUID!`
+  """
+  id: OrderDirection
+  """
+  ✨ Generated from Field `Dataset`.`userId` of type `UUID!`
+  """
+  userId: OrderDirection
+  """
+  ✨ Generated from Field `Dataset`.`user` of type `User!`
+  """
+  user: User_Order
+  """
+  ✨ Generated from Field `Dataset`.`columnInfo` of type `String`
+  """
+  columnInfo: OrderDirection
+  """
+  ✨ Generated from Field `Dataset`.`description` of type `String`
+  """
+  description: OrderDirection
+  """
+  ✨ Generated from Field `Dataset`.`fileLocation` of type `String!`
+  """
+  fileLocation: OrderDirection
+  """
+  ✨ Generated from Field `Dataset`.`filename` of type `String!`
+  """
+  filename: OrderDirection
+  """
+  ✨ Generated from Field `Dataset`.`name` of type `String!`
+  """
+  name: OrderDirection
+  """
+  ✨ Generated from Field `Dataset`.`status` of type `String!`
+  """
+  status: OrderDirection
+  """
+  ✨ Generated from Field `Dataset`.`uploadDate` of type `Timestamp!`
+  """
+  uploadDate: OrderDirection
+  """
+  ✨ Generated from Field `Dataset`.`_count` of type `Int!`
+  """
+  _count: OrderDirection
+  """
+  ✨ Generated from Field `Dataset`.`columnInfo_count` of type `Int!`
+  """
+  columnInfo_count: OrderDirection
+  """
+  ✨ Generated from Field `Dataset`.`description_count` of type `Int!`
+  """
+  description_count: OrderDirection
+  """
+  ✨ Generated from Field `Dataset`.`fileLocation_count` of type `Int!`
+  """
+  fileLocation_count: OrderDirection
+  """
+  ✨ Generated from Field `Dataset`.`filename_count` of type `Int!`
+  """
+  filename_count: OrderDirection
+  """
+  ✨ Generated from Field `Dataset`.`id_count` of type `Int!`
+  """
+  id_count: OrderDirection
+  """
+  ✨ Generated from Field `Dataset`.`name_count` of type `Int!`
+  """
+  name_count: OrderDirection
+  """
+  ✨ Generated from Field `Dataset`.`status_count` of type `Int!`
+  """
+  status_count: OrderDirection
+  """
+  ✨ Generated from Field `Dataset`.`uploadDate_count` of type `Int!`
+  """
+  uploadDate_count: OrderDirection
+  """
+  ✨ Generated from Field `Dataset`.`userId_count` of type `Int!`
+  """
+  userId_count: OrderDirection
+  """
+  ✨ Generated from Field `Dataset`.`uploadDate_min` of type `Timestamp`
+  """
+  uploadDate_min: OrderDirection
+  """
+  ✨ Generated from Field `Dataset`.`uploadDate_max` of type `Timestamp`
+  """
+  uploadDate_max: OrderDirection
+}
+"""
+✨ Generated data input type for table 'DetectionTask'. It includes all necessary fields for creating or upserting rows into table.
+"""
+input DetectionTask_Data {
+  """
+  ✨ Generated from Field `DetectionTask`.`id` of type `UUID!`
+  """
+  id: UUID
+  """
+  ✨ `_expr` server value variant of `id` (✨ Generated from Field `DetectionTask`.`id` of type `UUID!`)
+  """
+  id_expr: UUID_Expr
+  """
+  ✨ Generated from Field `DetectionTask`.`datasetId` of type `UUID!`
+  """
+  datasetId: UUID
+  """
+  ✨ `_expr` server value variant of `datasetId` (✨ Generated from Field `DetectionTask`.`datasetId` of type `UUID!`)
+  """
+  datasetId_expr: UUID_Expr
+  """
+  ✨ Generated from Field `DetectionTask`.`modelConfigurationId` of type `UUID!`
+  """
+  modelConfigurationId: UUID
+  """
+  ✨ `_expr` server value variant of `modelConfigurationId` (✨ Generated from Field `DetectionTask`.`modelConfigurationId` of type `UUID!`)
+  """
+  modelConfigurationId_expr: UUID_Expr
+  """
+  ✨ Generated from Field `DetectionTask`.`userId` of type `UUID!`
+  """
+  userId: UUID
+  """
+  ✨ `_expr` server value variant of `userId` (✨ Generated from Field `DetectionTask`.`userId` of type `UUID!`)
+  """
+  userId_expr: UUID_Expr
+  """
+  ✨ Generated from Field `DetectionTask`.`dataset` of type `Dataset!`
+  """
+  dataset: Dataset_Key
+  """
+  ✨ Generated from Field `DetectionTask`.`modelConfiguration` of type `ModelConfiguration!`
+  """
+  modelConfiguration: ModelConfiguration_Key
+  """
+  ✨ Generated from Field `DetectionTask`.`user` of type `User!`
+  """
+  user: User_Key
+  """
+  ✨ Generated from Field `DetectionTask`.`endDate` of type `Timestamp`
+  """
+  endDate: Timestamp
+  """
+  ✨ `_expr` server value variant of `endDate` (✨ Generated from Field `DetectionTask`.`endDate` of type `Timestamp`)
+  """
+  endDate_expr: Timestamp_Expr
+  """
+  ✨ `_time` server value variant of `endDate` (✨ Generated from Field `DetectionTask`.`endDate` of type `Timestamp`)
+  """
+  endDate_time: Timestamp_Relative
+  """
+  ✨ `_update` server value variant of `endDate` (✨ Generated from Field `DetectionTask`.`endDate` of type `Timestamp`)
+  """
+  endDate_update: [Timestamp_Update!]
+  """
+  ✨ Generated from Field `DetectionTask`.`notes` of type `String`
+  """
+  notes: String
+  """
+  ✨ `_expr` server value variant of `notes` (✨ Generated from Field `DetectionTask`.`notes` of type `String`)
+  """
+  notes_expr: String_Expr
+  """
+  ✨ Generated from Field `DetectionTask`.`resultsLocation` of type `String`
+  """
+  resultsLocation: String
+  """
+  ✨ `_expr` server value variant of `resultsLocation` (✨ Generated from Field `DetectionTask`.`resultsLocation` of type `String`)
+  """
+  resultsLocation_expr: String_Expr
+  """
+  ✨ Generated from Field `DetectionTask`.`startDate` of type `Timestamp!`
+  """
+  startDate: Timestamp
+  """
+  ✨ `_expr` server value variant of `startDate` (✨ Generated from Field `DetectionTask`.`startDate` of type `Timestamp!`)
+  """
+  startDate_expr: Timestamp_Expr
+  """
+  ✨ `_time` server value variant of `startDate` (✨ Generated from Field `DetectionTask`.`startDate` of type `Timestamp!`)
+  """
+  startDate_time: Timestamp_Relative
+  """
+  ✨ `_update` server value variant of `startDate` (✨ Generated from Field `DetectionTask`.`startDate` of type `Timestamp!`)
+  """
+  startDate_update: [Timestamp_Update!]
+  """
+  ✨ Generated from Field `DetectionTask`.`status` of type `String!`
+  """
+  status: String
+  """
+  ✨ `_expr` server value variant of `status` (✨ Generated from Field `DetectionTask`.`status` of type `String!`)
+  """
+  status_expr: String_Expr
+  """
+  ✨ Generated from Field `DetectionTask`.`taskName` of type `String!`
+  """
+  taskName: String
+  """
+  ✨ `_expr` server value variant of `taskName` (✨ Generated from Field `DetectionTask`.`taskName` of type `String!`)
+  """
+  taskName_expr: String_Expr
+}
+"""
+✨ Generated filter input type for table 'DetectionTask'. This input allows filtering objects using various conditions. Use `_or`, `_and`, and `_not` to compose complex filters.
+"""
+input DetectionTask_Filter {
+  """
+  Apply multiple filter conditions using `AND` logic.
+  """
+  _and: [DetectionTask_Filter!]
+  """
+  Negate the result of the provided filter condition.
+  """
+  _not: DetectionTask_Filter
+  """
+  Apply multiple filter conditions using `OR` logic.
+  """
+  _or: [DetectionTask_Filter!]
+  """
+  ✨ Generated from Field `DetectionTask`.`id` of type `UUID!`
+  """
+  id: UUID_Filter
+  """
+  ✨ Generated from Field `DetectionTask`.`datasetId` of type `UUID!`
+  """
+  datasetId: UUID_Filter
+  """
+  ✨ Generated from Field `DetectionTask`.`modelConfigurationId` of type `UUID!`
+  """
+  modelConfigurationId: UUID_Filter
+  """
+  ✨ Generated from Field `DetectionTask`.`userId` of type `UUID!`
+  """
+  userId: UUID_Filter
+  """
+  ✨ Generated from Field `DetectionTask`.`dataset` of type `Dataset!`
+  """
+  dataset: Dataset_Filter
+  """
+  ✨ Generated from Field `DetectionTask`.`modelConfiguration` of type `ModelConfiguration!`
+  """
+  modelConfiguration: ModelConfiguration_Filter
+  """
+  ✨ Generated from Field `DetectionTask`.`user` of type `User!`
+  """
+  user: User_Filter
+  """
+  ✨ Generated from Field `DetectionTask`.`endDate` of type `Timestamp`
+  """
+  endDate: Timestamp_Filter
+  """
+  ✨ Generated from Field `DetectionTask`.`notes` of type `String`
+  """
+  notes: String_Filter
+  """
+  ✨ Generated from Field `DetectionTask`.`resultsLocation` of type `String`
+  """
+  resultsLocation: String_Filter
+  """
+  ✨ Generated from Field `DetectionTask`.`startDate` of type `Timestamp!`
+  """
+  startDate: Timestamp_Filter
+  """
+  ✨ Generated from Field `DetectionTask`.`status` of type `String!`
+  """
+  status: String_Filter
+  """
+  ✨ Generated from Field `DetectionTask`.`taskName` of type `String!`
+  """
+  taskName: String_Filter
+  """
+  ✨ Generated from Field `DetectionTask`.`anomalies_on_detectionTask` of type `[Anomaly!]!`
+  """
+  anomalies_on_detectionTask: Anomaly_ListFilter
+}
+"""
+✨ Generated first-row input type for table 'DetectionTask'. This input selects the first row matching the filter criteria, ordered according to the specified conditions.
+"""
+input DetectionTask_FirstRow {
+  """
+  Order the result by the specified fields.
+  """
+  orderBy: [DetectionTask_Order!]
+  """
+  Filters rows based on the specified conditions.
+  """
+  where: DetectionTask_Filter
+}
+"""
+✨ Generated having input type for table 'DetectionTask'. This input allows you to filter groups during aggregate queries using various conditions. Use `_or`, `_and`, and `_not` to compose complex filters.
+"""
+input DetectionTask_Having {
+  """
+  Apply multiple Having conditions using `AND` logic.
+  """
+  _and: [DetectionTask_Having!]
+  """
+  Whether to apply DISTINCT to the aggregate function.
+  """
+  _distinct: Boolean
+  """
+  Negate the result of the provided Having condition.
+  """
+  _not: DetectionTask_Having
+  """
+  Apply multiple Having conditions using `OR` logic.
+  """
+  _or: [DetectionTask_Having!]
+  """
+  ✨ Generated from Field `DetectionTask`.`_count` of type `Int!`
+  """
+  _count: Int_Filter
+  """
+  ✨ Generated from Field `DetectionTask`.`datasetId_count` of type `Int!`
+  """
+  datasetId_count: Int_Filter
+  """
+  ✨ Generated from Field `DetectionTask`.`endDate_count` of type `Int!`
+  """
+  endDate_count: Int_Filter
+  """
+  ✨ Generated from Field `DetectionTask`.`id_count` of type `Int!`
+  """
+  id_count: Int_Filter
+  """
+  ✨ Generated from Field `DetectionTask`.`modelConfigurationId_count` of type `Int!`
+  """
+  modelConfigurationId_count: Int_Filter
+  """
+  ✨ Generated from Field `DetectionTask`.`notes_count` of type `Int!`
+  """
+  notes_count: Int_Filter
+  """
+  ✨ Generated from Field `DetectionTask`.`resultsLocation_count` of type `Int!`
+  """
+  resultsLocation_count: Int_Filter
+  """
+  ✨ Generated from Field `DetectionTask`.`startDate_count` of type `Int!`
+  """
+  startDate_count: Int_Filter
+  """
+  ✨ Generated from Field `DetectionTask`.`status_count` of type `Int!`
+  """
+  status_count: Int_Filter
+  """
+  ✨ Generated from Field `DetectionTask`.`taskName_count` of type `Int!`
+  """
+  taskName_count: Int_Filter
+  """
+  ✨ Generated from Field `DetectionTask`.`userId_count` of type `Int!`
+  """
+  userId_count: Int_Filter
+  """
+  ✨ Generated from Field `DetectionTask`.`endDate_min` of type `Timestamp`
+  """
+  endDate_min: Timestamp_Filter
+  """
+  ✨ Generated from Field `DetectionTask`.`startDate_min` of type `Timestamp`
+  """
+  startDate_min: Timestamp_Filter
+  """
+  ✨ Generated from Field `DetectionTask`.`endDate_max` of type `Timestamp`
+  """
+  endDate_max: Timestamp_Filter
+  """
+  ✨ Generated from Field `DetectionTask`.`startDate_max` of type `Timestamp`
+  """
+  startDate_max: Timestamp_Filter
+}
+"""
+✨ Generated key input type for table 'DetectionTask'. It represents the primary key fields used to uniquely identify a row in the table.
+"""
+input DetectionTask_Key {
+  """
+  ✨ Generated from Field `DetectionTask`.`id` of type `UUID!`
+  """
+  id: UUID
+  """
+  ✨ `_expr` server value variant of `id` (✨ Generated from Field `DetectionTask`.`id` of type `UUID!`)
+  """
+  id_expr: UUID_Expr
+}
+"""
+✨ Generated list filter input type for table 'DetectionTask'. This input applies filtering logic based on the count or existence of related objects that matches certain criteria.
+"""
+input DetectionTask_ListFilter {
+  """
+  The desired number of objects that match the condition (defaults to at least one).
+  """
+  count: Int_Filter = {gt:0}
+  """
+  Condition of the related objects to filter for.
+  """
+  exist: DetectionTask_Filter
+}
+"""
+✨ Generated order input type for table 'DetectionTask'. This input defines the sorting order of rows in query results based on one or more fields.
+"""
+input DetectionTask_Order {
+  """
+  ✨ Generated from Field `DetectionTask`.`id` of type `UUID!`
+  """
+  id: OrderDirection
+  """
+  ✨ Generated from Field `DetectionTask`.`datasetId` of type `UUID!`
+  """
+  datasetId: OrderDirection
+  """
+  ✨ Generated from Field `DetectionTask`.`modelConfigurationId` of type `UUID!`
+  """
+  modelConfigurationId: OrderDirection
+  """
+  ✨ Generated from Field `DetectionTask`.`userId` of type `UUID!`
+  """
+  userId: OrderDirection
+  """
+  ✨ Generated from Field `DetectionTask`.`dataset` of type `Dataset!`
+  """
+  dataset: Dataset_Order
+  """
+  ✨ Generated from Field `DetectionTask`.`modelConfiguration` of type `ModelConfiguration!`
+  """
+  modelConfiguration: ModelConfiguration_Order
+  """
+  ✨ Generated from Field `DetectionTask`.`user` of type `User!`
+  """
+  user: User_Order
+  """
+  ✨ Generated from Field `DetectionTask`.`endDate` of type `Timestamp`
+  """
+  endDate: OrderDirection
+  """
+  ✨ Generated from Field `DetectionTask`.`notes` of type `String`
+  """
+  notes: OrderDirection
+  """
+  ✨ Generated from Field `DetectionTask`.`resultsLocation` of type `String`
+  """
+  resultsLocation: OrderDirection
+  """
+  ✨ Generated from Field `DetectionTask`.`startDate` of type `Timestamp!`
+  """
+  startDate: OrderDirection
+  """
+  ✨ Generated from Field `DetectionTask`.`status` of type `String!`
+  """
+  status: OrderDirection
+  """
+  ✨ Generated from Field `DetectionTask`.`taskName` of type `String!`
+  """
+  taskName: OrderDirection
+  """
+  ✨ Generated from Field `DetectionTask`.`_count` of type `Int!`
+  """
+  _count: OrderDirection
+  """
+  ✨ Generated from Field `DetectionTask`.`datasetId_count` of type `Int!`
+  """
+  datasetId_count: OrderDirection
+  """
+  ✨ Generated from Field `DetectionTask`.`endDate_count` of type `Int!`
+  """
+  endDate_count: OrderDirection
+  """
+  ✨ Generated from Field `DetectionTask`.`id_count` of type `Int!`
+  """
+  id_count: OrderDirection
+  """
+  ✨ Generated from Field `DetectionTask`.`modelConfigurationId_count` of type `Int!`
+  """
+  modelConfigurationId_count: OrderDirection
+  """
+  ✨ Generated from Field `DetectionTask`.`notes_count` of type `Int!`
+  """
+  notes_count: OrderDirection
+  """
+  ✨ Generated from Field `DetectionTask`.`resultsLocation_count` of type `Int!`
+  """
+  resultsLocation_count: OrderDirection
+  """
+  ✨ Generated from Field `DetectionTask`.`startDate_count` of type `Int!`
+  """
+  startDate_count: OrderDirection
+  """
+  ✨ Generated from Field `DetectionTask`.`status_count` of type `Int!`
+  """
+  status_count: OrderDirection
+  """
+  ✨ Generated from Field `DetectionTask`.`taskName_count` of type `Int!`
+  """
+  taskName_count: OrderDirection
+  """
+  ✨ Generated from Field `DetectionTask`.`userId_count` of type `Int!`
+  """
+  userId_count: OrderDirection
+  """
+  ✨ Generated from Field `DetectionTask`.`endDate_min` of type `Timestamp`
+  """
+  endDate_min: OrderDirection
+  """
+  ✨ Generated from Field `DetectionTask`.`startDate_min` of type `Timestamp`
+  """
+  startDate_min: OrderDirection
+  """
+  ✨ Generated from Field `DetectionTask`.`endDate_max` of type `Timestamp`
+  """
+  endDate_max: OrderDirection
+  """
+  ✨ Generated from Field `DetectionTask`.`startDate_max` of type `Timestamp`
+  """
+  startDate_max: OrderDirection
+}
+"""
+✨ Generated data input type for table 'ModelConfiguration'. It includes all necessary fields for creating or upserting rows into table.
+"""
+input ModelConfiguration_Data {
+  """
+  ✨ Generated from Field `ModelConfiguration`.`id` of type `UUID!`
+  """
+  id: UUID
+  """
+  ✨ `_expr` server value variant of `id` (✨ Generated from Field `ModelConfiguration`.`id` of type `UUID!`)
+  """
+  id_expr: UUID_Expr
+  """
+  ✨ Generated from Field `ModelConfiguration`.`userId` of type `UUID!`
+  """
+  userId: UUID
+  """
+  ✨ `_expr` server value variant of `userId` (✨ Generated from Field `ModelConfiguration`.`userId` of type `UUID!`)
+  """
+  userId_expr: UUID_Expr
+  """
+  ✨ Generated from Field `ModelConfiguration`.`user` of type `User!`
+  """
+  user: User_Key
+  """
+  ✨ Generated from Field `ModelConfiguration`.`algorithmType` of type `String!`
+  """
+  algorithmType: String
+  """
+  ✨ `_expr` server value variant of `algorithmType` (✨ Generated from Field `ModelConfiguration`.`algorithmType` of type `String!`)
+  """
+  algorithmType_expr: String_Expr
+  """
+  ✨ Generated from Field `ModelConfiguration`.`createdAt` of type `Timestamp!`
+  """
+  createdAt: Timestamp
+  """
+  ✨ `_expr` server value variant of `createdAt` (✨ Generated from Field `ModelConfiguration`.`createdAt` of type `Timestamp!`)
+  """
+  createdAt_expr: Timestamp_Expr
+  """
+  ✨ `_time` server value variant of `createdAt` (✨ Generated from Field `ModelConfiguration`.`createdAt` of type `Timestamp!`)
+  """
+  createdAt_time: Timestamp_Relative
+  """
+  ✨ `_update` server value variant of `createdAt` (✨ Generated from Field `ModelConfiguration`.`createdAt` of type `Timestamp!`)
+  """
+  createdAt_update: [Timestamp_Update!]
+  """
+  ✨ Generated from Field `ModelConfiguration`.`description` of type `String`
+  """
+  description: String
+  """
+  ✨ `_expr` server value variant of `description` (✨ Generated from Field `ModelConfiguration`.`description` of type `String`)
+  """
+  description_expr: String_Expr
+  """
+  ✨ Generated from Field `ModelConfiguration`.`name` of type `String!`
+  """
+  name: String
+  """
+  ✨ `_expr` server value variant of `name` (✨ Generated from Field `ModelConfiguration`.`name` of type `String!`)
+  """
+  name_expr: String_Expr
+  """
+  ✨ Generated from Field `ModelConfiguration`.`parameters` of type `String`
+  """
+  parameters: String
+  """
+  ✨ `_expr` server value variant of `parameters` (✨ Generated from Field `ModelConfiguration`.`parameters` of type `String`)
+  """
+  parameters_expr: String_Expr
+}
+"""
+✨ Generated filter input type for table 'ModelConfiguration'. This input allows filtering objects using various conditions. Use `_or`, `_and`, and `_not` to compose complex filters.
+"""
+input ModelConfiguration_Filter {
+  """
+  Apply multiple filter conditions using `AND` logic.
+  """
+  _and: [ModelConfiguration_Filter!]
+  """
+  Negate the result of the provided filter condition.
+  """
+  _not: ModelConfiguration_Filter
+  """
+  Apply multiple filter conditions using `OR` logic.
+  """
+  _or: [ModelConfiguration_Filter!]
+  """
+  ✨ Generated from Field `ModelConfiguration`.`id` of type `UUID!`
+  """
+  id: UUID_Filter
+  """
+  ✨ Generated from Field `ModelConfiguration`.`userId` of type `UUID!`
+  """
+  userId: UUID_Filter
+  """
+  ✨ Generated from Field `ModelConfiguration`.`user` of type `User!`
+  """
+  user: User_Filter
+  """
+  ✨ Generated from Field `ModelConfiguration`.`algorithmType` of type `String!`
+  """
+  algorithmType: String_Filter
+  """
+  ✨ Generated from Field `ModelConfiguration`.`createdAt` of type `Timestamp!`
+  """
+  createdAt: Timestamp_Filter
+  """
+  ✨ Generated from Field `ModelConfiguration`.`description` of type `String`
+  """
+  description: String_Filter
+  """
+  ✨ Generated from Field `ModelConfiguration`.`name` of type `String!`
+  """
+  name: String_Filter
+  """
+  ✨ Generated from Field `ModelConfiguration`.`parameters` of type `String`
+  """
+  parameters: String_Filter
+  """
+  ✨ Generated from Field `ModelConfiguration`.`detectionTasks_on_modelConfiguration` of type `[DetectionTask!]!`
+  """
+  detectionTasks_on_modelConfiguration: DetectionTask_ListFilter
+}
+"""
+✨ Generated first-row input type for table 'ModelConfiguration'. This input selects the first row matching the filter criteria, ordered according to the specified conditions.
+"""
+input ModelConfiguration_FirstRow {
+  """
+  Order the result by the specified fields.
+  """
+  orderBy: [ModelConfiguration_Order!]
+  """
+  Filters rows based on the specified conditions.
+  """
+  where: ModelConfiguration_Filter
+}
+"""
+✨ Generated having input type for table 'ModelConfiguration'. This input allows you to filter groups during aggregate queries using various conditions. Use `_or`, `_and`, and `_not` to compose complex filters.
+"""
+input ModelConfiguration_Having {
+  """
+  Apply multiple Having conditions using `AND` logic.
+  """
+  _and: [ModelConfiguration_Having!]
+  """
+  Whether to apply DISTINCT to the aggregate function.
+  """
+  _distinct: Boolean
+  """
+  Negate the result of the provided Having condition.
+  """
+  _not: ModelConfiguration_Having
+  """
+  Apply multiple Having conditions using `OR` logic.
+  """
+  _or: [ModelConfiguration_Having!]
+  """
+  ✨ Generated from Field `ModelConfiguration`.`_count` of type `Int!`
+  """
+  _count: Int_Filter
+  """
+  ✨ Generated from Field `ModelConfiguration`.`algorithmType_count` of type `Int!`
+  """
+  algorithmType_count: Int_Filter
+  """
+  ✨ Generated from Field `ModelConfiguration`.`createdAt_count` of type `Int!`
+  """
+  createdAt_count: Int_Filter
+  """
+  ✨ Generated from Field `ModelConfiguration`.`description_count` of type `Int!`
+  """
+  description_count: Int_Filter
+  """
+  ✨ Generated from Field `ModelConfiguration`.`id_count` of type `Int!`
+  """
+  id_count: Int_Filter
+  """
+  ✨ Generated from Field `ModelConfiguration`.`name_count` of type `Int!`
+  """
+  name_count: Int_Filter
+  """
+  ✨ Generated from Field `ModelConfiguration`.`parameters_count` of type `Int!`
+  """
+  parameters_count: Int_Filter
+  """
+  ✨ Generated from Field `ModelConfiguration`.`userId_count` of type `Int!`
+  """
+  userId_count: Int_Filter
+  """
+  ✨ Generated from Field `ModelConfiguration`.`createdAt_min` of type `Timestamp`
+  """
+  createdAt_min: Timestamp_Filter
+  """
+  ✨ Generated from Field `ModelConfiguration`.`createdAt_max` of type `Timestamp`
+  """
+  createdAt_max: Timestamp_Filter
+}
+"""
+✨ Generated key input type for table 'ModelConfiguration'. It represents the primary key fields used to uniquely identify a row in the table.
+"""
+input ModelConfiguration_Key {
+  """
+  ✨ Generated from Field `ModelConfiguration`.`id` of type `UUID!`
+  """
+  id: UUID
+  """
+  ✨ `_expr` server value variant of `id` (✨ Generated from Field `ModelConfiguration`.`id` of type `UUID!`)
+  """
+  id_expr: UUID_Expr
+}
+"""
+✨ Generated list filter input type for table 'ModelConfiguration'. This input applies filtering logic based on the count or existence of related objects that matches certain criteria.
+"""
+input ModelConfiguration_ListFilter {
+  """
+  The desired number of objects that match the condition (defaults to at least one).
+  """
+  count: Int_Filter = {gt:0}
+  """
+  Condition of the related objects to filter for.
+  """
+  exist: ModelConfiguration_Filter
+}
+"""
+✨ Generated order input type for table 'ModelConfiguration'. This input defines the sorting order of rows in query results based on one or more fields.
+"""
+input ModelConfiguration_Order {
+  """
+  ✨ Generated from Field `ModelConfiguration`.`id` of type `UUID!`
+  """
+  id: OrderDirection
+  """
+  ✨ Generated from Field `ModelConfiguration`.`userId` of type `UUID!`
+  """
+  userId: OrderDirection
+  """
+  ✨ Generated from Field `ModelConfiguration`.`user` of type `User!`
+  """
+  user: User_Order
+  """
+  ✨ Generated from Field `ModelConfiguration`.`algorithmType` of type `String!`
+  """
+  algorithmType: OrderDirection
+  """
+  ✨ Generated from Field `ModelConfiguration`.`createdAt` of type `Timestamp!`
+  """
+  createdAt: OrderDirection
+  """
+  ✨ Generated from Field `ModelConfiguration`.`description` of type `String`
+  """
+  description: OrderDirection
+  """
+  ✨ Generated from Field `ModelConfiguration`.`name` of type `String!`
+  """
+  name: OrderDirection
+  """
+  ✨ Generated from Field `ModelConfiguration`.`parameters` of type `String`
+  """
+  parameters: OrderDirection
+  """
+  ✨ Generated from Field `ModelConfiguration`.`_count` of type `Int!`
+  """
+  _count: OrderDirection
+  """
+  ✨ Generated from Field `ModelConfiguration`.`algorithmType_count` of type `Int!`
+  """
+  algorithmType_count: OrderDirection
+  """
+  ✨ Generated from Field `ModelConfiguration`.`createdAt_count` of type `Int!`
+  """
+  createdAt_count: OrderDirection
+  """
+  ✨ Generated from Field `ModelConfiguration`.`description_count` of type `Int!`
+  """
+  description_count: OrderDirection
+  """
+  ✨ Generated from Field `ModelConfiguration`.`id_count` of type `Int!`
+  """
+  id_count: OrderDirection
+  """
+  ✨ Generated from Field `ModelConfiguration`.`name_count` of type `Int!`
+  """
+  name_count: OrderDirection
+  """
+  ✨ Generated from Field `ModelConfiguration`.`parameters_count` of type `Int!`
+  """
+  parameters_count: OrderDirection
+  """
+  ✨ Generated from Field `ModelConfiguration`.`userId_count` of type `Int!`
+  """
+  userId_count: OrderDirection
+  """
+  ✨ Generated from Field `ModelConfiguration`.`createdAt_min` of type `Timestamp`
+  """
+  createdAt_min: OrderDirection
+  """
+  ✨ Generated from Field `ModelConfiguration`.`createdAt_max` of type `Timestamp`
+  """
+  createdAt_max: OrderDirection
+}
+"""
+✨ Generated data input type for table 'User'. It includes all necessary fields for creating or upserting rows into table.
+"""
+input User_Data {
+  """
+  ✨ Generated from Field `User`.`id` of type `UUID!`
+  """
+  id: UUID
+  """
+  ✨ `_expr` server value variant of `id` (✨ Generated from Field `User`.`id` of type `UUID!`)
+  """
+  id_expr: UUID_Expr
+  """
+  ✨ Generated from Field `User`.`createdAt` of type `Timestamp!`
+  """
+  createdAt: Timestamp
+  """
+  ✨ `_expr` server value variant of `createdAt` (✨ Generated from Field `User`.`createdAt` of type `Timestamp!`)
+  """
+  createdAt_expr: Timestamp_Expr
+  """
+  ✨ `_time` server value variant of `createdAt` (✨ Generated from Field `User`.`createdAt` of type `Timestamp!`)
+  """
+  createdAt_time: Timestamp_Relative
+  """
+  ✨ `_update` server value variant of `createdAt` (✨ Generated from Field `User`.`createdAt` of type `Timestamp!`)
+  """
+  createdAt_update: [Timestamp_Update!]
+  """
+  ✨ Generated from Field `User`.`displayName` of type `String!`
+  """
+  displayName: String
+  """
+  ✨ `_expr` server value variant of `displayName` (✨ Generated from Field `User`.`displayName` of type `String!`)
+  """
+  displayName_expr: String_Expr
+  """
+  ✨ Generated from Field `User`.`email` of type `String`
+  """
+  email: String
+  """
+  ✨ `_expr` server value variant of `email` (✨ Generated from Field `User`.`email` of type `String`)
+  """
+  email_expr: String_Expr
+  """
+  ✨ Generated from Field `User`.`photoUrl` of type `String`
+  """
+  photoUrl: String
+  """
+  ✨ `_expr` server value variant of `photoUrl` (✨ Generated from Field `User`.`photoUrl` of type `String`)
+  """
+  photoUrl_expr: String_Expr
+}
+"""
+✨ Generated filter input type for table 'User'. This input allows filtering objects using various conditions. Use `_or`, `_and`, and `_not` to compose complex filters.
+"""
+input User_Filter {
+  """
+  Apply multiple filter conditions using `AND` logic.
+  """
+  _and: [User_Filter!]
+  """
+  Negate the result of the provided filter condition.
+  """
+  _not: User_Filter
+  """
+  Apply multiple filter conditions using `OR` logic.
+  """
+  _or: [User_Filter!]
+  """
+  ✨ Generated from Field `User`.`id` of type `UUID!`
+  """
+  id: UUID_Filter
+  """
+  ✨ Generated from Field `User`.`createdAt` of type `Timestamp!`
+  """
+  createdAt: Timestamp_Filter
+  """
+  ✨ Generated from Field `User`.`displayName` of type `String!`
+  """
+  displayName: String_Filter
+  """
+  ✨ Generated from Field `User`.`email` of type `String`
+  """
+  email: String_Filter
+  """
+  ✨ Generated from Field `User`.`photoUrl` of type `String`
+  """
+  photoUrl: String_Filter
+  """
+  ✨ Generated from Field `User`.`datasets_on_user` of type `[Dataset!]!`
+  """
+  datasets_on_user: Dataset_ListFilter
+  """
+  ✨ Generated from Field `User`.`detectionTasks_on_user` of type `[DetectionTask!]!`
+  """
+  detectionTasks_on_user: DetectionTask_ListFilter
+  """
+  ✨ Generated from Field `User`.`modelConfigurations_on_user` of type `[ModelConfiguration!]!`
+  """
+  modelConfigurations_on_user: ModelConfiguration_ListFilter
+}
+"""
+✨ Generated first-row input type for table 'User'. This input selects the first row matching the filter criteria, ordered according to the specified conditions.
+"""
+input User_FirstRow {
+  """
+  Order the result by the specified fields.
+  """
+  orderBy: [User_Order!]
+  """
+  Filters rows based on the specified conditions.
+  """
+  where: User_Filter
+}
+"""
+✨ Generated having input type for table 'User'. This input allows you to filter groups during aggregate queries using various conditions. Use `_or`, `_and`, and `_not` to compose complex filters.
+"""
+input User_Having {
+  """
+  Apply multiple Having conditions using `AND` logic.
+  """
+  _and: [User_Having!]
+  """
+  Whether to apply DISTINCT to the aggregate function.
+  """
+  _distinct: Boolean
+  """
+  Negate the result of the provided Having condition.
+  """
+  _not: User_Having
+  """
+  Apply multiple Having conditions using `OR` logic.
+  """
+  _or: [User_Having!]
+  """
+  ✨ Generated from Field `User`.`_count` of type `Int!`
+  """
+  _count: Int_Filter
+  """
+  ✨ Generated from Field `User`.`createdAt_count` of type `Int!`
+  """
+  createdAt_count: Int_Filter
+  """
+  ✨ Generated from Field `User`.`displayName_count` of type `Int!`
+  """
+  displayName_count: Int_Filter
+  """
+  ✨ Generated from Field `User`.`email_count` of type `Int!`
+  """
+  email_count: Int_Filter
+  """
+  ✨ Generated from Field `User`.`id_count` of type `Int!`
+  """
+  id_count: Int_Filter
+  """
+  ✨ Generated from Field `User`.`photoUrl_count` of type `Int!`
+  """
+  photoUrl_count: Int_Filter
+  """
+  ✨ Generated from Field `User`.`createdAt_min` of type `Timestamp`
+  """
+  createdAt_min: Timestamp_Filter
+  """
+  ✨ Generated from Field `User`.`createdAt_max` of type `Timestamp`
+  """
+  createdAt_max: Timestamp_Filter
+}
+"""
+✨ Generated key input type for table 'User'. It represents the primary key fields used to uniquely identify a row in the table.
+"""
+input User_Key {
+  """
+  ✨ Generated from Field `User`.`id` of type `UUID!`
+  """
+  id: UUID
+  """
+  ✨ `_expr` server value variant of `id` (✨ Generated from Field `User`.`id` of type `UUID!`)
+  """
+  id_expr: UUID_Expr
+}
+"""
+✨ Generated list filter input type for table 'User'. This input applies filtering logic based on the count or existence of related objects that matches certain criteria.
+"""
+input User_ListFilter {
+  """
+  The desired number of objects that match the condition (defaults to at least one).
+  """
+  count: Int_Filter = {gt:0}
+  """
+  Condition of the related objects to filter for.
+  """
+  exist: User_Filter
+}
+"""
+✨ Generated order input type for table 'User'. This input defines the sorting order of rows in query results based on one or more fields.
+"""
+input User_Order {
+  """
+  ✨ Generated from Field `User`.`id` of type `UUID!`
+  """
+  id: OrderDirection
+  """
+  ✨ Generated from Field `User`.`createdAt` of type `Timestamp!`
+  """
+  createdAt: OrderDirection
+  """
+  ✨ Generated from Field `User`.`displayName` of type `String!`
+  """
+  displayName: OrderDirection
+  """
+  ✨ Generated from Field `User`.`email` of type `String`
+  """
+  email: OrderDirection
+  """
+  ✨ Generated from Field `User`.`photoUrl` of type `String`
+  """
+  photoUrl: OrderDirection
+  """
+  ✨ Generated from Field `User`.`_count` of type `Int!`
+  """
+  _count: OrderDirection
+  """
+  ✨ Generated from Field `User`.`createdAt_count` of type `Int!`
+  """
+  createdAt_count: OrderDirection
+  """
+  ✨ Generated from Field `User`.`displayName_count` of type `Int!`
+  """
+  displayName_count: OrderDirection
+  """
+  ✨ Generated from Field `User`.`email_count` of type `Int!`
+  """
+  email_count: OrderDirection
+  """
+  ✨ Generated from Field `User`.`id_count` of type `Int!`
+  """
+  id_count: OrderDirection
+  """
+  ✨ Generated from Field `User`.`photoUrl_count` of type `Int!`
+  """
+  photoUrl_count: OrderDirection
+  """
+  ✨ Generated from Field `User`.`createdAt_min` of type `Timestamp`
+  """
+  createdAt_min: OrderDirection
+  """
+  ✨ Generated from Field `User`.`createdAt_max` of type `Timestamp`
+  """
+  createdAt_max: OrderDirection
+}
