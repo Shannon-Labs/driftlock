@@ -90,7 +90,7 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue'
 
-const signupEndpoint = '/api/v1/onboard/signup'
+const signupEndpoint = '/api/signup'
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 const form = reactive({

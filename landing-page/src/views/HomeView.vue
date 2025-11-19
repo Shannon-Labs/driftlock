@@ -8,23 +8,23 @@
             <div class="relative z-10 container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div class="mx-auto max-w-3xl text-center">
                     <span class="rounded-full bg-blue-500 px-4 py-1 text-sm font-sans font-medium text-white">
-                        Alpha Phase — Developer-First API
+                        Regulatory Compliance Made Simple
                     </span>
                     <h1 class="mt-6 text-5xl font-mono font-extrabold tracking-tight text-white sm:text-7xl">
-                        Explainable Anomalies, Ready in Minutes.
+                        Explainable Anomaly Detection
                     </h1>
                     <p class="mt-6 text-lg leading-8 font-sans text-gray-200 sm:text-xl">
-                        Clone the repo, run <code class="text-white">cd cbad-core && cargo build --release && cd ..</code>, then <code class="text-white">DRIFTLOCK_DEV_MODE=true ./scripts/run-api-demo.sh</code>—the same quickstart documented in the README. You'll mint a tenant, hit <code class="text-white">/v1/detect</code>, and inspect persisted anomalies with compression math instead of black-box ML.
+                        The only anomaly detection platform that can explain every alert with mathematical rigor. Built for regulated industries that need audit-ready evidence, not black-box predictions.
                     </p>
                     <p class="mt-4 text-base leading-7 font-sans text-gray-200/90 max-w-3xl mx-auto">
-                        Everything here mirrors the repo: API walkthrough, screenshots, and the ROI calculator that assumes the <span class="font-mono">~$1 per million anomaly checks</span> pricing direction (with volume discounts and enterprise plans in the low thousands per month).
+                        Powered by compression mathematics and AI analysis, Driftlock provides glass-box explanations that pass regulatory audits for DORA, NIS2, and EU AI Act compliance.
                     </p>
                     <div class="mt-10 flex items-center justify-center gap-x-6">
-                        <a href="#api-demo" class="rounded-md cta-gradient px-6 py-3 text-base font-sans font-semibold text-white shadow-lg transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">
-                            Run the API Demo
+                        <a href="#demo" class="rounded-md cta-gradient px-6 py-3 text-base font-sans font-semibold text-white shadow-lg transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">
+                            See Live Demo
                         </a>
-                        <a href="#contact" class="group flex items-center gap-x-2 rounded-md border border-blue-200 bg-white/90 px-6 py-3 text-base font-sans font-semibold text-gray-900 shadow-sm hover:bg-gray-50">
-                            Request Private Pilot
+                        <a href="#signup" class="group flex items-center gap-x-2 rounded-md border border-blue-200 bg-white/90 px-6 py-3 text-base font-sans font-semibold text-gray-900 shadow-sm hover:bg-gray-50">
+                            Start Free Trial
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
                             </svg>
@@ -34,48 +34,48 @@
             </div>
         </section>
 
-        <!-- API Demo Section -->
-        <section id="api-demo" class="bg-slate-950 text-white py-20">
+        <!-- Live Demo Section -->
+        <section id="demo" class="bg-slate-950 text-white py-20">
             <div class="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
                 <div class="grid gap-12 lg:grid-cols-2 lg:items-center">
                     <div>
-                        <p class="text-sm font-semibold uppercase tracking-[0.2em] text-blue-400">New onboarding</p>
-                        <h2 class="mt-3 text-4xl font-mono font-bold">HTTP API Demo with Docker + Postgres</h2>
+                        <p class="text-sm font-semibold uppercase tracking-[0.2em] text-blue-400">Live Demonstration</p>
+                        <h2 class="mt-3 text-4xl font-mono font-bold">See Anomaly Detection in Action</h2>
                         <p class="mt-4 text-lg text-slate-200">
-                            This is the exact flow from the README quickstart and <code>docs/API-DEMO-WALKTHROUGH.md</code>. Run one script, provision a tenant/key, hit <code>/v1/detect</code>, and inspect anomalies in Postgres—no black-box magic.
+                            Watch Driftlock detect real anomalies in financial transaction data, complete with mathematical explanations that satisfy regulatory audits.
                         </p>
                         <ol class="mt-6 space-y-4 text-slate-100">
                             <li class="flex items-start gap-3">
                                 <span class="mt-1 inline-flex h-8 w-8 items-center justify-center rounded-full bg-blue-500/30 text-blue-200 font-bold">1</span>
                                 <div>
-                                    <p class="font-semibold">Clone, build, run</p>
-                                    <p class="text-sm text-slate-300"><code>git clone</code>, <code>cd cbad-core && cargo build --release && cd ..</code>, then <code>DRIFTLOCK_DEV_MODE=true ./scripts/run-api-demo.sh</code>.</p>
+                                    <p class="font-semibold">Real-Time Detection</p>
+                                    <p class="text-sm text-slate-300">Process streaming transaction data and identify patterns that deviate from normal behavior</p>
                                 </div>
                             </li>
                             <li class="flex items-start gap-3">
                                 <span class="mt-1 inline-flex h-8 w-8 items-center justify-center rounded-full bg-blue-500/30 text-blue-200 font-bold">2</span>
                                 <div>
-                                    <p class="font-semibold">Script output = live instructions</p>
-                                    <p class="text-sm text-slate-300">We print <code>curl</code> + <code>psql</code> snippets so visitors can replay <code>/v1/detect</code>, fetch <code>/v1/anomalies/{id}</code>, and verify <code>/healthz</code> showing license + queue + DB status.</p>
+                                    <p class="font-semibold">Mathematical Proof</p>
+                                    <p class="text-sm text-slate-300">Get NCD scores, p-values, and compression ratios that provide auditable evidence</p>
                                 </div>
                             </li>
                             <li class="flex items-start gap-3">
                                 <span class="mt-1 inline-flex h-8 w-8 items-center justify-center rounded-full bg-blue-500/30 text-blue-200 font-bold">3</span>
                                 <div>
-                                    <p class="font-semibold">Proof in Postgres</p>
-                                    <p class="text-sm text-slate-300">`psql` output shows anomalies persisted with NCD, p-values, and explanations—ready for compliance teams.</p>
+                                    <p class="font-semibold">Compliance Reports</p>
+                                    <p class="text-sm text-slate-300">Auto-generate DORA, NIS2, and EU AI Act compliant reports with full audit trails</p>
                                 </div>
                             </li>
                         </ol>
-                        <p class="mt-8 text-sm text-slate-400">Dev mode bypass (`DRIFTLOCK_DEV_MODE=true`) is local-only. Production needs real keys; `/healthz` reports violations, just like the README describes.</p>
+                        <p class="mt-8 text-sm text-slate-400">Unlike black-box ML models, every Driftlock decision can be explained with mathematical certainty.</p>
                     </div>
                     <div class="space-y-6">
                         <video src="/api-demo-demo.mp4" autoplay muted loop playsinline controls poster="/api-demo-terminal.png" class="w-full rounded-2xl shadow-2xl border border-white/10">
-                            Sorry, your browser doesn't support embedded videos. Watch the terminal capture in the README.
+                            Interactive anomaly detection demonstration showing real-time analysis and explanations.
                         </video>
                         <div class="grid gap-4 sm:grid-cols-2">
-                            <img src="/api-demo-detect.png" alt="Sample /v1/detect response" class="rounded-2xl shadow-xl border border-white/5" />
-                            <img src="/api-demo-psql.png" alt="psql anomalies view" class="rounded-2xl shadow-xl border border-white/5" />
+                            <img src="/api-demo-detect.png" alt="Anomaly detection results with mathematical scores" class="rounded-2xl shadow-xl border border-white/5" />
+                            <img src="/api-demo-psql.png" alt="Audit trail in compliance database" class="rounded-2xl shadow-xl border border-white/5" />
                         </div>
                     </div>
                 </div>
@@ -196,7 +196,22 @@
             </div>
         </section>
 
-        <!-- How It Works Section -->
+        <!-- Interactive Playground Section -->
+        <section id="playground" class="py-24 sm:py-32 bg-white">
+            <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div class="mx-auto max-w-3xl text-center mb-16">
+                    <h2 class="text-base font-sans font-semibold leading-7 text-blue-600">Try It Now</h2>
+                    <p class="mt-2 text-4xl font-mono font-bold tracking-tight text-gray-900 sm:text-5xl">Interactive Demo</p>
+                    <p class="mt-6 text-lg leading-8 font-sans text-gray-700">
+                        Experience Driftlock's anomaly detection capabilities with real sample data. See how we detect anomalies and generate audit-ready explanations.
+                    </p>
+                </div>
+                
+                <div class="max-w-4xl mx-auto">
+                    <DemoComponent />
+                </div>
+            </div>
+        </section>
         <section id="how" class="py-24 sm:py-32 bg-gray-900 text-white">
             <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div class="mx-auto max-w-3xl text-center">
@@ -227,12 +242,7 @@
             </div>
         </section>
 
-        <!-- Live Playground Section -->
-        <section id="playground" class="py-24 sm:py-32">
-            <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <PlaygroundShell variant="embedded" />
-            </div>
-        </section>
+
 
         <!-- ROI Calculator Section -->
         <section id="roi" class="py-24 sm:py-32 bg-slate-950 text-white">
@@ -365,6 +375,51 @@
             </div>
         </section>
 
+        <!-- Signup Section -->
+        <section id="signup" class="py-24 sm:py-32 bg-gradient-to-r from-blue-50 to-indigo-50">
+            <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div class="grid gap-12 lg:grid-cols-2 lg:items-center">
+                    <div>
+                        <h2 class="text-4xl font-mono font-bold tracking-tight text-gray-900 sm:text-5xl">
+                            Ready to Start Detecting Anomalies?
+                        </h2>
+                        <p class="mt-6 text-lg leading-8 font-sans text-gray-700">
+                            Join financial institutions and healthcare companies already using Driftlock for regulatory compliance.
+                        </p>
+                        <div class="mt-8 space-y-4">
+                            <div class="flex items-center gap-3">
+                                <div class="flex-shrink-0 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                                    <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <span class="font-sans text-gray-700">14-day free trial with 10,000 events</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="flex-shrink-0 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                                    <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <span class="font-sans text-gray-700">Instant API key - no credit card required</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="flex-shrink-0 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                                    <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <span class="font-sans text-gray-700">DORA & NIS2 compliant from day one</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <SignupForm />
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- CTA Section -->
         <section id="contact" class="bg-gray-900">
             <div class="container mx-auto max-w-7xl px-4 py-24 sm:px-6 sm:py-32 lg:px-8">
@@ -485,7 +540,8 @@
 
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue'
-import PlaygroundShell from '../components/playground/PlaygroundShell.vue'
+import DemoComponent from '../components/DemoComponent.vue'
+import SignupForm from '../components/cta/SignupForm.vue'
 
 const contactEndpoint = '/api/v1/contact'
 const fallbackMailto = 'mailto:hunter@shannonlabs.dev?subject=Driftlock Pilot Program Inquiry'

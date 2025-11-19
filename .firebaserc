@@ -1,3 +1,5 @@
-# This file is used by the GitHub Action to deploy to Firebase
-# See https://firebase.google.com/docs/cli/ci#github_actions_for_firebase_hosting
-
+{
+  "projects": {
+    "default": "driftlock-1c354"
+  }
+}
