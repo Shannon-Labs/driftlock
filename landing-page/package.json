@@ -14,10 +14,18 @@
     "analyze": "npm run build && npx vite-bundle-analyzer dist"
   },
   "dependencies": {
+    "@headlessui/vue": "^1.7.23",
+    "@heroicons/vue": "^2.2.0",
     "@vueuse/core": "^10.7.0",
     "@vueuse/head": "^2.0.0",
+    "chart.js": "^4.5.1",
+    "firebase": "^12.6.0",
+    "highlight.js": "^11.11.1",
     "lucide-vue-next": "^0.303.0",
+    "marked": "^17.0.0",
+    "pinia": "^3.0.4",
     "vue": "^3.4.0",
+    "vue-chartjs": "^5.3.3",
     "vue-router": "^4.6.3"
   },
   "devDependencies": {

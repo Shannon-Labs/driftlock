@@ -5,7 +5,7 @@
       <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <div class="flex items-center gap-8">
           <router-link to="/" class="flex items-center gap-2">
-            <img class="h-8 w-auto" src="/logo-icon.svg" alt="Driftlock" />
+            <img class="h-8 w-auto" src="/logo.svg" alt="Driftlock" />
             <span class="font-mono font-bold text-gray-900">Driftlock Docs</span>
           </router-link>
         </div>
@@ -48,8 +48,8 @@
           <div v-if="loading" class="flex items-center justify-center py-20">
             <div class="h-8 w-8 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"></div>
           </div>
-          <div v-else-if="error" class="rounded-lg bg-red-50 p-4 text-red-700">
-            {{ error }}
+          <div v-else-if="errorMessage" class="rounded-lg bg-red-50 p-4 text-red-700">
+            {{ errorMessage }}
           </div>
           <article v-else class="prose prose-blue max-w-none prose-headings:font-mono prose-headings:font-bold prose-a:text-blue-600" v-html="content"></article>
         </main>
@@ -59,7 +59,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, type Ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { marked } from 'marked'
 import hljs from 'highlight.js'
@@ -68,11 +68,11 @@ import 'highlight.js/styles/github.css'
 const route = useRoute()
 const content = ref('')
 const loading = ref(true)
-const error = ref<string | null>(null)
+const errorMessage = ref(null) as Ref<string | null>
 
 // Configure marked with highlight.js
-marked.setOptions({
-  highlight: function(code, lang) {
+(marked as any).setOptions({
+  highlight: function(code: string, lang: string) {
     const language = hljs.getLanguage(lang) ? lang : 'plaintext';
     return hljs.highlight(code, { language }).value;
   },
@@ -121,7 +121,7 @@ const docMap: Record<string, string> = {
 
 const fetchDoc = async (slug: string | undefined) => {
   loading.value = true
-  error.value = null
+  errorMessage.value = null
   content.value = ''
 
   try {
@@ -141,9 +141,9 @@ const fetchDoc = async (slug: string | undefined) => {
     const fixedText = text.replace(/\]\(docs\/(.*?)\.md\)/g, '](/docs/$1)')
                           .replace(/\]\(\.\.\/docs\/(.*?)\.md\)/g, '](/docs/$1)')
                           
-    content.value = marked.parse(fixedText)
+    content.value = marked.parse(fixedText) as string
   } catch (e: any) {
-    error.value = `Could not load documentation: ${e.message}`
+    errorMessage.value = `Could not load documentation: ${e.message}`
   } finally {
     loading.value = false
   }
