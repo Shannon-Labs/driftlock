@@ -7,27 +7,94 @@
 
 ---
 
-## 🎯 **Current State: Full SaaS Platform Ready**
+## 🎯 **CURRENT STATUS: Ready for Firebase Deployment**
 
-### ✅ **Phase 7 Complete - SaaS Platform Integration**
+### ✅ **Phase 7 Complete - Full SaaS Integration**
 
-**Just Completed (January 2025):**
-- ✅ **Firebase Hosting** - Professional frontend deployment
-- ✅ **Firebase Functions** - Gemini AI-powered backend services  
-- ✅ **User Onboarding** - Instant signup with API key generation
-- ✅ **Cloud Run Integration** - Seamless proxy to anomaly detection backend
-- ✅ **Landing Page Cleanup** - Business-focused, no technical details exposed
-- ✅ **Interactive Demo** - Professional anomaly detection showcase
-- ✅ **API Integration** - Unified `/api/*` endpoints via Firebase
-- ✅ **Compliance AI** - Gemini-generated DORA/NIS2/AI Act reports
+**Repository State (January 2025):**
+- ✅ **Firebase Hosting** - Landing page ready for deployment
+- ✅ **Firebase Functions** - API layer with cost-optimized AI
+- ✅ **User Onboarding** - Instant signup flow implemented
+- ✅ **Cloud Run Integration** - Backend proxy configured
+- ✅ **Cost Optimization** - AI moved to premium tier (90% cost reduction)
+- ✅ **Landing Page** - Business-focused, no technical details exposed
+- ✅ **Interactive Demo** - Mathematical explanations + AI upsell
 
-**New SaaS Features:**
-- 🔑 **Instant Signup**: Users get API keys immediately on registration
-- 🤖 **AI Analysis**: Gemini Pro analyzes anomalies and provides insights
-- 📊 **Compliance Reports**: Auto-generated regulatory documentation
-- 🔒 **Authentication**: API key validation across all services
-- 📈 **Usage Tracking**: User metrics and plan limits implemented
-- 👥 **Admin Dashboard**: Tenant management and monitoring
+**Current Deployment Status:**
+- 🔄 **Not yet deployed** - Need to build and deploy to Firebase
+- 🔧 **Domain strategy** - Deciding between Google Domains vs Cloudflare
+- 🔑 **Auth integration** - Firebase Auth needs to be added
+- ⚙️ **Environment variables** - Need to configure Gemini API key
+
+---
+
+## 🚀 **IMMEDIATE NEXT STEPS (This Week)**
+
+### Step 1: Deploy Current SaaS Platform (Today)
+```bash
+# Build landing page
+cd landing-page && npm run build && cd ..
+
+# Upgrade Firebase to Blaze plan (required for Functions)
+# Visit: https://console.firebase.google.com/project/driftlock-1c354/usage/details
+
+# Deploy complete stack  
+firebase deploy
+```
+
+### Step 2: Domain Strategy (Choose One)
+
+#### Option A: Google-First (Recommended)
+```bash
+# Move domain to Google Domains
+# Point driftlock.net to Firebase Hosting
+# Benefits: Simpler management, integrated SSL/CDN
+```
+
+#### Option B: Keep Cloudflare  
+```bash
+# Add CNAME: driftlock.net -> driftlock-1c354.web.app
+# Benefits: Keep Cloudflare features (analytics, security)
+```
+
+### Step 3: Add Firebase Authentication
+```bash
+# Enable Firebase Auth in console
+# Add auth providers (email/password, Google)
+# Integrate with existing signup flow
+```
+
+### Step 4: Environment Configuration
+```bash
+# Set Gemini API key
+firebase functions:config:set gemini.api_key="your-key"
+
+# Set Cloud Run backend URL  
+firebase functions:config:set cloudrun.api_url="your-backend-url"
+```
+
+---
+
+## 📋 **WEEK-BY-WEEK PLAN TO LAUNCH**
+
+### Week 1: Production Deployment
+**Days 1-2: Firebase Deployment**
+- [ ] Upgrade Firebase project to Blaze plan
+- [ ] Deploy landing page and functions to Firebase
+- [ ] Configure custom domain (driftlock.net)
+- [ ] Set up SSL certificates and CDN
+
+**Days 3-4: Authentication Integration**  
+- [ ] Enable Firebase Auth (email/password + Google)
+- [ ] Update SignupForm.vue to use Firebase Auth
+- [ ] Integrate with Cloud Run backend for API key generation
+- [ ] Test complete signup flow
+
+**Days 5-7: Testing & Monitoring**
+- [ ] End-to-end testing of signup → API key → detection
+- [ ] Set up Firebase Analytics and monitoring
+- [ ] Performance optimization and caching
+- [ ] Security audit and penetration testing
 
 ---
 
