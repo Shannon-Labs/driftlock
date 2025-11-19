@@ -301,6 +301,9 @@ func buildHTTPHandler(cfg config, store *store, queue jobQueue, limiter *tenantR
 	mux.Handle("/v1/me/keys", withFirebaseAuth(store, http.HandlerFunc(handleListKeys(store))))
 	mux.Handle("/v1/me/usage", withFirebaseAuth(store, http.HandlerFunc(handleGetUsage(store))))
 
+	// Admin endpoints
+	mux.Handle("/v1/admin/", withAdminAuth(http.StripPrefix("/v1/admin", adminHandler(store))))
+
 	return withCommon(withRequestContext(mux))
 }
 

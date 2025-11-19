@@ -734,6 +734,7 @@ type tenantRecord struct {
 	Plan              string
 	DefaultCompressor string
 	RateLimitRPS         int
+	Email                string
 	StripeCustomerID     *string
 	StripeSubscriptionID *string
 	StripeStatus         *string
@@ -935,8 +936,12 @@ type apiKeyRecord struct {
 	KeyRateLimit      int
 	TenantName        string
 	TenantSlug        string
+	Plan              string
 	DefaultCompressor string
 	TenantRateLimit   int
+	CreatedAt         time.Time
+	ExpiresAt         *time.Time
+	RevokedAt         *time.Time
 }
 
 type tenantContext struct {

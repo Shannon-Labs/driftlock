@@ -11,7 +11,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stripe/stripe-go/v76"
-	"github.com/stripe/stripe-go/v76/checkout/session"
+	portalsession "github.com/stripe/stripe-go/v76/billingportal/session"
+	checkoutsession "github.com/stripe/stripe-go/v76/checkout/session"
 	"github.com/stripe/stripe-go/v76/webhook"
 )
 
@@ -62,7 +63,7 @@ func billingCheckoutHandler(store *store) http.HandlerFunc {
 			},
 		}
 
-		s, err := session.New(params)
+		s, err := checkoutsession.New(params)
 		if err != nil {
 			writeError(w, r, http.StatusInternalServerError, fmt.Errorf("stripe session creation failed: %w", err))
 			return
@@ -88,12 +89,15 @@ func billingPortalHandler(store *store) http.HandlerFunc {
 
 		// We need the Stripe Customer ID from the tenant record
 		// If they don't have one, we can't send them to portal (they need to checkout first)
-		// We'll need to fetch the full tenant record if it's not fully populated in context
 
-		// TODO: Fetch full tenant details including stripe_customer_id
-		var customerID string
+		var customerID *string
 		err := store.pool.QueryRow(r.Context(), "SELECT stripe_customer_id FROM tenants WHERE id = $1", tc.Tenant.ID).Scan(&customerID)
-		if err != nil || customerID == "" {
+		if err != nil {
+			writeError(w, r, http.StatusInternalServerError, fmt.Errorf("database error: %w", err))
+			return
+		}
+
+		if customerID == nil || *customerID == "" {
 			writeError(w, r, http.StatusBadRequest, fmt.Errorf("no billing account found; please subscribe first"))
 			return
 		}
@@ -106,11 +110,11 @@ func billingPortalHandler(store *store) http.HandlerFunc {
 		// Create Portal Session
 		// Ideally set STRIPE_CUSTOMER_PORTAL_ID in env if using a specific configuration
 		params := &stripe.BillingPortalSessionParams{
-			Customer:  stripe.String(customerID),
+			Customer:  stripe.String(*customerID),
 			ReturnURL: stripe.String(domain + "/dashboard"),
 		}
 
-		ps, err := session.NewBillingPortal(params)
+		ps, err := portalsession.New(params)
 		if err != nil {
 			writeError(w, r, http.StatusInternalServerError, fmt.Errorf("stripe portal session failed: %w", err))
 			return

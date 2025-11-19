@@ -295,6 +295,47 @@ EOF
     fi
 }
 
+# Test 11: Admin API
+test_admin_api() {
+    echo -e "\n👑 Test 11: Admin API"
+
+    if [ -z "$ADMIN_KEY" ]; then
+        warn "ADMIN_KEY not set, skipping admin API tests"
+        return
+    fi
+
+    # Test stats endpoint
+    response=$(curl -s -w "\n%{http_code}" \
+        -H "X-Admin-Key: $ADMIN_KEY" \
+        "$API_URL/v1/admin/stats" 2>/dev/null || echo "000")
+
+    body=$(echo "$response" | head -n1)
+    status=$(echo "$response" | tail -n1)
+
+    if [ "$status" = "200" ]; then
+        pass "Admin stats endpoint works"
+        if echo "$body" | jq -e '.total_tenants >= 0' > /dev/null 2>&1; then
+            pass "Admin stats payload valid"
+        else
+            fail "Admin stats payload invalid: $body"
+        fi
+    else
+        fail "Admin stats failed with status: $status"
+    fi
+
+    # Test unauthorized access
+    response=$(curl -s -w "\n%{http_code}" \
+        -H "X-Admin-Key: wrong_key" \
+        "$API_URL/v1/admin/stats" 2>/dev/null || echo "000")
+    status=$(echo "$response" | tail -n1)
+
+    if [ "$status" = "403" ]; then
+        pass "Admin auth rejects invalid key"
+    else
+        fail "Admin auth allowed invalid key or returned wrong status: $status"
+    fi
+}
+
 # Summary
 print_summary() {
     echo -e "\n====================================="
@@ -342,5 +383,6 @@ test_cors
 test_security
 test_migrations
 test_performance
+test_admin_api
 
 print_summary

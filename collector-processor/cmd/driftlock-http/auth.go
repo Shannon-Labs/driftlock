@@ -14,6 +14,15 @@ import (
 	"google.golang.org/api/option"
 )
 
+// Define context key
+const tenantContextKey ctxKey = "tenantContext"
+
+// Helper to get tenant from context
+func tenantFromContext(ctx context.Context) (tenantContext, bool) {
+	tc, ok := ctx.Value(tenantContextKey).(tenantContext)
+	return tc, ok
+}
+
 var firebaseAuth *auth.Client
 
 func initFirebaseAuth() error {
@@ -82,20 +91,12 @@ func withFirebaseAuth(store *store, next http.Handler) http.Handler {
 		}
 
 		// Find tenant by email
-		// Note: This assumes 1:1 mapping for now, or 1st tenant found
-		// In a real multi-user system, we'd have a users table linking to tenants.
-		// For MVP, we look up tenant by email.
 		tenantID, err := store.tenantIDByEmail(r.Context(), user.Email)
 		if err != nil {
 			writeError(w, r, http.StatusForbidden, fmt.Errorf("no tenant found for email %s", user.Email))
 			return
 		}
 
-		// Inject tenant context (reusing existing context structure if possible, or creating new)
-		// We need to fetch the API key to fully populate tenantContext if downstream needs it,
-		// but for dashboard actions, just TenantID is often enough.
-		// Let's fetch the full record to be safe.
-		
 		// Fetch a valid API key for this tenant to populate the context fully
 		apiKey, err := store.primaryAPIKey(r.Context(), tenantID)
 		if err != nil {
@@ -105,10 +106,78 @@ func withFirebaseAuth(store *store, next http.Handler) http.Handler {
 
 		// Populate context
 		tc := tenantContext{
-			Tenant: tenantRecord{ID: tenantID, Name: user.Email, Email: user.Email}, // Partial record
+			Tenant: tenantRecord{ID: tenantID, Name: user.Email, Email: user.Email},
 			Key:    apiKey,
 		}
 		
+		ctx := context.WithValue(r.Context(), tenantContextKey, tc)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+// withAuth verifies X-Api-Key
+func withAuth(store *store, limiter *tenantRateLimiter, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		key := r.Header.Get("X-Api-Key")
+		if key == "" {
+			authHeader := r.Header.Get("Authorization")
+			if strings.HasPrefix(authHeader, "Bearer ") {
+				key = strings.TrimPrefix(authHeader, "Bearer ")
+			}
+		}
+
+		if key == "" {
+			writeError(w, r, http.StatusUnauthorized, fmt.Errorf("missing api key"))
+			return
+		}
+
+		if !strings.HasPrefix(key, "dlk_") {
+			writeError(w, r, http.StatusUnauthorized, fmt.Errorf("invalid api key format"))
+			return
+		}
+
+		parts := strings.Split(key, ".")
+		if len(parts) != 2 {
+			writeError(w, r, http.StatusUnauthorized, fmt.Errorf("invalid api key format"))
+			return
+		}
+
+		idPart := strings.TrimPrefix(parts[0], "dlk_")
+		keyID, err := uuid.Parse(idPart)
+		if err != nil {
+			writeError(w, r, http.StatusUnauthorized, fmt.Errorf("invalid api key id"))
+			return
+		}
+
+		rec, err := store.resolveAPIKey(r.Context(), keyID)
+		if err != nil {
+			writeError(w, r, http.StatusUnauthorized, fmt.Errorf("invalid api key"))
+			return
+		}
+
+		if !verifyAPIKey(rec.KeyHash, key) {
+			writeError(w, r, http.StatusUnauthorized, fmt.Errorf("invalid api key"))
+			return
+		}
+
+		tc := tenantContext{
+			Tenant: tenantRecord{
+				ID: rec.TenantID,
+				Name: rec.TenantName,
+				Slug: rec.TenantSlug,
+				Plan: rec.Plan,
+				DefaultCompressor: rec.DefaultCompressor,
+				RateLimitRPS: rec.TenantRateLimit,
+			},
+			Key: *rec,
+		}
+
+		if allowed, wait := limiter.Allow(tc); !allowed {
+			w.Header().Set("Retry-After", fmt.Sprintf("%d", int(wait.Seconds())))
+			writeError(w, r, http.StatusTooManyRequests, fmt.Errorf("rate limit exceeded"))
+			return
+		}
+
 		ctx := context.WithValue(r.Context(), tenantContextKey, tc)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})

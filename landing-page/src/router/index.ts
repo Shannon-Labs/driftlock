@@ -36,6 +36,21 @@ const router = createRouter({
       path: '/docs/:pathMatch(.*)*',
       name: 'docs',
       component: () => import('../views/DocsView.vue')
+    },
+    {
+      path: '/admin/login',
+      name: 'admin-login',
+      component: () => import('../components/admin/AdminLogin.vue')
+    },
+    {
+      path: '/admin/dashboard',
+      name: 'admin-dashboard',
+      component: () => import('../views/AdminDashboard.vue'),
+      meta: { requiresAdmin: true }
+    },
+    {
+      path: '/admin',
+      redirect: '/admin/dashboard'
     }
   ],
   scrollBehavior(to, from, savedPosition) {
@@ -55,6 +70,16 @@ router.beforeEach(async (to, from, next) => {
   // Ensure auth is initialized
   if (authStore.loading) {
     await authStore.init()
+  }
+
+  if (to.meta.requiresAdmin) {
+    const adminKey = localStorage.getItem('driftlock_admin_key')
+    if (!adminKey) {
+      next('/admin/login')
+      return
+    }
+    next()
+    return
   }
 
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
