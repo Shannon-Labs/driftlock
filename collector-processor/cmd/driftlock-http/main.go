@@ -271,6 +271,14 @@ func buildHTTPHandler(cfg config, store *store, queue jobQueue, limiter *tenantR
 	})))
 	mux.Handle("/v1/anomalies", withAuth(store, limiter, anomaliesHandler(store)))
 	mux.Handle("/v1/anomalies/", withAuth(store, limiter, anomalyRouter(cfg, store, queue)))
+
+	// Onboarding endpoints (no auth required)
+	mux.HandleFunc("/v1/onboard/signup", onboardSignupHandler(store))
+
+	// Admin endpoints
+	mux.HandleFunc("/v1/admin/tenants", adminTenantsHandler(store))
+	mux.HandleFunc("/v1/admin/tenants/", adminTenantUsageHandler(store))
+
 	return withCommon(withRequestContext(mux))
 }
 

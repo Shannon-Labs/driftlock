@@ -24,6 +24,11 @@ const router = createRouter({
     {
       path: '/playground',
       redirect: { path: '/', hash: '#playground' }
+    },
+    {
+      path: '/admin',
+      name: 'admin',
+      component: () => import('../views/AdminDashboard.vue')
     }
   ],
   scrollBehavior(to, from, savedPosition) {
