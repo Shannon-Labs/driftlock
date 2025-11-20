@@ -1,34 +1,45 @@
 <template>
     <main>
         <!-- Hero Section -->
-        <section class="relative overflow-hidden py-24 sm:py-32 isolate">
-            <!-- Animated Gradient Background -->
-            <div class="absolute inset-0 -z-10 h-full w-full bg-slate-950">
-                <div class="absolute bottom-0 left-0 right-0 top-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:14px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"></div>
-                <div class="absolute right-0 top-0 -z-10 transform-gpu overflow-hidden blur-3xl" aria-hidden="true">
-                    <div class="relative left-[calc(50%+3rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-20 sm:left-[calc(50%+36rem)] sm:w-[72.1875rem]" style="clip-path: polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)"></div>
+        <section class="relative isolate overflow-hidden py-24 sm:py-32">
+            <div class="absolute inset-0 -z-10 bg-slate-950">
+                <div class="absolute inset-0 opacity-40 bg-[radial-gradient(circle_at_top,rgba(14,165,233,0.35),transparent_55%),linear-gradient(120deg,rgba(15,23,42,0.95),rgba(8,47,73,0.92))]"></div>
+                <div class="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:32px_32px] opacity-20 [mask-image:radial-gradient(ellipse_70%_60%_at_50%_0%,#fff_60%,transparent)]"></div>
+                <div class="absolute inset-x-0 top-0 flex justify-center">
+                    <div class="h-[120px] w-[70%] bg-gradient-to-r from-cyan-400/40 via-blue-500/30 to-transparent blur-3xl opacity-60"></div>
+                </div>
+                <div class="absolute inset-x-0 top-4 flex justify-around text-[9px] font-mono uppercase tracking-[0.8em] text-cyan-200/40">
+                    <span class="animate-pulse">cbad core live</span>
+                    <span class="animate-pulse delay-300">ncd signal stable</span>
+                    <span class="animate-pulse delay-500">audit log signed</span>
+                </div>
+                <div class="pointer-events-none absolute inset-0">
+                    <div class="absolute left-1/4 top-0 h-full w-px bg-gradient-to-b from-transparent via-cyan-400/50 to-transparent animate-[pulse_6s_ease-in-out_infinite]"></div>
+                    <div class="absolute right-1/3 top-0 h-full w-px bg-gradient-to-b from-transparent via-indigo-400/40 to-transparent animate-[pulse_8s_ease-in-out_infinite]"></div>
                 </div>
             </div>
-            
-            <div class="relative z-10 container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+
+            <div class="container relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div class="mx-auto max-w-3xl text-center">
-                    <div class="mb-8 flex justify-center">
-                        <span class="relative rounded-full px-3 py-1 text-sm leading-6 text-gray-300 ring-1 ring-white/10 hover:ring-white/20">
-                            Developer-first · Math detects, AI explains <a href="#pricing" class="font-semibold text-blue-300"><span class="absolute inset-0" aria-hidden="true"></span>See pricing <span aria-hidden="true">&rarr;</span></a>
-                        </span>
+                    <div class="mb-6 inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.4em] text-cyan-200">
+                        Explainable · DORA Ready · Gemini Optional
                     </div>
-                    <h1 class="mt-6 text-5xl font-mono font-extrabold tracking-tight text-white sm:text-7xl bg-clip-text text-transparent bg-gradient-to-b from-white to-white/60">
-                        Math Detects It.<br/>AI Explains It.
+                    <h1 class="text-5xl font-mono font-extrabold tracking-tight text-white sm:text-7xl">
+                        Stop Black Box Audits.
                     </h1>
-                    <p class="mt-6 text-lg leading-8 font-sans text-gray-300 sm:text-xl max-w-2xl mx-auto">
-                        Driftlock finds anomalies using deterministic compression math (cbad-core) in milliseconds, then asks Gemini Flash to describe the \"why\" in plain English for auditors, analysts, or AI ops teams.
+                    <p class="mt-6 text-lg leading-8 text-slate-200 sm:text-xl">
+                        Driftlock compresses every payload twice, proves the math behind each anomaly, and (optionally) asks Gemini Flash to narrate the context.
+                        Compliance teams get receipts. Engineers get sub-2s signal.
                     </p>
-                    <div class="mt-10 flex items-center justify-center gap-x-6">
-                        <a href="#signup" class="rounded-full bg-blue-600 px-8 py-3.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 transition-all">
+                    <div class="mt-10 flex flex-wrap items-center justify-center gap-4">
+                        <a href="#signup" class="rounded-full bg-blue-600 px-8 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/30 transition hover:-translate-y-0.5 hover:bg-blue-500">
                             Start Free Trial
                         </a>
-                        <a href="#api-demo" class="text-sm font-semibold leading-6 text-white hover:text-blue-300 transition-colors">
-                            View API Demo <span aria-hidden="true">→</span>
+                        <button type="button" @click="triggerLiveScan" class="rounded-full border border-white/30 px-6 py-3.5 text-sm font-semibold text-white transition hover:border-cyan-300 hover:text-cyan-200">
+                            Live Signal Scan →
+                        </button>
+                        <a href="#api-demo" class="text-sm font-semibold leading-6 text-cyan-200 hover:text-white transition">
+                            View API Demo
                         </a>
                     </div>
                 </div>
@@ -258,7 +269,7 @@
                     <h2 class="text-3xl font-bold tracking-tight text-gray-900">Try It Yourself</h2>
                     <p class="mt-4 text-lg text-gray-600">Interact with the API directly from your browser.</p>
                 </div>
-                <PlaygroundShell variant="embedded" />
+                <PlaygroundShell ref="playgroundRef" variant="embedded" />
             </div>
         </section>
 
@@ -409,6 +420,7 @@ import { computed, reactive, ref } from 'vue'
 import PlaygroundShell from '../components/playground/PlaygroundShell.vue'
 import SignupForm from '../components/cta/SignupForm.vue'
 
+const playgroundRef = ref<InstanceType<typeof PlaygroundShell> | null>(null)
 const contactEndpoint = '/api/v1/contact'
 const fallbackMailto = 'mailto:hunter@shannonlabs.dev?subject=Driftlock Pilot Program Inquiry'
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -449,6 +461,12 @@ const handleContactSubmit = async () => {
         submissionState.value = 'success'
         resetForm()
     }, 1000)
+}
+
+const triggerLiveScan = () => {
+    const target = document.getElementById('playground')
+    target?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    playgroundRef.value?.runFinancialDemo?.()
 }
 
 // ROI calculator state

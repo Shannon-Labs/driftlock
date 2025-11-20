@@ -28,6 +28,7 @@ type config struct {
 	ReadTimeout      time.Duration
 	WriteTimeout     time.Duration
 	IdleTimeout      time.Duration
+	MaxEvents        int
 	DefaultBaseline  int
 	DefaultWindow    int
 	DefaultHop       int
@@ -38,6 +39,7 @@ type config struct {
 	Seed             uint64
 	RateLimitRPS     int
 	QueueCapacity    int
+	PreferOpenZL     bool
 }
 
 func loadConfig() config {
@@ -46,6 +48,7 @@ func loadConfig() config {
 		ReadTimeout:      time.Duration(envInt("READ_TIMEOUT_SEC", 15)) * time.Second,
 		WriteTimeout:     time.Duration(envInt("WRITE_TIMEOUT_SEC", 30)) * time.Second,
 		IdleTimeout:      time.Duration(envInt("IDLE_TIMEOUT_SEC", 60)) * time.Second,
+		MaxEvents:        envInt("MAX_EVENTS", 1000),
 		DefaultBaseline:  envInt("DEFAULT_BASELINE", 400),
 		DefaultWindow:    envInt("DEFAULT_WINDOW", 50),
 		DefaultHop:       envInt("DEFAULT_HOP", 10),
@@ -56,6 +59,7 @@ func loadConfig() config {
 		Seed:             envInt64("SEED", 42),
 		RateLimitRPS:     envInt("RATE_LIMIT_RPS", 60),
 		QueueCapacity:    envInt("QUEUE_CAPACITY", 512),
+		PreferOpenZL:     envBool("PREFER_OPENZL", false),
 	}
 }
 
@@ -670,6 +674,16 @@ func detectHandler(w http.ResponseWriter, r *http.Request, cfg config, store *st
 		writeError(w, r, http.StatusBadRequest, fmt.Errorf("events required"))
 		return
 	}
+	if cfg.MaxEvents > 0 && len(payload.Events) > cfg.MaxEvents {
+		writeError(w, r, http.StatusBadRequest, fmt.Errorf("too many events: max %d per request", cfg.MaxEvents))
+		return
+	}
+	for idx, ev := range payload.Events {
+		if len(bytes.TrimSpace(ev)) == 0 || bytes.Equal(bytes.TrimSpace(ev), []byte("null")) {
+			writeError(w, r, http.StatusBadRequest, fmt.Errorf("event %d is empty", idx))
+			return
+		}
+	}
 
 	stream, settings, err := resolveStream(store, tc, payload.StreamID)
 	if err != nil {
@@ -787,6 +801,8 @@ func buildDetectionSettings(cfg config, stream streamRecord, settings streamSett
 	if plan.CompressionAlgorithm == "" {
 		plan.CompressionAlgorithm = strings.ToLower(cfg.DefaultAlgo)
 	}
+
+	overrodeCompressor := false
 	if override != nil {
 		if override.BaselineSize != nil {
 			plan.BaselineSize = *override.BaselineSize
@@ -808,7 +824,11 @@ func buildDetectionSettings(cfg config, stream streamRecord, settings streamSett
 		}
 		if override.Compressor != nil && *override.Compressor != "" {
 			plan.CompressionAlgorithm = strings.ToLower(*override.Compressor)
+			overrodeCompressor = true
 		}
+	}
+	if cfg.PreferOpenZL && driftlockcbad.HasOpenZL() && plan.CompressionAlgorithm != "openzl" && !overrodeCompressor {
+		plan.CompressionAlgorithm = "openzl"
 	}
 	return plan
 }
@@ -1036,6 +1056,18 @@ func envFloat(key string, def float64) float64 {
 	return def
 }
 
+func envBool(key string, def bool) bool {
+	if v := os.Getenv(key); v != "" {
+		switch strings.ToLower(strings.TrimSpace(v)) {
+		case "1", "true", "yes", "y", "on":
+			return true
+		case "0", "false", "no", "n", "off":
+			return false
+		}
+	}
+	return def
+}
+
 func parseAllowedOrigins(v string) []string {
 	v = strings.ReplaceAll(v, "%2C", ",")
 	v = strings.ReplaceAll(v, "%2c", ",")
@@ -1110,11 +1142,20 @@ var (
 		Help:    "Duration of /v1/detect requests",
 		Buckets: prometheus.DefBuckets,
 	})
+	openZLAvailable = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "driftlock_openzl_available",
+		Help: "Whether OpenZL symbols are present in the CBAD core",
+	})
 	registerMetricsOnce sync.Once
 )
 
 func registerMetrics() {
 	registerMetricsOnce.Do(func() {
-		prometheus.MustRegister(requestCounter, requestDuration)
+		prometheus.MustRegister(requestCounter, requestDuration, openZLAvailable)
+		if driftlockcbad.HasOpenZL() {
+			openZLAvailable.Set(1)
+		} else {
+			openZLAvailable.Set(0)
+		}
 	})
 }

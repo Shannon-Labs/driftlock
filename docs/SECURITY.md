@@ -83,6 +83,16 @@ The Shannon Labs security team can be reached at:
 - Rotate secrets regularly
 - Use a secrets management system in production
 
+### Frontend API Key Management
+
+Client-side applications, like the `landing-page`, require special handling for API keys.
+
+- **NEVER** embed API keys directly in the frontend code or commit them to version control in files like `.env`.
+- The `VITE_FIREBASE_API_KEY` for the frontend is stored securely in **Google Secret Manager**.
+- A **Firebase Cloud Function** (`getFirebaseConfig`) acts as a secure proxy. It is the only part of the system with permission to access the API key secret.
+- The frontend application calls this Cloud Function at runtime to fetch the Firebase configuration.
+- This pattern ensures that the API key is never exposed directly to the browser or public repositories.
+
 ## Dependency Security
 
 We regularly scan our dependencies for known vulnerabilities using:

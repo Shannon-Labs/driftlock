@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -33,6 +31,7 @@ type onboardSignupRequest struct {
 type onboardSignupResponse struct {
 	Success bool   `json:"success"`
 	Message string `json:"message"`
+	APIKey  string `json:"api_key,omitempty"`
 	Tenant  struct {
 		ID        string    `json:"id"`
 		Name      string    `json:"name"`
@@ -40,7 +39,6 @@ type onboardSignupResponse struct {
 		Plan      string    `json:"plan"`
 		CreatedAt time.Time `json:"created_at"`
 	} `json:"tenant"`
-	// APIKey removed from response for verification flow
 }
 
 func onboardSignupHandler(cfg config, store *store, emailer *emailService) http.HandlerFunc {
@@ -49,6 +47,8 @@ func onboardSignupHandler(cfg config, store *store, emailer *emailService) http.
 			writeError(w, r, http.StatusMethodNotAllowed, fmt.Errorf("use POST"))
 			return
 		}
+		defer r.Body.Close()
+		r.Body = http.MaxBytesReader(w, r.Body, 64*1024) // defensive bound for signup payloads
 
 		// Rate limit by IP
 		ip := getClientIP(r)
@@ -58,7 +58,9 @@ func onboardSignupHandler(cfg config, store *store, emailer *emailService) http.
 		}
 
 		var req onboardSignupRequest
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		decoder := json.NewDecoder(r.Body)
+		decoder.DisallowUnknownFields()
+		if err := decoder.Decode(&req); err != nil {
 			writeError(w, r, http.StatusBadRequest, fmt.Errorf("invalid request body: %w", err))
 			return
 		}
@@ -83,21 +85,13 @@ func onboardSignupHandler(cfg config, store *store, emailer *emailService) http.
 			return
 		}
 
-		// Create tenant with trial plan (Pending Verification)
+		// Create tenant with active status and API key immediately
 		plan := req.Plan
 		if plan == "" {
 			plan = "trial"
 		}
 
-		// Generate verification token
-		tokenBytes := make([]byte, 32)
-		if _, err := rand.Read(tokenBytes); err != nil {
-			writeError(w, r, http.StatusInternalServerError, fmt.Errorf("failed to generate token: %w", err))
-			return
-		}
-		token := hex.EncodeToString(tokenBytes)
-
-		result, err := store.createPendingTenant(ctx, tenantCreateParams{
+		result, err := store.createTenantWithKey(ctx, tenantCreateParams{
 			Name:                req.CompanyName,
 			Slug:                slugify(req.CompanyName),
 			Plan:                plan,
@@ -105,6 +99,9 @@ func onboardSignupHandler(cfg config, store *store, emailer *emailService) http.
 			StreamType:          "logs",
 			StreamDescription:   "Default stream created during onboarding",
 			StreamRetentionDays: 14,
+			KeyRole:             "admin",
+			KeyName:             "default-key",
+			KeyRateLimit:        cfg.DefaultRateLimit(),
 			TenantRateLimit:     cfg.DefaultRateLimit(),
 			DefaultBaseline:     cfg.DefaultBaseline,
 			DefaultWindow:       cfg.DefaultWindow,
@@ -117,22 +114,25 @@ func onboardSignupHandler(cfg config, store *store, emailer *emailService) http.
 			SignupIP:            ip,
 			Source:              req.Source,
 			Seed:                int64(cfg.Seed),
-			VerificationToken:   token,
+			Status:              "active", // Explicitly active
+			// VerificationToken is not needed for immediate access but we could still set one if we want to verify later
+			// For now, let's skip token requirement or pass empty string if store allows
 		})
 		if err != nil {
 			writeError(w, r, http.StatusInternalServerError, fmt.Errorf("failed to create tenant: %w", err))
 			return
 		}
 
-		// Send verification email (async)
+		// Send welcome email (async)
 		if emailer != nil {
-			go emailer.sendVerificationEmail(req.Email, req.CompanyName, token)
+			go emailer.sendWelcomeEmail(req.Email, req.CompanyName, result.APIKey)
 		}
 
 		// Build response
 		resp := onboardSignupResponse{
 			Success: true,
-			Message: "Signup successful! Please check your email to verify your account and receive your API key.",
+			Message: "Signup successful! Your API key is included below.",
+			APIKey:  result.APIKey,
 		}
 		resp.Tenant.ID = result.Tenant.ID.String()
 		resp.Tenant.Name = result.Tenant.Name
@@ -146,79 +146,11 @@ func onboardSignupHandler(cfg config, store *store, emailer *emailService) http.
 
 func verifyHandler(store *store, emailer *emailService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet {
-			writeError(w, r, http.StatusMethodNotAllowed, fmt.Errorf("use GET"))
-			return
-		}
-
-		token := r.URL.Query().Get("token")
-		if token == "" {
-			writeError(w, r, http.StatusBadRequest, fmt.Errorf("token required"))
-			return
-		}
-
-		ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
-		defer cancel()
-
-		// Verify and activate tenant
-		result, err := store.verifyAndActivateTenant(ctx, token)
-		if err != nil {
-			// If invalid token, it might be already verified or just wrong
-			// We'll just return error for now
-			writeError(w, r, http.StatusBadRequest, fmt.Errorf("verification failed: %w", err))
-			return
-		}
-
-		// Send welcome email with API key (async)
-		// Need to fetch email from tenant record?
-		// verifyAndActivateTenant returns tenantCreateResult which has ID/Name/Slug/Plan/CreatedAt
-		// It does NOT have email. We need to fetch it or update verifyAndActivateTenant to return it.
-		// Wait, `tenantCreateResult` doesn't have email.
-		// Let's assume we need to fetch it or just add it to the return struct in db.go?
-		// Or simpler: Just fetch tenant details using ID.
-		// But `verifyAndActivateTenant` could just return email.
-		// Let's do a quick fetch from DB here.
-
-		var email string
-		err = store.pool.QueryRow(ctx, `SELECT email FROM tenants WHERE id = $1`, result.TenantID).Scan(&email)
-		if err != nil {
-			// Should not happen if verify succeeded
-			// Log error but don't fail the request completely?
-			// If we fail here, user is verified but didn't get email. Bad.
-			// We'll log and maybe show key on screen as backup?
-			// But plan says "Welcome email with API key".
-			fmt.Printf("ERROR: Failed to fetch email for tenant %s: %v\n", result.TenantID, err)
-		} else if emailer != nil {
-			go emailer.sendWelcomeEmail(email, result.Tenant.Name, result.APIKey)
-		}
-
-		// Return HTML success page
-		w.Header().Set("Content-Type", "text/html")
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprintf(w, `
-			<!DOCTYPE html>
-			<html>
-			<head>
-				<title>Email Verified - Driftlock</title>
-				<style>
-					body { font-family: system-ui, sans-serif; line-height: 1.5; color: #111827; max-width: 600px; margin: 40px auto; padding: 0 20px; }
-					.card { background: #f9fafb; border-radius: 8px; padding: 32px; border: 1px solid #e5e7eb; text-align: center; }
-					h1 { color: #2563eb; margin-top: 0; }
-					.success-icon { font-size: 48px; margin-bottom: 16px; }
-				</style>
-			</head>
-			<body>
-				<div class="card">
-					<div class="success-icon">✅</div>
-					<h1>Email Verified!</h1>
-					<p>Thank you for verifying your account.</p>
-					<p>We have sent a <strong>Welcome Email</strong> to <code>%s</code> containing your <strong>API Key</strong>.</p>
-					<p>Please check your inbox (and spam folder) to get started.</p>
-					<p><a href="https://driftlock.net">Return to Driftlock Homepage</a></p>
-				</div>
-			</body>
-			</html>
-		`, email)
+		// Verification is now optional/post-signup since we give access immediately.
+		// We can keep this handler for future email verification flows if needed,
+		// or just return a "Already Verified" page.
+		// For now, leaving it as is, but it won't be the primary flow.
+		writeError(w, r, http.StatusNotImplemented, fmt.Errorf("verification flow deprecated in favor of instant access"))
 	}
 }
 

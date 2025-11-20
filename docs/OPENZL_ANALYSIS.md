@@ -40,6 +40,20 @@ _Last updated: 2025-01-27_
      .
    ```
 
+## Docker Compose (OpenZL path)
+
+- **Build + run:** `USE_OPENZL=true docker compose build driftlock-http && USE_OPENZL=true docker compose up driftlock-postgres driftlock-http`
+- **Verify locally:** `curl -s http://localhost:8080/healthz | jq '.openzl_available, .available_algos'` should return `true` and include `"openzl"` alongside `zstd`, `lz4`, and `gzip`. If accessing from outside the container fails, run `docker compose exec driftlock-http curl -s http://localhost:8080/healthz`.
+- **Fallback:** When `USE_OPENZL` is `false` (default) or OpenZL assets are missing, the image builds with the generic compressors only. Requests that ask for `openzl` will transparently fall back to `zstd` and the HTTP response will include `"fallback_from_algo": "openzl"`.
+
+The Dockerfiles for `driftlock-http` and `driftlock-collector` now copy the bundled `openzl/` tree. Setting `USE_OPENZL=true` triggers the OpenZL build; leaving it `false` avoids the extra work while keeping the default demos fast.
+
+## Prefer OpenZL When Available (opt-in)
+
+- Set `PREFER_OPENZL=true` in the API environment to automatically choose `openzl` as the default compressor when the binary includes OpenZL symbols. Overrides are respected: explicit request payload `compressor` values still win, and we always fall back to `zstd` if OpenZL is missing.
+- `/healthz` and Prometheus now export `openzl_available` so operators can see whether the OpenZL path is active.
+- A deterministic benchmark (`openzl_bench_test.go`) runs only when OpenZL is compiled; use `go test -run TestDoesNotExist -bench OpenZLPreference ./cmd/driftlock-http` to compare `openzl` vs `zstd` locally.
+
 ## Docker & CI Story
 
 - `scripts/test-docker-build.sh` now autodetects whether OpenZL artifacts are present. When they are missing (default), the script builds only the generic images and clearly prints that OpenZL-only variants were skipped. Set `ENABLE_OPENZL_BUILD=true` and expose the libraries to force those builds.

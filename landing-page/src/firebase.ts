@@ -1,38 +1,53 @@
-import { initializeApp } from 'firebase/app'
+import { initializeApp, type FirebaseApp } from 'firebase/app'
 import { getAuth, type Auth } from 'firebase/auth'
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-// NOTE: These should be environment variables in production
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || '',
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '',
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || '',
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || ''
-}
+let app: FirebaseApp | null = null;
+let auth: Auth | null = null;
+let firebasePromise: Promise<void> | null = null;
 
-// Validate Firebase configuration
-const isFirebaseConfigValid = firebaseConfig.apiKey && 
-                              firebaseConfig.authDomain && 
-                              firebaseConfig.projectId && 
-                              firebaseConfig.appId
+const initializeFirebase = async () => {
+  if (app) {
+    return;
+  }
 
-if (!isFirebaseConfigValid) {
-  console.warn('Firebase configuration is incomplete. Please set all VITE_FIREBASE_* environment variables.')
-}
+  try {
+    // In production, the function is at the root. In dev, it's proxied by vite.
+    const functionUrl = import.meta.env.PROD
+      ? '/getFirebaseConfig' // Relative path for prod
+      : 'http://127.0.0.1:5001/driftlock/us-central1/getFirebaseConfig'; // Local emulator
 
-// Initialize Firebase only if config is valid
-let app
-let auth: Auth | null = null
+    const response = await fetch(functionUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch Firebase config: ${response.statusText}`);
+    }
+    const firebaseConfig = await response.json();
 
-if (isFirebaseConfigValid) {
-  app = initializeApp(firebaseConfig)
-  auth = getAuth(app)
-}
+    // Validate fetched Firebase configuration
+    const isFirebaseConfigValid = firebaseConfig.apiKey &&
+                                  firebaseConfig.authDomain &&
+                                  firebaseConfig.projectId &&
+                                  firebaseConfig.appId;
 
-export { auth }
+    if (!isFirebaseConfigValid) {
+      console.warn('Fetched Firebase configuration is incomplete.');
+      return;
+    }
+
+    app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+  } catch (error) {
+    console.error("Error initializing Firebase:", error);
+  }
+};
+
+const getFirebaseAuth = async () => {
+  if (!firebasePromise) {
+    firebasePromise = initializeFirebase();
+  }
+  await firebasePromise;
+  return auth;
+};
+
+export { getFirebaseAuth };
 
 

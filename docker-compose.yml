@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: collector-processor/cmd/driftlock-http/Dockerfile
       args:
-        - USE_OPENZL=false
+        - USE_OPENZL=${USE_OPENZL:-false}
     ports:
       - "8080:8080"
     environment:
@@ -16,6 +16,7 @@ services:
       - DRIFTLOCK_LICENSE_KEY=${DRIFTLOCK_LICENSE_KEY}
       - DRIFTLOCK_DEV_MODE=${DRIFTLOCK_DEV_MODE:-true}
       - USE_OPENZL=${USE_OPENZL:-false}
+      - PREFER_OPENZL=${PREFER_OPENZL:-false}
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8080/healthz || exit 1"]
       interval: 10s
@@ -53,7 +54,7 @@ services:
       context: .
       dockerfile: collector-processor/cmd/driftlock-collector/Dockerfile
       args:
-        - USE_OPENZL=false
+        - USE_OPENZL=${USE_OPENZL:-false}
     depends_on:
       - kafka
     environment:

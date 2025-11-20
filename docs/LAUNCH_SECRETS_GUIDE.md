@@ -25,23 +25,36 @@ gcloud secrets create driftlock-db-url --data-file=- <<< "postgres://user:pass@h
 gcloud secrets create driftlock-license-key --data-file=- <<< "dev-mode" # or real key
 ```
 
-## 2. Frontend Environment Variables
+## 2. Frontend Configuration
 
-The frontend needs public keys to initialize Firebase and Stripe.
-Create `landing-page/.env.production`:
+The frontend requires Firebase and Stripe configuration. The Stripe Publishable Key is public and can be stored in `landing-page/.env.production`. The Firebase configuration, including the API key, is now fetched securely at runtime.
+
+### Storing the Firebase API Key (VITE_FIREBASE_API_KEY)
+
+The `VITE_FIREBASE_API_KEY` must be stored in **Google Secret Manager**. This is a critical security measure to prevent exposing the key publicly.
+
+1.  **Create the secret in Google Secret Manager:**
+    ```bash
+    # Replace YOUR_NEW_API_KEY with your actual key
+    echo -n "YOUR_NEW_API_KEY" | gcloud secrets versions add VITE_FIREBASE_API_KEY --data-file=- --project="your-project-id"
+    ```
+
+### How it Works
+
+1.  A Firebase Cloud Function named `getFirebaseConfig` has been created.
+2.  This function securely reads the `VITE_FIREBASE_API_KEY` from Google Secret Manager.
+3.  The `firebase.json` file is configured to rewrite requests from the frontend at the path `/getFirebaseConfig` to this Cloud Function.
+4.  The frontend application calls this endpoint to fetch the full Firebase configuration, including the API key, when it initializes.
+
+### Stripe Public Key
+
+Create `landing-page/.env.production` for your Stripe key:
 
 ```ini
-# Firebase Public Config (from Firebase Console)
-VITE_FIREBASE_API_KEY=AIzaSy...
-VITE_FIREBASE_AUTH_DOMAIN=your-app.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your-app
-VITE_FIREBASE_STORAGE_BUCKET=your-app.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
-VITE_FIREBASE_APP_ID=1:123456789:web:abc123456
-
 # Stripe Public Key
 VITE_STRIPE_PUBLISHABLE_KEY=pk_live_...
 ```
+
 
 ## 3. Deployment Steps
 
@@ -62,5 +75,8 @@ VITE_STRIPE_PUBLISHABLE_KEY=pk_live_...
    - Log in via Magic Link.
    - Access `/dashboard`.
    - Click "Manage Billing" to test Stripe Portal.
+
+
+
 
 

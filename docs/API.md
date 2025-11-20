@@ -23,8 +23,8 @@ Base URL defaults to `http://localhost:8080` when running Docker Compose; produc
 
 ## Rate Limiting & Quotas
 
-- Deterministic token-bucket per tenant enforced in-process (defaults: 60 req/sec ingest, 10 req/sec detect). Admins can override per-tenant rates; API keys may optionally set lower overrides.
-- Each response includes `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and `X-RateLimit-Reset`. When throttled, the server sets `Retry-After` and returns a JSON `rate_limit_exceeded` envelope.
+- Deterministic token-bucket per tenant enforced in-process (`RATE_LIMIT_RPS` env, default 60 req/sec). Admins can override per-tenant rates; API keys may optionally set lower overrides.
+- Authenticated responses now include `X-RateLimit-Limit` and `X-RateLimit-Remaining` (minimum of tenant + key limits). Throttled responses add `Retry-After`, `X-RateLimit-Reset`, and a JSON envelope with `error.code="rate_limit_exceeded"` plus `retry_after_seconds`.
 - Redis-backed buckets land in Phase 4; today’s build keeps the bucket in memory and is suitable for single-instance pilots.
 
 ## Endpoint Summary
@@ -130,6 +130,10 @@ Response mirrors CLI output:
   }
 }
 ```
+
+Validation notes:
+- Request bodies are capped at `MAX_BODY_MB` (default 10 MiB) and a maximum of `MAX_EVENTS` events (default 1,000). Empty or `null` events are rejected with `400 invalid_argument`.
+- When callers request `openzl` but the binary was built without the OpenZL feature flag, the response falls back to `zstd` and includes `"fallback_from_algo": "openzl"`.
 
 ### `GET /v1/anomalies`
 
@@ -272,14 +276,18 @@ Server-Sent Events feed for live anomaly notifications.
 
 ### `GET /healthz`
 
-Returns 200 when core dependencies are healthy and exposes compliance-friendly diagnostics.
+Returns 200 when core dependencies are healthy and exposes compliance-friendly diagnostics. Fields of note:
+
+- `openzl_available` (bool) — true when the binary includes OpenZL symbols.
+- `available_algos` — includes `"openzl"` only when compiled in; requests for `openzl` will fall back to `zstd` when unavailable and surface `fallback_from_algo` in responses.
+- `license.status` — must be `"valid"` outside dev; dev mode is for local demos only.
 
 ```json
 {
   "build": {
     "revision": "5b93f09",
     "cbad_core": "0.3.2",
-    "compressors": ["zstd", "lz4", "gzip"]
+    "compressors": ["zstd", "lz4", "gzip", "openzl"]
   },
   "license": {
     "status": "dev_mode",
