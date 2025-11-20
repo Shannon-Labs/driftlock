@@ -23,8 +23,11 @@ For an authoritative description of what ships today, see `FINAL-STATUS.md`. The
 - **CLI demo** (`cmd/demo/`): reproducible HTML report for quick verification and CI.
 - **Synthetic data** (`test-data/financial-demo.json`): 5,000 payment-like events with injected anomalies (used by both CLI + HTTP scripts).
 - **Docs and runbooks** (`docs/`): launch plans, compliance positioning, `USE_CASES.md`, deployment guides.
+- **SDKs (beta)** (`sdks/typescript`, `sdks/python`): thin clients for `/v1` detect/anomalies/healthz.
 
 The CLI demo remains the fastest path to verify the engine locally, but the **primary product surface is the hosted HTTP API + dashboard**.
+
+Running everything end-to-end? See `QUICKSTART_GOD_MODE.md` for a guided “god mode” checklist covering the CLI demo, API, landing page, and deploy.
 
 ---
 
@@ -81,7 +84,23 @@ The script:
 For the manual, step-by-step version see `docs/API-DEMO-WALKTHROUGH.md`.  
 For the HTTP API schema, see `docs/API.md`.
 
-**OpenZL note:** OpenZL integration is optional/experimental. All default builds ship with zstd/lz4/gzip; flip the feature flag only if you have OpenZL available (see `docs/OPENZL_ANALYSIS.md`).
+**OpenZL note:** OpenZL integration is optional/experimental. Defaults stay on zstd/lz4/gzip for determinism and portability. To exercise OpenZL: `USE_OPENZL=true docker compose build driftlock-http && USE_OPENZL=true PREFER_OPENZL=true docker compose up driftlock-postgres driftlock-http`, then hit `/healthz` and look for `"openzl_available": true`. To prefer it when compiled in, set `PREFER_OPENZL=true` (requests can still override `compressor`). See `docs/OPENZL_ANALYSIS.md`.
+
+### OpenZL Docker Workflow
+
+To build and run with OpenZL enabled:
+
+```bash
+# Build with OpenZL support
+USE_OPENZL=true docker compose build driftlock-http
+
+# Run with OpenZL preference
+USE_OPENZL=true PREFER_OPENZL=true docker compose up -d driftlock-postgres driftlock-http
+
+# Verify OpenZL availability
+curl -s http://localhost:8080/healthz | jq '.openzl_available'
+```
+
 
 ---
 
@@ -133,6 +152,18 @@ Driftlock includes built-in Stripe support for subscription management.
 2. Add secrets to Google Cloud Secret Manager (see `docs/GCP_SECRETS_CHECKLIST.md`).
 3. Deploy using `cloudbuild.yaml`.
 
+
+---
+
+## Security
+
+Driftlock is designed with security in mind. We follow best practices for handling secrets and API keys.
+
+- **Backend Secrets:** All backend secrets, such as database credentials and third-party API keys, are managed through Google Secret Manager.
+- **Frontend API Keys:** The Firebase API key for the frontend is also stored in Google Secret Manager and served securely to the client via a Cloud Function. This prevents the key from being exposed in the frontend code.
+- **Vulnerability Reporting:** We take security vulnerabilities seriously. Please report any vulnerabilities to us privately.
+
+For more details on our security policies and best practices, see `docs/SECURITY.md`.
 
 ---
 

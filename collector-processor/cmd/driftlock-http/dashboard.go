@@ -1,8 +1,9 @@
 package main
 
 import (
-	"encoding/json"
+	"fmt"
 	"net/http"
+	"time"
 )
 
 func handleListKeys(store *store) http.HandlerFunc {

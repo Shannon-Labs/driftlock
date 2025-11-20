@@ -9,6 +9,26 @@
 
 ## 📋 What You've Accomplished vs. What Was Planned
 
+## 🚧 Immediate Next Steps
+
+1. **Unblock Firebase Functions deployment**
+   - Current deploy fails because org policy blocks adding `allUsers` as Cloud Run invoker.
+   - **Status:** Created `scripts/deploy-functions-secure.sh` to deploy with restricted service account invokers (`firebase-hosting@system.gserviceaccount.com`, etc.).
+   - **Action:** Run `./scripts/deploy-functions-secure.sh`. If 403 errors persist on hosting rewrites, verify the correct service account is added to `FUNCTIONS_INVOKERS`.
+
+2. **Verify end-to-end signup flow after functions go live**
+   - **Status:** Verified hosting rewrites are hitting the function (returning 403 instead of 404/HTML), but permission is still denied. Waiting for correct service account propagation.
+   - **Test:** `curl -X POST https://driftlock.web.app/api/v1/onboard/signup ...`
+
+3. **Get OpenZL (zlab) Docker workflow working**
+   - **Status:** ✅ **DONE**
+   - **Verification:**
+     ```bash
+     USE_OPENZL=true PREFER_OPENZL=true docker compose up -d driftlock-http
+     curl localhost:8080/healthz | jq '.openzl_available' # true
+     ```
+   - Updated `README.md` and `docker-compose.yml`.
+
 ### ✅ Previous AI Agent (Pre-Configured Infrastructure)
 The previous AI agent created:
 - ✅ Complete deployment infrastructure (Cloud Run + Cloudflare Pages + Supabase)
@@ -67,7 +87,7 @@ The previous AI agent created:
 - ✅ **Real Firebase web application** - Successfully created `DriftlockWebApp` with complete configuration:
   - **Project ID:** `driftlock`
   - **App ID:** `1:131489574303:web:e83e3e433912d05a8d61aa`
-  - **API Key:** `AIzaSyDZqTIPz39LJQVKyAXhTZaO9pIXk0RB98w`
+  - **API Key:** `[REDACTED - stored in Secret Manager]`
   - **Storage Bucket:** `driftlock.firebasestorage.app`
   - **Auth Domain:** `driftlock.firebaseapp.com`
   - **Messaging Sender ID:** `131489574303`
@@ -135,7 +155,7 @@ The previous AI agent created:
 ```bash
 # ✅ Successfully created Firebase Web App: "DriftlockWebApp"
 # ✅ Generated real configuration values:
-VITE_FIREBASE_API_KEY=AIzaSyDZqTIPz39LJQVKyAXhTZaO9pIXk0RB98w
+VITE_FIREBASE_API_KEY=[REDACTED - stored in Secret Manager]
 VITE_FIREBASE_AUTH_DOMAIN=driftlock.firebaseapp.com
 VITE_FIREBASE_PROJECT_ID=driftlock
 VITE_FIREBASE_APP_ID=1:131489574303:web:e83e3e433912d05a8d61aa
@@ -810,7 +830,7 @@ You have a complete, production-ready SaaS application that is:
 #### **🔐 Complete Authentication System**
 - ✅ **Firebase Web App** created: "DriftlockWebApp"
 - ✅ **Real Firebase configuration** deployed:
-  - API Key: `AIzaSyDZqTIPz39LJQVKyAXhTZaO9pIXk0RB98w`
+  - API Key: `[REDACTED - stored in Secret Manager]`
   - App ID: `1:131489574303:web:e83e3e433912d05a8d61aa`
   - Project: `driftlock`
   - Storage: `driftlock.firebasestorage.app`

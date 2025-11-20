@@ -24,16 +24,67 @@ const navigation = [
     ]
   },
   {
+    title: 'SDKs',
+    items: [
+      { title: 'Node.js', href: '/docs/sdks/nodejs' },
+      { title: 'Python', href: '/docs/sdks/python' },
+      { title: 'Go', href: '/docs/sdks/go' },
+      { title: 'JavaScript', href: '/docs/sdks/javascript' },
+    ]
+  },
+  {
+    title: 'Integrations',
+    items: [
+      { title: 'Express.js', href: '/docs/integrations/express' },
+      { title: 'Next.js', href: '/docs/integrations/nextjs' },
+      { title: 'Django', href: '/docs/integrations/django' },
+      { title: 'FastAPI', href: '/docs/integrations/fastapi' },
+      { title: 'Spring Boot', href: '/docs/integrations/spring-boot' },
+    ]
+  },
+  {
+    title: 'Developer Tools',
+    items: [
+      { title: 'CLI', href: '/docs/tools/cli' },
+      { title: 'Postman', href: '/docs/tools/postman' },
+      { title: 'Webhooks', href: '/docs/tools/webhooks' },
+      { title: 'OpenAPI', href: '/docs/tools/openapi' },
+      { title: 'Testing', href: '/docs/tools/testing' },
+    ]
+  },
+  {
+    title: 'Production',
+    items: [
+      { title: 'Performance', href: '/docs/production/performance' },
+      { title: 'Security', href: '/docs/production/security' },
+      { title: 'Monitoring', href: '/docs/production/monitoring' },
+      { title: 'Scaling', href: '/docs/production/scaling' },
+      { title: 'Troubleshooting', href: '/docs/production/troubleshooting' },
+    ]
+  },
+  {
+    title: 'Examples',
+    items: [
+      { title: 'Fraud Detection', href: '/docs/examples/fraud-detection' },
+      { title: 'Log Analysis', href: '/docs/examples/log-analysis' },
+      { title: 'API Monitoring', href: '/docs/examples/api-monitoring' },
+      { title: 'IoT Sensors', href: '/docs/examples/iot-sensors' },
+    ]
+  },
+  {
+    title: 'Migration',
+    items: [
+      { title: 'From DataDog', href: '/docs/migration/from-datadog' },
+      { title: 'From New Relic', href: '/docs/migration/from-newrelic' },
+      { title: 'From Splunk', href: '/docs/migration/from-splunk' },
+      { title: 'Comparison', href: '/docs/migration/comparison' },
+    ]
+  },
+  {
     title: 'Code Examples',
     items: [
       { title: 'cURL', href: '/docs/api/examples/curl-examples' },
       { title: 'Python', href: '/docs/api/examples/python-examples' },
-    ]
-  },
-  {
-    title: 'SDKs',
-    items: [
-      { title: 'Data Connect', href: '/docs/sdks/data-connect' },
     ]
   }
 ];

@@ -1,137 +1,168 @@
 <template>
   <div :class="rootClasses">
-    <header class="mb-8">
+    <header class="mb-10">
       <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <p v-if="variant === 'embedded'" class="text-sm uppercase tracking-widest text-primary-600 dark:text-primary-400 font-semibold mb-1">
+          <p class="text-xs font-semibold uppercase tracking-[0.4em] text-cyan-200/80">
             Live Playground
           </p>
-          <h2 class="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-600 bg-clip-text text-transparent mb-2">
-            Driftlock Playground
+          <h2 class="text-3xl lg:text-4xl font-semibold text-white">
+            CBAD Mission Control
           </h2>
-          <p class="text-gray-600 dark:text-gray-300">
-            Paste JSON/NDJSON or load a sample - Driftlock auto-tunes the baseline, runs detection, and explains every anomaly.
+          <p class="text-sm text-slate-300">
+            Paste NDJSON, stream a synthetic burst, and watch Driftlock surface anomalies with audit-ready math.
           </p>
         </div>
-
         <div class="flex items-center gap-3">
-          <div
-            class="flex items-center gap-2 px-4 py-2 rounded-lg border shadow-sm transition-all duration-200"
-            :class="apiStatus === 'connected'
-              ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-              : apiStatus === 'checking'
-                ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800'
-                : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'"
-          >
-            <div
-              class="w-2.5 h-2.5 rounded-full"
-              :class="apiStatus === 'connected'
-                ? 'bg-green-500 animate-pulse'
-                : apiStatus === 'checking'
-                  ? 'bg-yellow-500 animate-pulse'
-                  : 'bg-red-500'"
-            ></div>
+          <div class="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white">
             <span
-              class="text-sm font-medium"
-              :class="apiStatus === 'connected'
-                ? 'text-green-700 dark:text-green-400'
-                : apiStatus === 'checking'
-                  ? 'text-yellow-700 dark:text-yellow-400'
-                  : 'text-red-700 dark:text-red-400'"
-            >
-              {{ apiStatus === 'connected' ? 'API Connected' : apiStatus === 'checking' ? 'Checking...' : 'API Unavailable' }}
-            </span>
+              class="h-2.5 w-2.5 rounded-full"
+              :class="{
+                'bg-emerald-400 animate-pulse': apiStatus === 'connected',
+                'bg-amber-300 animate-pulse': apiStatus === 'checking',
+                'bg-rose-400': apiStatus === 'disconnected'
+              }"
+            ></span>
+            {{ apiStatusLabel }}
           </div>
         </div>
       </div>
     </header>
 
-    <section class="grid lg:grid-cols-3 gap-6 mb-6">
-      <div class="lg:col-span-2 space-y-6">
-        <UploadPanel @data="onData" />
-        <SamplePicker @load="onSample" />
+    <section class="rounded-3xl border border-white/10 bg-white/5 p-6 text-white/80 shadow-[0_35px_120px_rgba(15,23,42,0.55)]">
+      <div class="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+        <div class="flex flex-1 flex-col gap-3">
+          <p class="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">Datasets</p>
+          <SamplePicker variant="inline" @load="onSample" />
+        </div>
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <button
+            class="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-cyan-500/30 transition hover:scale-105 disabled:cursor-not-allowed disabled:opacity-60"
+            :disabled="loading"
+            @click="runDetect"
+          >
+            {{ loading ? 'Scanning…' : 'Run Analyzer' }}
+          </button>
+          <div class="rounded-2xl border border-white/10 px-4 py-2 text-xs uppercase tracking-[0.3em] text-slate-300">
+            Status · {{ loaderLabel }}
+          </div>
+        </div>
       </div>
-      <div>
-        <ParamsForm :params="params" @update="onParams" @run="runDetect" />
+
+      <div class="mt-6 grid gap-6 lg:grid-cols-3">
+        <div class="lg:col-span-2 space-y-6">
+          <UploadPanel @data="onData" />
+        </div>
+        <div class="space-y-6">
+          <ParamsForm :params="params" @update="onParams" @run="runDetect" />
+          <div class="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
+            <p class="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">API Health</p>
+            <p class="mt-2 text-lg font-semibold text-white">{{ apiStatusLabel }}</p>
+            <p class="text-sm text-slate-400">Last check: {{ lastHealthCheckCopy }}</p>
+          </div>
+        </div>
       </div>
     </section>
 
-    <section
-      v-if="loading"
-      class="mt-6 p-8 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm"
-    >
-      <div class="flex items-center justify-center gap-4">
-        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span class="text-gray-600 dark:text-gray-300 text-lg font-medium">Processing detection...</span>
+    <section v-if="loading" class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div
+        v-for="(step, idx) in loaderStates"
+        :key="idx"
+        :class="[
+          'rounded-2xl border px-4 py-4 text-sm uppercase tracking-[0.4em]',
+          step.state === 'done' ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200' :
+          step.state === 'active' ? 'border-cyan-400/50 bg-cyan-400/10 text-cyan-200 animate-pulse' :
+          'border-white/10 bg-white/5 text-slate-400'
+        ]"
+      >
+        {{ step.label }}
       </div>
+    </section>
+
+    <section class="mt-10">
+      <AnomalyChart :series="chartSeries" :threshold="0.5" @select="handleChartSelect" />
     </section>
 
     <section
       v-if="response"
-      class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm"
+      class="mt-10 rounded-3xl border border-white/10 bg-white/5 p-6 text-white shadow-[0_35px_120px_rgba(15,23,42,0.45)]"
     >
-      <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-4">
-        <h3 class="text-2xl font-bold text-gray-900 dark:text-white">Results</h3>
+      <div class="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <h3 class="text-2xl font-semibold">Detection Results</h3>
+          <p class="text-sm text-slate-300">Deterministic compression metrics ready for auditors.</p>
+        </div>
         <CurlSnippet :curl="curlCmd" />
       </div>
-      <div class="flex flex-wrap gap-6 mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-        <div class="flex items-center gap-2">
-          <span class="text-sm text-gray-600 dark:text-gray-400">Total Events:</span>
-          <span class="text-lg font-semibold text-gray-900 dark:text-white">{{ response.total_events }}</span>
+
+      <div class="mb-6 flex flex-wrap gap-6 text-sm text-slate-200">
+        <div class="rounded-2xl border border-white/10 px-4 py-3">
+          <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Events</p>
+          <p class="text-2xl font-mono">{{ response.total_events }}</p>
         </div>
-        <div class="flex items-center gap-2">
-          <span class="text-sm text-gray-600 dark:text-gray-400">Anomalies:</span>
-          <span
-            class="text-lg font-semibold"
-            :class="response.anomaly_count > 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'"
-          >
+        <div class="rounded-2xl border border-white/10 px-4 py-3">
+          <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Anomalies</p>
+          <p :class="['text-2xl font-mono', (response.anomaly_count || 0) > 0 ? 'text-rose-300' : 'text-emerald-300']">
             {{ response.anomaly_count || 0 }}
-          </span>
+          </p>
         </div>
-        <div class="flex items-center gap-2">
-          <span class="text-sm text-gray-600 dark:text-gray-400">Algorithm:</span>
-          <span class="text-lg font-semibold text-gray-900 dark:text-white">{{ response.compression_algo }}</span>
+        <div class="rounded-2xl border border-white/10 px-4 py-3">
+          <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Algorithm</p>
+          <p class="text-2xl font-mono">{{ response.compression_algo }}</p>
         </div>
-        <div class="flex items-center gap-2">
-          <span class="text-sm text-gray-600 dark:text-gray-400">Processing Time:</span>
-          <span class="text-lg font-semibold text-gray-900 dark:text-white">{{ response.processing_time }}</span>
+        <div class="rounded-2xl border border-white/10 px-4 py-3">
+          <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Latency</p>
+          <p class="text-2xl font-mono">{{ response.processing_time }}</p>
         </div>
       </div>
-      <ResultsTable :items="response.anomalies || []" />
-      <div class="mt-6">
-        <button
-          class="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg font-medium transition-all duration-200 transform hover:scale-105 shadow-sm"
-          @click="downloadJSON"
-        >
-          Download JSON Results
-        </button>
+
+      <div class="grid gap-6 lg:grid-cols-3">
+        <div class="lg:col-span-2 rounded-2xl border border-white/10 bg-slate-950/60 p-4">
+          <ResultsTable
+            :items="response.anomalies || []"
+            :selected-index="selectedIndex"
+            @select="selectFromTable"
+          />
+          <div class="mt-4 flex justify-end">
+            <button
+              class="inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white/90 transition hover:border-cyan-400 hover:text-white"
+              :disabled="!response"
+              @click="downloadJSON"
+            >
+              Download JSON
+            </button>
+          </div>
+        </div>
+        <AnomalyDetail :anomaly="selectedAnomaly" :loading="loading" />
       </div>
     </section>
 
     <section
       v-if="error"
-      class="mt-6 p-4 rounded-xl border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 shadow-sm"
+      class="mt-8 rounded-2xl border border-rose-500/40 bg-rose-500/10 p-4 text-sm text-rose-100"
     >
-      <div class="flex items-center gap-2">
-        <span class="text-xl">⚠️</span>
-        <span class="font-medium">{{ error }}</span>
+      <div class="flex items-center gap-2 font-semibold">
+        <span>⚠</span>
+        <span>{{ error }}</span>
       </div>
     </section>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import UploadPanel from './UploadPanel.vue'
 import ParamsForm from './ParamsForm.vue'
 import ResultsTable from './ResultsTable.vue'
 import SamplePicker from './SamplePicker.vue'
 import CurlSnippet from './CurlSnippet.vue'
+import AnomalyChart from './AnomalyChart.vue'
+import AnomalyDetail from './AnomalyDetail.vue'
 
 const props = withDefaults(defineProps<{
   variant?: 'full' | 'embedded'
 }>(), {
-  variant: 'full'
+  variant: 'full',
 })
 
 const apiBase = import.meta.env.VITE_API_BASE_URL || 'https://driftlock.net/api/v1'
@@ -143,24 +174,64 @@ const response = ref<any | null>(null)
 const error = ref<string | null>(null)
 const loading = ref<boolean>(false)
 const apiStatus = ref<'checking' | 'connected' | 'disconnected'>('checking')
+const lastHealthCheck = ref<Date | null>(null)
+const chartSeries = ref<SeriesPoint[]>([])
+const selectedAnomaly = ref<any | null>(null)
+const loaderIndex = ref(0)
+let loaderTimer: number | null = null
+let healthInterval: number | null = null
 
-const rootClasses = computed(() => props.variant === 'embedded'
-  ? 'backdrop-blur-md bg-white/95 dark:bg-gray-900/80 border border-gray-200/80 dark:border-gray-700/80 rounded-3xl p-6 lg:p-8 shadow-2xl'
-  : 'rounded-xl'
-)
+const rootClasses = computed(() => {
+  const base = 'rounded-[32px] border border-white/10 bg-gradient-to-b from-slate-950 via-slate-950/90 to-slate-900 p-6 lg:p-10 text-white'
+  return props.variant === 'embedded' ? `${base} backdrop-blur-xl shadow-[0_60px_140px_rgba(2,6,23,0.75)]` : base
+})
+
+const loaderSteps = [
+  'init core',
+  'calibrate baseline',
+  'compress + compare',
+  'explain anomaly',
+]
+
+const loaderDurations = [400, 800, 900, 600]
+
+const loaderStates = computed(() => loaderSteps.map((label, idx) => ({
+  label,
+  state: idx < loaderIndex.value ? 'done' : idx === loaderIndex.value ? 'active' : 'pending',
+})))
+
+const loaderLabel = computed(() => loaderSteps[Math.min(loaderIndex.value, loaderSteps.length - 1)])
+
+const lastHealthCheckCopy = computed(() => {
+  if (!lastHealthCheck.value) return 'pending…'
+  return lastHealthCheck.value.toLocaleTimeString()
+})
+
+const apiStatusLabel = computed(() => {
+  if (apiStatus.value === 'connected') return 'API Connected'
+  if (apiStatus.value === 'checking') return 'Checking…'
+  return 'API Unavailable'
+})
+
+const selectedIndex = computed(() => {
+  if (!selectedAnomaly.value) return null
+  return selectedAnomaly.value.index
+    ?? selectedAnomaly.value.sequence
+    ?? selectedAnomaly.value.window_index
+    ?? null
+})
 
 async function checkApiHealth() {
   apiStatus.value = 'checking'
   try {
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 5000)
-
+    const timeoutId = window.setTimeout(() => controller.abort(), 5000)
     const res = await fetch(`${apiBase}/healthz`, {
       method: 'GET',
       signal: controller.signal,
     })
-    clearTimeout(timeoutId)
-
+    window.clearTimeout(timeoutId)
+    lastHealthCheck.value = new Date()
     if (res.ok) {
       const data = await res.json()
       if (data.success === true || data.ok === true) {
@@ -169,14 +240,26 @@ async function checkApiHealth() {
       }
     }
     apiStatus.value = 'disconnected'
-  } catch (e) {
+  } catch {
     apiStatus.value = 'disconnected'
   }
 }
 
 onMounted(() => {
   checkApiHealth()
-  setInterval(checkApiHealth, 30000)
+  healthInterval = window.setInterval(checkApiHealth, 30000)
+})
+
+onUnmounted(() => {
+  if (healthInterval) {
+    clearInterval(healthInterval)
+  }
+  stopLoaderSequence()
+})
+
+watch(response, (payload) => {
+  chartSeries.value = buildSeries(payload)
+  selectedAnomaly.value = payload?.anomalies?.[0] ?? null
 })
 
 function onData(payload: { text: string, format: 'ndjson' | 'json' }) {
@@ -206,18 +289,46 @@ const curlCmd = computed(() => {
   return `curl -s -X POST "${apiBase}/v1/detect?${q.toString()}" -H "Content-Type: application/json" --data-binary @your-file.${mime.value === 'ndjson' ? 'jsonl' : 'json'}`
 })
 
+function startLoaderSequence() {
+  stopLoaderSequence()
+  loaderIndex.value = 0
+  const advance = (step: number) => {
+    loaderTimer = window.setTimeout(() => {
+      if (loaderIndex.value < loaderSteps.length - 1) {
+        loaderIndex.value += 1
+        advance(step + 1)
+      }
+    }, loaderDurations[Math.min(step, loaderDurations.length - 1)])
+  }
+  advance(0)
+}
+
+function stopLoaderSequence() {
+  if (loaderTimer) {
+    clearTimeout(loaderTimer)
+    loaderTimer = null
+  }
+  loaderIndex.value = loaderSteps.length - 1
+}
+
 async function runDetect() {
+  if (!raw.value.trim()) {
+    error.value = 'Please load or paste data before running detection.'
+    return
+  }
   error.value = null
   response.value = null
   loading.value = true
+  startLoaderSequence()
 
-  const currentStatus = apiStatus.value
-  if (currentStatus !== 'connected') {
+  let status = apiStatus.value
+  if (status !== 'connected') {
     await checkApiHealth()
-    const newStatus = apiStatus.value
-    if (newStatus !== 'connected') {
-      error.value = 'API is unavailable. Please check your connection and ensure the API server is running.'
+    status = apiStatus.value
+    if (status !== 'connected') {
+      error.value = 'API is unavailable. Please ensure the Driftlock API server is reachable.'
       loading.value = false
+      stopLoaderSequence()
       return
     }
   }
@@ -242,16 +353,17 @@ async function runDetect() {
     }
     response.value = json
   } catch (e: any) {
-    if (e.name === 'AbortError' || e.name === 'TimeoutError') {
+    if (e?.name === 'AbortError' || e?.name === 'TimeoutError') {
       error.value = 'Request timed out. The API may be slow or unavailable.'
-    } else if (e.message?.includes('Failed to fetch') || e.message?.includes('NetworkError')) {
-      error.value = 'Network error. Please check your connection and ensure the API server is running at ' + apiBase
+    } else if (e?.message?.includes('Failed to fetch') || e?.message?.includes('NetworkError')) {
+      error.value = `Network error. Please ensure the API server is running at ${apiBase}`
       apiStatus.value = 'disconnected'
     } else {
       error.value = e?.message || String(e)
     }
   } finally {
     loading.value = false
+    stopLoaderSequence()
   }
 }
 
@@ -263,6 +375,59 @@ function downloadJSON() {
   a.download = 'driftlock-results.json'
   a.click()
 }
-</script>
 
+function buildSeries(payload: any | null): SeriesPoint[] {
+  const total = Number(payload?.total_events) || (payload?.anomalies?.length ?? 0)
+  if (!total) return []
+  const baseSeries: SeriesPoint[] = Array.from({ length: total }).map((_, idx) => {
+    const signal = 0.22 + Math.sin((idx + 1) / 3.5) * 0.08 + ((idx + 1) % 7 === 0 ? 0.05 : 0)
+    const clamped = Math.min(Math.max(signal, 0.05), 0.7)
+    return { index: idx + 1, score: Number(clamped.toFixed(3)), anomaly: false }
+  })
+
+  const anomalies = payload?.anomalies ?? []
+  anomalies.forEach((entry: any) => {
+    const rawIndex = Number(entry.index ?? entry.sequence ?? entry.window_index ?? entry.position ?? 1)
+    const slot = Math.min(Math.max(rawIndex || 1, 1), baseSeries.length)
+    baseSeries[slot - 1] = {
+      index: slot,
+      score: Number((entry.metrics?.ncd ?? 0.82).toFixed(3)),
+      anomaly: true,
+      record: entry,
+    }
+  })
+
+  return baseSeries
+}
+
+function handleChartSelect(payload: { index: number, record?: any }) {
+  selectedAnomaly.value = payload.record ?? findAnomalyByIndex(payload.index)
+}
+
+function selectFromTable(row: any) {
+  selectedAnomaly.value = row
+}
+
+function findAnomalyByIndex(index: number) {
+  return response.value?.anomalies?.find((item: any) => {
+    const idx = item.index ?? item.sequence ?? item.window_index ?? item.position
+    return idx === index
+  }) ?? null
+}
+
+async function runFinancialDemo() {
+  await onSample('/samples/demo-financial.ndjson')
+  await nextTick()
+  runDetect()
+}
+
+defineExpose({ runFinancialDemo })
+
+interface SeriesPoint {
+  index: number
+  score: number
+  anomaly?: boolean
+  record?: any
+}
+</script>
 

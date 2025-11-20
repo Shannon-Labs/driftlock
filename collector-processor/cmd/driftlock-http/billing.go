@@ -11,7 +11,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stripe/stripe-go/v76"
-	"github.com/stripe/stripe-go/v76/checkout/session"
+	"github.com/stripe/stripe-go/v76/billingportal/session"
+	checkoutsession "github.com/stripe/stripe-go/v76/checkout/session"
 	"github.com/stripe/stripe-go/v76/webhook"
 )
 
@@ -62,7 +63,7 @@ func billingCheckoutHandler(store *store) http.HandlerFunc {
 			},
 		}
 
-		s, err := session.New(params)
+		s, err := checkoutsession.New(params)
 		if err != nil {
 			writeError(w, r, http.StatusInternalServerError, fmt.Errorf("stripe session creation failed: %w", err))
 			return
@@ -110,7 +111,7 @@ func billingPortalHandler(store *store) http.HandlerFunc {
 			ReturnURL: stripe.String(domain + "/dashboard"),
 		}
 
-		ps, err := session.NewBillingPortal(params)
+		ps, err := session.New(params)
 		if err != nil {
 			writeError(w, r, http.StatusInternalServerError, fmt.Errorf("stripe portal session failed: %w", err))
 			return

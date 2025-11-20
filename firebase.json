@@ -1,5 +1,52 @@
 {
-    "dataconnect": {
-        "source": "dataconnect"
+  "dataconnect": {
+    "source": "dataconnect"
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ]
     }
+  ],
+  "hosting": {
+    "public": "landing-page/dist",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "/getFirebaseConfig",
+        "function": "getFirebaseConfig"
+      },
+      {
+        "source": "/api/v1/onboard/signup",
+        "function": "signup"
+      },
+      {
+        "source": "/api/analyze",
+        "function": "analyzeAnomalies"
+      },
+      {
+        "source": "/api/compliance",
+        "function": "generateComplianceReport"
+      },
+      {
+        "source": "/api/proxy/**",
+        "function": "apiProxy"
+      },
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
 }
