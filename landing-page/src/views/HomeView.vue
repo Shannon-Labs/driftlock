@@ -167,21 +167,21 @@
             <div class="container-padding">
                 <div class="max-w-3xl mb-16">
                     <p class="text-sm font-bold font-sans uppercase tracking-widest mb-2 border-b border-black inline-block">Pricing</p>
-                    <h2 class="text-4xl font-sans font-bold tracking-tight mt-4">START FREE. SCALE WITH MATH.</h2>
-                    <p class="text-lg font-serif mt-4">Compression math costs about $1 per million events. Our plans price in the Gemini explainability layer so you don't have to think about tokens.</p>
+                    <h2 class="text-4xl font-sans font-bold tracking-tight mt-4">THE SHANNON TIERS</h2>
+                    <p class="text-lg font-serif mt-4">Compression math costs about $1 per million events. We honor our Bell Labs roots by naming our tiers after the evolution of information theory.</p>
                 </div>
 
                 <div class="grid gap-8 lg:grid-cols-4">
                     <!-- Developer -->
                     <div class="brutalist-card flex flex-col">
                         <div class="mb-8">
-                            <p class="text-sm font-bold font-sans uppercase tracking-wide mb-2">Developer</p>
+                            <p class="text-sm font-bold font-sans uppercase tracking-wide mb-2">1. The Bit</p>
                             <p class="text-4xl font-sans font-bold">$0</p>
                             <p class="text-sm text-gray-500 font-mono">per month</p>
-                            <p class="mt-4 text-sm font-serif">10k events/mo, math proofs, CLI + API access.</p>
+                            <p class="mt-4 text-sm font-serif">The fundamental unit. Local CLI, playground, and basic detection.</p>
                         </div>
                         <ul class="space-y-3 text-sm font-mono border-t border-black pt-4 mt-auto">
-                            <li>[x] Deterministic anomaly detection</li>
+                            <li>[x] 10k events/mo</li>
                             <li>[x] CLI demo & Playground</li>
                             <li>[x] JSON reports</li>
                         </ul>
@@ -191,18 +191,18 @@
                     <!-- Basic -->
                     <div class="brutalist-card flex flex-col relative">
                         <div class="mb-8">
-                            <p class="text-sm font-bold font-sans uppercase tracking-wide mb-2">Basic</p>
+                            <p class="text-sm font-bold font-sans uppercase tracking-wide mb-2">2. Signal</p>
                             <p class="text-4xl font-sans font-bold">$20</p>
                             <p class="text-sm text-gray-500 font-mono">per month</p>
-                            <p class="mt-4 text-sm font-serif">500k events/mo + Gemini summaries for anomalies.</p>
+                            <p class="mt-4 text-sm font-serif">Separate signal from noise. AI insights + Dashboard.</p>
                             <p class="mt-2 text-xs text-gray-400 font-mono">Usage-based overage available</p>
                         </div>
                         <ul class="space-y-3 text-sm font-mono border-t border-black pt-4 mt-auto">
+                            <li>[x] 500k events/mo</li>
                             <li>[x] Email alerts with context</li>
-                            <li>[x] Driftlock dashboard</li>
-                            <li>[x] 30-day data retention</li>
+                            <li>[x] 30-day retention</li>
                         </ul>
-                        <button type="button" onclick="window.location.href='#signup'" class="brutalist-button w-full text-center mt-8">Launch Basic</button>
+                        <button type="button" onclick="window.location.href='#signup'" class="brutalist-button w-full text-center mt-8">Get Signal</button>
                     </div>
 
                     <!-- Pro -->
@@ -211,27 +211,27 @@
                             Most Popular
                         </div>
                         <div class="mb-8">
-                            <p class="text-sm font-bold font-sans uppercase tracking-wide mb-2">Pro</p>
+                            <p class="text-sm font-bold font-sans uppercase tracking-wide mb-2">3. Transistor</p>
                             <p class="text-4xl font-sans font-bold">$200</p>
                             <p class="text-sm text-gray-400 font-mono">per month</p>
-                            <p class="mt-4 text-sm font-serif">5M events/mo + Advanced compliance reports.</p>
+                            <p class="mt-4 text-sm font-serif">Solid-state scale. Compliance bundles for DORA/NIS2.</p>
                             <p class="mt-2 text-xs text-gray-400 font-mono">Usage-based overage available</p>
                         </div>
                         <ul class="space-y-3 text-sm font-mono border-t border-white pt-4 mt-auto">
-                            <li>[x] DORA/NIS2 Evidence Bundles</li>
+                            <li>[x] 5M events/mo</li>
+                            <li>[x] DORA/NIS2 Evidence</li>
                             <li>[x] Priority Support</li>
-                            <li>[x] 90-day data retention</li>
                         </ul>
-                        <button type="button" onclick="window.location.href='#signup'" class="brutalist-button-primary w-full text-center mt-8 border-white hover:bg-white hover:text-black">Go Pro</button>
+                        <button type="button" onclick="window.location.href='#signup'" class="brutalist-button-primary w-full text-center mt-8 border-white hover:bg-white hover:text-black">Amplify</button>
                     </div>
 
                     <!-- Enterprise -->
                     <div class="brutalist-card flex flex-col">
                         <div class="mb-8">
-                            <p class="text-sm font-bold font-sans uppercase tracking-wide mb-2">Enterprise</p>
+                            <p class="text-sm font-bold font-sans uppercase tracking-wide mb-2">4. Telstar</p>
                             <p class="text-4xl font-sans font-bold">Custom</p>
                             <p class="text-sm text-gray-500 font-mono">Unlimited</p>
-                            <p class="mt-4 text-sm font-serif">Custom compression models, private cloud, dedicated support.</p>
+                            <p class="mt-4 text-sm font-serif">Global reach. Custom models, adaptive windowing, on-prem.</p>
                         </div>
                         <ul class="space-y-3 text-sm font-mono border-t border-black pt-4 mt-auto">
                             <li>[x] Custom OpenZL Models</li>

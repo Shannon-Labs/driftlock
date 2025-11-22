@@ -112,12 +112,12 @@
                  <p class="text-xs text-blue-700 mt-1">Choose a plan to remove limits.</p>
              </div>
              <div class="flex gap-2">
-                 <button @click="handleUpgrade('basic')" class="flex-1 inline-flex justify-center items-center rounded-md border border-blue-200 bg-white px-3 py-2 text-xs font-medium text-blue-700 shadow-sm hover:bg-blue-50 focus:outline-none" :disabled="upgrading">
-                    <span v-if="!upgrading">Basic ($20)</span>
+                 <button @click="handleUpgrade('signal')" class="flex-1 inline-flex justify-center items-center rounded-md border border-blue-200 bg-white px-3 py-2 text-xs font-medium text-blue-700 shadow-sm hover:bg-blue-50 focus:outline-none" :disabled="upgrading">
+                    <span v-if="!upgrading">Signal ($20)</span>
                     <span v-else>...</span>
                  </button>
-                 <button @click="handleUpgrade('pro')" class="flex-1 inline-flex justify-center items-center rounded-md border border-transparent bg-blue-600 px-3 py-2 text-xs font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none" :disabled="upgrading">
-                    <span v-if="!upgrading">Pro ($200)</span>
+                 <button @click="handleUpgrade('transistor')" class="flex-1 inline-flex justify-center items-center rounded-md border border-transparent bg-blue-600 px-3 py-2 text-xs font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none" :disabled="upgrading">
+                    <span v-if="!upgrading">Transistor ($200)</span>
                     <span v-else>...</span>
                  </button>
              </div>
