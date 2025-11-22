@@ -33,11 +33,34 @@ func billingCheckoutHandler(store *store) http.HandlerFunc {
 			return
 		}
 
-		// Define price IDs for plans (should be in config/env)
-		// For now, hardcoding or using env vars
-		priceID := os.Getenv("STRIPE_PRICE_ID_PRO")
+		// Parse request body for plan selection
+		var req struct {
+			Plan string `json:"plan"`
+		}
+		// Allow empty body for backward compatibility (default to basic)
+		if r.Body != nil {
+			json.NewDecoder(r.Body).Decode(&req)
+		}
+
+		// Determine Price ID based on plan
+		var priceID string
+		switch req.Plan {
+		case "pro":
+			priceID = os.Getenv("STRIPE_PRICE_ID_PRO")
+		case "basic":
+			priceID = os.Getenv("STRIPE_PRICE_ID_BASIC")
+		default:
+			// Default to basic if not specified, or handle error
+			// For now default to basic as the entry paid tier
+			priceID = os.Getenv("STRIPE_PRICE_ID_BASIC")
+			if priceID == "" {
+				// Fallback to Pro if Basic not set (migration path)
+				priceID = os.Getenv("STRIPE_PRICE_ID_PRO")
+			}
+		}
+
 		if priceID == "" {
-			writeError(w, r, http.StatusInternalServerError, fmt.Errorf("pricing configuration missing"))
+			writeError(w, r, http.StatusInternalServerError, fmt.Errorf("pricing configuration missing for plan: %s", req.Plan))
 			return
 		}
 

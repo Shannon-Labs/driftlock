@@ -106,15 +106,21 @@
         </div>
 
         <div class="bg-gradient-to-r from-indigo-50 to-blue-50 p-4 rounded-lg border border-blue-100">
-          <div class="flex items-center justify-between">
+          <div class="flex flex-col space-y-3">
              <div>
-                 <h4 class="text-sm font-bold text-blue-900">Need higher limits?</h4>
-                 <p class="text-xs text-blue-700 mt-1">Upgrade to Pro for unlimited events.</p>
+                 <h4 class="text-sm font-bold text-blue-900">Upgrade Plan</h4>
+                 <p class="text-xs text-blue-700 mt-1">Choose a plan to remove limits.</p>
              </div>
-             <button @click="handleUpgrade" class="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-3 py-2 text-xs font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none" :disabled="upgrading">
-                <span v-if="!upgrading">Upgrade</span>
-                <span v-else>...</span>
-             </button>
+             <div class="flex gap-2">
+                 <button @click="handleUpgrade('basic')" class="flex-1 inline-flex justify-center items-center rounded-md border border-blue-200 bg-white px-3 py-2 text-xs font-medium text-blue-700 shadow-sm hover:bg-blue-50 focus:outline-none" :disabled="upgrading">
+                    <span v-if="!upgrading">Basic ($20)</span>
+                    <span v-else>...</span>
+                 </button>
+                 <button @click="handleUpgrade('pro')" class="flex-1 inline-flex justify-center items-center rounded-md border border-transparent bg-blue-600 px-3 py-2 text-xs font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none" :disabled="upgrading">
+                    <span v-if="!upgrading">Pro ($200)</span>
+                    <span v-else>...</span>
+                 </button>
+             </div>
           </div>
         </div>
       </div>
@@ -192,7 +198,7 @@ const copyToClipboard = async () => {
   }
 }
 
-const handleUpgrade = async () => {
+const handleUpgrade = async (plan: string) => {
   upgrading.value = true
   try {
     // Use proxy to route through Firebase Functions to Cloud Run
@@ -201,7 +207,8 @@ const handleUpgrade = async () => {
       headers: {
         'Content-Type': 'application/json',
         'X-Api-Key': apiKey.value
-      }
+      },
+      body: JSON.stringify({ plan })
     })
     
     if (!response.ok) {
