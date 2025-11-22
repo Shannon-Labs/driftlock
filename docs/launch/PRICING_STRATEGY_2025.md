@@ -6,20 +6,12 @@
 
 ---
 
-## Executive Summary
+## 🧪 The "Shannon Labs" Tiers
 
-Based on late 2025 SaaS trends, the market has shifted definitively toward **Hybrid Usage-Based Pricing**. Pure seat-based models are dead for developer tools, and pure usage-based models create procurement friction.
+Honoring our roots in Information Theory and the legacy of Bell Labs, our pricing tiers represent the evolution of communication technology.
 
-Driftlock adopts a **"Compliance-Core, AI-Flex"** model:
-1.  **Core Platform (SaaS Subscription):** Predictable monthly fee for data retention, users, and compliance reporting (DORA/NIS2).
-2.  **AI Insights (Included/Usage):** AI explanations are included in paid tiers with generous limits.
-
----
-
-## 1. The Pricing Tiers
-
-### **Developer (Free)**
-*For individuals and local testing.*
+### **1. The Bit (Free)**
+*The fundamental unit of information.*
 - **Price:** $0/mo
 - **Deployment:** Local CLI + Limited Hosted
 - **Features:**
@@ -29,10 +21,10 @@ Driftlock adopts a **"Compliance-Core, AI-Flex"** model:
   - JSON reports
   - Community support
   - 7-day data retention
-- **Goal:** Ubiquity. Every developer should have `driftlock` in their local toolchain.
+- **Goal:** Ubiquity. The atom of the Driftlock ecosystem.
 
-### **Basic ($20/mo)**
-*For startups and individual teams.*
+### **2. Signal ($20/mo)**
+*Separating the signal from the noise.*
 - **Price:** $20/month
 - **Usage:** 500,000 events / month
 - **Features:**
@@ -40,10 +32,10 @@ Driftlock adopts a **"Compliance-Core, AI-Flex"** model:
   - 30-day retention
   - Email alerts
   - **AI Insights:** Gemini summaries for detected anomalies
-- **Goal:** Low friction adoption. "Put it on the corporate card."
+- **Goal:** Clarity. Low friction adoption for teams needing noise reduction.
 
-### **Pro ($200/mo)**
-*For growing companies and compliance-sensitive teams.*
+### **3. Transistor ($200/mo)**
+*The solid-state revolution. Scale, reliability, and amplification.*
 - **Price:** $200/month
 - **Usage:** 5,000,000 events / month
 - **Features:**
@@ -52,20 +44,30 @@ Driftlock adopts a **"Compliance-Core, AI-Flex"** model:
   - Priority Support
   - Advanced Reporting
   - Higher rate limits
-- **Goal:** Compliance readiness for scale-ups.
+- **Goal:** Resilience. For scale-ups building critical infrastructure.
 
-### **Enterprise (Custom)**
-*For regulated organizations (FinTech, HealthTech).*
+### **4. Telstar (Custom)**
+*The first active communications satellite. Global reach.*
 - **Price:** Custom (Contact Sales)
 - **Usage:** Unlimited / Custom volume
 - **Features:**
   - SSO / SAML
-  - **Adaptive Windowing:** "Ungameable" randomized audit intervals (Security Shield)
+  - **Adaptive Windowing:** "Ungameable" randomized audit intervals
   - Custom Retention
   - **Private Cloud / On-Prem Options**
   - **Custom Compression Models (OpenZL)**
   - Dedicated Account Manager
-- **Goal:** High ACV. Selling "Audit Insurance," not just logging.
+- **Goal:** Global Scale. Custom solutions for the largest networks.
+
+---
+
+## Executive Summary
+
+Based on late 2025 SaaS trends, the market has shifted definitively toward **Hybrid Usage-Based Pricing**. Pure seat-based models are dead for developer tools, and pure usage-based models create procurement friction.
+
+Driftlock adopts a **"Compliance-Core, AI-Flex"** model:
+1.  **Core Platform (SaaS Subscription):** Predictable monthly fee for data retention, users, and compliance reporting.
+2.  **AI Insights (Included/Usage):** AI explanations are included in paid tiers with generous limits.
 
 ---
 
@@ -90,10 +92,10 @@ Market research indicates deep fatigue with opaque AI upcharges. Driftlock diffe
 ### Phase 1: Infrastructure (Current)
 - [x] Stripe Integration (Subscriptions)
 - [x] Usage Metering (Postgres/Redis counters)
-- [x] Multi-tier support (Developer, Basic, Pro)
+- [x] Multi-tier support (Bit, Signal, Transistor)
 
 ### Phase 2: Packaging (Q1 2026)
-- [ ] Automated DORA Report generation (PDF) for Enterprise
+- [ ] Automated DORA Report generation (PDF) for Telstar/Transistor
 - [ ] Self-Service upgrade flow refinement
 
 ### Phase 3: Enterprise (Q2 2026)

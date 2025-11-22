@@ -45,16 +45,15 @@ func billingCheckoutHandler(store *store) http.HandlerFunc {
 		// Determine Price ID based on plan
 		var priceID string
 		switch req.Plan {
-		case "pro":
+		case "transistor", "pro": // "pro" kept for back-compat
 			priceID = os.Getenv("STRIPE_PRICE_ID_PRO")
-		case "basic":
+		case "signal", "basic": // "basic" kept for back-compat
 			priceID = os.Getenv("STRIPE_PRICE_ID_BASIC")
 		default:
-			// Default to basic if not specified, or handle error
-			// For now default to basic as the entry paid tier
+			// Default to signal (basic) as the entry paid tier
 			priceID = os.Getenv("STRIPE_PRICE_ID_BASIC")
 			if priceID == "" {
-				// Fallback to Pro if Basic not set (migration path)
+				// Fallback to Transistor (Pro) if Signal not set (migration path)
 				priceID = os.Getenv("STRIPE_PRICE_ID_PRO")
 			}
 		}
