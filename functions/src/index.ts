@@ -299,20 +299,72 @@ export const apiProxy = onRequest({ cors: true }, async (request, response) => {
   logger.info("API proxy request", { path: request.path, method: request.method });
 
   try {
-    const apiPath = request.path.replace('/api/proxy', '');
+    let apiPath = request.path;
+    
+    // Handle specific rewrites first
+    if (request.path === '/webhooks/stripe') {
+      apiPath = '/v1/billing/webhook';
+    } else {
+      // Default behavior: strip /api/proxy prefix
+      apiPath = request.path.replace('/api/proxy', '');
+    }
+    
     const backendUrl = `${CLOUD_RUN_API}${apiPath}`;
+    
+    // Determine headers to forward
+    const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+    };
+    
+    // Forward Authorization header
+    if (request.headers.authorization) {
+        headers['Authorization'] = request.headers.authorization;
+    }
+    
+    // Forward Stripe headers for webhooks
+    if (request.headers['stripe-signature']) {
+        headers['Stripe-Signature'] = request.headers['stripe-signature'] as string;
+    }
+    
+    // Forward X-Api-Key if present
+    if (request.headers['x-api-key']) {
+        headers['X-Api-Key'] = request.headers['x-api-key'] as string;
+    }
+
+    // For webhooks, we need raw body sometimes, but fetch takes body as string/buffer
+    // request.body in Firebase Functions is already parsed if JSON
+    // BUT Stripe webhooks need raw body for signature verification.
+    // Firebase Functions v2 usually provides rawBody buffer if rawBody is enabled?
+    // Actually onRequest by default parses body.
+    // For webhooks verification we might need the raw buffer.
+    // However, passing JSON.stringify(request.body) might break signature verification
+    // if the parsing/stringifying changes the byte order.
+    // Since we are acting as a proxy, we should ideally forward the raw bytes.
+    
+    let body: any;
+    if (request.method !== 'GET' && request.method !== 'HEAD') {
+        if (request.path === '/webhooks/stripe' && (request as any).rawBody) {
+             body = (request as any).rawBody;
+        } else {
+             body = JSON.stringify(request.body);
+        }
+    }
 
     const backendResponse = await fetch(backendUrl, {
       method: request.method,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': request.headers.authorization || '',
-      },
-      body: request.method !== 'GET' ? JSON.stringify(request.body) : undefined,
+      headers: headers,
+      body: body,
     });
 
-    const result = await backendResponse.json();
-    response.status(backendResponse.status).json(result);
+    // Check content type of response
+    const contentType = backendResponse.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+        const result = await backendResponse.json();
+        response.status(backendResponse.status).json(result);
+    } else {
+        const text = await backendResponse.text();
+        response.status(backendResponse.status).send(text);
+    }
 
   } catch (error) {
     logger.error("API proxy error", error);

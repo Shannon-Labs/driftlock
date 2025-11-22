@@ -195,7 +195,8 @@ const copyToClipboard = async () => {
 const handleUpgrade = async () => {
   upgrading.value = true
   try {
-    const response = await fetch('/api/v1/billing/checkout', {
+    // Use proxy to route through Firebase Functions to Cloud Run
+    const response = await fetch('/api/proxy/v1/billing/checkout', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

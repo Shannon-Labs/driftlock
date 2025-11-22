@@ -28,6 +28,10 @@
         "function": "getFirebaseConfig"
       },
       {
+        "source": "/webhooks/stripe",
+        "function": "apiProxy"
+      },
+      {
         "source": "/api/v1/onboard/signup",
         "function": "signup"
       },
@@ -48,5 +52,10 @@
         "destination": "/index.html"
       }
     ]
+  },
+  "emulators": {
+    "dataconnect": {
+      "dataDir": "dataconnect/.dataconnect/pgliteData"
+    }
   }
 }
