@@ -175,10 +175,10 @@
                     <!-- Developer -->
                     <div class="brutalist-card flex flex-col">
                         <div class="mb-8">
-                            <p class="text-sm font-bold font-sans uppercase tracking-wide mb-2">1. The Bit</p>
+                            <p class="text-sm font-bold font-sans uppercase tracking-wide mb-2">1. Pulse</p>
                             <p class="text-4xl font-sans font-bold">$0</p>
                             <p class="text-sm text-gray-500 font-mono">per month</p>
-                            <p class="mt-4 text-sm font-serif">The fundamental unit. Local CLI, playground, and basic detection.</p>
+                            <p class="mt-4 text-sm font-serif">The heartbeat of your data. Local CLI, playground, and basic detection.</p>
                         </div>
                         <ul class="space-y-3 text-sm font-mono border-t border-black pt-4 mt-auto">
                             <li>[x] 10k events/mo</li>
@@ -191,10 +191,10 @@
                     <!-- Basic -->
                     <div class="brutalist-card flex flex-col relative">
                         <div class="mb-8">
-                            <p class="text-sm font-bold font-sans uppercase tracking-wide mb-2">2. Signal</p>
+                            <p class="text-sm font-bold font-sans uppercase tracking-wide mb-2">2. Radar</p>
                             <p class="text-4xl font-sans font-bold">$20</p>
                             <p class="text-sm text-gray-500 font-mono">per month</p>
-                            <p class="mt-4 text-sm font-serif">Separate signal from noise. AI insights + Dashboard.</p>
+                            <p class="mt-4 text-sm font-serif">Active scanning and insights. AI context + Dashboard.</p>
                             <p class="mt-2 text-xs text-gray-400 font-mono">Usage-based overage available</p>
                         </div>
                         <ul class="space-y-3 text-sm font-mono border-t border-black pt-4 mt-auto">
@@ -202,7 +202,7 @@
                             <li>[x] Email alerts with context</li>
                             <li>[x] 30-day retention</li>
                         </ul>
-                        <button type="button" onclick="window.location.href='#signup'" class="brutalist-button w-full text-center mt-8">Get Signal</button>
+                        <button type="button" onclick="window.location.href='#signup'" class="brutalist-button w-full text-center mt-8">Get Radar</button>
                     </div>
 
                     <!-- Pro -->
@@ -211,10 +211,10 @@
                             Most Popular
                         </div>
                         <div class="mb-8">
-                            <p class="text-sm font-bold font-sans uppercase tracking-wide mb-2">3. Transistor</p>
+                            <p class="text-sm font-bold font-sans uppercase tracking-wide mb-2">3. Lock</p>
                             <p class="text-4xl font-sans font-bold">$200</p>
                             <p class="text-sm text-gray-400 font-mono">per month</p>
-                            <p class="mt-4 text-sm font-serif">Solid-state scale. Compliance bundles for DORA/NIS2.</p>
+                            <p class="mt-4 text-sm font-serif">Secure your infrastructure. Compliance bundles for DORA/NIS2.</p>
                             <p class="mt-2 text-xs text-gray-400 font-mono">Usage-based overage available</p>
                         </div>
                         <ul class="space-y-3 text-sm font-mono border-t border-white pt-4 mt-auto">
@@ -222,16 +222,16 @@
                             <li>[x] DORA/NIS2 Evidence</li>
                             <li>[x] Priority Support</li>
                         </ul>
-                        <button type="button" onclick="window.location.href='#signup'" class="brutalist-button-primary w-full text-center mt-8 border-white hover:bg-white hover:text-black">Amplify</button>
+                        <button type="button" onclick="window.location.href='#signup'" class="brutalist-button-primary w-full text-center mt-8 border-white hover:bg-white hover:text-black">Engage Lock</button>
                     </div>
 
                     <!-- Enterprise -->
                     <div class="brutalist-card flex flex-col">
                         <div class="mb-8">
-                            <p class="text-sm font-bold font-sans uppercase tracking-wide mb-2">4. Telstar</p>
+                            <p class="text-sm font-bold font-sans uppercase tracking-wide mb-2">4. Orbit</p>
                             <p class="text-4xl font-sans font-bold">Custom</p>
                             <p class="text-sm text-gray-500 font-mono">Unlimited</p>
-                            <p class="mt-4 text-sm font-serif">Global reach. Custom models, adaptive windowing, on-prem.</p>
+                            <p class="mt-4 text-sm font-serif">See beyond the edge. Custom models, adaptive windowing, on-prem.</p>
                         </div>
                         <ul class="space-y-3 text-sm font-mono border-t border-black pt-4 mt-auto">
                             <li>[x] Custom OpenZL Models</li>
@@ -249,9 +249,9 @@
             <div class="container-padding">
                 <div class="max-w-3xl mb-12">
                     <h2 class="text-sm font-bold font-sans uppercase tracking-widest mb-2 text-gray-400 border-b border-gray-400 inline-block">Financial Impact</h2>
-                    <h2 class="text-4xl font-sans font-bold tracking-tight mt-4">ROUGH ROI ESTIMATION</h2>
+                    <h2 class="text-4xl font-sans font-bold tracking-tight mt-4">PROJECTED IMPACT</h2>
                     <p class="text-base font-mono mt-4 text-gray-400">
-                        Uses assumptions from our README: ~$1 per million anomaly checks.
+                        Estimated savings based on typical incident response costs and regulatory fine exposure.
                     </p>
                 </div>
                 <div class="grid gap-10 lg:grid-cols-2 lg:items-start">

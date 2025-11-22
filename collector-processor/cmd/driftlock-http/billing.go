@@ -45,15 +45,15 @@ func billingCheckoutHandler(store *store) http.HandlerFunc {
 		// Determine Price ID based on plan
 		var priceID string
 		switch req.Plan {
-		case "transistor", "pro": // "pro" kept for back-compat
+		case "lock", "transistor", "pro": // "lock" is new, others back-compat
 			priceID = os.Getenv("STRIPE_PRICE_ID_PRO")
-		case "signal", "basic": // "basic" kept for back-compat
+		case "radar", "signal", "basic": // "radar" is new, others back-compat
 			priceID = os.Getenv("STRIPE_PRICE_ID_BASIC")
 		default:
-			// Default to signal (basic) as the entry paid tier
+			// Default to radar (basic) as the entry paid tier
 			priceID = os.Getenv("STRIPE_PRICE_ID_BASIC")
 			if priceID == "" {
-				// Fallback to Transistor (Pro) if Signal not set (migration path)
+				// Fallback to Lock (Pro) if Radar not set (migration path)
 				priceID = os.Getenv("STRIPE_PRICE_ID_PRO")
 			}
 		}
@@ -82,6 +82,7 @@ func billingCheckoutHandler(store *store) http.HandlerFunc {
 			ClientReferenceID: stripe.String(tc.Tenant.ID.String()),
 			Metadata: map[string]string{
 				"tenant_id": tc.Tenant.ID.String(),
+				"plan":      req.Plan,
 			},
 		}
 
@@ -206,12 +207,18 @@ func handleCheckoutSessionCompleted(store *store, session stripe.CheckoutSession
 
 	customerID := session.Customer.ID
 	subscriptionID := session.Subscription.ID
+	
+	// Retrieve plan from metadata, default to "transistor" (previously pro) if missing
+	plan := session.Metadata["plan"]
+	if plan == "" {
+		plan = "transistor" 
+	}
 
 	ctx := context.Background()
-	if err := store.updateTenantStripeInfo(ctx, tenantID, customerID, subscriptionID, "active"); err != nil {
+	if err := store.updateTenantStripeInfo(ctx, tenantID, customerID, subscriptionID, "active", plan); err != nil {
 		log.Printf("Failed to update tenant %s with stripe info: %v", tenantID, err)
 	} else {
-		log.Printf("Updated tenant %s with subscription %s", tenantID, subscriptionID)
+		log.Printf("Updated tenant %s with subscription %s (plan: %s)", tenantID, subscriptionID, plan)
 	}
 }
 
@@ -223,21 +230,32 @@ func handleSubscriptionUpdated(store *store, subscription stripe.Subscription) {
 
 	status := string(subscription.Status)
 	customerID := subscription.Customer.ID
+	
+	// Determine plan from subscription items
+	plan := "signal" // Default fallthrough
+	if len(subscription.Items.Data) > 0 {
+		priceID := subscription.Items.Data[0].Price.ID
+		if priceID == os.Getenv("STRIPE_PRICE_ID_PRO") {
+			plan = "transistor"
+		} else if priceID == os.Getenv("STRIPE_PRICE_ID_BASIC") {
+			plan = "signal"
+		}
+	}
 
 	ctx := context.Background()
-	if err := store.updateTenantStatusByStripeID(ctx, customerID, status); err != nil {
+	if err := store.updateTenantStatusByStripeID(ctx, customerID, status, plan); err != nil {
 		log.Printf("Failed to update tenant status for customer %s: %v", customerID, err)
 	}
 }
 
 // Store methods for billing
 
-func (s *store) updateTenantStripeInfo(ctx context.Context, tenantID uuid.UUID, customerID, subscriptionID, status string) error {
+func (s *store) updateTenantStripeInfo(ctx context.Context, tenantID uuid.UUID, customerID, subscriptionID, status, plan string) error {
 	_, err := s.pool.Exec(ctx, `
 		UPDATE tenants 
-		SET stripe_customer_id = $2, stripe_subscription_id = $3, stripe_status = $4, plan = 'pro', updated_at = NOW()
+		SET stripe_customer_id = $2, stripe_subscription_id = $3, stripe_status = $4, plan = $5, updated_at = NOW()
 		WHERE id = $1`,
-		tenantID, customerID, subscriptionID, status)
+		tenantID, customerID, subscriptionID, status, plan)
 	if err != nil {
 		return err
 	}
@@ -245,18 +263,18 @@ func (s *store) updateTenantStripeInfo(ctx context.Context, tenantID uuid.UUID, 
 	return s.loadCache(ctx)
 }
 
-func (s *store) updateTenantStatusByStripeID(ctx context.Context, customerID, status string) error {
+func (s *store) updateTenantStatusByStripeID(ctx context.Context, customerID, status, plan string) error {
 	// Also revert plan if not active?
-	plan := "pro"
+	targetPlan := plan
 	if status != "active" && status != "trialing" {
-		plan = "pilot" // Revert to free tier
+		targetPlan = "pilot" // Revert to free tier
 	}
 
 	_, err := s.pool.Exec(ctx, `
 		UPDATE tenants 
 		SET stripe_status = $2, plan = $3, updated_at = NOW()
 		WHERE stripe_customer_id = $1`,
-		customerID, status, plan)
+		customerID, status, targetPlan)
 	if err != nil {
 		return err
 	}
