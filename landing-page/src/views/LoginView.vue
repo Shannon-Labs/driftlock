@@ -2,9 +2,10 @@
   <div class="flex min-h-screen flex-col justify-center py-12 sm:px-6 lg:px-8 bg-white">
     <div class="sm:mx-auto sm:w-full sm:max-w-md">
       <router-link to="/" class="flex justify-center">
-        <div class="h-16 w-16 bg-black flex items-center justify-center border-2 border-black hover:rotate-12 transition-transform duration-300">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M2 12H22M12 2V22M4.5 4.5L19.5 19.5M4.5 19.5L19.5 4.5" stroke="white" stroke-width="3"/>
+        <div class="h-16 w-16 hover:scale-105 transition-transform duration-300">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="24" height="24" fill="black"/>
+            <path d="M0 12H6L8.5 16.5L11 7.5L13.5 14.5L16 12H24" stroke="white" stroke-width="2" stroke-linejoin="bevel"/>
           </svg>
         </div>
       </router-link>

@@ -3,9 +3,10 @@
     <!-- Sidebar -->
     <div class="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 bg-white border-r-2 border-black">
       <div class="flex items-center h-20 flex-shrink-0 px-4 bg-white border-b-2 border-black">
-        <div class="h-8 w-8 bg-black flex items-center justify-center border border-black mr-3">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M2 12H22M12 2V22M4.5 4.5L19.5 19.5M4.5 19.5L19.5 4.5" stroke="white" stroke-width="3"/>
+        <div class="h-8 w-8 mr-3">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="24" height="24" fill="black"/>
+            <path d="M0 12H6L8.5 16.5L11 7.5L13.5 14.5L16 12H24" stroke="white" stroke-width="2" stroke-linejoin="bevel"/>
           </svg>
         </div>
         <span class="font-sans font-black text-xl tracking-tighter uppercase text-black">Driftlock</span>
