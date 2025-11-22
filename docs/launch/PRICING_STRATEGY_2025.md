@@ -46,6 +46,7 @@ Driftlock will adopt a **"Compliance-Core, AI-Flex"** model:
 - **Features:**
   - SSO / SAML
   - **DORA & NIS2 Compliance Bundles** (The "Killer Feature")
+  - **Adaptive Windowing:** "Ungameable" randomized audit intervals (Security Shield)
   - 90+ day retention
   - **Private AI:** Zero-retention LLM contracts or BYO-Key
   - Priority Support
