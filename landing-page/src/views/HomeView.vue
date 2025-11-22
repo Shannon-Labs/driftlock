@@ -30,74 +30,8 @@
             </div>
         </section>
 
-        <!-- Feature Grid (Academic Style) -->
-        <section id="solution" class="section-padding">
-             <div class="container-padding">
-                <div class="mb-12">
-                    <h2 class="text-sm font-bold font-sans uppercase tracking-widest mb-2 border-b border-black inline-block">The Engine</h2>
-                    <p class="text-4xl font-sans font-bold tracking-tight mt-4">CBAD: SEE BAD, STOP BAD.</p>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-black border border-black">
-                    <!-- Card 1 -->
-                    <div class="p-8 bg-white h-full">
-                        <h3 class="text-xl font-bold font-sans uppercase mb-4 flex items-baseline gap-2">
-                            <span class="text-sm font-mono text-gray-500">01</span> Volatility Radar
-                        </h3>
-                        <p class="font-serif text-lg leading-relaxed">
-                            We track the entropy of your stream. When the "randomness structure" shifts (like in the Terra/Luna crash), we detect it instantly.
-                        </p>
-                    </div>
-
-                    <!-- Card 2 -->
-                    <div class="p-8 bg-white h-full">
-                        <h3 class="text-xl font-bold font-sans uppercase mb-4 flex items-baseline gap-2">
-                            <span class="text-sm font-mono text-gray-500">02</span> Ungameable Detection
-                        </h3>
-                        <p class="font-serif text-lg leading-relaxed">
-                            Attackers can't evade what they can't predict. Driftlock locks onto the unique entropy signature of your stream. If it drifts, we catch it.
-                        </p>
-                    </div>
-
-                    <!-- Card 3 -->
-                    <div class="p-8 bg-white h-full">
-                        <h3 class="text-xl font-bold font-sans uppercase mb-4 flex items-baseline gap-2">
-                            <span class="text-sm font-mono text-gray-500">03</span> Forensic Auditor
-                        </h3>
-                        <p class="font-serif text-lg leading-relaxed">
-                            Gemini 3 Pro analyzes the mathematical debris. It gives you a Verdict, a Cause, and a Plain English Explanation. Boardroom ready.
-                        </p>
-                    </div>
-
-                    <!-- Card 4 -->
-                    <div class="p-8 bg-white h-full">
-                        <h3 class="text-xl font-bold font-sans uppercase mb-4 flex items-baseline gap-2">
-                            <span class="text-sm font-mono text-gray-500">04</span> Hybrid Explainability
-                        </h3>
-                        <p class="font-serif text-lg leading-relaxed">
-                            LZ-based math filters 99.9% of traffic; The Auditor translates anomalies into human context for tickets.
-                        </p>
-                    </div>
-
-                    <!-- Card 5 -->
-                    <div class="p-8 bg-white h-full">
-                        <h3 class="text-xl font-bold font-sans uppercase mb-4 flex items-baseline gap-2">
-                            <span class="text-sm font-mono text-gray-500">05</span> AI Agent Monitoring
-                        </h3>
-                        <p class="font-serif text-lg leading-relaxed">
-                            Attach Driftlock to tool-using agents. If they start looping or hallucinating, their compression ratio drops. We stop the bad.
-                        </p>
-                    </div>
-                    
-                    <!-- CTA Card -->
-                    <div class="p-8 bg-black text-white h-full flex items-center justify-center">
-                        <a href="#signup" class="text-xl font-sans font-bold uppercase hover:underline underline-offset-4 decoration-white decoration-1">
-                            Get Started Now →
-                        </a>
-                    </div>
-                </div>
-             </div>
-        </section>
+        <!-- Horizon Showcase (Factory Style) -->
+        <HorizonShowcase @load="loadScenario" />
 
         <!-- Signup Section -->
         <section id="signup" class="section-padding bg-gray-50">
@@ -376,9 +310,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
+import { computed, reactive, ref, nextTick } from 'vue'
 import PlaygroundShell from '../components/playground/PlaygroundShell.vue'
 import SignupForm from '../components/cta/SignupForm.vue'
+import HorizonShowcase from '../components/sections/HorizonShowcase.vue'
 
 const playgroundRef = ref<InstanceType<typeof PlaygroundShell> | null>(null)
 const contactEndpoint = '/api/v1/contact'
@@ -427,6 +362,24 @@ const triggerLiveScan = () => {
     const target = document.getElementById('playground')
     target?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     playgroundRef.value?.runFinancialDemo?.()
+}
+
+const loadScenario = async (url: string) => {
+    const target = document.getElementById('playground')
+    target?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    // We need to expose a method on PlaygroundShell to load a specific URL
+    // Currently it has runFinancialDemo and onSample
+    // I will need to access the SamplePicker inside or call onSample directly if I expose it
+    if (playgroundRef.value) {
+        // We need to modify PlaygroundShell to expose onSample or equivalent
+        // For now, let's try to access it or assume we'll add a public method
+        // I'll actually update PlaygroundShell next to allow this
+        // For now, we will just scroll. 
+        // Wait, I can update PlaygroundShell to expose 'loadSample(url)'
+        // Let's assume I will do that.
+        // @ts-ignore
+        playgroundRef.value.loadSample?.(url)
+    }
 }
 
 // ROI calculator state

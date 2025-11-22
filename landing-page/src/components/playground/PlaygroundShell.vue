@@ -416,12 +416,19 @@ function findAnomalyByIndex(index: number) {
 }
 
 async function runFinancialDemo() {
-  await onSample('/samples/demo-financial.ndjson')
+  await onSample('/samples/fraud.json')
   await nextTick()
   runDetect()
 }
 
-defineExpose({ runFinancialDemo })
+async function loadSample(url: string) {
+    await onSample(url)
+    await nextTick()
+    // Optionally auto-run?
+    // runDetect()
+}
+
+defineExpose({ runFinancialDemo, loadSample })
 
 interface SeriesPoint {
   index: number
