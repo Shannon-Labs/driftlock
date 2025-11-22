@@ -21,6 +21,15 @@ These instructions are for **AI agents and automation** working in this reposito
 - `.archive/reports/FINAL-STATUS.md` - Core demo functionality (still must work)
 - `README.md` - Project overview
 
+### Developer Tooling Inventory (November 2025 update):
+- **`cmd/driftlock-cli`** – `driftlock scan` streams NDJSON/STDIN through `pkg/entropywindow`; keep flags (`--format`, `--follow`, `--stdin`) stable.
+- **`pkg/entropywindow/`** – Shared Go analyzer for CLI + MCP. Never break its API without updating both callers.
+- **`extensions/vscode-driftlock/`** – VS Code Live Radar extension. Use `npm run lint`, `npm run compile`, and `npm run test` before publishing.
+- **`cmd/driftlock-mcp/`** – Claude/Cursor MCP server with local entropy fallback. `detect_anomalies` tool must always accept raw strings.
+- **Landing page automation** – `scripts/deploy-landing.sh`, `scripts/verify-horizon-datasets.ts`, and Playwright specs under `landing-page/tests/` gate the Horizon Showcase.
+- **Live Soak Test** – `scripts/soak_runner.py` and `scripts/crypto_bridge.py` for long-running validation against live Crypto Volatility data (see `docs/launch/SOAK_TEST.md`).
+- **Evidence scripts** – `scripts/chaos-report.py` + `docs/launch/THE_CHAOS_REPORT.md` summarize benchmark datasets; regenerate when logs change.
+
 ---
 
 ## 2. Golden Invariants (NEVER BREAK)
@@ -68,6 +77,11 @@ firebase deploy
 - Use Firebase Auth for user management
 - Integrate with existing API key system in Cloud Run backend
 - Maintain backward compatibility with existing `/v1/onboard/signup`
+
+### Landing Page + Showcase Automation:
+- Use `make deploy-landing` or `scripts/deploy-landing.sh` (expects `FIREBASE_TOKEN`) for hosting pushes.
+- Run `scripts/verify-horizon-datasets.ts` (via `npm run verify:horizon` in repo root) after touching sample data or the Horizon Showcase component.
+- UI gating lives in `landing-page/tests/`; Playwright suite (`npx playwright test`) must stay green with the auto-start preview server defined in `playwright.config.ts`.
 
 ---
 
@@ -202,6 +216,12 @@ We have organized documentation to keep the root clean and context clear:
   - Do not change C signatures without updating the corresponding Rust exports.
   - On error, return clear Go errors; do not panic on normal failure modes.
 
+### Developer Tooling (CLI, VS Code, MCP)
+
+- **CLI (`cmd/driftlock-cli`)**: `driftlock scan` is the supported entrypoint. Preserve streaming options (`--format`, `--follow`, `--stdin`, `--baseline-lines`, `--algo`, `--show-all`). Any change to analyzer output must keep `pkg/entropywindow.Result` backward-compatible.
+- **VS Code extension (`extensions/vscode-driftlock`)**: Keep analyzer subprocess invocations using `driftlock scan --stdin`. Always run `npm run lint`, `npm run compile`, and `npm run test` before publishing `.vsix` builds.
+- **MCP server (`cmd/driftlock-mcp`)**: `detect_anomalies` must accept large raw strings, chunk them with the entropy window, and auto-detect JSON vs raw payloads. Update `docs/integrations/MCP_SETUP.md` when the schema changes.
+
 ### Frontend (`playground/`, `landing-page/`)
 
 - Maintain the existing tech choices (Vue 3 + TS for playground; Vue/Tailwind stack for landing page).
@@ -244,6 +264,13 @@ We have organized documentation to keep the root clean and context clear:
 - Before concluding work that touches core logic, FFI, Docker, or the HTTP API:
   - Run `make demo` and `./scripts/verify-launch-readiness.sh` if available.
   - Run any relevant scripts under `scripts/` (e.g., `test-api.sh`, `test-docker-build.sh`, `test-services.sh`) that cover your changes.
+- Frontend + showcase gates:
+  - `cd landing-page && npm run lint && npm run type-check && npm run build`.
+  - `cd landing-page && npx playwright test` (auto-starts `npm run preview`).
+  - `node scripts/verify-horizon-datasets.ts` (or `npm run verify:horizon`) to confirm datasets still load.
+- Developer tooling:
+  - `cd extensions/vscode-driftlock && npm run lint && npm run compile && npm run test` before shipping.
+  - `cd pkg/entropywindow && go test ./...` anytime analyzer math changes; propagate via `go test` inside `cmd/driftlock-cli` and `cmd/driftlock-mcp`.
 - Only modify or add tests that are clearly related to the behaviour you are changing.
 - Keep tests fast and focused; avoid adding slow end‑to‑end suites without a good reason.
 

@@ -8,9 +8,9 @@
     ],
     "rewrites": [
       {
-        "source": "/api/v1/**",
+        "source": "/api/**",
         "run": {
-          "serviceId": "driftlock-api",
+          "serviceId": "apiproxy",
           "region": "us-central1"
         }
       },

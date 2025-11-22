@@ -1,0 +1,32 @@
+connectorId: driftlock
+generate:
+  javascriptSdk:
+    - outputDir: ../../playground/src/dataconnect-generated
+      package: "@dataconnect/generated"
+      packageJsonDir: ../../playground
+      react: false
+      angular: false
+    - outputDir: ../../landing-page/src/dataconnect-generated
+      package: "@dataconnect/generated"
+      packageJsonDir: ../../landing-page
+      react: false
+      angular: false
+    - outputDir: ../../sdks/typescript/src/dataconnect-generated
+      package: "@dataconnect/generated"
+      packageJsonDir: ../../sdks/typescript
+      react: false
+      angular: false
+    - outputDir: ../../collector-processor/landing-page/src/dataconnect-generated
+      package: "@dataconnect/generated"
+      packageJsonDir: ../../collector-processor/landing-page
+      react: false
+      angular: false
+    - outputDir: ../../openzl/tools/visualization_app/src/dataconnect-generated
+      package: "@dataconnect/generated"
+      packageJsonDir: ../../openzl/tools/visualization_app
+      react: true
+      angular: false
+  adminNodeSdk:
+    - outputDir: ../../functions/src/dataconnect-admin-generated
+      package: "@dataconnect/admin-generated"
+      packageJsonDir: ../../functions

@@ -15,6 +15,7 @@
   },
   "main": "lib/index.js",
   "dependencies": {
+    "@dataconnect/admin-generated": "file:src/dataconnect-admin-generated",
     "@google-cloud/secret-manager": "^6.1.1",
     "@google/generative-ai": "^0.24.1",
     "firebase-admin": "^12.6.0",

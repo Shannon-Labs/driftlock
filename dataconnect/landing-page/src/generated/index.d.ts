@@ -352,6 +352,126 @@ export interface User_Key {
   __typename?: 'User_Key';
 }
 
+interface GetUserRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetUserVariables): QueryRef<GetUserData, GetUserVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetUserVariables): QueryRef<GetUserData, GetUserVariables>;
+  operationName: string;
+}
+export const getUserRef: GetUserRef;
+
+export function getUser(vars: GetUserVariables): QueryPromise<GetUserData, GetUserVariables>;
+export function getUser(dc: DataConnect, vars: GetUserVariables): QueryPromise<GetUserData, GetUserVariables>;
+
+interface ListUsersByEmailRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ListUsersByEmailVariables): QueryRef<ListUsersByEmailData, ListUsersByEmailVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ListUsersByEmailVariables): QueryRef<ListUsersByEmailData, ListUsersByEmailVariables>;
+  operationName: string;
+}
+export const listUsersByEmailRef: ListUsersByEmailRef;
+
+export function listUsersByEmail(vars: ListUsersByEmailVariables): QueryPromise<ListUsersByEmailData, ListUsersByEmailVariables>;
+export function listUsersByEmail(dc: DataConnect, vars: ListUsersByEmailVariables): QueryPromise<ListUsersByEmailData, ListUsersByEmailVariables>;
+
+interface GetDatasetRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetDatasetVariables): QueryRef<GetDatasetData, GetDatasetVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetDatasetVariables): QueryRef<GetDatasetData, GetDatasetVariables>;
+  operationName: string;
+}
+export const getDatasetRef: GetDatasetRef;
+
+export function getDataset(vars: GetDatasetVariables): QueryPromise<GetDatasetData, GetDatasetVariables>;
+export function getDataset(dc: DataConnect, vars: GetDatasetVariables): QueryPromise<GetDatasetData, GetDatasetVariables>;
+
+interface ListDatasetsByUserRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ListDatasetsByUserVariables): QueryRef<ListDatasetsByUserData, ListDatasetsByUserVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ListDatasetsByUserVariables): QueryRef<ListDatasetsByUserData, ListDatasetsByUserVariables>;
+  operationName: string;
+}
+export const listDatasetsByUserRef: ListDatasetsByUserRef;
+
+export function listDatasetsByUser(vars: ListDatasetsByUserVariables): QueryPromise<ListDatasetsByUserData, ListDatasetsByUserVariables>;
+export function listDatasetsByUser(dc: DataConnect, vars: ListDatasetsByUserVariables): QueryPromise<ListDatasetsByUserData, ListDatasetsByUserVariables>;
+
+interface GetModelConfigurationRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetModelConfigurationVariables): QueryRef<GetModelConfigurationData, GetModelConfigurationVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetModelConfigurationVariables): QueryRef<GetModelConfigurationData, GetModelConfigurationVariables>;
+  operationName: string;
+}
+export const getModelConfigurationRef: GetModelConfigurationRef;
+
+export function getModelConfiguration(vars: GetModelConfigurationVariables): QueryPromise<GetModelConfigurationData, GetModelConfigurationVariables>;
+export function getModelConfiguration(dc: DataConnect, vars: GetModelConfigurationVariables): QueryPromise<GetModelConfigurationData, GetModelConfigurationVariables>;
+
+interface ListModelConfigurationsByUserRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ListModelConfigurationsByUserVariables): QueryRef<ListModelConfigurationsByUserData, ListModelConfigurationsByUserVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ListModelConfigurationsByUserVariables): QueryRef<ListModelConfigurationsByUserData, ListModelConfigurationsByUserVariables>;
+  operationName: string;
+}
+export const listModelConfigurationsByUserRef: ListModelConfigurationsByUserRef;
+
+export function listModelConfigurationsByUser(vars: ListModelConfigurationsByUserVariables): QueryPromise<ListModelConfigurationsByUserData, ListModelConfigurationsByUserVariables>;
+export function listModelConfigurationsByUser(dc: DataConnect, vars: ListModelConfigurationsByUserVariables): QueryPromise<ListModelConfigurationsByUserData, ListModelConfigurationsByUserVariables>;
+
+interface GetDetectionTaskRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetDetectionTaskVariables): QueryRef<GetDetectionTaskData, GetDetectionTaskVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetDetectionTaskVariables): QueryRef<GetDetectionTaskData, GetDetectionTaskVariables>;
+  operationName: string;
+}
+export const getDetectionTaskRef: GetDetectionTaskRef;
+
+export function getDetectionTask(vars: GetDetectionTaskVariables): QueryPromise<GetDetectionTaskData, GetDetectionTaskVariables>;
+export function getDetectionTask(dc: DataConnect, vars: GetDetectionTaskVariables): QueryPromise<GetDetectionTaskData, GetDetectionTaskVariables>;
+
+interface ListDetectionTasksByUserRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ListDetectionTasksByUserVariables): QueryRef<ListDetectionTasksByUserData, ListDetectionTasksByUserVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ListDetectionTasksByUserVariables): QueryRef<ListDetectionTasksByUserData, ListDetectionTasksByUserVariables>;
+  operationName: string;
+}
+export const listDetectionTasksByUserRef: ListDetectionTasksByUserRef;
+
+export function listDetectionTasksByUser(vars: ListDetectionTasksByUserVariables): QueryPromise<ListDetectionTasksByUserData, ListDetectionTasksByUserVariables>;
+export function listDetectionTasksByUser(dc: DataConnect, vars: ListDetectionTasksByUserVariables): QueryPromise<ListDetectionTasksByUserData, ListDetectionTasksByUserVariables>;
+
+interface GetAnomaliesByTaskRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetAnomaliesByTaskVariables): QueryRef<GetAnomaliesByTaskData, GetAnomaliesByTaskVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetAnomaliesByTaskVariables): QueryRef<GetAnomaliesByTaskData, GetAnomaliesByTaskVariables>;
+  operationName: string;
+}
+export const getAnomaliesByTaskRef: GetAnomaliesByTaskRef;
+
+export function getAnomaliesByTask(vars: GetAnomaliesByTaskVariables): QueryPromise<GetAnomaliesByTaskData, GetAnomaliesByTaskVariables>;
+export function getAnomaliesByTask(dc: DataConnect, vars: GetAnomaliesByTaskVariables): QueryPromise<GetAnomaliesByTaskData, GetAnomaliesByTaskVariables>;
+
+interface GetHighScoreAnomaliesRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetHighScoreAnomaliesVariables): QueryRef<GetHighScoreAnomaliesData, GetHighScoreAnomaliesVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetHighScoreAnomaliesVariables): QueryRef<GetHighScoreAnomaliesData, GetHighScoreAnomaliesVariables>;
+  operationName: string;
+}
+export const getHighScoreAnomaliesRef: GetHighScoreAnomaliesRef;
+
+export function getHighScoreAnomalies(vars: GetHighScoreAnomaliesVariables): QueryPromise<GetHighScoreAnomaliesData, GetHighScoreAnomaliesVariables>;
+export function getHighScoreAnomalies(dc: DataConnect, vars: GetHighScoreAnomaliesVariables): QueryPromise<GetHighScoreAnomaliesData, GetHighScoreAnomaliesVariables>;
+
 interface CreateUserRef {
   /* Allow users to create refs without passing in DataConnect */
   (vars: CreateUserVariables): MutationRef<CreateUserData, CreateUserVariables>;
@@ -483,124 +603,4 @@ export const createAnomalyRef: CreateAnomalyRef;
 
 export function createAnomaly(vars: CreateAnomalyVariables): MutationPromise<CreateAnomalyData, CreateAnomalyVariables>;
 export function createAnomaly(dc: DataConnect, vars: CreateAnomalyVariables): MutationPromise<CreateAnomalyData, CreateAnomalyVariables>;
-
-interface GetUserRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (vars: GetUserVariables): QueryRef<GetUserData, GetUserVariables>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect, vars: GetUserVariables): QueryRef<GetUserData, GetUserVariables>;
-  operationName: string;
-}
-export const getUserRef: GetUserRef;
-
-export function getUser(vars: GetUserVariables): QueryPromise<GetUserData, GetUserVariables>;
-export function getUser(dc: DataConnect, vars: GetUserVariables): QueryPromise<GetUserData, GetUserVariables>;
-
-interface ListUsersByEmailRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (vars: ListUsersByEmailVariables): QueryRef<ListUsersByEmailData, ListUsersByEmailVariables>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect, vars: ListUsersByEmailVariables): QueryRef<ListUsersByEmailData, ListUsersByEmailVariables>;
-  operationName: string;
-}
-export const listUsersByEmailRef: ListUsersByEmailRef;
-
-export function listUsersByEmail(vars: ListUsersByEmailVariables): QueryPromise<ListUsersByEmailData, ListUsersByEmailVariables>;
-export function listUsersByEmail(dc: DataConnect, vars: ListUsersByEmailVariables): QueryPromise<ListUsersByEmailData, ListUsersByEmailVariables>;
-
-interface GetDatasetRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (vars: GetDatasetVariables): QueryRef<GetDatasetData, GetDatasetVariables>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect, vars: GetDatasetVariables): QueryRef<GetDatasetData, GetDatasetVariables>;
-  operationName: string;
-}
-export const getDatasetRef: GetDatasetRef;
-
-export function getDataset(vars: GetDatasetVariables): QueryPromise<GetDatasetData, GetDatasetVariables>;
-export function getDataset(dc: DataConnect, vars: GetDatasetVariables): QueryPromise<GetDatasetData, GetDatasetVariables>;
-
-interface ListDatasetsByUserRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (vars: ListDatasetsByUserVariables): QueryRef<ListDatasetsByUserData, ListDatasetsByUserVariables>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect, vars: ListDatasetsByUserVariables): QueryRef<ListDatasetsByUserData, ListDatasetsByUserVariables>;
-  operationName: string;
-}
-export const listDatasetsByUserRef: ListDatasetsByUserRef;
-
-export function listDatasetsByUser(vars: ListDatasetsByUserVariables): QueryPromise<ListDatasetsByUserData, ListDatasetsByUserVariables>;
-export function listDatasetsByUser(dc: DataConnect, vars: ListDatasetsByUserVariables): QueryPromise<ListDatasetsByUserData, ListDatasetsByUserVariables>;
-
-interface GetModelConfigurationRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (vars: GetModelConfigurationVariables): QueryRef<GetModelConfigurationData, GetModelConfigurationVariables>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect, vars: GetModelConfigurationVariables): QueryRef<GetModelConfigurationData, GetModelConfigurationVariables>;
-  operationName: string;
-}
-export const getModelConfigurationRef: GetModelConfigurationRef;
-
-export function getModelConfiguration(vars: GetModelConfigurationVariables): QueryPromise<GetModelConfigurationData, GetModelConfigurationVariables>;
-export function getModelConfiguration(dc: DataConnect, vars: GetModelConfigurationVariables): QueryPromise<GetModelConfigurationData, GetModelConfigurationVariables>;
-
-interface ListModelConfigurationsByUserRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (vars: ListModelConfigurationsByUserVariables): QueryRef<ListModelConfigurationsByUserData, ListModelConfigurationsByUserVariables>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect, vars: ListModelConfigurationsByUserVariables): QueryRef<ListModelConfigurationsByUserData, ListModelConfigurationsByUserVariables>;
-  operationName: string;
-}
-export const listModelConfigurationsByUserRef: ListModelConfigurationsByUserRef;
-
-export function listModelConfigurationsByUser(vars: ListModelConfigurationsByUserVariables): QueryPromise<ListModelConfigurationsByUserData, ListModelConfigurationsByUserVariables>;
-export function listModelConfigurationsByUser(dc: DataConnect, vars: ListModelConfigurationsByUserVariables): QueryPromise<ListModelConfigurationsByUserData, ListModelConfigurationsByUserVariables>;
-
-interface GetDetectionTaskRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (vars: GetDetectionTaskVariables): QueryRef<GetDetectionTaskData, GetDetectionTaskVariables>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect, vars: GetDetectionTaskVariables): QueryRef<GetDetectionTaskData, GetDetectionTaskVariables>;
-  operationName: string;
-}
-export const getDetectionTaskRef: GetDetectionTaskRef;
-
-export function getDetectionTask(vars: GetDetectionTaskVariables): QueryPromise<GetDetectionTaskData, GetDetectionTaskVariables>;
-export function getDetectionTask(dc: DataConnect, vars: GetDetectionTaskVariables): QueryPromise<GetDetectionTaskData, GetDetectionTaskVariables>;
-
-interface ListDetectionTasksByUserRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (vars: ListDetectionTasksByUserVariables): QueryRef<ListDetectionTasksByUserData, ListDetectionTasksByUserVariables>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect, vars: ListDetectionTasksByUserVariables): QueryRef<ListDetectionTasksByUserData, ListDetectionTasksByUserVariables>;
-  operationName: string;
-}
-export const listDetectionTasksByUserRef: ListDetectionTasksByUserRef;
-
-export function listDetectionTasksByUser(vars: ListDetectionTasksByUserVariables): QueryPromise<ListDetectionTasksByUserData, ListDetectionTasksByUserVariables>;
-export function listDetectionTasksByUser(dc: DataConnect, vars: ListDetectionTasksByUserVariables): QueryPromise<ListDetectionTasksByUserData, ListDetectionTasksByUserVariables>;
-
-interface GetAnomaliesByTaskRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (vars: GetAnomaliesByTaskVariables): QueryRef<GetAnomaliesByTaskData, GetAnomaliesByTaskVariables>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect, vars: GetAnomaliesByTaskVariables): QueryRef<GetAnomaliesByTaskData, GetAnomaliesByTaskVariables>;
-  operationName: string;
-}
-export const getAnomaliesByTaskRef: GetAnomaliesByTaskRef;
-
-export function getAnomaliesByTask(vars: GetAnomaliesByTaskVariables): QueryPromise<GetAnomaliesByTaskData, GetAnomaliesByTaskVariables>;
-export function getAnomaliesByTask(dc: DataConnect, vars: GetAnomaliesByTaskVariables): QueryPromise<GetAnomaliesByTaskData, GetAnomaliesByTaskVariables>;
-
-interface GetHighScoreAnomaliesRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (vars: GetHighScoreAnomaliesVariables): QueryRef<GetHighScoreAnomaliesData, GetHighScoreAnomaliesVariables>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect, vars: GetHighScoreAnomaliesVariables): QueryRef<GetHighScoreAnomaliesData, GetHighScoreAnomaliesVariables>;
-  operationName: string;
-}
-export const getHighScoreAnomaliesRef: GetHighScoreAnomaliesRef;
-
-export function getHighScoreAnomalies(vars: GetHighScoreAnomaliesVariables): QueryPromise<GetHighScoreAnomaliesData, GetHighScoreAnomaliesVariables>;
-export function getHighScoreAnomalies(dc: DataConnect, vars: GetHighScoreAnomaliesVariables): QueryPromise<GetHighScoreAnomaliesData, GetHighScoreAnomaliesVariables>;
 

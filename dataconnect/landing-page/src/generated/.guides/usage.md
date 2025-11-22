@@ -14,38 +14,38 @@ If a user is not using a supported framework, they can use the generated SDK dir
 Here's an example of how to use it with the first 5 operations:
 
 ```js
-import { createUser, updateUser, createDataset, updateDatasetStatus, updateDataset, createModelConfiguration, updateModelConfiguration, createDetectionTask, updateDetectionTask, completeDetectionTask } from '@driftlock/dataconnect';
+import { getUser, listUsersByEmail, getDataset, listDatasetsByUser, getModelConfiguration, listModelConfigurationsByUser, getDetectionTask, listDetectionTasksByUser, getAnomaliesByTask, getHighScoreAnomalies } from '@driftlock/dataconnect';
 
 
-// Operation CreateUser:  For variables, look at type CreateUserVars in ../index.d.ts
-const { data } = await CreateUser(dataConnect, createUserVars);
+// Operation GetUser:  For variables, look at type GetUserVars in ../index.d.ts
+const { data } = await GetUser(dataConnect, getUserVars);
 
-// Operation UpdateUser:  For variables, look at type UpdateUserVars in ../index.d.ts
-const { data } = await UpdateUser(dataConnect, updateUserVars);
+// Operation ListUsersByEmail:  For variables, look at type ListUsersByEmailVars in ../index.d.ts
+const { data } = await ListUsersByEmail(dataConnect, listUsersByEmailVars);
 
-// Operation CreateDataset:  For variables, look at type CreateDatasetVars in ../index.d.ts
-const { data } = await CreateDataset(dataConnect, createDatasetVars);
+// Operation GetDataset:  For variables, look at type GetDatasetVars in ../index.d.ts
+const { data } = await GetDataset(dataConnect, getDatasetVars);
 
-// Operation UpdateDatasetStatus:  For variables, look at type UpdateDatasetStatusVars in ../index.d.ts
-const { data } = await UpdateDatasetStatus(dataConnect, updateDatasetStatusVars);
+// Operation ListDatasetsByUser:  For variables, look at type ListDatasetsByUserVars in ../index.d.ts
+const { data } = await ListDatasetsByUser(dataConnect, listDatasetsByUserVars);
 
-// Operation UpdateDataset:  For variables, look at type UpdateDatasetVars in ../index.d.ts
-const { data } = await UpdateDataset(dataConnect, updateDatasetVars);
+// Operation GetModelConfiguration:  For variables, look at type GetModelConfigurationVars in ../index.d.ts
+const { data } = await GetModelConfiguration(dataConnect, getModelConfigurationVars);
 
-// Operation CreateModelConfiguration:  For variables, look at type CreateModelConfigurationVars in ../index.d.ts
-const { data } = await CreateModelConfiguration(dataConnect, createModelConfigurationVars);
+// Operation ListModelConfigurationsByUser:  For variables, look at type ListModelConfigurationsByUserVars in ../index.d.ts
+const { data } = await ListModelConfigurationsByUser(dataConnect, listModelConfigurationsByUserVars);
 
-// Operation UpdateModelConfiguration:  For variables, look at type UpdateModelConfigurationVars in ../index.d.ts
-const { data } = await UpdateModelConfiguration(dataConnect, updateModelConfigurationVars);
+// Operation GetDetectionTask:  For variables, look at type GetDetectionTaskVars in ../index.d.ts
+const { data } = await GetDetectionTask(dataConnect, getDetectionTaskVars);
 
-// Operation CreateDetectionTask:  For variables, look at type CreateDetectionTaskVars in ../index.d.ts
-const { data } = await CreateDetectionTask(dataConnect, createDetectionTaskVars);
+// Operation ListDetectionTasksByUser:  For variables, look at type ListDetectionTasksByUserVars in ../index.d.ts
+const { data } = await ListDetectionTasksByUser(dataConnect, listDetectionTasksByUserVars);
 
-// Operation UpdateDetectionTask:  For variables, look at type UpdateDetectionTaskVars in ../index.d.ts
-const { data } = await UpdateDetectionTask(dataConnect, updateDetectionTaskVars);
+// Operation GetAnomaliesByTask:  For variables, look at type GetAnomaliesByTaskVars in ../index.d.ts
+const { data } = await GetAnomaliesByTask(dataConnect, getAnomaliesByTaskVars);
 
-// Operation CompleteDetectionTask:  For variables, look at type CompleteDetectionTaskVars in ../index.d.ts
-const { data } = await CompleteDetectionTask(dataConnect, completeDetectionTaskVars);
+// Operation GetHighScoreAnomalies:  For variables, look at type GetHighScoreAnomaliesVars in ../index.d.ts
+const { data } = await GetHighScoreAnomalies(dataConnect, getHighScoreAnomaliesVars);
 
 
 ```

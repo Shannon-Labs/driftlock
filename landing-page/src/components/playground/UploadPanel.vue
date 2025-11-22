@@ -35,10 +35,44 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 
-const emit = defineEmits<{ (e: 'data', p: { text: string, format: 'ndjson' | 'json' }): void }>()
+const props = defineProps<{
+  text: string
+  format: 'ndjson' | 'json'
+}>()
 
-const text = ref('')
-const format = ref<'ndjson' | 'json'>('ndjson')
+const emit = defineEmits<{
+  (e: 'data', p: { text: string, format: 'ndjson' | 'json' }): void
+  (e: 'update:text', value: string): void
+  (e: 'update:format', value: 'ndjson' | 'json'): void
+}>()
+
+const text = ref(props.text)
+const format = ref<'ndjson' | 'json'>(props.format)
+
+watch(() => props.text, value => {
+  if (value !== text.value) {
+    text.value = value
+  }
+})
+
+watch(() => props.format, value => {
+  if (value !== format.value) {
+    format.value = value
+  }
+})
+
+watch(text, value => {
+  emit('update:text', value)
+  const trimmed = value.trim()
+  const inferred: 'ndjson' | 'json' = trimmed.startsWith('[') ? 'json' : 'ndjson'
+  if (inferred !== format.value) {
+    format.value = inferred
+  }
+})
+
+watch(format, value => {
+  emit('update:format', value)
+})
 
 function emitData() {
   emit('data', { text: text.value, format: format.value })
@@ -54,12 +88,5 @@ async function onFile(e: Event) {
   if (file.name.endsWith('.jsonl') || file.name.endsWith('.ndjson')) format.value = 'ndjson'
   emitData()
 }
-
-watch(text, () => {
-  // lightweight auto-detect on paste
-  const t = text.value.trim()
-  if (t.startsWith('[')) format.value = 'json'
-  else format.value = 'ndjson'
-})
 </script>
 

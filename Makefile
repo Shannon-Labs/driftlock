@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: all cbad-core demo verify clean
+.PHONY: all cbad-core demo verify clean deploy-landing
 
 all: demo
 
@@ -28,3 +28,6 @@ verify: demo
 clean:
 	@rm -f driftlock-demo demo-output.html verify.log
 	@cd cbad-core && cargo clean
+
+deploy-landing:
+	@./scripts/deploy-landing.sh

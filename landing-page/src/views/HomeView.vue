@@ -11,7 +11,9 @@
                         When Data Drifts,<br>We Lock On.
                     </h1>
                     <p class="text-xl sm:text-2xl font-serif leading-relaxed max-w-2xl mb-10 border-l border-black pl-6">
-                        The Volatility Radar for the AI Era. Powered by CBAD.
+                        Quantify the entropy in your data streams.
+                        <br>
+                        How much chaos do you want to find?
                         <br><br>
                         <strong class="font-sans uppercase text-sm tracking-widest">See Bad. Stop Bad.</strong>
                     </p>
@@ -63,63 +65,7 @@
             </div>
         </section>
 
-        <!-- API Demo Section -->
-        <section id="api-demo" class="section-padding bg-black text-white">
-            <div class="container-padding">
-                <div class="grid gap-12 lg:grid-cols-2 lg:items-center">
-                    <div>
-                        <div class="inline-block border border-white px-2 py-1 text-xs font-mono mb-6">
-                            New Onboarding Flow
-                        </div>
-                        <h2 class="text-4xl font-sans font-bold tracking-tight mb-6">HTTP API DEMO</h2>
-                        <p class="text-lg font-serif text-gray-300 mb-8 leading-relaxed">
-                            This is the exact flow from the README quickstart. Run one script, provision a tenant/key, hit <code class="font-mono bg-gray-800 px-1">/v1/detect</code>, and inspect anomalies in Postgres—no black-box magic.
-                        </p>
-                        
-                        <div class="space-y-6 border-l border-white pl-6">
-                             <div>
-                                <h3 class="text-lg font-bold font-sans uppercase">1. Clone & Build</h3>
-                                <p class="mt-2 font-mono text-sm bg-gray-900 p-3 border border-gray-700">
-                                    git clone ... && cargo build --release
-                                </p>
-                            </div>
-                            <div>
-                                <h3 class="text-lg font-bold font-sans uppercase">2. Run Demo Script</h3>
-                                <p class="mt-2 font-mono text-sm bg-gray-900 p-3 border border-gray-700">
-                                    DRIFTLOCK_DEV_MODE=true ./scripts/run-api-demo.sh
-                                </p>
-                            </div>
-                             <div>
-                                <h3 class="text-lg font-bold font-sans uppercase">3. Verify in Postgres</h3>
-                                <p class="mt-2 text-sm font-serif text-gray-400">
-                                    `psql` output shows anomalies persisted with NCD, p-values, and explanations.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Terminal Window -->
-                    <div class="border border-white bg-black font-mono text-sm p-4 shadow-none">
-                        <div class="border-b border-gray-700 pb-2 mb-4 flex justify-between">
-                            <span>bash — 80x24</span>
-                            <span>[●]</span>
-                        </div>
-                        <div class="space-y-1">
-                            <div class="text-green-400">$ ./scripts/run-api-demo.sh</div>
-                            <div class="text-gray-500"># Initializing Driftlock HTTP API...</div>
-                            <div>> Service listening on :8080</div>
-                            <div>> Provisioning tenant... OK</div>
-                            <div>> Sending 50 normal events... OK</div>
-                            <div>> Sending 1 anomaly... <span class="text-red-500 font-bold bg-red-900/20 px-1">DETECTED</span></div>
-                            <br>
-                            <div class="text-blue-400 font-bold">ANOMALY FOUND (ID: 550e8400-...)</div>
-                            <div>NCD: 0.82 (Threshold: 0.5)</div>
-                            <div>Explanation: "High entropy variance in field 'amount'"</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
+
 
         <!-- Problem Section (The $ Risk) -->
         <section id="problem" class="section-padding">
@@ -194,7 +140,7 @@
                             <p class="text-sm font-bold font-sans uppercase tracking-wide mb-2">2. Radar</p>
                             <p class="text-4xl font-sans font-bold">$20</p>
                             <p class="text-sm text-gray-500 font-mono">per month</p>
-                            <p class="mt-4 text-sm font-serif">Active scanning and insights. AI context + Dashboard.</p>
+                            <p class="mt-4 text-sm font-serif">Detect standard deviation. Filter the background noise.</p>
                             <p class="mt-2 text-xs text-gray-400 font-mono">Usage-based overage available</p>
                         </div>
                         <ul class="space-y-3 text-sm font-mono border-t border-black pt-4 mt-auto">
@@ -214,7 +160,7 @@
                             <p class="text-sm font-bold font-sans uppercase tracking-wide mb-2">3. Lock</p>
                             <p class="text-4xl font-sans font-bold">$200</p>
                             <p class="text-sm text-gray-400 font-mono">per month</p>
-                            <p class="mt-4 text-sm font-serif">Secure your infrastructure. Compliance bundles for DORA/NIS2.</p>
+                            <p class="mt-4 text-sm font-serif">Full entropy surveillance. High-fidelity chaos detection & compliance.</p>
                             <p class="mt-2 text-xs text-gray-400 font-mono">Usage-based overage available</p>
                         </div>
                         <ul class="space-y-3 text-sm font-mono border-t border-white pt-4 mt-auto">

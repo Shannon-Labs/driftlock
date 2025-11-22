@@ -57,6 +57,19 @@ func onboardSignupHandler(cfg config, store *store, emailer *emailService) http.
 			return
 		}
 
+		// Check for Firebase Auth token (optional for backward compatibility)
+		var firebaseUID string
+		authHeader := r.Header.Get("Authorization")
+		if strings.HasPrefix(authHeader, "Bearer ") && firebaseAuth != nil {
+			tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+			user, err := verifyFirebaseToken(r.Context(), tokenString)
+			if err == nil {
+				firebaseUID = user.UID
+				// If Firebase token is valid, use the email from the token (more secure)
+				// But we'll still accept email from body for backward compatibility
+			}
+		}
+
 		var req onboardSignupRequest
 		decoder := json.NewDecoder(r.Body)
 		decoder.DisallowUnknownFields()
@@ -83,6 +96,19 @@ func onboardSignupHandler(cfg config, store *store, emailer *emailService) http.
 		if exists {
 			writeError(w, r, http.StatusConflict, fmt.Errorf("email already registered"))
 			return
+		}
+
+		// If Firebase UID provided, also check if that UID is already linked
+		if firebaseUID != "" {
+			exists, err := store.checkTenantFirebaseUID(ctx, firebaseUID)
+			if err != nil {
+				writeError(w, r, http.StatusInternalServerError, fmt.Errorf("database error: %w", err))
+				return
+			}
+			if exists {
+				writeError(w, r, http.StatusConflict, fmt.Errorf("firebase account already registered"))
+				return
+			}
 		}
 
 		// Create tenant with active status and API key immediately
@@ -114,9 +140,8 @@ func onboardSignupHandler(cfg config, store *store, emailer *emailService) http.
 			SignupIP:            ip,
 			Source:              req.Source,
 			Seed:                int64(cfg.Seed),
-			Status:              "active", // Explicitly active
-			// VerificationToken is not needed for immediate access but we could still set one if we want to verify later
-			// For now, let's skip token requirement or pass empty string if store allows
+			Status:              "active",    // Explicitly active
+			FirebaseUID:         firebaseUID, // Link to Firebase Auth user if provided
 		})
 		if err != nil {
 			writeError(w, r, http.StatusInternalServerError, fmt.Errorf("failed to create tenant: %w", err))

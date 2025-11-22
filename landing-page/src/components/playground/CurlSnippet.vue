@@ -23,7 +23,9 @@ async function copy() {
   try { 
     await navigator.clipboard.writeText(props.curl)
     // Could add a toast notification here
-  } catch {}
+  } catch (error) {
+    console.warn('Failed to copy cURL snippet', error)
+  }
 }
 </script>
 

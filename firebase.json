@@ -44,6 +44,10 @@
         "function": "generateComplianceReport"
       },
       {
+        "source": "/api/v1/**",
+        "function": "apiProxy"
+      },
+      {
         "source": "/api/proxy/**",
         "function": "apiProxy"
       },

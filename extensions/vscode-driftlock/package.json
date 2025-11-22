@@ -1,0 +1,111 @@
+{
+  "name": "vscode-driftlock",
+  "displayName": "Driftlock Live Radar",
+  "description": "Highlight high-entropy log lines directly inside VS Code using the Driftlock CLI.",
+  "version": "0.1.0",
+  "publisher": "driftlock",
+  "license": "SEE LICENSE IN ../../LICENSE",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:driftlock.startLiveLinting",
+    "onCommand:driftlock.stopLiveLinting",
+    "onCommand:driftlock.startTerminalRadar",
+    "onCommand:driftlock.stopTerminalRadar",
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "driftlock.startLiveLinting",
+        "title": "Driftlock: Start Live Linting",
+        "category": "Driftlock"
+      },
+      {
+        "command": "driftlock.stopLiveLinting",
+        "title": "Driftlock: Stop Live Linting",
+        "category": "Driftlock"
+      },
+      {
+        "command": "driftlock.startTerminalRadar",
+        "title": "Driftlock: Monitor Terminal Output",
+        "category": "Driftlock"
+      },
+      {
+        "command": "driftlock.stopTerminalRadar",
+        "title": "Driftlock: Stop Terminal Monitor",
+        "category": "Driftlock"
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "Driftlock",
+      "properties": {
+        "driftlock.cliPath": {
+          "type": "string",
+          "default": "driftlock",
+          "description": "Path to the driftlock CLI executable."
+        },
+        "driftlock.baselineLines": {
+          "type": "number",
+          "default": 400,
+          "minimum": 50,
+          "description": "Number of historical lines kept in the baseline window."
+        },
+        "driftlock.threshold": {
+          "type": "number",
+          "default": 0.35,
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Anomaly score threshold (0-1)."
+        },
+        "driftlock.format": {
+          "type": "string",
+          "enum": [
+            "raw",
+            "ndjson"
+          ],
+          "default": "raw",
+          "description": "Input format for streamed data."
+        },
+        "driftlock.algo": {
+          "type": "string",
+          "enum": [
+            "zstd",
+            "gzip"
+          ],
+          "default": "zstd",
+          "description": "Compression algorithm used by the entropy analyzer."
+        },
+        "driftlock.minLineLength": {
+          "type": "number",
+          "default": 12,
+          "description": "Minimum line length evaluated for anomalies."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p .",
+    "watch": "tsc -p . -w",
+    "lint": "tsc --noEmit",
+    "test": "node ./dist/test/runTest.js",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^20.11.3",
+    "@types/vscode": "1.85.0",
+    "@vscode/test-electron": "^2.3.8",
+    "@vscode/vsce": "^2.27.0",
+    "glob": "^11.0.0",
+    "mocha": "^11.7.5",
+    "tslib": "^2.6.2",
+    "typescript": "^5.3.3"
+  }
+}

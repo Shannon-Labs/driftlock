@@ -6,6 +6,116 @@ export const connectorConfig = {
   location: 'us-central1'
 };
 
+export const getUserRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetUser', inputVars);
+}
+getUserRef.operationName = 'GetUser';
+
+export function getUser(dcOrVars, vars) {
+  return executeQuery(getUserRef(dcOrVars, vars));
+}
+
+export const listUsersByEmailRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'ListUsersByEmail', inputVars);
+}
+listUsersByEmailRef.operationName = 'ListUsersByEmail';
+
+export function listUsersByEmail(dcOrVars, vars) {
+  return executeQuery(listUsersByEmailRef(dcOrVars, vars));
+}
+
+export const getDatasetRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetDataset', inputVars);
+}
+getDatasetRef.operationName = 'GetDataset';
+
+export function getDataset(dcOrVars, vars) {
+  return executeQuery(getDatasetRef(dcOrVars, vars));
+}
+
+export const listDatasetsByUserRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'ListDatasetsByUser', inputVars);
+}
+listDatasetsByUserRef.operationName = 'ListDatasetsByUser';
+
+export function listDatasetsByUser(dcOrVars, vars) {
+  return executeQuery(listDatasetsByUserRef(dcOrVars, vars));
+}
+
+export const getModelConfigurationRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetModelConfiguration', inputVars);
+}
+getModelConfigurationRef.operationName = 'GetModelConfiguration';
+
+export function getModelConfiguration(dcOrVars, vars) {
+  return executeQuery(getModelConfigurationRef(dcOrVars, vars));
+}
+
+export const listModelConfigurationsByUserRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'ListModelConfigurationsByUser', inputVars);
+}
+listModelConfigurationsByUserRef.operationName = 'ListModelConfigurationsByUser';
+
+export function listModelConfigurationsByUser(dcOrVars, vars) {
+  return executeQuery(listModelConfigurationsByUserRef(dcOrVars, vars));
+}
+
+export const getDetectionTaskRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetDetectionTask', inputVars);
+}
+getDetectionTaskRef.operationName = 'GetDetectionTask';
+
+export function getDetectionTask(dcOrVars, vars) {
+  return executeQuery(getDetectionTaskRef(dcOrVars, vars));
+}
+
+export const listDetectionTasksByUserRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'ListDetectionTasksByUser', inputVars);
+}
+listDetectionTasksByUserRef.operationName = 'ListDetectionTasksByUser';
+
+export function listDetectionTasksByUser(dcOrVars, vars) {
+  return executeQuery(listDetectionTasksByUserRef(dcOrVars, vars));
+}
+
+export const getAnomaliesByTaskRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetAnomaliesByTask', inputVars);
+}
+getAnomaliesByTaskRef.operationName = 'GetAnomaliesByTask';
+
+export function getAnomaliesByTask(dcOrVars, vars) {
+  return executeQuery(getAnomaliesByTaskRef(dcOrVars, vars));
+}
+
+export const getHighScoreAnomaliesRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetHighScoreAnomalies', inputVars);
+}
+getHighScoreAnomaliesRef.operationName = 'GetHighScoreAnomalies';
+
+export function getHighScoreAnomalies(dcOrVars, vars) {
+  return executeQuery(getHighScoreAnomaliesRef(dcOrVars, vars));
+}
+
 export const createUserRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();
@@ -125,115 +235,5 @@ createAnomalyRef.operationName = 'CreateAnomaly';
 
 export function createAnomaly(dcOrVars, vars) {
   return executeMutation(createAnomalyRef(dcOrVars, vars));
-}
-
-export const getUserRef = (dcOrVars, vars) => {
-  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
-  dcInstance._useGeneratedSdk();
-  return queryRef(dcInstance, 'GetUser', inputVars);
-}
-getUserRef.operationName = 'GetUser';
-
-export function getUser(dcOrVars, vars) {
-  return executeQuery(getUserRef(dcOrVars, vars));
-}
-
-export const listUsersByEmailRef = (dcOrVars, vars) => {
-  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
-  dcInstance._useGeneratedSdk();
-  return queryRef(dcInstance, 'ListUsersByEmail', inputVars);
-}
-listUsersByEmailRef.operationName = 'ListUsersByEmail';
-
-export function listUsersByEmail(dcOrVars, vars) {
-  return executeQuery(listUsersByEmailRef(dcOrVars, vars));
-}
-
-export const getDatasetRef = (dcOrVars, vars) => {
-  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
-  dcInstance._useGeneratedSdk();
-  return queryRef(dcInstance, 'GetDataset', inputVars);
-}
-getDatasetRef.operationName = 'GetDataset';
-
-export function getDataset(dcOrVars, vars) {
-  return executeQuery(getDatasetRef(dcOrVars, vars));
-}
-
-export const listDatasetsByUserRef = (dcOrVars, vars) => {
-  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
-  dcInstance._useGeneratedSdk();
-  return queryRef(dcInstance, 'ListDatasetsByUser', inputVars);
-}
-listDatasetsByUserRef.operationName = 'ListDatasetsByUser';
-
-export function listDatasetsByUser(dcOrVars, vars) {
-  return executeQuery(listDatasetsByUserRef(dcOrVars, vars));
-}
-
-export const getModelConfigurationRef = (dcOrVars, vars) => {
-  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
-  dcInstance._useGeneratedSdk();
-  return queryRef(dcInstance, 'GetModelConfiguration', inputVars);
-}
-getModelConfigurationRef.operationName = 'GetModelConfiguration';
-
-export function getModelConfiguration(dcOrVars, vars) {
-  return executeQuery(getModelConfigurationRef(dcOrVars, vars));
-}
-
-export const listModelConfigurationsByUserRef = (dcOrVars, vars) => {
-  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
-  dcInstance._useGeneratedSdk();
-  return queryRef(dcInstance, 'ListModelConfigurationsByUser', inputVars);
-}
-listModelConfigurationsByUserRef.operationName = 'ListModelConfigurationsByUser';
-
-export function listModelConfigurationsByUser(dcOrVars, vars) {
-  return executeQuery(listModelConfigurationsByUserRef(dcOrVars, vars));
-}
-
-export const getDetectionTaskRef = (dcOrVars, vars) => {
-  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
-  dcInstance._useGeneratedSdk();
-  return queryRef(dcInstance, 'GetDetectionTask', inputVars);
-}
-getDetectionTaskRef.operationName = 'GetDetectionTask';
-
-export function getDetectionTask(dcOrVars, vars) {
-  return executeQuery(getDetectionTaskRef(dcOrVars, vars));
-}
-
-export const listDetectionTasksByUserRef = (dcOrVars, vars) => {
-  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
-  dcInstance._useGeneratedSdk();
-  return queryRef(dcInstance, 'ListDetectionTasksByUser', inputVars);
-}
-listDetectionTasksByUserRef.operationName = 'ListDetectionTasksByUser';
-
-export function listDetectionTasksByUser(dcOrVars, vars) {
-  return executeQuery(listDetectionTasksByUserRef(dcOrVars, vars));
-}
-
-export const getAnomaliesByTaskRef = (dcOrVars, vars) => {
-  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
-  dcInstance._useGeneratedSdk();
-  return queryRef(dcInstance, 'GetAnomaliesByTask', inputVars);
-}
-getAnomaliesByTaskRef.operationName = 'GetAnomaliesByTask';
-
-export function getAnomaliesByTask(dcOrVars, vars) {
-  return executeQuery(getAnomaliesByTaskRef(dcOrVars, vars));
-}
-
-export const getHighScoreAnomaliesRef = (dcOrVars, vars) => {
-  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
-  dcInstance._useGeneratedSdk();
-  return queryRef(dcInstance, 'GetHighScoreAnomalies', inputVars);
-}
-getHighScoreAnomaliesRef.operationName = 'GetHighScoreAnomalies';
-
-export function getHighScoreAnomalies(dcOrVars, vars) {
-  return executeQuery(getHighScoreAnomaliesRef(dcOrVars, vars));
 }
 
