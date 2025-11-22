@@ -2,7 +2,7 @@
 
 Driftlock is a **developer-first anomaly detection platform**: we use deterministic compression math (cbad-core) to flag weird behaviour in milliseconds, then optionally hand the anomaly off to Gemini to explain it in plain English. The repo contains everything needed to ship that experience as a SaaS product: core engine, HTTP service, landing page + dashboard, Firebase Auth, Stripe hooks, and deployment runbooks.
 
-For an authoritative description of what ships today, see `FINAL-STATUS.md`. The short version:
+For an authoritative description of what ships today, see `.archive/reports/FINAL-STATUS.md` (snapshot) or `NEXT_STEPS.md` (current). The short version:
 
 - ✅ Math engine + CLI demo for deterministic verification
 - ✅ Multi-tenant HTTP API (`/v1/detect`) with Firebase Auth
@@ -10,7 +10,7 @@ For an authoritative description of what ships today, see `FINAL-STATUS.md`. The
 - ✅ Pricing tiers (Developer free, Starter $25, Pro custom) wired to Stripe and the dashboard usage endpoints
 - ✅ Gemini-based explainability layer ready to be toggled on per anomaly
 
-**🚀 Ready for SaaS Launch:** Full Cloud SQL + Firebase Auth deployment setup available in `CLOUDSQL_FIREBASE_SETUP_GUIDE.md`.
+**🚀 Ready for SaaS Launch:** Full Cloud SQL + Firebase Auth deployment setup available in `docs/deployment/CLOUDSQL_FIREBASE_SETUP_GUIDE.md`.
 
 ---
 
@@ -22,12 +22,12 @@ For an authoritative description of what ships today, see `FINAL-STATUS.md`. The
 - **Vue landing page + dashboard** (`landing-page/`): marketing site, signup flow, pricing section (Developer/Starter/Pro), dashboard with API keys + usage, docs viewer.
 - **CLI demo** (`cmd/demo/`): reproducible HTML report for quick verification and CI.
 - **Synthetic data** (`test-data/financial-demo.json`): 5,000 payment-like events with injected anomalies (used by both CLI + HTTP scripts).
-- **Docs and runbooks** (`docs/`): launch plans, compliance positioning, `USE_CASES.md`, deployment guides.
+- **Docs and runbooks** (`docs/`): organized by `architecture`, `deployment`, `launch`, `compliance`, and `development`.
 - **SDKs (beta)** (`sdks/typescript`, `sdks/python`): thin clients for `/v1` detect/anomalies/healthz.
 
 The CLI demo remains the fastest path to verify the engine locally, but the **primary product surface is the hosted HTTP API + dashboard**.
 
-Running everything end-to-end? See `QUICKSTART_GOD_MODE.md` for a guided “god mode” checklist covering the CLI demo, API, landing page, and deploy.
+Running everything end-to-end? See `docs/deployment/QUICKSTART_GOD_MODE.md` for a guided “god mode” checklist covering the CLI demo, API, landing page, and deploy.
 
 ---
 
@@ -38,7 +38,7 @@ Driftlock is purpose-built for teams who need **provable anomaly detection** wit
 - **Math detects it**: cbad-core builds a baseline from your first ~400 events, then scores every new event using Normalized Compression Distance (NCD), permutation tests, and entropy deltas.
 - **AI explains it**: when an anomaly survives the math, we optionally send the evidence payload + metrics to Gemini Flash. The response becomes the \"plain English\" field in dashboards, email alerts, or Slack posts.
 - **Dev-first ergonomics**: deterministic CLI demo, REST API, Vue dashboard, Firebase Auth, Stripe billing, Cloud SQL deployment scripts.
-- **Use cases**: financial compliance (EU DORA, FFIEC), DDOS/API abuse, AI agent monitoring, IoT/smart-home telemetry. See `docs/USE_CASES.md`.
+- **Use cases**: financial compliance (EU DORA, FFIEC), DDOS/API abuse, AI agent monitoring, IoT/smart-home telemetry. See `docs/launch/USE_CASES.md`.
 
 ## Quickstart: CLI HTML demo (deterministic)
 
@@ -81,10 +81,10 @@ The script:
 - Applies migrations and creates a demo tenant + API key.
 - Calls `/v1/detect` with synthetic data, prints follow-up `curl` + `psql` commands, and shows how Gemini explainability would be triggered.
 
-For the manual, step-by-step version see `docs/API-DEMO-WALKTHROUGH.md`.  
-For the HTTP API schema, see `docs/API.md`.
+For the manual, step-by-step version see `docs/development/API_DEMO_WALKTHROUGH.md`.  
+For the HTTP API schema, see `docs/architecture/API.md`.
 
-**OpenZL note:** OpenZL integration is optional/experimental. Defaults stay on zstd/lz4/gzip for determinism and portability. To exercise OpenZL: `USE_OPENZL=true docker compose build driftlock-http && USE_OPENZL=true PREFER_OPENZL=true docker compose up driftlock-postgres driftlock-http`, then hit `/healthz` and look for `"openzl_available": true`. To prefer it when compiled in, set `PREFER_OPENZL=true` (requests can still override `compressor`). See `docs/OPENZL_ANALYSIS.md`.
+**OpenZL note:** OpenZL integration is optional/experimental. Defaults stay on zstd/lz4/gzip for determinism and portability. To exercise OpenZL: `USE_OPENZL=true docker compose build driftlock-http && USE_OPENZL=true PREFER_OPENZL=true docker compose up driftlock-postgres driftlock-http`, then hit `/healthz` and look for `"openzl_available": true`. To prefer it when compiled in, set `PREFER_OPENZL=true` (requests can still override `compressor`). See `.archive/reports/OPENZL_ANALYSIS.md`.
 
 ### OpenZL Docker Workflow
 
@@ -124,14 +124,14 @@ curl -s http://localhost:8080/healthz | jq '.openzl_available'
 ### Complete Launch Guide
 
 For a **comprehensive step-by-step deployment plan**, see:
-- **`CLOUDSQL_FIREBASE_SETUP_GUIDE.md`** - Complete Cloud SQL + Firebase Auth setup
-- **`docs/COMPLETE_DEPLOYMENT_PLAN.md`** - Legacy Supabase setup (deprecated)
+- **`docs/deployment/CLOUDSQL_FIREBASE_SETUP_GUIDE.md`** - Complete Cloud SQL + Firebase Auth setup
+- **`docs/deployment/COMPLETE_DEPLOYMENT_PLAN.md`** - Legacy Supabase setup (deprecated)
 
 ### Launch Readiness
 
 To launch Driftlock as a SaaS product, see:
-- **`docs/LAUNCH_SUMMARY.md`** - What remains to implement (90% complete)
-- **`docs/LAUNCH_CHECKLIST.md`** - Day-by-day launch plan
+- **`docs/launch/LAUNCH_SUMMARY.md`** - What remains to implement (90% complete)
+- **`docs/launch/LAUNCH_CHECKLIST.md`** - Day-by-day launch plan
 - **`scripts/test-deployment.sh`** - Validate deployment before launch
 
 **Current Status:** Infrastructure is production-ready and fully wired to the new landing page/dashboard. Remaining work before GA:
@@ -149,7 +149,7 @@ Driftlock includes built-in Stripe support for subscription management.
 
 **Setup:**
 1. Create a Stripe account and a Product with a Price (Recurring).
-2. Add secrets to Google Cloud Secret Manager (see `docs/GCP_SECRETS_CHECKLIST.md`).
+2. Add secrets to Google Cloud Secret Manager (see `docs/deployment/GCP_SECRETS_CHECKLIST.md`).
 3. Deploy using `cloudbuild.yaml`.
 
 
@@ -163,7 +163,7 @@ Driftlock is designed with security in mind. We follow best practices for handli
 - **Frontend API Keys:** The Firebase API key for the frontend is also stored in Google Secret Manager and served securely to the client via a Cloud Function. This prevents the key from being exposed in the frontend code.
 - **Vulnerability Reporting:** We take security vulnerabilities seriously. Please report any vulnerabilities to us privately.
 
-For more details on our security policies and best practices, see `docs/SECURITY.md`.
+For more details on our security policies and best practices, see `docs/architecture/SECURITY.md`.
 
 ---
 
@@ -181,19 +181,19 @@ At a high level, both the CLI and HTTP flows do the same thing:
    - p-value and confidence
    - a short explanation string.
 
-The math and implementation details are documented in `docs/ALGORITHMS.md`.
+The math and implementation details are documented in `docs/architecture/ALGORITHMS.md`.
 
 ---
 
 ## Project status
 
-See `FINAL-STATUS.md` for the current repository status. As of that file's last update:
+See `.archive/reports/FINAL-STATUS.md` for the snapshot repository status. As of that file's last update:
 
-- ✅ Rust + Go CLI demo is stable and exercised in CI via `./verify-yc-ready.sh`.
+- ✅ Rust + Go CLI demo is stable and exercised in CI via `./scripts/verify-launch-readiness.sh`.
 - ✅ Synthetic dataset and HTML report are suitable for screenshots and quick demos.
 - ✅ HTTP API service (`driftlock-http`) is production-ready and deployable to Google Cloud Run.
-- ✅ Complete deployment guide available: `docs/COMPLETE_DEPLOYMENT_PLAN.md`
-- ✅ Launch materials created: `docs/LAUNCH_SUMMARY.md`
+- ✅ Complete deployment guide available: `docs/deployment/COMPLETE_DEPLOYMENT_PLAN.md`
+- ✅ Launch materials created: `docs/launch/LAUNCH_SUMMARY.md`
 - ✅ Deployment validation script: `scripts/test-deployment.sh`
 
 **Ready for production deployment**: The HTTP API can be deployed to Cloud Run with Supabase PostgreSQL. Onboarding and billing features need completion before full SaaS launch.
@@ -225,13 +225,13 @@ See `LICENSE` and `LICENSE-COMMERCIAL.md` for details.
 Ready to launch Driftlock as a SaaS? Start with:
 
 ```bash
-cat docs/LAUNCH_SUMMARY.md
+cat docs/launch/LAUNCH_SUMMARY.md
 ```
 
 Then follow the step-by-step guide:
 
 ```bash
-cat docs/COMPLETE_DEPLOYMENT_PLAN.md
+cat docs/deployment/CLOUDSQL_FIREBASE_SETUP_GUIDE.md
 ```
 
 Estimated time to first customer: **2-3 days** for MVP launch.
