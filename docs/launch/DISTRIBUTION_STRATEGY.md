@@ -31,6 +31,12 @@ We will not wait for users to download a CLI. We will go where they work.
 
 ## 2. Developer Advocacy
 
+### "The Horizon Showcase" (Interactive Marketing)
+*   **Asset:** The new "Factory-style" interactive playground on `driftlock.net`.
+*   **Strategy:** Allow users to replay historical disasters (Terra Crash, Airline Meltdowns) in the browser.
+*   **Conversion:** "See the anomaly with your own eyes -> Sign up to detect it in your data."
+*   **Action:** Promote the "Horizon Showcase" on Hacker News and Twitter/X with "Can you spot the crash?" challenges.
+
 ### "The Chaos Engineering" Angle
 *   **Campaign:** "Don't wait for the crash."
 *   **Content:** Blog posts showing Driftlock detecting famous crashes (Terra, FTX, Delta) *before* they made headlines.

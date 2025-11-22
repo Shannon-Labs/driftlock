@@ -48,22 +48,40 @@ const emit = defineEmits<{ (e: 'load', payload: string): void }>()
 
 const samples = [
   {
-    name: 'Financial Live Demo',
-    url: '/samples/demo-financial.ndjson',
-    badge: 'NEW',
-    description: '60 fintech events with 3 anomaly spikes',
+    name: 'Credit Card Fraud',
+    url: '/samples/fraud.json',
+    badge: 'FINANCE',
+    description: 'Real-world credit card transaction dataset (2k events, 3% fraud)',
   },
   {
-    name: 'NDJSON (small)',
-    url: '/samples/small.ndjson',
-    badge: 'core math',
-    description: 'Minimal dataset for quick testing',
+    name: 'Terra/Luna Crash',
+    url: '/samples/terra.json',
+    badge: 'CRYPTO',
+    description: 'Historical pricing data during the 2022 collapse',
   },
   {
-    name: 'JSON Array (small)',
-    url: '/samples/small.json',
-    badge: 'array',
-    description: 'JSON array for browser uploads',
+    name: 'Prompt Injection',
+    url: '/samples/safety.json',
+    badge: 'AI SAFETY',
+    description: 'Adversarial inputs targeting LLM guardrails',
+  },
+  {
+    name: 'Airline Delays',
+    url: '/samples/airline.json',
+    badge: 'AVIATION',
+    description: 'Flight telemetry predicting operational drift',
+  },
+  {
+    name: 'Web Traffic',
+    url: '/samples/cloud.json',
+    badge: 'SRE',
+    description: 'NAB dataset showing traffic spikes and outages',
+  },
+  {
+    name: 'Network Intrusion',
+    url: '/samples/network.json',
+    badge: 'CYBER',
+    description: 'UNSW-NB15 network traffic showing attack signatures',
   },
 ]
 
