@@ -1,9 +1,9 @@
 <template>
-  <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
-    <div class="flex items-center justify-between mb-4">
-      <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Data</h3>
-      <div class="text-sm text-gray-500 dark:text-gray-400">Format:
-        <select v-model="format" class="ml-2 border rounded-lg px-3 py-1.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+  <div class="bg-white border-2 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+    <div class="flex items-center justify-between mb-4 border-b-2 border-black pb-4">
+      <h3 class="text-xl font-sans font-black uppercase tracking-tighter text-black">Data Input</h3>
+      <div class="text-xs font-bold uppercase tracking-widest text-gray-500 flex items-center">Format:
+        <select v-model="format" class="ml-2 border-2 border-black px-2 py-1 bg-white text-black font-mono text-xs focus:outline-none focus:ring-2 focus:ring-black">
           <option value="ndjson">NDJSON</option>
           <option value="json">JSON Array</option>
         </select>
@@ -13,17 +13,17 @@
       <textarea 
         v-model="text" 
         rows="10" 
-        class="w-full border rounded-lg p-3 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
-        placeholder="Paste NDJSON or JSON array..."
+        class="w-full border-2 border-black p-3 bg-gray-50 text-black font-mono text-sm focus:outline-none focus:ring-4 focus:ring-black/10 placeholder-gray-500" 
+        placeholder="PASTE NDJSON OR JSON ARRAY..."
       ></textarea>
     </div>
     <div class="flex items-center gap-3">
-      <label class="px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-sm font-medium">
+      <label class="px-4 py-2 border-2 border-black bg-white text-black font-bold uppercase tracking-widest text-xs cursor-pointer hover:bg-black hover:text-white transition-colors shadow-[4px_4px_0px_0px_rgba(0,0,0,0)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
         <input type="file" @change="onFile" class="hidden" accept=".json,.jsonl,.ndjson" />
         Choose File
       </label>
       <button 
-        class="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg font-medium transition-all duration-200 transform hover:scale-105 shadow-sm" 
+        class="px-4 py-2 border-2 border-black bg-black text-white font-bold uppercase tracking-widest text-xs hover:bg-white hover:text-black transition-colors shadow-[4px_4px_0px_0px_rgba(0,0,0,0)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" 
         @click="emitData"
       >
         Use Data

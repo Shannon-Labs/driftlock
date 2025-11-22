@@ -1,0 +1,67 @@
+{
+  "info": {
+    "name": "Driftlock API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/healthz",
+          "host": ["{{base_url}}"],
+          "path": ["healthz"]
+        }
+      }
+    },
+    {
+      "name": "Detect (NDJSON)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"a\":1}\n{\"a\":2}\n{\"a\":999}\n"
+        },
+        "url": {
+          "raw": "{{base_url}}/v1/detect?format=ndjson&baseline=400&window=1&hop=1&algo=zstd",
+          "host": ["{{base_url}}"],
+          "path": ["v1", "detect"],
+          "query": [
+            { "key": "format", "value": "ndjson" },
+            { "key": "baseline", "value": "400" },
+            { "key": "window", "value": "1" },
+            { "key": "hop", "value": "1" },
+            { "key": "algo", "value": "zstd" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Detect (JSON array)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "[{\"a\":1},{\"a\":2},{\"a\":999}]"
+        },
+        "url": {
+          "raw": "{{base_url}}/v1/detect",
+          "host": ["{{base_url}}"],
+          "path": ["v1", "detect"]
+        }
+      }
+    }
+  ],
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8080" }
+  ]
+}
+
