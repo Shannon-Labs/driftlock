@@ -1,0 +1,111 @@
+openapi: 3.0.3
+info:
+  title: Driftlock HTTP API
+  version: 0.1.0
+  description: Compression-based anomaly detection over JSON/NDJSON.
+servers:
+  - url: https://api.driftlock.net
+    description: Production API
+  - url: http://localhost:8080
+    description: Local development API
+paths:
+  /healthz:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  library_status:
+                    type: string
+                  openzl_available:
+                    type: boolean
+  /v1/detect:
+    post:
+      summary: Detect anomalies in a batch of events
+      parameters:
+        - in: query
+          name: format
+          schema:
+            type: string
+            enum: [json, ndjson]
+          description: Input format (auto-detected if omitted)
+        - in: query
+          name: algo
+          schema:
+            type: string
+            enum: [zstd, lz4, gzip, openzl]
+          description: Compression algorithm
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: array
+                  items: { type: object }
+                - type: string
+      responses:
+        '200':
+          description: Detection results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetectResponse'
+
+  /v1/stream/anomalies:
+    get:
+      summary: Real-time anomaly stream (SSE)
+      description: Connect to this endpoint to receive Server-Sent Events (SSE) for new anomalies.
+      parameters:
+        - in: query
+          name: api_key
+          schema:
+            type: string
+          required: false
+          description: API Key for authentication (alternative to X-Api-Key header)
+      responses:
+        '200':
+          description: SSE Stream
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                example: |
+                  event: anomaly
+                  data: {"id": "...", "ncd": 0.45}
+
+components:
+  schemas:
+    DetectResponse:
+      type: object
+      properties:
+        total_events: { type: integer }
+        anomaly_count: { type: integer }
+        processing_time: { type: string }
+        compression_algo: { type: string }
+        anomalies:
+          type: array
+          items:
+            $ref: '#/components/schemas/Anomaly'
+
+    Anomaly:
+      type: object
+      properties:
+        index: { type: integer }
+        detected: { type: boolean }
+        why: { type: string }
+        event: { type: object }
+        metrics:
+          type: object
+          properties:
+            ncd: { type: number }
+            p_value: { type: number }
+            confidence_level: { type: number }
+            explanation: { type: string }

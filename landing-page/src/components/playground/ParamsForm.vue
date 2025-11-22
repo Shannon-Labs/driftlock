@@ -1,41 +1,41 @@
 <template>
-  <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
-    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Parameters</h3>
+  <div class="bg-white border-2 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+    <h3 class="text-xl font-sans font-black uppercase tracking-tighter text-black mb-4 border-b-2 border-black pb-4">Parameters</h3>
     <div class="space-y-4">
       <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Baseline</label>
+        <label class="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Baseline</label>
         <input 
           type="number" 
           v-model.number="local.baseline" 
-          class="w-full border rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+          class="w-full border-2 border-black px-3 py-2 bg-white text-black font-mono focus:outline-none focus:ring-4 focus:ring-black/10" 
           min="1" 
         />
       </div>
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Window</label>
+          <label class="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Window</label>
           <input 
             type="number" 
             v-model.number="local.window" 
-            class="w-full border rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+            class="w-full border-2 border-black px-3 py-2 bg-white text-black font-mono focus:outline-none focus:ring-4 focus:ring-black/10" 
             min="1" 
           />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Hop</label>
+          <label class="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Hop</label>
           <input 
             type="number" 
             v-model.number="local.hop" 
-            class="w-full border rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+            class="w-full border-2 border-black px-3 py-2 bg-white text-black font-mono focus:outline-none focus:ring-4 focus:ring-black/10" 
             min="1" 
           />
         </div>
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Algorithm</label>
+        <label class="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Algorithm</label>
         <select 
           v-model="local.algo" 
-          class="w-full border rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          class="w-full border-2 border-black px-3 py-2 bg-white text-black font-mono focus:outline-none focus:ring-4 focus:ring-black/10"
         >
           <option value="zstd">zstd</option>
           <option value="lz4">lz4</option>
@@ -45,13 +45,13 @@
       </div>
       <div class="pt-2 flex gap-3">
         <button 
-          class="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg border border-gray-300 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors font-medium" 
+          class="flex-1 px-4 py-2 border-2 border-black bg-white text-black font-bold uppercase tracking-widest text-xs hover:bg-black hover:text-white transition-colors" 
           @click="reset"
         >
           Reset
         </button>
         <button 
-          class="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg font-medium transition-all duration-200 transform hover:scale-105 shadow-sm" 
+          class="flex-1 px-4 py-2 border-2 border-black bg-black text-white font-bold uppercase tracking-widest text-xs hover:bg-white hover:text-black transition-colors shadow-[4px_4px_0px_0px_rgba(0,0,0,0)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" 
           @click="apply"
         >
           Run Detection

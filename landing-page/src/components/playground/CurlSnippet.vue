@@ -1,13 +1,13 @@
 <template>
   <details class="text-xs">
-    <summary class="cursor-pointer text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 font-medium">
+    <summary class="cursor-pointer text-black hover:underline font-bold uppercase tracking-wider">
       Show cURL
     </summary>
-    <div class="mt-2 bg-gray-50 dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+    <div class="mt-2 bg-gray-50 border-2 border-black p-3">
       <div class="flex items-start justify-between gap-2">
-        <code class="flex-1 text-gray-800 dark:text-gray-200 break-all">{{ curl }}</code>
+        <code class="flex-1 text-black font-mono break-all text-xs">{{ curl }}</code>
         <button 
-          class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors text-xs font-medium whitespace-nowrap" 
+          class="px-3 py-1 border-2 border-black bg-white text-black hover:bg-black hover:text-white transition-colors text-xs font-bold uppercase tracking-wider whitespace-nowrap" 
           @click="copy"
         >
           Copy

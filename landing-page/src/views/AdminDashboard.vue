@@ -1,16 +1,16 @@
 <template>
-    <main class="min-h-screen bg-gray-100">
+    <main class="min-h-screen bg-white">
         <!-- Header -->
-        <header class="bg-white shadow">
+        <header class="bg-white border-b-4 border-black">
             <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <div class="flex h-16 items-center justify-between">
-                    <h1 class="text-xl font-mono font-bold text-gray-900">Driftlock Admin</h1>
+                <div class="flex h-20 items-center justify-between">
+                    <h1 class="text-2xl font-sans font-black uppercase tracking-tighter text-black">Driftlock Admin</h1>
                     <div class="flex items-center gap-4">
-                        <span class="text-sm text-gray-500">{{ tenants.length }} tenants</span>
+                        <span class="text-sm font-mono font-bold text-gray-600 uppercase tracking-wider">{{ tenants.length }} tenants</span>
                         <button
                             @click="refreshData"
                             :disabled="loading"
-                            class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+                            class="border-2 border-black bg-black px-4 py-2 text-sm font-bold uppercase tracking-widest text-white hover:bg-white hover:text-black transition-colors shadow-[4px_4px_0px_0px_rgba(0,0,0,0)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {{ loading ? 'Loading...' : 'Refresh' }}
                         </button>
@@ -20,29 +20,29 @@
         </header>
 
         <!-- Auth Modal -->
-        <div v-if="!authenticated" class="fixed inset-0 bg-gray-900/50 flex items-center justify-center z-50">
-            <div class="bg-white rounded-2xl p-8 shadow-2xl w-full max-w-md">
-                <h2 class="text-xl font-mono font-bold text-gray-900">Admin Authentication</h2>
-                <p class="mt-2 text-sm text-gray-600">Enter your admin key to access the dashboard.</p>
-                <form @submit.prevent="authenticate" class="mt-6 space-y-4">
+        <div v-if="!authenticated" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm">
+            <div class="bg-white border-4 border-black p-8 shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] w-full max-w-md">
+                <h2 class="text-2xl font-sans font-black uppercase tracking-tighter text-black mb-2">Admin Authentication</h2>
+                <p class="text-sm font-serif text-gray-800 mb-6">Enter your admin key to access the dashboard.</p>
+                <form @submit.prevent="authenticate" class="space-y-4">
                     <div>
-                        <label for="admin-key" class="block text-sm font-semibold text-gray-700">Admin Key</label>
+                        <label for="admin-key" class="block text-xs font-bold uppercase tracking-widest text-black mb-1">Admin Key</label>
                         <input
                             id="admin-key"
                             v-model="adminKey"
                             type="password"
                             required
-                            class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-3 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                            class="w-full border-2 border-black px-4 py-3 focus:outline-none focus:ring-4 focus:ring-black/20 font-mono"
                             placeholder="Enter admin key"
                         />
                     </div>
                     <button
                         type="submit"
-                        class="w-full rounded-xl bg-blue-600 px-4 py-3 font-semibold text-white hover:bg-blue-700"
+                        class="w-full border-2 border-black bg-black px-4 py-3 font-bold uppercase tracking-widest text-white hover:bg-white hover:text-black transition-colors shadow-[4px_4px_0px_0px_rgba(0,0,0,0)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
                     >
                         Sign In
                     </button>
-                    <p v-if="authError" class="text-sm text-red-600">{{ authError }}</p>
+                    <p v-if="authError" class="text-sm font-bold text-red-600 border border-red-600 bg-red-50 p-2">{{ authError }}</p>
                 </form>
             </div>
         </div>
@@ -51,37 +51,37 @@
         <div v-if="authenticated" class="container mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
             <!-- Stats Cards -->
             <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-                <div class="rounded-xl bg-white p-6 shadow">
-                    <p class="text-sm font-semibold text-gray-500">Total Tenants</p>
-                    <p class="mt-2 text-3xl font-mono font-bold text-gray-900">{{ tenants.length }}</p>
+                <div class="bg-white border-2 border-black p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                    <p class="text-xs font-bold uppercase tracking-widest text-gray-500">Total Tenants</p>
+                    <p class="mt-2 text-4xl font-mono font-bold text-black">{{ tenants.length }}</p>
                 </div>
-                <div class="rounded-xl bg-white p-6 shadow">
-                    <p class="text-sm font-semibold text-gray-500">Verified</p>
-                    <p class="mt-2 text-3xl font-mono font-bold text-green-600">{{ verifiedCount }}</p>
+                <div class="bg-white border-2 border-black p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                    <p class="text-xs font-bold uppercase tracking-widest text-gray-500">Verified</p>
+                    <p class="mt-2 text-4xl font-mono font-bold text-black">{{ verifiedCount }}</p>
                 </div>
-                <div class="rounded-xl bg-white p-6 shadow">
-                    <p class="text-sm font-semibold text-gray-500">Trial</p>
-                    <p class="mt-2 text-3xl font-mono font-bold text-blue-600">{{ trialCount }}</p>
+                <div class="bg-white border-2 border-black p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                    <p class="text-xs font-bold uppercase tracking-widest text-gray-500">Trial</p>
+                    <p class="mt-2 text-4xl font-mono font-bold text-black">{{ trialCount }}</p>
                 </div>
-                <div class="rounded-xl bg-white p-6 shadow">
-                    <p class="text-sm font-semibold text-gray-500">Paid</p>
-                    <p class="mt-2 text-3xl font-mono font-bold text-purple-600">{{ paidCount }}</p>
+                <div class="bg-white border-2 border-black p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                    <p class="text-xs font-bold uppercase tracking-widest text-gray-500">Paid</p>
+                    <p class="mt-2 text-4xl font-mono font-bold text-black">{{ paidCount }}</p>
                 </div>
             </div>
 
             <!-- Search and Filter -->
-            <div class="mb-6 flex flex-col sm:flex-row gap-4">
+            <div class="mb-8 flex flex-col sm:flex-row gap-4">
                 <div class="flex-1">
                     <input
                         v-model="searchQuery"
                         type="text"
-                        placeholder="Search by name, email, or slug..."
-                        class="w-full rounded-xl border border-gray-200 px-4 py-3 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                        placeholder="SEARCH BY NAME, EMAIL, OR SLUG..."
+                        class="w-full border-2 border-black px-4 py-3 focus:outline-none focus:ring-4 focus:ring-black/20 font-mono text-sm placeholder-gray-500 uppercase"
                     />
                 </div>
                 <select
                     v-model="filterPlan"
-                    class="rounded-xl border border-gray-200 px-4 py-3 focus:border-blue-500 focus:outline-none"
+                    class="border-2 border-black px-4 py-3 focus:outline-none focus:ring-4 focus:ring-black/20 font-bold uppercase text-sm bg-white"
                 >
                     <option value="">All Plans</option>
                     <option value="trial">Trial</option>
@@ -92,66 +92,66 @@
             </div>
 
             <!-- Tenants Table -->
-            <div class="rounded-xl bg-white shadow overflow-hidden">
+            <div class="bg-white border-2 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead class="bg-gray-50 border-b border-gray-200">
+                    <table class="w-full border-collapse">
+                        <thead class="bg-black text-white">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-widest border-b-2 border-black">
                                     Tenant
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-widest border-b-2 border-black">
                                     Email
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-widest border-b-2 border-black">
                                     Plan
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-widest border-b-2 border-black">
                                     Status
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-widest border-b-2 border-black">
                                     Created
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-widest border-b-2 border-black">
                                     Actions
                                 </th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200">
-                            <tr v-for="tenant in filteredTenants" :key="tenant.id" class="hover:bg-gray-50">
-                                <td class="px-6 py-4 whitespace-nowrap">
+                        <tbody class="divide-y-2 divide-black">
+                            <tr v-for="tenant in filteredTenants" :key="tenant.id" class="hover:bg-gray-50 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap border-r border-gray-200">
                                     <div>
-                                        <p class="font-semibold text-gray-900">{{ tenant.name }}</p>
+                                        <p class="font-bold text-black uppercase">{{ tenant.name }}</p>
                                         <p class="text-xs text-gray-500 font-mono">{{ tenant.slug }}</p>
                                     </div>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-800 border-r border-gray-200">
                                     {{ tenant.email || '-' }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span :class="planBadgeClass(tenant.plan)" class="px-2 py-1 text-xs font-semibold rounded-full">
+                                <td class="px-6 py-4 whitespace-nowrap border-r border-gray-200">
+                                    <span :class="planBadgeClass(tenant.plan)" class="px-2 py-1 text-xs font-bold uppercase tracking-wide border border-black">
                                         {{ tenant.plan }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span :class="statusBadgeClass(tenant.status)" class="px-2 py-1 text-xs font-semibold rounded-full">
+                                <td class="px-6 py-4 whitespace-nowrap border-r border-gray-200">
+                                    <span :class="statusBadgeClass(tenant.status)" class="px-2 py-1 text-xs font-bold uppercase tracking-wide border border-black">
                                         {{ tenant.status }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-600 border-r border-gray-200">
                                     {{ formatDate(tenant.created_at) }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <button
                                         @click="viewTenantUsage(tenant.id)"
-                                        class="text-blue-600 hover:text-blue-800 text-sm font-semibold"
+                                        class="text-black hover:text-white hover:bg-black px-2 py-1 text-xs font-bold uppercase tracking-wider border border-black transition-colors"
                                     >
                                         View Usage
                                     </button>
                                 </td>
                             </tr>
                             <tr v-if="filteredTenants.length === 0">
-                                <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                                <td colspan="6" class="px-6 py-12 text-center text-gray-500 font-mono uppercase tracking-widest">
                                     No tenants found
                                 </td>
                             </tr>
@@ -161,31 +161,32 @@
             </div>
 
             <!-- Usage Modal -->
-            <div v-if="selectedTenant" class="fixed inset-0 bg-gray-900/50 flex items-center justify-center z-50">
-                <div class="bg-white rounded-2xl p-8 shadow-2xl w-full max-w-lg">
-                    <div class="flex items-center justify-between mb-6">
-                        <h2 class="text-xl font-mono font-bold text-gray-900">Usage Details</h2>
-                        <button @click="selectedTenant = null" class="text-gray-400 hover:text-gray-600">
+            <div v-if="selectedTenant" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm">
+                <div class="bg-white border-4 border-black p-8 shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] w-full max-w-lg">
+                    <div class="flex items-center justify-between mb-6 border-b-2 border-black pb-4">
+                        <h2 class="text-xl font-sans font-black uppercase tracking-tighter text-black">Usage Details</h2>
+                        <button @click="selectedTenant = null" class="text-black hover:bg-black hover:text-white border-2 border-black p-1 transition-colors">
                             <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                <path stroke-linecap="square" stroke-linejoin="miter" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </button>
                     </div>
-                    <div v-if="usageLoading" class="text-center py-8">
-                        <p class="text-gray-500">Loading usage data...</p>
+                    <div v-if="usageLoading" class="text-center py-12">
+                        <div class="animate-spin h-8 w-8 border-4 border-black border-t-transparent rounded-full mx-auto mb-4"></div>
+                        <p class="text-gray-500 font-mono uppercase text-sm">Loading usage data...</p>
                     </div>
                     <div v-else-if="usageData" class="space-y-4">
-                        <div class="rounded-xl bg-gray-50 p-4">
-                            <p class="text-sm font-semibold text-gray-500">Event Count (30 days)</p>
-                            <p class="mt-1 text-2xl font-mono font-bold text-gray-900">{{ usageData.event_count.toLocaleString() }}</p>
+                        <div class="border-2 border-black p-4 bg-gray-50">
+                            <p class="text-xs font-bold uppercase tracking-widest text-gray-500">Event Count (30 days)</p>
+                            <p class="mt-1 text-3xl font-mono font-bold text-black">{{ usageData.event_count.toLocaleString() }}</p>
                         </div>
-                        <div class="rounded-xl bg-gray-50 p-4">
-                            <p class="text-sm font-semibold text-gray-500">Anomalies Detected</p>
-                            <p class="mt-1 text-2xl font-mono font-bold text-gray-900">{{ usageData.anomaly_count.toLocaleString() }}</p>
+                        <div class="border-2 border-black p-4 bg-gray-50">
+                            <p class="text-xs font-bold uppercase tracking-widest text-gray-500">Anomalies Detected</p>
+                            <p class="mt-1 text-3xl font-mono font-bold text-black">{{ usageData.anomaly_count.toLocaleString() }}</p>
                         </div>
-                        <div class="rounded-xl bg-gray-50 p-4">
-                            <p class="text-sm font-semibold text-gray-500">API Requests</p>
-                            <p class="mt-1 text-2xl font-mono font-bold text-gray-900">{{ usageData.api_requests.toLocaleString() }}</p>
+                        <div class="border-2 border-black p-4 bg-gray-50">
+                            <p class="text-xs font-bold uppercase tracking-widest text-gray-500">API Requests</p>
+                            <p class="mt-1 text-3xl font-mono font-bold text-black">{{ usageData.api_requests.toLocaleString() }}</p>
                         </div>
                     </div>
                 </div>
@@ -304,19 +305,19 @@ const formatDate = (dateStr: string) => {
 
 const planBadgeClass = (plan: string) => {
     switch (plan) {
-        case 'trial': return 'bg-gray-100 text-gray-800'
-        case 'starter': return 'bg-blue-100 text-blue-800'
-        case 'growth': return 'bg-purple-100 text-purple-800'
-        case 'enterprise': return 'bg-amber-100 text-amber-800'
-        default: return 'bg-gray-100 text-gray-800'
+        case 'trial': return 'bg-white text-black'
+        case 'starter': return 'bg-gray-200 text-black'
+        case 'growth': return 'bg-gray-800 text-white'
+        case 'enterprise': return 'bg-black text-white'
+        default: return 'bg-white text-black'
     }
 }
 
 const statusBadgeClass = (status: string) => {
     switch (status) {
-        case 'verified': return 'bg-green-100 text-green-800'
-        case 'pending': return 'bg-yellow-100 text-yellow-800'
-        default: return 'bg-gray-100 text-gray-800'
+        case 'verified': return 'bg-black text-white'
+        case 'pending': return 'bg-white text-black border-dashed'
+        default: return 'bg-white text-black'
     }
 }
 

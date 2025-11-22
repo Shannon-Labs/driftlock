@@ -1,77 +1,77 @@
 <template>
-  <div class="rounded-3xl border border-slate-800 bg-slate-950/95 p-6 text-white shadow-[0_40px_120px_rgba(15,23,42,0.65)]">
-    <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+  <div class="border-2 border-black bg-white p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+    <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b-2 border-black pb-4 mb-6">
       <div>
-        <p class="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-300/80">
+        <p class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">
           Glass-box inspector
         </p>
-        <h3 class="text-xl font-semibold">Anomaly Evidence</h3>
-        <p class="text-sm text-slate-400">
+        <h3 class="text-xl font-sans font-black uppercase tracking-tighter text-black">Anomaly Evidence</h3>
+        <p class="text-sm font-serif text-gray-800">
           Raw payload + deterministic math for auditors and LLM ops.
         </p>
       </div>
-      <div v-if="anomaly" class="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em]">
-        <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-400"></span>
+      <div v-if="anomaly" class="inline-flex items-center gap-2 border-2 border-black bg-black px-4 py-2 text-xs font-bold uppercase tracking-widest text-white">
+        <span class="h-2 w-2 border border-white bg-red-500"></span>
         {{ displayIndex }}
       </div>
-      <div v-else-if="loading" class="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-300">
-        <span class="h-1.5 w-1.5 animate-spin rounded-full border border-cyan-200 border-t-transparent"></span>
+      <div v-else-if="loading" class="inline-flex items-center gap-2 border-2 border-black bg-white px-4 py-2 text-xs font-bold uppercase tracking-widest text-black">
+        <span class="h-2 w-2 animate-spin border-2 border-black border-t-transparent"></span>
         Listening
       </div>
     </div>
 
-    <div v-if="anomaly" class="mt-6 space-y-6">
+    <div v-if="anomaly" class="space-y-6">
       <div class="grid gap-4">
-        <div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
-          <div class="flex items-center justify-between">
-            <h4 class="text-sm font-semibold uppercase tracking-[0.4em] text-slate-400">Raw Event</h4>
-            <span class="rounded-full border border-cyan-400/40 px-3 py-1 text-xs font-semibold text-cyan-200">
+        <div class="border-2 border-black bg-gray-50 p-4">
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="text-sm font-bold uppercase tracking-widest text-gray-500">Raw Event</h4>
+            <span class="border border-black px-3 py-1 text-xs font-bold uppercase tracking-wider bg-white">
               immutable
             </span>
           </div>
-          <pre class="mt-3 overflow-x-auto rounded-xl bg-black/40 p-4 text-xs leading-relaxed text-cyan-100">
+          <pre class="overflow-x-auto bg-black p-4 text-xs leading-relaxed text-green-400 font-mono border border-black">
 {{ prettyEvent }}
           </pre>
         </div>
 
         <div class="space-y-4">
-          <div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
-            <div class="flex items-center justify-between">
-              <h4 class="text-sm font-semibold uppercase tracking-[0.4em] text-slate-400">Math Breakdown</h4>
-              <span class="rounded-full bg-emerald-400/10 px-3 py-1 text-xs font-semibold text-emerald-300">
+          <div class="border-2 border-black bg-white p-4">
+            <div class="flex items-center justify-between mb-3">
+              <h4 class="text-sm font-bold uppercase tracking-widest text-gray-500">Math Breakdown</h4>
+              <span class="border border-black px-3 py-1 text-xs font-bold uppercase tracking-wider bg-green-100">
                 deterministic
               </span>
             </div>
-            <dl class="mt-4 grid grid-cols-2 gap-4 text-sm">
+            <dl class="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <dt class="text-slate-400">NCD</dt>
-                <dd class="text-lg font-mono text-white">{{ fmt(metrics.ncd) }}</dd>
+                <dt class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">NCD</dt>
+                <dd class="text-lg font-mono font-bold text-black">{{ fmt(metrics.ncd) }}</dd>
               </div>
               <div>
-                <dt class="text-slate-400">p-value</dt>
-                <dd class="text-lg font-mono text-white">{{ fmt(metrics.p_value) }}</dd>
+                <dt class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">p-value</dt>
+                <dd class="text-lg font-mono font-bold text-black">{{ fmt(metrics.p_value) }}</dd>
               </div>
               <div>
-                <dt class="text-slate-400">Confidence</dt>
-                <dd class="text-lg font-mono text-cyan-300">{{ pct(metrics.confidence_level) }}</dd>
+                <dt class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">Confidence</dt>
+                <dd class="text-lg font-mono font-bold text-black">{{ pct(metrics.confidence_level) }}</dd>
               </div>
               <div>
-                <dt class="text-slate-400">Compression Δ</dt>
-                <dd class="text-lg font-mono text-rose-300">
+                <dt class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">Compression Δ</dt>
+                <dd class="text-lg font-mono font-bold text-red-600">
                   {{ compressionDelta }}
                 </dd>
               </div>
             </dl>
           </div>
 
-          <div class="rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-900/80 via-slate-900/60 to-slate-950/60 p-4">
-            <div class="flex items-center justify-between">
-              <h4 class="text-sm font-semibold uppercase tracking-[0.4em] text-slate-400">Narrative</h4>
-              <span class="rounded-full border border-fuchsia-400/40 px-3 py-1 text-xs font-semibold text-fuchsia-200">
+          <div class="border-2 border-black bg-gray-50 p-4">
+            <div class="flex items-center justify-between mb-3">
+              <h4 class="text-sm font-bold uppercase tracking-widest text-gray-500">Narrative</h4>
+              <span class="border border-black px-3 py-1 text-xs font-bold uppercase tracking-wider bg-white">
                 AI optional
               </span>
             </div>
-            <p class="mt-3 text-sm leading-relaxed text-slate-200">
+            <p class="text-sm leading-relaxed font-serif text-black">
               {{ explanation }}
             </p>
           </div>
@@ -79,10 +79,10 @@
       </div>
     </div>
 
-    <div v-else class="mt-10 flex flex-col items-center justify-center text-center text-slate-400">
+    <div v-else class="py-12 flex flex-col items-center justify-center text-center text-gray-500">
       <span class="text-4xl">⌁</span>
-      <p class="mt-3 text-sm uppercase tracking-[0.3em]">Run analyzer to inspect anomalies</p>
-      <p class="text-xs text-slate-500">Mathematical context appears automatically when Driftlock flags an event.</p>
+      <p class="mt-3 text-sm font-bold uppercase tracking-widest">Run analyzer to inspect anomalies</p>
+      <p class="text-xs font-mono mt-2">Mathematical context appears automatically when Driftlock flags an event.</p>
     </div>
   </div>
 </template>

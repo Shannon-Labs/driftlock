@@ -1,26 +1,26 @@
 <template>
   <div :class="rootClasses">
-    <header class="mb-10">
+    <header class="mb-10 border-b-4 border-black pb-6">
       <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <p class="text-xs font-semibold uppercase tracking-[0.4em] text-cyan-200/80">
+          <p class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
             Live Playground
           </p>
-          <h2 class="text-3xl lg:text-4xl font-semibold text-white">
+          <h2 class="text-3xl lg:text-4xl font-sans font-black uppercase tracking-tighter text-black mb-2">
             CBAD Mission Control
           </h2>
-          <p class="text-sm text-slate-300">
+          <p class="text-sm font-serif text-gray-800 max-w-2xl">
             Paste NDJSON, stream a synthetic burst, and watch Driftlock surface anomalies with audit-ready math.
           </p>
         </div>
         <div class="flex items-center gap-3">
-          <div class="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white">
+          <div class="flex items-center gap-2 border-2 border-black bg-white px-4 py-2 text-sm font-bold uppercase tracking-wider text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <span
-              class="h-2.5 w-2.5 rounded-full"
+              class="h-3 w-3 border border-black"
               :class="{
-                'bg-emerald-400 animate-pulse': apiStatus === 'connected',
-                'bg-amber-300 animate-pulse': apiStatus === 'checking',
-                'bg-rose-400': apiStatus === 'disconnected'
+                'bg-green-500': apiStatus === 'connected',
+                'bg-yellow-400 animate-pulse': apiStatus === 'checking',
+                'bg-red-500': apiStatus === 'disconnected'
               }"
             ></span>
             {{ apiStatusLabel }}
@@ -29,95 +29,95 @@
       </div>
     </header>
 
-    <section class="rounded-3xl border border-white/10 bg-white/5 p-6 text-white/80 shadow-[0_35px_120px_rgba(15,23,42,0.55)]">
-      <div class="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+    <section class="border-2 border-black bg-white p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] mb-8">
+      <div class="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between mb-6 border-b-2 border-black pb-6">
         <div class="flex flex-1 flex-col gap-3">
-          <p class="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">Datasets</p>
+          <p class="text-xs font-bold uppercase tracking-widest text-gray-500">Datasets</p>
           <SamplePicker variant="inline" @load="onSample" />
         </div>
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
           <button
-            class="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-cyan-500/30 transition hover:scale-105 disabled:cursor-not-allowed disabled:opacity-60"
+            class="inline-flex items-center justify-center border-2 border-black bg-black px-6 py-3 text-sm font-bold uppercase tracking-widest text-white transition-all hover:bg-white hover:text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:shadow-none disabled:hover:bg-black disabled:hover:text-white"
             :disabled="loading"
             @click="runDetect"
           >
             {{ loading ? 'Scanning…' : 'Run Analyzer' }}
           </button>
-          <div class="rounded-2xl border border-white/10 px-4 py-2 text-xs uppercase tracking-[0.3em] text-slate-300">
+          <div class="border-2 border-black px-4 py-2 text-xs font-bold uppercase tracking-widest text-black bg-gray-100">
             Status · {{ loaderLabel }}
           </div>
         </div>
       </div>
 
-      <div class="mt-6 grid gap-6 lg:grid-cols-3">
+      <div class="grid gap-6 lg:grid-cols-3">
         <div class="lg:col-span-2 space-y-6">
           <UploadPanel @data="onData" />
         </div>
         <div class="space-y-6">
           <ParamsForm :params="params" @update="onParams" @run="runDetect" />
-          <div class="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
-            <p class="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">API Health</p>
-            <p class="mt-2 text-lg font-semibold text-white">{{ apiStatusLabel }}</p>
-            <p class="text-sm text-slate-400">Last check: {{ lastHealthCheckCopy }}</p>
+          <div class="border-2 border-black bg-gray-50 p-4">
+            <p class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">API Health</p>
+            <p class="text-lg font-mono font-bold text-black">{{ apiStatusLabel }}</p>
+            <p class="text-xs font-mono text-gray-500 mt-1">Last check: {{ lastHealthCheckCopy }}</p>
           </div>
         </div>
       </div>
     </section>
 
-    <section v-if="loading" class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <section v-if="loading" class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
       <div
         v-for="(step, idx) in loaderStates"
         :key="idx"
         :class="[
-          'rounded-2xl border px-4 py-4 text-sm uppercase tracking-[0.4em]',
-          step.state === 'done' ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200' :
-          step.state === 'active' ? 'border-cyan-400/50 bg-cyan-400/10 text-cyan-200 animate-pulse' :
-          'border-white/10 bg-white/5 text-slate-400'
+          'border-2 px-4 py-4 text-sm font-bold uppercase tracking-widest transition-colors',
+          step.state === 'done' ? 'border-black bg-black text-white' :
+          step.state === 'active' ? 'border-black bg-white text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]' :
+          'border-gray-300 bg-white text-gray-400'
         ]"
       >
         {{ step.label }}
       </div>
     </section>
 
-    <section class="mt-10">
+    <section class="mt-10 mb-10 border-2 border-black p-4 bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
       <AnomalyChart :series="chartSeries" :threshold="0.5" @select="handleChartSelect" />
     </section>
 
     <section
       v-if="response"
-      class="mt-10 rounded-3xl border border-white/10 bg-white/5 p-6 text-white shadow-[0_35px_120px_rgba(15,23,42,0.45)]"
+      class="mt-10 border-2 border-black bg-white p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]"
     >
-      <div class="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <div class="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between border-b-2 border-black pb-6">
         <div>
-          <h3 class="text-2xl font-semibold">Detection Results</h3>
-          <p class="text-sm text-slate-300">Deterministic compression metrics ready for auditors.</p>
+          <h3 class="text-2xl font-sans font-black uppercase tracking-tighter text-black">Detection Results</h3>
+          <p class="text-sm font-serif text-gray-800">Deterministic compression metrics ready for auditors.</p>
         </div>
         <CurlSnippet :curl="curlCmd" />
       </div>
 
-      <div class="mb-6 flex flex-wrap gap-6 text-sm text-slate-200">
-        <div class="rounded-2xl border border-white/10 px-4 py-3">
-          <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Events</p>
-          <p class="text-2xl font-mono">{{ response.total_events }}</p>
+      <div class="mb-6 flex flex-wrap gap-6">
+        <div class="border-2 border-black px-4 py-3 bg-gray-50 min-w-[140px]">
+          <p class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">Events</p>
+          <p class="text-2xl font-mono font-bold text-black">{{ response.total_events }}</p>
         </div>
-        <div class="rounded-2xl border border-white/10 px-4 py-3">
-          <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Anomalies</p>
-          <p :class="['text-2xl font-mono', (response.anomaly_count || 0) > 0 ? 'text-rose-300' : 'text-emerald-300']">
+        <div class="border-2 border-black px-4 py-3 bg-gray-50 min-w-[140px]">
+          <p class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">Anomalies</p>
+          <p :class="['text-2xl font-mono font-bold', (response.anomaly_count || 0) > 0 ? 'text-red-600' : 'text-green-600']">
             {{ response.anomaly_count || 0 }}
           </p>
         </div>
-        <div class="rounded-2xl border border-white/10 px-4 py-3">
-          <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Algorithm</p>
-          <p class="text-2xl font-mono">{{ response.compression_algo }}</p>
+        <div class="border-2 border-black px-4 py-3 bg-gray-50 min-w-[140px]">
+          <p class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">Algorithm</p>
+          <p class="text-2xl font-mono font-bold text-black">{{ response.compression_algo }}</p>
         </div>
-        <div class="rounded-2xl border border-white/10 px-4 py-3">
-          <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Latency</p>
-          <p class="text-2xl font-mono">{{ response.processing_time }}</p>
+        <div class="border-2 border-black px-4 py-3 bg-gray-50 min-w-[140px]">
+          <p class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">Latency</p>
+          <p class="text-2xl font-mono font-bold text-black">{{ response.processing_time }}</p>
         </div>
       </div>
 
       <div class="grid gap-6 lg:grid-cols-3">
-        <div class="lg:col-span-2 rounded-2xl border border-white/10 bg-slate-950/60 p-4">
+        <div class="lg:col-span-2 border-2 border-black bg-white p-4">
           <ResultsTable
             :items="response.anomalies || []"
             :selected-index="selectedIndex"
@@ -125,7 +125,7 @@
           />
           <div class="mt-4 flex justify-end">
             <button
-              class="inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white/90 transition hover:border-cyan-400 hover:text-white"
+              class="inline-flex items-center gap-2 border-2 border-black px-4 py-2 text-sm font-bold uppercase tracking-widest text-black hover:bg-black hover:text-white transition-colors"
               :disabled="!response"
               @click="downloadJSON"
             >
@@ -139,9 +139,9 @@
 
     <section
       v-if="error"
-      class="mt-8 rounded-2xl border border-rose-500/40 bg-rose-500/10 p-4 text-sm text-rose-100"
+      class="mt-8 border-2 border-red-600 bg-red-50 p-4 text-sm font-bold text-red-600 shadow-[4px_4px_0px_0px_rgba(220,38,38,1)]"
     >
-      <div class="flex items-center gap-2 font-semibold">
+      <div class="flex items-center gap-2">
         <span>⚠</span>
         <span>{{ error }}</span>
       </div>
@@ -182,8 +182,8 @@ let loaderTimer: number | null = null
 let healthInterval: number | null = null
 
 const rootClasses = computed(() => {
-  const base = 'rounded-[32px] border border-white/10 bg-gradient-to-b from-slate-950 via-slate-950/90 to-slate-900 p-6 lg:p-10 text-white'
-  return props.variant === 'embedded' ? `${base} backdrop-blur-xl shadow-[0_60px_140px_rgba(2,6,23,0.75)]` : base
+  // Brutalist container style
+  return 'bg-white text-black'
 })
 
 const loaderSteps = [

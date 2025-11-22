@@ -1,27 +1,28 @@
 <template>
-  <div class="min-h-screen bg-gray-50 flex">
+  <div class="min-h-screen bg-white flex">
     <!-- Sidebar -->
-    <div class="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 bg-gray-900 text-white">
-      <div class="flex items-center h-16 flex-shrink-0 px-4 bg-gray-900 border-b border-gray-800">
-        <img class="h-8 w-auto" src="/logo.svg" alt="Driftlock" />
-        <span class="ml-2 font-mono font-bold text-lg tracking-tight text-white">Driftlock</span>
+    <div class="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 bg-white border-r-2 border-black">
+      <div class="flex items-center h-20 flex-shrink-0 px-4 bg-white border-b-2 border-black">
+        <img class="h-8 w-auto border border-black p-0.5 grayscale" src="/logo.svg" alt="Driftlock" />
+        <span class="ml-3 font-sans font-black text-xl tracking-tighter uppercase text-black">Driftlock</span>
       </div>
       <div class="flex-1 flex flex-col overflow-y-auto">
-        <nav class="flex-1 px-2 py-4 space-y-1">
-          <router-link to="/dashboard" class="group flex items-center px-2 py-2 text-sm font-medium rounded-md bg-gray-800 text-white">
-            <svg class="mr-3 h-6 w-6 text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+        <nav class="flex-1 px-4 py-6 space-y-2">
+          <router-link to="/dashboard" class="group flex items-center px-3 py-3 text-sm font-bold uppercase tracking-widest border-2 border-black bg-black text-white hover:bg-white hover:text-black transition-colors shadow-[4px_4px_0px_0px_rgba(0,0,0,0)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <svg class="mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="square" stroke-linejoin="miter" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
             </svg>
             Dashboard
           </router-link>
           <!-- Add more links here later: Anomalies, Settings, etc. -->
         </nav>
       </div>
-      <div class="flex-shrink-0 flex bg-gray-800 p-4">
+      <div class="flex-shrink-0 flex bg-white border-t-2 border-black p-4">
         <div class="flex items-center w-full">
-          <div class="ml-3 w-full">
-            <p class="text-sm font-medium text-white truncate">{{ authStore.user?.email }}</p>
-            <button @click="logout" class="text-xs font-medium text-gray-400 hover:text-white mt-1">Sign out</button>
+          <div class="w-full">
+            <p class="text-xs font-mono font-bold text-black truncate uppercase mb-2">Logged in as:</p>
+            <p class="text-sm font-bold text-black truncate border-b-2 border-black pb-1 mb-2">{{ authStore.user?.email }}</p>
+            <button @click="logout" class="w-full text-xs font-bold uppercase tracking-widest text-black border-2 border-black py-2 hover:bg-black hover:text-white transition-colors">Sign out</button>
           </div>
         </div>
       </div>
@@ -29,7 +30,7 @@
 
     <!-- Main Content -->
     <div class="flex-1 flex flex-col md:pl-64">
-      <main class="flex-1">
+      <main class="flex-1 bg-white">
         <slot></slot>
       </main>
     </div>

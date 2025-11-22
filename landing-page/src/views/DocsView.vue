@@ -64,7 +64,7 @@ watch(() => route.path, (newPath) => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-white dark:bg-gray-900 pt-16">
+  <div class="min-h-screen bg-background pt-0">
     <div class="flex max-w-8xl mx-auto">
       <!-- Sidebar -->
       <DocsSidebar />
@@ -72,18 +72,18 @@ watch(() => route.path, (newPath) => {
       <!-- Main Content -->
       <main class="flex-1 min-w-0 px-4 sm:px-6 lg:px-8 py-10">
         <div v-if="loading" class="flex justify-center py-20">
-          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div class="animate-spin h-8 w-8 border-2 border-black border-t-transparent"></div>
         </div>
         
         <div v-else-if="error" class="text-center py-20">
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">404 - Not Found</h2>
-          <p class="text-gray-600 dark:text-gray-400">{{ error }}</p>
-          <router-link to="/docs" class="text-blue-600 hover:underline mt-4 inline-block">
+          <h2 class="text-2xl font-bold font-sans uppercase text-foreground mb-4">404 - Not Found</h2>
+          <p class="text-gray-600 font-mono mb-6">{{ error }}</p>
+          <router-link to="/docs" class="brutalist-button">
             Return to Documentation Home
           </router-link>
         </div>
         
-        <div v-else class="prose prose-blue dark:prose-invert max-w-4xl mx-auto">
+        <div v-else class="prose max-w-4xl mx-auto">
           <div v-html="content"></div>
         </div>
       </main>
@@ -92,86 +92,134 @@ watch(() => route.path, (newPath) => {
 </template>
 
 <style>
-/* Custom styles for markdown content */
+/* Custom styles for markdown content - Brutalist Academic Edition */
+.prose {
+  color: var(--color-foreground);
+  font-family: "EB Garamond", serif;
+  line-height: 1.6;
+}
+
 .prose pre {
-  background-color: #282c34;
-  border-radius: 0.5rem;
+  background-color: #1a1a1a;
+  border: 1px solid #000;
+  border-radius: 0;
   padding: 1rem;
   overflow-x: auto;
+  margin: 1.5rem 0;
 }
 
 .prose code {
-  color: #e06c75;
-  background-color: rgba(40, 44, 52, 0.1);
+  color: #d63384;
+  background-color: #f3f4f6;
   padding: 0.2em 0.4em;
-  border-radius: 0.25rem;
+  border: 1px solid #e5e7eb;
+  font-family: "JetBrains Mono", monospace;
   font-size: 0.875em;
-}
-
-.dark .prose code {
-  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .prose pre code {
   color: inherit;
   background-color: transparent;
   padding: 0;
+  border: none;
   font-size: 0.875em;
 }
 
 .prose h1 {
-  font-size: 2.25rem;
+  font-family: "Inter", sans-serif;
+  font-size: 3rem;
   font-weight: 800;
+  letter-spacing: -0.02em;
   margin-bottom: 2rem;
-  background: linear-gradient(90deg, #0284c7 0%, #3b82f6 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  text-transform: uppercase;
+  border-bottom: 1px solid #000;
+  padding-bottom: 1rem;
 }
 
 .prose h2 {
-  font-size: 1.5rem;
+  font-family: "Inter", sans-serif;
+  font-size: 1.8rem;
   font-weight: 700;
-  margin-top: 2.5rem;
-  margin-bottom: 1rem;
-  border-bottom: 1px solid #e5e7eb;
+  margin-top: 3rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #000;
   padding-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-.dark .prose h2 {
-  border-color: #374151;
+.prose h3 {
+  font-family: "Inter", sans-serif;
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.prose p {
+  margin-bottom: 1.25rem;
+  font-size: 1.125rem;
 }
 
 .prose a {
-  color: #2563eb;
-  text-decoration: none;
+  color: #000;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  font-weight: 600;
+  transition: all 0.2s;
 }
 
 .prose a:hover {
-  text-decoration: underline;
+  background-color: #000;
+  color: #fff;
+  text-decoration: none;
+}
+
+.prose ul, .prose ol {
+  margin: 1.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.prose li {
+  margin-bottom: 0.5rem;
 }
 
 .prose table {
   width: 100%;
   border-collapse: collapse;
-  margin: 1.5rem 0;
+  margin: 2rem 0;
+  border: 1px solid #000;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.85rem;
 }
 
 .prose th, .prose td {
   padding: 0.75rem;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #000;
   text-align: left;
 }
 
-.dark .prose th, .dark .prose td {
-  border-color: #374151;
-}
-
 .prose th {
-  background-color: #f9fafb;
-  font-weight: 600;
+  background-color: #000;
+  color: #fff;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-.dark .prose th {
-  background-color: #1f2937;
+.prose tr:nth-child(even) {
+  background-color: #f9fafb;
+}
+
+.prose blockquote {
+  border-left: 2px solid #000;
+  padding-left: 1.5rem;
+  margin: 1.5rem 0;
+  font-style: italic;
+  background-color: #f3f4f6;
+  padding: 1rem;
 }
 </style>

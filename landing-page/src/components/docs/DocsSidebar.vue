@@ -9,82 +9,25 @@ const navigation = [
   {
     title: 'Getting Started',
     items: [
-      { title: 'Quickstart', href: '/docs/getting-started/quickstart' },
-      { title: 'Core Concepts', href: '/docs/getting-started/concepts' },
-      { title: 'Authentication', href: '/docs/getting-started/authentication' },
+      { title: 'Quickstart', href: '/docs/deployment/DEPLOYMENT_QUICKSTART' },
+      { title: 'Core Concepts', href: '/docs/architecture/ALGORITHMS' },
+      { title: 'Authentication', href: '/docs/architecture/API' },
     ]
   },
   {
-    title: 'REST API',
+    title: 'Compliance',
     items: [
-      { title: 'Overview', href: '/docs/api/rest-api' },
-      { title: 'POST /detect', href: '/docs/api/endpoints/detect' },
-      { title: 'GET /anomalies', href: '/docs/api/endpoints/anomalies' },
-      { title: 'GET /anomalies/{id}', href: '/docs/api/endpoints/anomaly-detail' },
+      { title: 'DORA', href: '/docs/compliance/COMPLIANCE_DORA' },
+      { title: 'Runtime AI', href: '/docs/compliance/COMPLIANCE_RUNTIME_AI' },
+      { title: 'US Regulations', href: '/docs/compliance/COMPLIANCE_US' },
     ]
   },
   {
-    title: 'SDKs',
+    title: 'Architecture',
     items: [
-      { title: 'Node.js', href: '/docs/sdks/nodejs' },
-      { title: 'Python', href: '/docs/sdks/python' },
-      { title: 'Go', href: '/docs/sdks/go' },
-      { title: 'JavaScript', href: '/docs/sdks/javascript' },
-    ]
-  },
-  {
-    title: 'Integrations',
-    items: [
-      { title: 'Express.js', href: '/docs/integrations/express' },
-      { title: 'Next.js', href: '/docs/integrations/nextjs' },
-      { title: 'Django', href: '/docs/integrations/django' },
-      { title: 'FastAPI', href: '/docs/integrations/fastapi' },
-      { title: 'Spring Boot', href: '/docs/integrations/spring-boot' },
-    ]
-  },
-  {
-    title: 'Developer Tools',
-    items: [
-      { title: 'CLI', href: '/docs/tools/cli' },
-      { title: 'Postman', href: '/docs/tools/postman' },
-      { title: 'Webhooks', href: '/docs/tools/webhooks' },
-      { title: 'OpenAPI', href: '/docs/tools/openapi' },
-      { title: 'Testing', href: '/docs/tools/testing' },
-    ]
-  },
-  {
-    title: 'Production',
-    items: [
-      { title: 'Performance', href: '/docs/production/performance' },
-      { title: 'Security', href: '/docs/production/security' },
-      { title: 'Monitoring', href: '/docs/production/monitoring' },
-      { title: 'Scaling', href: '/docs/production/scaling' },
-      { title: 'Troubleshooting', href: '/docs/production/troubleshooting' },
-    ]
-  },
-  {
-    title: 'Examples',
-    items: [
-      { title: 'Fraud Detection', href: '/docs/examples/fraud-detection' },
-      { title: 'Log Analysis', href: '/docs/examples/log-analysis' },
-      { title: 'API Monitoring', href: '/docs/examples/api-monitoring' },
-      { title: 'IoT Sensors', href: '/docs/examples/iot-sensors' },
-    ]
-  },
-  {
-    title: 'Migration',
-    items: [
-      { title: 'From DataDog', href: '/docs/migration/from-datadog' },
-      { title: 'From New Relic', href: '/docs/migration/from-newrelic' },
-      { title: 'From Splunk', href: '/docs/migration/from-splunk' },
-      { title: 'Comparison', href: '/docs/migration/comparison' },
-    ]
-  },
-  {
-    title: 'Code Examples',
-    items: [
-      { title: 'cURL', href: '/docs/api/examples/curl-examples' },
-      { title: 'Python', href: '/docs/api/examples/python-examples' },
+      { title: 'Overview', href: '/docs/architecture/ARCHITECTURE' },
+      { title: 'Deployment', href: '/docs/deployment/DEPLOYMENT' },
+      { title: 'Kafka Setup', href: '/docs/deployment/KAFKA_SETUP' },
     ]
   }
 ];
@@ -99,33 +42,36 @@ const toggleSection = (title: string) => {
   }
 };
 
-const isActive = (href: string) => route.path === href;
+const isActive = (href: string) => {
+    // Handle potential trailing slashes or .md extensions if needed
+    return route.path === href || route.path === href.replace('.md', '');
+};
 </script>
 
 <template>
-  <nav class="w-64 flex-shrink-0 border-r border-gray-200 dark:border-gray-800 h-[calc(100vh-4rem)] overflow-y-auto sticky top-16 bg-white dark:bg-gray-900 py-6 px-4 hidden lg:block">
-    <div class="space-y-6">
+  <nav class="w-64 flex-shrink-0 border-r border-black h-[calc(100vh-5rem)] overflow-y-auto sticky top-20 bg-white py-6 px-4 hidden lg:block">
+    <div class="space-y-8">
       <div v-for="section in navigation" :key="section.title">
         <button 
           @click="toggleSection(section.title)"
-          class="flex items-center justify-between w-full text-sm font-semibold text-gray-900 dark:text-white mb-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+          class="flex items-center justify-between w-full text-sm font-bold font-sans uppercase tracking-widest text-black mb-4 hover:underline decoration-1 underline-offset-2"
         >
           {{ section.title }}
           <component 
             :is="openSections.has(section.title) ? ChevronDownIcon : ChevronRightIcon" 
-            class="h-4 w-4 text-gray-500"
+            class="h-4 w-4 text-black border border-black p-0.5"
           />
         </button>
         
-        <ul v-show="openSections.has(section.title)" class="space-y-1">
+        <ul v-show="openSections.has(section.title)" class="space-y-1 pl-2 border-l border-black ml-1">
           <li v-for="item in section.items" :key="item.href">
             <router-link 
               :to="item.href"
-              class="block px-2 py-1.5 text-sm rounded-md transition-colors duration-200"
+              class="block px-3 py-1 text-sm transition-all duration-200 font-mono border-l-2 border-transparent"
               :class="[
                 isActive(item.href) 
-                  ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 font-medium' 
-                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
+                  ? 'border-black font-bold pl-4 bg-gray-100' 
+                  : 'text-gray-600 hover:text-black hover:pl-4 hover:bg-gray-50'
               ]"
             >
               {{ item.title }}

@@ -8,126 +8,58 @@
   }
 
   body {
-    @apply bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100;
-    font-feature-settings: 'cv11', 'ss01', 'ss02';
+    @apply bg-background text-foreground font-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Focus styles for accessibility */
+  /* Typography Defaults matching the academic style */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-sans uppercase tracking-wider font-bold;
+  }
+
+  /* Focus styles for accessibility - High Contrast */
   *:focus-visible {
-    @apply outline-none ring-2 ring-primary-500 ring-offset-2;
-  }
-
-  /* Screen reader only class */
-  .sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border-width: 0;
-  }
-
-  .focus\:not-sr-only:focus {
-    position: static;
-    width: auto;
-    height: auto;
-    padding: inherit;
-    margin: inherit;
-    overflow: visible;
-    clip: auto;
-    white-space: normal;
+    @apply outline-none ring-1 ring-black ring-offset-2;
   }
 }
 
 @layer components {
-  .gradient-text {
-    @apply bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-600 bg-clip-text text-transparent;
-    background-size: 200% auto;
-    animation: shimmer 3s linear infinite;
-  }
-
-  @keyframes shimmer {
-    0% { background-position: 0% center; }
-    100% { background-position: 200% center; }
-  }
-
   .section-padding {
-    @apply py-20 lg:py-32;
+    @apply py-16 lg:py-24 border-b border-black;
   }
 
   .container-padding {
-    @apply px-4 sm:px-6 lg:px-8 max-w-7xl;
+    @apply px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto;
   }
 
-  .animate-float {
-    animation: float 3s ease-in-out infinite;
+  /* Brutalist Utilities - Refined for Academic Look */
+  .brutalist-border {
+    @apply border border-black;
   }
 
-  @keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
+  .brutalist-card {
+    @apply bg-white border border-black p-6;
   }
 
-  .glass-effect {
-    @apply bg-white/10 backdrop-blur-md border border-white/20;
+  /* 
+    Buttons:
+    Default: Transparent with border, black text. Hover: Black bg, white text.
+    This matches the "hover-invert" style.
+  */
+  .brutalist-button {
+    @apply inline-flex items-center justify-center px-6 py-3 border border-black bg-transparent text-foreground font-sans uppercase tracking-wider font-medium text-sm transition-all duration-0 hover:bg-black hover:text-white;
   }
 
-  .premium-shadow {
-    box-shadow:
-      0 10px 15px -3px rgba(0, 0, 0, 0.1),
-      0 4px 6px -2px rgba(0, 0, 0, 0.05),
-      0 0 0 1px rgba(0, 0, 0, 0.05);
+  .brutalist-button-primary {
+    @apply inline-flex items-center justify-center px-6 py-3 border border-black bg-black text-white font-sans uppercase tracking-wider font-medium text-sm transition-all duration-0 hover:bg-white hover:text-black hover:border-black;
   }
 
-  .premium-shadow-lg {
-    box-shadow:
-      0 20px 25px -5px rgba(0, 0, 0, 0.1),
-      0 10px 10px -5px rgba(0, 0, 0, 0.04),
-      0 0 0 1px rgba(0, 0, 0, 0.05);
+  .brutalist-input {
+    @apply w-full bg-white border border-black p-3 text-foreground font-mono text-sm focus:outline-none focus:ring-1 focus:ring-black placeholder-gray-500;
   }
-
-  .card-hover {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .card-hover:hover {
-    transform: translateY(-4px);
-    box-shadow:
-      0 20px 25px -5px rgba(37, 99, 235, 0.2),
-      0 10px 10px -5px rgba(37, 99, 235, 0.1),
-      0 0 0 1px rgba(37, 99, 235, 0.1);
-  }
-
-  .animate-fade-in {
-    animation: fadeIn 0.8s ease-out;
-  }
-
-  .animate-slide-up {
-    animation: slideUp 0.8s ease-out;
-  }
-
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-
-  @keyframes slideUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+  
+  .link-underline {
+    @apply underline underline-offset-4 hover:no-underline;
   }
 }
