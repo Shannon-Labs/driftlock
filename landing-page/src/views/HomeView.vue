@@ -5,15 +5,15 @@
             <div class="container-padding">
                 <div class="max-w-4xl">
                     <div class="inline-block border border-black px-3 py-1 text-xs font-bold font-sans uppercase tracking-widest mb-6 bg-white">
-                        Explainable · DORA Ready · Gemini Optional
+                        Volatility Radar · DORA Ready · Forensic Audits
                     </div>
                     <h1 class="text-6xl sm:text-8xl font-sans font-bold tracking-tight leading-none mb-8 uppercase">
-                        Stop Black<br>Box Audits.
+                        When Data Drifts,<br>We Lock On.
                     </h1>
                     <p class="text-xl sm:text-2xl font-serif leading-relaxed max-w-2xl mb-10 border-l border-black pl-6">
-                        Driftlock compresses every payload twice, proves the math behind each anomaly, and (optionally) asks Gemini Flash to narrate the context.
+                        The Volatility Radar for the AI Era. Powered by CBAD.
                         <br><br>
-                        <strong class="font-sans uppercase text-sm tracking-widest">Compliance teams get receipts. Engineers get sub-2s signal.</strong>
+                        <strong class="font-sans uppercase text-sm tracking-widest">See Bad. Stop Bad.</strong>
                     </p>
                     <div class="flex flex-wrap gap-4">
                         <a href="#signup" class="brutalist-button-primary text-lg">
@@ -34,38 +34,38 @@
         <section id="solution" class="section-padding">
              <div class="container-padding">
                 <div class="mb-12">
-                    <h2 class="text-sm font-bold font-sans uppercase tracking-widest mb-2 border-b border-black inline-block">The Solution</h2>
-                    <p class="text-4xl font-sans font-bold tracking-tight mt-4">MATH, NOT MAGIC.</p>
+                    <h2 class="text-sm font-bold font-sans uppercase tracking-widest mb-2 border-b border-black inline-block">The Engine</h2>
+                    <p class="text-4xl font-sans font-bold tracking-tight mt-4">CBAD: SEE BAD, STOP BAD.</p>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-black border border-black">
                     <!-- Card 1 -->
                     <div class="p-8 bg-white h-full">
                         <h3 class="text-xl font-bold font-sans uppercase mb-4 flex items-baseline gap-2">
-                            <span class="text-sm font-mono text-gray-500">01</span> Glass-Box Algorithm
+                            <span class="text-sm font-mono text-gray-500">01</span> Volatility Radar
                         </h3>
                         <p class="font-serif text-lg leading-relaxed">
-                            Mathematical explanations for every decision. No black boxes, no "computer says no". Verify the math yourself.
+                            We track the entropy of your stream. When the "randomness structure" shifts (like in the Terra/Luna crash), we detect it instantly.
                         </p>
                     </div>
 
                     <!-- Card 2 -->
                     <div class="p-8 bg-white h-full">
                         <h3 class="text-xl font-bold font-sans uppercase mb-4 flex items-baseline gap-2">
-                            <span class="text-sm font-mono text-gray-500">02</span> Real-Time Detection
+                            <span class="text-sm font-mono text-gray-500">02</span> Ungameable Detection
                         </h3>
                         <p class="font-serif text-lg leading-relaxed">
-                            Process 1000+ events/second with sub-second latency. Built in Rust for maximum performance and safety.
+                            Attackers can't evade what they can't predict. Driftlock locks onto the unique entropy signature of your stream. If it drifts, we catch it.
                         </p>
                     </div>
 
                     <!-- Card 3 -->
                     <div class="p-8 bg-white h-full">
                         <h3 class="text-xl font-bold font-sans uppercase mb-4 flex items-baseline gap-2">
-                            <span class="text-sm font-mono text-gray-500">03</span> Audit-Ready Reports
+                            <span class="text-sm font-mono text-gray-500">03</span> Forensic Auditor
                         </h3>
                         <p class="font-serif text-lg leading-relaxed">
-                            One-click compliance reports for regulator submissions. Ready for EU DORA and US audit requirements.
+                            Gemini 3 Pro analyzes the mathematical debris. It gives you a Verdict, a Cause, and a Plain English Explanation. Boardroom ready.
                         </p>
                     </div>
 
@@ -75,7 +75,7 @@
                             <span class="text-sm font-mono text-gray-500">04</span> Hybrid Explainability
                         </h3>
                         <p class="font-serif text-lg leading-relaxed">
-                            LZ-based math filters 99.9% of traffic; Gemini Flash translates anomalies into human context for tickets.
+                            LZ-based math filters 99.9% of traffic; The Auditor translates anomalies into human context for tickets.
                         </p>
                     </div>
 
@@ -85,7 +85,7 @@
                             <span class="text-sm font-mono text-gray-500">05</span> AI Agent Monitoring
                         </h3>
                         <p class="font-serif text-lg leading-relaxed">
-                            Attach Driftlock to tool-using agents to spot runaway loops, hallucinations, or unexpected tool chains.
+                            Attach Driftlock to tool-using agents. If they start looping or hallucinating, their compression ratio drops. We stop the bad.
                         </p>
                     </div>
                     
