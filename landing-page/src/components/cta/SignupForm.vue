@@ -3,7 +3,7 @@
     <form @submit.prevent="handleSignup" class="bg-white rounded-xl shadow-xl border border-gray-100 p-8 sm:p-10">
       <div v-if="!submitted" class="space-y-6">
         <div class="text-center">
-          <h2 class="text-2xl font-bold text-gray-900">Start Your Free Trial</h2>
+          <h2 class="text-2xl font-bold text-gray-900">Initialize Radar</h2>
           <p class="mt-2 text-sm text-gray-500">Get instant access to Driftlock's anomaly detection API</p>
         </div>
         
@@ -47,7 +47,7 @@
           class="flex w-full justify-center rounded-md border border-transparent bg-blue-600 py-3 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-70 disabled:cursor-not-allowed transition-all"
           :disabled="loading"
         >
-          <span v-if="!loading">Start Free Trial →</span>
+          <span v-if="!loading">Start Pilot →</span>
           <span v-else class="flex items-center gap-2">
             <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -58,7 +58,7 @@
         </button>
 
         <p class="text-center text-xs text-gray-500">
-          Free trial includes 10,000 events. No credit card required.
+          No credit card required.
         </p>
       </div>
 
@@ -112,12 +112,12 @@
                  <p class="text-xs text-blue-700 mt-1">Choose a plan to remove limits.</p>
              </div>
              <div class="flex gap-2">
-                 <button @click="handleUpgrade('signal')" class="flex-1 inline-flex justify-center items-center rounded-md border border-blue-200 bg-white px-3 py-2 text-xs font-medium text-blue-700 shadow-sm hover:bg-blue-50 focus:outline-none" :disabled="upgrading">
-                    <span v-if="!upgrading">Signal ($20)</span>
+                 <button @click="handleUpgrade('radar')" class="flex-1 inline-flex justify-center items-center rounded-md border border-blue-200 bg-white px-3 py-2 text-xs font-medium text-blue-700 shadow-sm hover:bg-blue-50 focus:outline-none" :disabled="upgrading">
+                    <span v-if="!upgrading">Radar ($20)</span>
                     <span v-else>...</span>
                  </button>
-                 <button @click="handleUpgrade('transistor')" class="flex-1 inline-flex justify-center items-center rounded-md border border-transparent bg-blue-600 px-3 py-2 text-xs font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none" :disabled="upgrading">
-                    <span v-if="!upgrading">Transistor ($200)</span>
+                 <button @click="handleUpgrade('lock')" class="flex-1 inline-flex justify-center items-center rounded-md border border-transparent bg-blue-600 px-3 py-2 text-xs font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none" :disabled="upgrading">
+                    <span v-if="!upgrading">Lock ($200)</span>
                     <span v-else>...</span>
                  </button>
              </div>
@@ -130,6 +130,8 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { getFirebaseAuth } from '@/firebase'
+import { createUserWithEmailAndPassword } from 'firebase/auth'
 
 const email = ref('')
 const company = ref('')
@@ -145,11 +147,31 @@ const handleSignup = async () => {
   loading.value = true
 
   try {
-    // Use relative path to leverage Firebase Hosting rewrites
+    // Step 1: Create Firebase Auth user
+    const auth = await getFirebaseAuth()
+    if (!auth) {
+      throw new Error('Firebase Auth not initialized. Please refresh the page.')
+    }
+
+    // Generate a temporary password (users can reset it later via email)
+    // For now, we'll use a random password and they can use "Forgot Password" to set their own
+    const tempPassword = `Temp${Math.random().toString(36).slice(-12)}!${Math.floor(Math.random() * 1000)}`
+    
+    const userCredential = await createUserWithEmailAndPassword(
+      auth,
+      email.value,
+      tempPassword
+    )
+
+    // Step 2: Get the ID token
+    const idToken = await userCredential.user.getIdToken()
+
+    // Step 3: Send to backend to create tenant and link to Firebase user
     const response = await fetch('/api/v1/onboard/signup', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${idToken}`
       },
       body: JSON.stringify({
         email: email.value,
@@ -162,6 +184,12 @@ const handleSignup = async () => {
     const data = await response.json()
 
     if (!response.ok) {
+      // If backend fails, delete the Firebase user we just created
+      try {
+        await userCredential.user.delete()
+      } catch (deleteErr) {
+        console.error('Failed to cleanup Firebase user:', deleteErr)
+      }
       throw new Error(data.error || 'Failed to create account. Please try again.')
     }
 
@@ -175,11 +203,23 @@ const handleSignup = async () => {
           method: 'landing_page'
         })
       }
+
+      // Note: User can now log in with their email and use "Forgot Password" to set a real password
+      // Or we could send them a password reset email automatically
     } else {
       throw new Error('Invalid response from server')
     }
   } catch (err: any) {
-    error.value = err.message || 'Something went wrong. Please try again.'
+    // Handle Firebase Auth errors
+    if (err.code === 'auth/email-already-in-use') {
+      error.value = 'This email is already registered. Please sign in instead.'
+    } else if (err.code === 'auth/invalid-email') {
+      error.value = 'Please enter a valid email address.'
+    } else if (err.code === 'auth/weak-password') {
+      error.value = 'Password is too weak. Please try again.'
+    } else {
+      error.value = err.message || 'Something went wrong. Please try again.'
+    }
     console.error('Signup error:', err)
   } finally {
     loading.value = false

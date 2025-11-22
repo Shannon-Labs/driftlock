@@ -1,0 +1,156 @@
+# User queries
+query GetUser($id: UUID!) @auth(level: USER) {
+  user(id: $id) {
+    id
+    displayName
+    email
+    photoUrl
+    createdAt
+  }
+}
+
+query ListUsersByEmail($email: String!) @auth(level: USER) {
+  users(where: { email: { eq: $email } }) {
+    id
+    displayName
+    email
+    photoUrl
+    createdAt
+  }
+}
+
+# Dataset queries
+query GetDataset($id: UUID!) @auth(level: USER) {
+  dataset(id: $id) {
+    id
+    name
+    filename
+    uploadDate
+    fileLocation
+    status
+    description
+    columnInfo
+    user {
+      id
+      displayName
+      email
+    }
+  }
+}
+
+query ListDatasetsByUser($userId: UUID!) @auth(level: USER) {
+  datasets(where: { userId: { eq: $userId } }) {
+    id
+    name
+    filename
+    uploadDate
+    fileLocation
+    status
+    description
+    columnInfo
+  }
+}
+
+# Model Configuration queries
+query GetModelConfiguration($id: UUID!) @auth(level: USER) {
+  modelConfiguration(id: $id) {
+    id
+    name
+    algorithmType
+    createdAt
+    parameters
+    description
+    user {
+      id
+      displayName
+    }
+  }
+}
+
+query ListModelConfigurationsByUser($userId: UUID!) @auth(level: USER) {
+  modelConfigurations(where: { userId: { eq: $userId } }) {
+    id
+    name
+    algorithmType
+    createdAt
+    parameters
+    description
+  }
+}
+
+# Detection Task queries
+query GetDetectionTask($id: UUID!) @auth(level: USER) {
+  detectionTask(id: $id) {
+    id
+    taskName
+    startDate
+    endDate
+    status
+    resultsLocation
+    notes
+    user {
+      id
+      displayName
+    }
+    dataset {
+      id
+      name
+      filename
+    }
+    modelConfiguration {
+      id
+      name
+      algorithmType
+    }
+  }
+}
+
+query ListDetectionTasksByUser($userId: UUID!) @auth(level: USER) {
+  detectionTasks(where: { userId: { eq: $userId } }, orderBy: { startDate: DESC }) {
+    id
+    taskName
+    startDate
+    endDate
+    status
+    resultsLocation
+    notes
+    dataset {
+      id
+      name
+    }
+    modelConfiguration {
+      id
+      name
+    }
+  }
+}
+
+# Anomaly queries
+query GetAnomaliesByTask($taskId: UUID!) @auth(level: USER) {
+  anomalies(where: { detectionTaskId: { eq: $taskId } }, orderBy: { anomalyScore: DESC }) {
+    id
+    dataPointIdentifier
+    anomalyScore
+    isAnomaly
+    explanation
+    timestamp
+  }
+}
+
+query GetHighScoreAnomalies($taskId: UUID!, $minScore: Float!) @auth(level: USER) {
+  anomalies(
+    where: { 
+      detectionTaskId: { eq: $taskId }
+      anomalyScore: { ge: $minScore }
+      isAnomaly: { eq: true }
+    }
+    orderBy: { anomalyScore: DESC }
+  ) {
+    id
+    dataPointIdentifier
+    anomalyScore
+    isAnomaly
+    explanation
+    timestamp
+  }
+}

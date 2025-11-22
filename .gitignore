@@ -60,6 +60,7 @@ logs/
 coverage/
 .coverage
 *.lcov
+landing-page/tests/artifacts/
 
 # Database
 *.db
@@ -77,3 +78,6 @@ temp/
 # Build artifacts
 build/
 .cache/
+logs/
+extensions/vscode-driftlock/.vscode-test/
+test-data/airline/Airline_Delay_Cause.csv

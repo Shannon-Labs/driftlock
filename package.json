@@ -1,0 +1,11 @@
+{
+  "name": "driftlock",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "verify:horizon": "tsx scripts/verify-horizon-datasets.ts"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2"
+  }
+}

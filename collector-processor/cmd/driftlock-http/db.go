@@ -66,6 +66,15 @@ func (s *store) Close() {
 	}
 }
 
+func (s *store) checkTenantFirebaseUID(ctx context.Context, firebaseUID string) (bool, error) {
+	var exists bool
+	err := s.pool.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM tenants WHERE firebase_uid = $1)", firebaseUID).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
+}
+
 func (s *store) checkTenantEmail(ctx context.Context, email string) (bool, error) {
 	var exists bool
 	err := s.pool.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM tenants WHERE email = $1)`, email).Scan(&exists)
@@ -309,9 +318,14 @@ func (s *store) createPendingTenant(ctx context.Context, params tenantCreatePara
 	now := time.Now()
 	status := "pending_verification"
 
-	_, err = tx.Exec(ctx, `INSERT INTO tenants (id, name, slug, plan, default_compressor, rate_limit_rps, email, signup_ip, signup_source, created_at, verification_token, status) 
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
-		tenantID, params.Name, slug, params.Plan, params.DefaultCompressor, params.TenantRateLimit, params.Email, params.SignupIP, params.Source, now, params.VerificationToken, status)
+	// Insert tenant (firebase_uid is optional, use NULL if empty)
+	var firebaseUID *string
+	if params.FirebaseUID != "" {
+		firebaseUID = &params.FirebaseUID
+	}
+	_, err = tx.Exec(ctx, `INSERT INTO tenants (id, name, slug, plan, default_compressor, rate_limit_rps, email, signup_ip, signup_source, created_at, verification_token, status, firebase_uid) 
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
+		tenantID, params.Name, slug, params.Plan, params.DefaultCompressor, params.TenantRateLimit, params.Email, params.SignupIP, params.Source, now, params.VerificationToken, status, firebaseUID)
 	if err != nil {
 		return nil, err
 	}
@@ -728,11 +742,11 @@ func subtleCompare(a, b []byte) bool {
 // Config cache structures
 
 type tenantRecord struct {
-	ID                uuid.UUID
-	Name              string
-	Slug              string
-	Plan              string
-	DefaultCompressor string
+	ID                   uuid.UUID
+	Name                 string
+	Slug                 string
+	Plan                 string
+	DefaultCompressor    string
 	RateLimitRPS         int
 	StripeCustomerID     *string
 	StripeSubscriptionID *string
@@ -899,6 +913,7 @@ type tenantCreateParams struct {
 	Seed                int64
 	VerificationToken   string
 	Status              string
+	FirebaseUID         string // Optional: Firebase Auth UID to link tenant to user account
 }
 
 type tenantCreateResult struct {

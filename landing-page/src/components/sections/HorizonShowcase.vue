@@ -145,7 +145,7 @@ const horizons = [
     verdict: 'ANOMALY DETECTED: Compression ratio spike (2.4x). Entropy variance exceeds 3σ baseline.',
     description: 'Detects fraud patterns that rules engines miss by analyzing the entropy of transaction metadata.',
     kaggleRef: 'Credit Card Fraud Detection (ULB)',
-    geminiInsight: 'Gemini 1.5 Pro analysis detects coordinated high-frequency micro-transactions consistent with skimming. Geographical entropy mismatch confirmed.',
+    geminiInsight: 'Gemini 3 Pro analysis detects coordinated high-frequency micro-transactions consistent with skimming. Geographical entropy mismatch confirmed.',
     sampleUrl: '/samples/fraud.json'
   },
   {

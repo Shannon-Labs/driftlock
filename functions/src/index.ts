@@ -304,9 +304,10 @@ export const apiProxy = onRequest({ cors: true }, async (request, response) => {
     // Handle specific rewrites first
     if (request.path === '/webhooks/stripe') {
       apiPath = '/v1/billing/webhook';
-    } else {
-      // Default behavior: strip /api/proxy prefix
+    } else if (request.path.startsWith('/api/proxy')) {
       apiPath = request.path.replace('/api/proxy', '');
+    } else if (request.path.startsWith('/api/v1')) {
+      apiPath = request.path.replace('/api', '');
     }
     
     const backendUrl = `${CLOUD_RUN_API}${apiPath}`;

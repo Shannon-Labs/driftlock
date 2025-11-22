@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/driftlock/driftlock/pkg/entropywindow"
 )
 
 // MCP Protocol Types (Simplified for MVP)
@@ -49,18 +51,31 @@ const (
 var tools = []Tool{
 	{
 		Name:        "detect_anomalies",
-		Description: "Analyze a string of log/metric data for anomalies using Driftlock's CBAD engine.",
+		Description: "Analyze raw strings or JSON payloads for entropy anomalies using Driftlock.",
 		InputSchema: map[string]any{
 			"type": "object",
 			"properties": map[string]any{
 				"data": map[string]string{
 					"type":        "string",
-					"description": "The raw log or metric data (JSON/NDJSON) to analyze.",
+					"description": "Raw log / metric data to analyze.",
 				},
-				"format": map[string]string{
+				"mode": map[string]any{
 					"type":        "string",
-					"description": "The format of data: 'json' or 'ndjson'",
+					"enum":        []string{"auto", "raw", "json"},
+					"description": "auto = detect raw vs JSON, raw = entropy-only, json = send to API",
+				},
+				"format": map[string]any{
+					"type":        "string",
 					"enum":        []string{"json", "ndjson"},
+					"description": "Hint for remote API requests",
+				},
+				"windowLines": map[string]any{
+					"type":        "integer",
+					"description": "Sliding baseline size for local entropy analysis",
+				},
+				"threshold": map[string]any{
+					"type":        "number",
+					"description": "Anomaly score threshold (0-1) for local analysis",
 				},
 			},
 			"required": []string{"data"},
@@ -70,7 +85,7 @@ var tools = []Tool{
 		Name:        "check_system_health",
 		Description: "Check the health status of the Driftlock API.",
 		InputSchema: map[string]any{
-			"type": "object",
+			"type":       "object",
 			"properties": map[string]any{},
 		},
 	},
@@ -133,33 +148,123 @@ func handleToolCall(params CallToolParams) (string, error) {
 		return string(body), nil
 
 	case "detect_anomalies":
-		var args struct {
-			Data   string `json:"data"`
-			Format string `json:"format"`
-		}
+		var args detectArgs
 		if err := json.Unmarshal(params.Arguments, &args); err != nil {
 			return "", fmt.Errorf("invalid arguments")
 		}
-		
-		req, err := http.NewRequest("POST", API_URL+"/detect?algo=zstd", strings.NewReader(args.Data))
-		if err != nil {
-			return "", err
+		args.applyDefaults()
+		if args.shouldAnalyzeLocally() {
+			return runLocalAnalyzer(args)
 		}
-		req.Header.Set("Content-Type", "application/json")
-		// Note: MCP context usually implies authorized agent, but here we'd need an API key.
-		// For MVP, we assume public/demo or Env var.
-		if key := os.Getenv("DRIFTLOCK_API_KEY"); key != "" {
-			req.Header.Set("X-Api-Key", key)
-		}
-
-		client := &http.Client{}
-		resp, err := client.Do(req)
-		if err != nil {
-			return "", err
-		}
-		defer resp.Body.Close()
-		body, _ := io.ReadAll(resp.Body)
-		return string(body), nil
+		return callRemoteAPI(args)
 	}
 	return "", fmt.Errorf("unknown tool")
+}
+
+type detectArgs struct {
+	Data        string  `json:"data"`
+	Mode        string  `json:"mode"`
+	Format      string  `json:"format"`
+	WindowLines int     `json:"windowLines"`
+	Threshold   float64 `json:"threshold"`
+}
+
+func (d *detectArgs) applyDefaults() {
+	if d.Mode == "" {
+		d.Mode = "auto"
+	}
+	if d.WindowLines <= 0 {
+		d.WindowLines = 400
+	}
+	if d.Threshold <= 0 {
+		d.Threshold = 0.35
+	}
+	if d.Format == "" {
+		d.Format = "json"
+	}
+}
+
+func (d detectArgs) shouldAnalyzeLocally() bool {
+	switch strings.ToLower(d.Mode) {
+	case "raw":
+		return true
+	case "json":
+		return false
+	default:
+	}
+	trimmed := strings.TrimSpace(d.Data)
+	if trimmed == "" {
+		return true
+	}
+	if strings.HasPrefix(trimmed, "{") || strings.HasPrefix(trimmed, "[") {
+		return false
+	}
+	return true
+}
+
+func runLocalAnalyzer(args detectArgs) (string, error) {
+	analyzer, err := entropywindow.NewAnalyzer(entropywindow.Config{
+		BaselineLines:        args.WindowLines,
+		Threshold:            args.Threshold,
+		CompressionAlgorithm: "zstd",
+		MinLineLength:        8,
+	})
+	if err != nil {
+		return "", err
+	}
+	defer analyzer.Close()
+
+	lines := splitLines(args.Data)
+	results := make([]entropywindow.Result, 0, len(lines))
+	for _, line := range lines {
+		res := analyzer.Process(line)
+		if res.Ready && res.IsAnomaly {
+			results = append(results, res)
+		}
+	}
+	payload := map[string]any{
+		"mode":          "local",
+		"total_records": len(lines),
+		"anomaly_count": len(results),
+		"anomalies":     results,
+	}
+	body, _ := json.MarshalIndent(payload, "", "  ")
+	return string(body), nil
+}
+
+func callRemoteAPI(args detectArgs) (string, error) {
+	req, err := http.NewRequest("POST", API_URL+"/detect?algo=zstd", strings.NewReader(args.Data))
+	if err != nil {
+		return "", err
+	}
+	switch strings.ToLower(args.Format) {
+	case "ndjson":
+		req.Header.Set("Content-Type", "application/x-ndjson")
+	default:
+		req.Header.Set("Content-Type", "application/json")
+	}
+	if key := os.Getenv("DRIFTLOCK_API_KEY"); key != "" {
+		req.Header.Set("X-Api-Key", key)
+	}
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	body, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode >= 300 {
+		return "", fmt.Errorf("remote API error: %s", string(body))
+	}
+	return string(body), nil
+}
+
+func splitLines(payload string) []string {
+	scanner := bufio.NewScanner(strings.NewReader(payload))
+	scanner.Buffer(make([]byte, 0, 1024), 1024*1024)
+	var out []string
+	for scanner.Scan() {
+		out = append(out, scanner.Text())
+	}
+	return out
 }

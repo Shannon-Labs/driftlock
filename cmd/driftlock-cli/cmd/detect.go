@@ -1,10 +1,8 @@
 package cmd
 
 import (
-	"bytes"
 	"fmt"
 	"io"
-	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -13,14 +11,26 @@ import (
 	"github.com/spf13/viper"
 )
 
+var (
+	detectStdin bool
+)
+
 var detectCmd = &cobra.Command{
 	Use:   "detect [file]",
 	Short: "Run anomaly detection on a file",
 	Long: `Upload a file (JSON/NDJSON) to the Driftlock API for anomaly detection.
 Example: driftlock detect logs.json`,
-	Args: cobra.ExactArgs(1),
+	Args: cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		filePath := args[0]
+		if len(args) == 0 && !detectStdin {
+			fmt.Println("❌ provide a file path or pass --stdin to read from STDIN")
+			return
+		}
+
+		filePath := ""
+		if len(args) > 0 {
+			filePath = args[0]
+		}
 		apiKey := viper.GetString("api_key")
 		apiURL := viper.GetString("api_url")
 
@@ -29,22 +39,21 @@ Example: driftlock detect logs.json`,
 			return
 		}
 
-		file, err := os.Open(filePath)
-		if err != nil {
-			fmt.Printf("❌ Error opening file: %v\n", err)
-			return
+		var bodyReader io.ReadCloser
+		if detectStdin || filePath == "-" {
+			bodyReader = io.NopCloser(os.Stdin)
+			filePath = "stdin"
+		} else {
+			file, err := os.Open(filePath)
+			if err != nil {
+				fmt.Printf("❌ Error opening file: %v\n", err)
+				return
+			}
+			bodyReader = file
+			defer file.Close()
 		}
-		defer file.Close()
 
-		body := &bytes.Buffer{}
-		// For /v1/detect endpoint, we assume it takes raw body or multipart. 
-		// Based on previous context, /v1/detect usually accepts raw JSON/NDJSON body.
-		// Let's stream the file content directly.
-		
-		// Ideally we stream directly to Request, but here we read to memory for simplicity in CLI MVP.
-		// For production CLI with large files, we should use io.Pipe or pass file directly as Body.
-		
-		req, err := http.NewRequest("POST", apiURL+"/detect?algo=zstd", file)
+		req, err := http.NewRequest("POST", apiURL+"/detect?algo=zstd", bodyReader)
 		if err != nil {
 			fmt.Printf("❌ Error creating request: %v\n", err)
 			return
@@ -55,6 +64,8 @@ Example: driftlock detect logs.json`,
 		contentType := "application/json"
 		if ext == ".ndjson" || ext == ".jsonl" {
 			contentType = "application/x-ndjson"
+		} else if filePath == "stdin" {
+			contentType = "application/octet-stream"
 		}
 		req.Header.Set("Content-Type", contentType)
 		req.Header.Set("X-Api-Key", apiKey)
@@ -82,4 +93,5 @@ Example: driftlock detect logs.json`,
 
 func init() {
 	rootCmd.AddCommand(detectCmd)
+	detectCmd.Flags().BoolVar(&detectStdin, "stdin", false, "Read payload from STDIN instead of a file")
 }

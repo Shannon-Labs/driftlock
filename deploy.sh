@@ -37,7 +37,8 @@ if command -v gcloud &> /dev/null; then
     # Submit build to Cloud Build (builds, pushes, and deploys based on cloudbuild.yaml)
     # We use the root directory as context
     echo "   Submitting build to Cloud Build..."
-    gcloud builds submit --config cloudbuild.yaml .
+    SHORT_SHA=$(git rev-parse --short HEAD)
+    gcloud builds submit --config cloudbuild.yaml . --substitutions=SHORT_SHA=$SHORT_SHA
     
     echo "   Backend deployed successfully!"
 else

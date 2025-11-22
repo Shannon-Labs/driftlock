@@ -11,4 +11,15 @@ test-data
 screenshots
 *.mp4
 *.gif
+*.zip
+docs/
+functions/
+infrastructure/
+.venv/
+.firebase/
+.genkit/
+.cursor/
+.factory/
+.cache/
+landing-page/
 
