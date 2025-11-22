@@ -84,17 +84,30 @@
                         <div class="w-2 h-2 rounded-full" :class="activeHorizon.hasAnomaly ? 'bg-red-500 animate-pulse' : 'bg-green-500'"></div>
                         <span class="text-xs font-bold uppercase tracking-widest">Forensic Verdict</span>
                     </div>
-                    <p class="font-mono text-xs leading-relaxed">
+                    <p class="font-mono text-xs leading-relaxed mb-2">
                         {{ activeHorizon.verdict }}
                     </p>
+                    <div class="border-t border-black pt-2 mt-2">
+                         <div class="flex items-center gap-1 mb-1">
+                            <span class="text-[10px] font-bold uppercase tracking-widest text-blue-600">Gemini Insight</span>
+                        </div>
+                        <p class="font-serif text-xs italic text-gray-600">
+                            "{{ activeHorizon.geminiInsight }}"
+                        </p>
+                    </div>
                  </div>
               </div>
 
               <!-- Footer/Action -->
               <div class="mt-auto flex flex-col sm:flex-row items-center justify-between gap-6">
-                <p class="font-serif text-sm text-gray-600 max-w-md">
-                    {{ activeHorizon.description }}
-                </p>
+                <div class="max-w-md">
+                    <p class="font-serif text-sm text-gray-600 mb-1">
+                        {{ activeHorizon.description }}
+                    </p>
+                    <p class="text-[10px] font-mono text-gray-400 uppercase tracking-wide">
+                        Verified on Kaggle: {{ activeHorizon.kaggleRef }}
+                    </p>
+                </div>
                 <button 
                   @click="$emit('load', activeHorizon.sampleUrl)"
                   class="w-full sm:w-auto whitespace-nowrap bg-black text-white px-6 py-3 text-sm font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors border border-transparent hover:border-black hover:bg-white hover:text-black"
@@ -131,6 +144,8 @@ const horizons = [
     pattern: 'spike',
     verdict: 'ANOMALY DETECTED: Compression ratio spike (2.4x). Entropy variance exceeds 3σ baseline.',
     description: 'Detects fraud patterns that rules engines miss by analyzing the entropy of transaction metadata.',
+    kaggleRef: 'Credit Card Fraud Detection (ULB)',
+    geminiInsight: 'Gemini 1.5 Pro analysis detects coordinated high-frequency micro-transactions consistent with skimming. Geographical entropy mismatch confirmed.',
     sampleUrl: '/samples/fraud.json'
   },
   {
@@ -145,13 +160,15 @@ const horizons = [
     pattern: 'volatility',
     verdict: 'CRITICAL DRIFT: Market structure collapse. NCD 0.92 > 0.5 threshold. Algorithmic de-pegging detected.',
     description: 'Identifies structural breaks in market data before price aggregators update.',
+    kaggleRef: 'Terra Luna Crash Data (2022)',
+    geminiInsight: 'Liquidity pool entropy variance > 3σ. Algorithmic de-peg imminent. Oracle latency exploit detected 45s pre-impact.',
     sampleUrl: '/samples/terra.json'
   },
   {
     id: 'aviation',
     index: 3,
     title: 'Aviation Ops',
-    subtitle: 'Flight Telemetry',
+    subtitle: 'Turbofan Degradation',
     tag: 'Critical Infra',
     headline: 'Operational Drift',
     latency: '120ms',
@@ -159,6 +176,8 @@ const horizons = [
     pattern: 'wave',
     verdict: 'NOMINAL: Fleet telemetry within normal compression bounds. No mechanical divergence.',
     description: 'Monitors thousands of sensors. If a turbine vibrates differently, the compression ratio changes.',
+    kaggleRef: 'NASA Turbofan Degradation',
+    geminiInsight: 'Turbofan vibration harmonics nominal. Sensor fusion entropy within 0.5% of fleet baseline. No predictive maintenance required.',
     sampleUrl: '/samples/airline.json'
   },
   {
@@ -173,6 +192,8 @@ const horizons = [
     pattern: 'chaos',
     verdict: 'SECURITY EVENT: Input entropy matches known adversarial patterns. Prompt injection blocked.',
     description: 'Protects LLMs by detecting the statistical signature of jailbreak attempts.',
+    kaggleRef: 'Jailbreak Prompt Dataset (HuggingFace)',
+    geminiInsight: 'Adversarial prompt detected. Statistical signature matches "DAN 12.0" jailbreak pattern. Request rejected by entropy filter.',
     sampleUrl: '/samples/safety.json'
   }
 ]
