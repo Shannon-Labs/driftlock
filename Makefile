@@ -23,7 +23,7 @@ docker-test:
 
 verify: demo
 	@echo "Running verification script ..."
-	@./verify-yc-ready.sh
+	@./scripts/verify-launch-readiness.sh
 
 clean:
 	@rm -f driftlock-demo demo-output.html verify.log

@@ -15,10 +15,10 @@ These instructions are for **AI agents and automation** working in this reposito
 - **GitHub Repository** - Technical reference for YC/developers, NOT primary user interface
 
 ### Before Making Changes, Read:
-- `FIREBASE_SAAS_COMPLETE.md` - SaaS transformation summary
-- `AI_COST_OPTIMIZATION.md` - Cost-efficient AI strategy
-- `ROADMAP.md` - Updated SaaS launch roadmap
-- `FINAL-STATUS.md` - Core demo functionality (still must work)
+- `docs/deployment/FIREBASE_SAAS_COMPLETE.md` - SaaS transformation summary
+- `docs/deployment/AI_COST_OPTIMIZATION.md` - Cost-efficient AI strategy
+- `docs/launch/ROADMAP.md` - Updated SaaS launch roadmap
+- `.archive/reports/FINAL-STATUS.md` - Core demo functionality (still must work)
 - `README.md` - Project overview
 
 ---
@@ -26,7 +26,7 @@ These instructions are for **AI agents and automation** working in this reposito
 ## 2. Golden Invariants (NEVER BREAK)
 
 ### Core Demo (Must Always Work):
-- ✅ `make demo` and `./verify-yc-ready.sh` must succeed
+- ✅ `make demo` and `./scripts/verify-launch-readiness.sh` must succeed
 - ✅ CLI demo produces deterministic HTML reports
 - ✅ Mathematical explanations remain audit-ready
 - ✅ Same input = same output (reproducible for compliance)
@@ -164,7 +164,22 @@ firebase deploy
 
 ---
 
-## 3. Code‑Level Guidelines
+## 9. Documentation Structure
+
+We have organized documentation to keep the root clean and context clear:
+
+- **`docs/architecture/`**: Core design, algorithms, API schema (`API.md`, `ARCHITECTURE.md`).
+- **`docs/deployment/`**: Cloud Run, Firebase, Cloud SQL setup guides (`DEPLOYMENT.md`, `CLOUDSQL_FIREBASE_SETUP_GUIDE.md`).
+- **`docs/compliance/`**: DORA, NIS2, US regulations (`COMPLIANCE_*.md`).
+- **`docs/launch/`**: Roadmap, launch checklists, use cases (`LAUNCH_SUMMARY.md`, `ROADMAP.md`).
+- **`docs/development/`**: Build guides, coding standards, contributing (`DEVELOPMENT.md`, `CONTRIBUTING.md`).
+- **`docs/ai-context/`**: Prompts and AI-specific instructions (`AI_*.md`).
+- **`docs/user-guide/`**: End-user documentation and quickstarts.
+- **`.archive/`**: Old plans, reports, and superseded docs.
+
+---
+
+## 10. Code‑Level Guidelines
 
 ### Rust (`cbad-core/`)
 
@@ -182,7 +197,7 @@ firebase deploy
 
 - Keep `collector-processor/cmd/driftlock-http/main.go` as the **canonical HTTP engine**:
   - `/healthz` should reflect CBAD and compression adapter health.
-  - `/v1/detect` is the primary public detection endpoint; changes to its request/response shape must be documented in `docs/API.md`.
+  - `/v1/detect` is the primary public detection endpoint; changes to its request/response shape must be documented in `docs/architecture/API.md`.
 - FFI (`collector-processor/driftlockcbad/*.go`):
   - Do not change C signatures without updating the corresponding Rust exports.
   - On error, return clear Go errors; do not panic on normal failure modes.
@@ -195,7 +210,7 @@ firebase deploy
 
 ---
 
-## 4. OpenZL and Compression Strategy
+## 11. OpenZL and Compression Strategy
 
 - OpenZL is a **format‑aware compressor** that can provide better compression and sharper anomaly signals but:
   - It is **not required** for correctness.
@@ -205,11 +220,11 @@ firebase deploy
   - If you add or modify OpenZL integration:
     - Keep it behind feature flags and/or explicit build args (e.g., `USE_OPENZL=true`).
     - Add clear error paths and fallbacks to zstd when OpenZL libraries, plans, or symbols are unavailable.
-    - Update `docs/OPENZL_ANALYSIS.md` with what is supported and how to build it.
+    - Update `.archive/reports/OPENZL_ANALYSIS.md` with what is supported and how to build it.
 
 ---
 
-## 5. Docker and Deployment
+## 12. Docker and Deployment
 
 - Use the existing Docker files as the primary deployment path:
   - `docker-compose.yml`
@@ -224,28 +239,28 @@ firebase deploy
 
 ---
 
-## 6. Testing and Verification
+## 13. Testing and Verification
 
 - Before concluding work that touches core logic, FFI, Docker, or the HTTP API:
-  - Run `make demo` and `./verify-yc-ready.sh` if available.
+  - Run `make demo` and `./scripts/verify-launch-readiness.sh` if available.
   - Run any relevant scripts under `scripts/` (e.g., `test-api.sh`, `test-docker-build.sh`, `test-services.sh`) that cover your changes.
 - Only modify or add tests that are clearly related to the behaviour you are changing.
 - Keep tests fast and focused; avoid adding slow end‑to‑end suites without a good reason.
 
 ---
 
-## 7. Documentation Expectations
+## 14. Documentation Expectations
 
 - When you change behaviour, configuration, or public interfaces, update:
-  - `README.md` and `DEMO.md` if the end‑user flow changes.
-  - `docs/API.md` for HTTP/API changes.
-  - `docs/OPENZL_ANALYSIS.md` and/or `docs/ai-agents/DOCKER-BUILD-STATUS.md` for compression and Docker changes.
-  - `docs/ROADMAP_TO_LAUNCH.md` only when adjusting high‑level roadmap assumptions.
+  - `README.md` and `docs/launch/DEMO.md` if the end‑user flow changes.
+  - `docs/architecture/API.md` for HTTP/API changes.
+  - `.archive/reports/OPENZL_ANALYSIS.md` and/or `docs/ai-agents/DOCKER-BUILD-STATUS.md` for compression and Docker changes.
+  - `docs/launch/ROADMAP_TO_LAUNCH.md` only when adjusting high‑level roadmap assumptions.
 - Keep documentation honest about what is implemented in this repo vs. what is future/roadmap.
 
 ---
 
-## 8. Scope and Restraint
+## 15. Scope and Restraint
 
 - This repo intentionally focuses on:
   - The CBAD core engine.

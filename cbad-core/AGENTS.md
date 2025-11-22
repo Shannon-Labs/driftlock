@@ -32,7 +32,7 @@ When changing anything under `cbad-core/`, do **not** break:
   - If you must change a struct or function signature, introduce a **new** symbol and keep the old one for backward compatibility where feasible.
 
 - **CLI demo compatibility**
-  - Do not change behaviour in ways that break `make demo` or `./verify-yc-ready.sh` without coordinating updates in the Go demo and HTML report expectations.
+  - Do not change behaviour in ways that break `make demo` or `./scripts/verify-launch-readiness.sh` without coordinating updates in the Go demo and HTML report expectations.
 
 ---
 
