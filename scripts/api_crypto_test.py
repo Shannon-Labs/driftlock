@@ -14,6 +14,7 @@ Or specify API key and URL:
 """
 
 import asyncio
+import time
 import json
 import sys
 import logging
@@ -63,7 +64,7 @@ class CryptoAPITester:
         self.detect_endpoint = f"{api_url}/detect"
         self.streams = streams
         self.event_buffer = []
-        self.last_send_time = asyncio.get_event_loop().time()
+        self.last_send_time = time.time()
         self.total_events = 0
         self.total_anomalies = 0
 
@@ -259,4 +260,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

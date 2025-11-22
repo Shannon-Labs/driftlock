@@ -171,7 +171,8 @@ const props = withDefaults(defineProps<{
   variant: 'full',
 })
 
-const apiBase = import.meta.env.VITE_API_BASE_URL || 'https://driftlock.net/api'
+// Use relative path for same-origin requests (works with Firebase Hosting)
+const apiBase = import.meta.env.VITE_API_BASE_URL || '/api'
 
 const raw = ref<string>('')
 const mime = ref<'ndjson' | 'json'>('ndjson')
@@ -232,7 +233,8 @@ async function checkApiHealth() {
   try {
     const controller = new AbortController()
     const timeoutId = window.setTimeout(() => controller.abort(), 5000)
-    const res = await fetch(`${apiBase}/healthz`, {
+    // Health check is at /api/v1/healthz (proxied to backend /healthz)
+    const res = await fetch(`${apiBase}/v1/healthz`, {
       method: 'GET',
       signal: controller.signal,
     })
