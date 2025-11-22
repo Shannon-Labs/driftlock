@@ -9,8 +9,9 @@
             <!-- Replaced Logo with Brutalist Driftlock Visual -->
              <div class="w-10 h-10 group-hover:scale-110 transition-transform duration-300">
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect width="24" height="24" fill="black"/>
-                  <path d="M0 12H6L8.5 16.5L11 7.5L13.5 14.5L16 12H24" stroke="white" stroke-width="2" stroke-linejoin="bevel"/>
+                  <path d="M6 11V4H18V11" stroke="black" stroke-width="4"/>
+                  <rect x="2" y="11" width="20" height="11" fill="black"/>
+                  <path d="M4 16.5H7L9.5 12.5L12.5 19.5L15 15.5L17 16.5H20" stroke="white" stroke-width="2" stroke-linejoin="bevel"/>
                 </svg>
               </div>
             <span class="text-xl font-bold font-sans tracking-widest uppercase">Driftlock</span>
@@ -69,8 +70,9 @@
                         <!-- Replaced Logo with Brutalist Driftlock Visual -->
                          <div class="w-8 h-8">
                             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <rect width="24" height="24" fill="black"/>
-                              <path d="M0 12H6L8.5 16.5L11 7.5L13.5 14.5L16 12H24" stroke="white" stroke-width="2" stroke-linejoin="bevel"/>
+                              <path d="M6 11V4H18V11" stroke="black" stroke-width="4"/>
+                              <rect x="2" y="11" width="20" height="11" fill="black"/>
+                              <path d="M4 16.5H7L9.5 12.5L12.5 19.5L15 15.5L17 16.5H20" stroke="white" stroke-width="2" stroke-linejoin="bevel"/>
                             </svg>
                           </div>
                         <span class="text-lg font-bold font-sans uppercase tracking-widest">Driftlock</span>
