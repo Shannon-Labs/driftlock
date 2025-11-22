@@ -51,7 +51,13 @@
 
       <div class="grid gap-6 lg:grid-cols-3">
         <div class="lg:col-span-2 space-y-6">
-          <UploadPanel @data="onData" />
+          <UploadPanel
+            :text="raw"
+            :format="mime"
+            @data="onData"
+            @update:text="updateRaw"
+            @update:format="updateMime"
+          />
         </div>
         <div class="space-y-6">
           <ParamsForm :params="params" @update="onParams" @run="runDetect" />
@@ -165,7 +171,7 @@ const props = withDefaults(defineProps<{
   variant: 'full',
 })
 
-const apiBase = import.meta.env.VITE_API_BASE_URL || 'https://driftlock.net/api/v1'
+const apiBase = import.meta.env.VITE_API_BASE_URL || 'https://driftlock.net/api'
 
 const raw = ref<string>('')
 const mime = ref<'ndjson' | 'json'>('ndjson')
@@ -265,6 +271,14 @@ watch(response, (payload) => {
 function onData(payload: { text: string, format: 'ndjson' | 'json' }) {
   raw.value = payload.text
   mime.value = payload.format
+}
+
+function updateRaw(value: string) {
+  raw.value = value
+}
+
+function updateMime(value: 'ndjson' | 'json') {
+  mime.value = value
 }
 
 async function onSample(url: string) {

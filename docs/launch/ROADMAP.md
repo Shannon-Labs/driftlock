@@ -1,9 +1,21 @@
 # Driftlock SaaS Platform Launch Roadmap 
 
-**Last Updated**: January 2025 (Post-Firebase Integration)
-**Current Status**: SaaS Platform Architecture Complete & Validated
-**Timeline**: Ready for Public Launch
-**Architecture**: Firebase Hosting + Functions + Cloud Run Backend
+**Last Updated**: November 22, 2025 (Universal Smoke Detector handoff)
+**Current Status**: SaaS platform + developer tooling complete & validated
+**Timeline**: Ready for public launch + IDE/agent distribution
+**Architecture**: Firebase Hosting + Functions + Cloud Run Backend + Local developer tooling
+
+### ⚡ Remaining Critical Path (Target: GA by Dec 5, 2025)
+| Track | Owner | Deadline | Status |
+| --- | --- | --- | --- |
+| Deploy landing page + Firebase Functions to production (custom domain + SSL) | Hunter | Nov 24 | ⏳ DNS pending |
+| Publish Driftlock VS Code extension to Marketplace (signed `.vsix`, docs) | Tools team | Nov 26 | 🔧 blocked on publisher cert |
+| Produce `driftlock-cli` release binaries (mac/linux, includes `scan`) + update README install docs | CLI team | Nov 26 | ⏳ build script WIP |
+| Launch streaming soak test + overnight monitoring (real dataset + Gemini summaries) | Ops | Nov 27 | 🟡 streaming source selection |
+| Record 3 short demo videos (landing signup, CLI stream, VS Code Live Radar) for launch site | Marketing | Nov 28 | ⏳ storyboard ready |
+| Enable analytics + alerting (Firebase Analytics, Cloud Monitoring, PagerDuty) | Infra | Nov 29 | 🔧 need service accounts |
+| Security + legal: finalize privacy policy, pentest sign-off, confirm Gemini billing guardrails | Compliance | Nov 30 | 🟡 third-party tester scheduled |
+| Public launch sequence (blog, newsletter, PH) | GTM | Dec 4 | 🟠 awaiting creative |
 
 ---
 
@@ -19,6 +31,23 @@
 - ✅ **Cost Optimization** - AI moved to premium tier (90% cost reduction)
 - ✅ **Landing Page** - Business-focused, no technical details exposed
 - ✅ **Interactive Demo** - Mathematical explanations + AI upsell
+
+### ✅ **Phase 8 Complete - Universal Smoke Detector Tooling**
+
+- ✅ **CLI Streaming (`driftlock scan`)** - STDIN/NDJSON streaming with entropy windows.
+- ✅ **Entropy window core (`pkg/entropywindow`)** - Shared analyzer powering CLI + MCP.
+- ✅ **VS Code Live Radar extension** - Streams diagnostics via `driftlock scan --stdin`.
+- ✅ **MCP Server (`cmd/driftlock-mcp`)** - Claude/Cursor-ready `detect_anomalies` tool with local fallback.
+- ✅ **Horizon Showcase automation** - `scripts/verify-horizon-datasets.ts` + Playwright specs keep datasets green.
+- ✅ **Chaos Report** - `scripts/chaos-report.py` + `docs/launch/THE_CHAOS_REPORT.md` summarize 7 benchmark datasets.
+
+### 🚧 **Phase 9 In Progress - Launch Hardening & Distribution**
+
+- 🔄 **Marketplace Prep** – Sign and publish VS Code Live Radar extension (`extensions/vscode-driftlock`, `npm run lint && npm run compile && npm run test`).
+- 🔄 **CLI Releases** – Produce notarized macOS + Linux binaries for `driftlock scan`; update `README.md` install section.
+- 🔄 **Streaming Soak Test** – Stand up real-world feed → `driftlock scan` → Gemini summaries (see “Universal Smoke Detector Soak Test” plan).
+- 🔄 **Monitoring & Analytics** – Configure Firebase Analytics, Cloud Monitoring dashboards, PagerDuty alerts.
+- 🔄 **Security & Compliance** – External pentest, privacy policy refresh, Gemini billing guardrails.
 
 **Current Deployment Status:**
 - 🔄 **Ready to deploy** - Build artifacts verified
@@ -82,6 +111,8 @@ gcloud builds submit --config=cloudbuild.yaml
 - [ ] Set up Firebase Analytics and monitoring
 - [ ] Performance optimization and caching
 - [ ] Security audit and penetration testing
+- [x] Automate Horizon Showcase dataset verification (Playwright + `scripts/verify-horizon-datasets.ts`)
+- [ ] Run Universal Smoke Detector soak test (live data feed → `driftlock scan` → Gemini summaries)
 
 ---
 
@@ -144,6 +175,7 @@ firebase deploy
 - [ ] Test Gemini AI analysis with real anomaly data
 - [ ] Validate compliance report generation
 - [ ] Performance testing with load simulation
+- [ ] Publish soak-test logs + Gemini summaries for review
 
 #### Days 6-7: Launch Preparation
 - [ ] Set up monitoring and alerting (Firebase Console + Cloud Monitoring)
@@ -151,22 +183,36 @@ firebase deploy
 - [ ] Prepare marketing launch sequence
 - [ ] Set up analytics and user tracking
 - [ ] Final security audit and penetration testing
+- [ ] Finalize privacy policy + ToS updates reflecting SaaS billing + AI features
+
+#### Developer Tooling Distribution
+- [x] Document MCP + CLI tooling (`docs/integrations/MCP_SETUP.md`, `docs/launch/THE_CHAOS_REPORT.md`).
+- [ ] Publish VS Code Live Radar extension to the Marketplace (requires signed `.vsix`).
+- [ ] Tag a `driftlock-cli` release binary that bundles `driftlock scan` defaults.
+- [ ] Produce short setup videos showing IDE, CLI, and MCP flows for the launch site.
+
+#### Universal Smoke Detector Soak Test
+- [ ] Pick compliant live data feed (Reddit, NOAA, etc.) and normalize to NDJSON.
+- [ ] Pipe feed into `./bin/driftlock scan --stdin --format ndjson --follow --baseline-lines 400 --threshold 0.35 --algo zstd`.
+- [ ] Persist analyzer output to `logs/live-stream.ndjson` (gitignored) and tail anomalies via `jq 'select(.anomaly==true)'`.
+- [ ] Batch anomalies to `https://us-central1-driftlock.cloudfunctions.net/analyzeAnomalies` (Gemini) and store responses in `logs/live-gemini.ndjson`.
+- [ ] Document tmux commands + env requirements in `docs/launch/ROADMAP.md` (this section) once validated.
 
 ### Week 2: Public Launch & Growth
 
 #### Days 8-10: Soft Launch
-- [ ] Deploy to production with custom domain
-- [ ] Invite beta users from existing pipeline  
-- [ ] Monitor system performance and user feedback
-- [ ] Fix any critical issues discovered
-- [ ] Optimize conversion funnel
+- [ ] Deploy Firebase Hosting + Functions behind driftlock.net with SSL/CDN (Google Domains or Cloudflare).
+- [ ] Invite beta users from YC / design partners; create shared feedback doc.
+- [ ] Instrument FullStory/Mixpanel (or equivalent) for hero CTA + signup funnel.
+- [ ] Monitor soak-test dashboard + Cloud Monitoring alerts overnight.
+- [ ] Fix any critical issues discovered, re-run `npx playwright test` + `./scripts/verify-launch-readiness.sh`.
 
 #### Days 11-14: Public Launch
-- [ ] Public announcement across channels
-- [ ] Product Hunt launch
-- [ ] Content marketing (blog posts, case studies)
-- [ ] Customer success onboarding flows
-- [ ] Sales process optimization
+- [ ] Publish blog + newsletter + Product Hunt post (embed demo videos + Chaos Report excerpts).
+- [ ] Release VS Code extension + CLI binaries publicly; update README + landing CTA.
+- [ ] Send onboarding drips + customer success guides (DocsView + video walkthroughs).
+- [ ] Kick off outbound motion (compliance leads, SOC teams) w/ case-study collateral.
+- [ ] Capture launch metrics + retro into ROADMAP.md for next planning cycle.
 
 ---
 
@@ -190,6 +236,8 @@ firebase deploy
 - **Firebase CLI** - Deployment automation  
 - **Cloud Build** - Container image management
 - **Secret Manager** - Secure credential storage
+- **CLI Tooling** - `driftlock scan` + `pkg/entropywindow` for offline analysis
+- **IDE Integrations** - VS Code Live Radar extension and MCP server for Claude/Cursor agents
 
 ---
 

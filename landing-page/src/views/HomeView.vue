@@ -370,15 +370,8 @@ const loadScenario = async (url: string) => {
     // We need to expose a method on PlaygroundShell to load a specific URL
     // Currently it has runFinancialDemo and onSample
     // I will need to access the SamplePicker inside or call onSample directly if I expose it
-    if (playgroundRef.value) {
-        // We need to modify PlaygroundShell to expose onSample or equivalent
-        // For now, let's try to access it or assume we'll add a public method
-        // I'll actually update PlaygroundShell next to allow this
-        // For now, we will just scroll. 
-        // Wait, I can update PlaygroundShell to expose 'loadSample(url)'
-        // Let's assume I will do that.
-        // @ts-ignore
-        playgroundRef.value.loadSample?.(url)
+    if (playgroundRef.value?.loadSample) {
+        await playgroundRef.value.loadSample(url)
     }
 }
 
