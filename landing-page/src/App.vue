@@ -87,9 +87,9 @@
                 <div class="flex flex-col md:flex-row gap-8 md:gap-16">
                     <div class="flex flex-col space-y-2">
                         <h4 class="font-bold font-sans uppercase tracking-widest text-sm border-b border-black pb-1 mb-2">Product</h4>
-                        <a href="#features" class="text-sm font-serif hover:underline underline-offset-2">Features</a>
+                        <a href="#showcase" class="text-sm font-serif hover:underline underline-offset-2">Radar</a>
                         <a href="#pricing" class="text-sm font-serif hover:underline underline-offset-2">Pricing</a>
-                        <a href="/docs" class="text-sm font-serif hover:underline underline-offset-2">Documentation</a>
+                        <router-link to="/docs" class="text-sm font-serif hover:underline underline-offset-2">Documentation</router-link>
                     </div>
                     <div class="flex flex-col space-y-2">
                         <h4 class="font-bold font-sans uppercase tracking-widest text-sm border-b border-black pb-1 mb-2">Company</h4>
