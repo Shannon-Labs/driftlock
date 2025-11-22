@@ -3,8 +3,12 @@
     <!-- Sidebar -->
     <div class="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 bg-white border-r-2 border-black">
       <div class="flex items-center h-20 flex-shrink-0 px-4 bg-white border-b-2 border-black">
-        <img class="h-8 w-auto border border-black p-0.5 grayscale" src="/logo.svg" alt="Driftlock" />
-        <span class="ml-3 font-sans font-black text-xl tracking-tighter uppercase text-black">Driftlock</span>
+        <div class="h-8 w-8 bg-black flex items-center justify-center border border-black mr-3">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M2 12H22M12 2V22M4.5 4.5L19.5 19.5M4.5 19.5L19.5 4.5" stroke="white" stroke-width="3"/>
+          </svg>
+        </div>
+        <span class="font-sans font-black text-xl tracking-tighter uppercase text-black">Driftlock</span>
       </div>
       <div class="flex-1 flex flex-col overflow-y-auto">
         <nav class="flex-1 px-4 py-6 space-y-2">

@@ -2,14 +2,18 @@
   <div class="flex min-h-screen flex-col justify-center py-12 sm:px-6 lg:px-8 bg-white">
     <div class="sm:mx-auto sm:w-full sm:max-w-md">
       <router-link to="/" class="flex justify-center">
-        <img class="h-16 w-auto border-2 border-black p-1 grayscale" src="/logo.svg" alt="Driftlock" />
+        <div class="h-16 w-16 bg-black flex items-center justify-center border-2 border-black hover:rotate-12 transition-transform duration-300">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M2 12H22M12 2V22M4.5 4.5L19.5 19.5M4.5 19.5L19.5 4.5" stroke="white" stroke-width="3"/>
+          </svg>
+        </div>
       </router-link>
       <h2 class="mt-6 text-center text-3xl font-sans font-black uppercase tracking-tighter text-black">
         Sign in to dashboard
       </h2>
       <p class="mt-2 text-center text-sm text-gray-600 font-mono">
         Or
-        <router-link to="/#signup" class="font-bold text-black underline decoration-2 underline-offset-4 hover:bg-black hover:text-white transition-colors px-1">start your free trial</router-link>
+        <router-link to="/#signup" class="font-bold text-black underline decoration-2 underline-offset-4 hover:bg-black hover:text-white transition-colors px-1">initialize your pilot</router-link>
       </p>
     </div>
 
