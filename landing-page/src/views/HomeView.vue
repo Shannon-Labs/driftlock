@@ -171,12 +171,12 @@
                     <p class="text-lg font-serif mt-4">Compression math costs about $1 per million events. Our plans price in the Gemini explainability layer so you don't have to think about tokens.</p>
                 </div>
 
-                <div class="grid gap-8 lg:grid-cols-3">
+                <div class="grid gap-8 lg:grid-cols-4">
                     <!-- Developer -->
                     <div class="brutalist-card flex flex-col">
                         <div class="mb-8">
                             <p class="text-sm font-bold font-sans uppercase tracking-wide mb-2">Developer</p>
-                            <p class="text-5xl font-sans font-bold">$0</p>
+                            <p class="text-4xl font-sans font-bold">$0</p>
                             <p class="text-sm text-gray-500 font-mono">per month</p>
                             <p class="mt-4 text-sm font-serif">10k events/mo, math proofs, CLI + API access.</p>
                         </div>
@@ -188,37 +188,55 @@
                         <a href="#signup" class="brutalist-button w-full text-center mt-8">Start Building</a>
                     </div>
 
-                    <!-- Starter -->
+                    <!-- Basic -->
+                    <div class="brutalist-card flex flex-col relative">
+                        <div class="mb-8">
+                            <p class="text-sm font-bold font-sans uppercase tracking-wide mb-2">Basic</p>
+                            <p class="text-4xl font-sans font-bold">$20</p>
+                            <p class="text-sm text-gray-500 font-mono">per month</p>
+                            <p class="mt-4 text-sm font-serif">500k events/mo + Gemini summaries for anomalies.</p>
+                            <p class="mt-2 text-xs text-gray-400 font-mono">Usage-based overage available</p>
+                        </div>
+                        <ul class="space-y-3 text-sm font-mono border-t border-black pt-4 mt-auto">
+                            <li>[x] Email alerts with context</li>
+                            <li>[x] Driftlock dashboard</li>
+                            <li>[x] 30-day data retention</li>
+                        </ul>
+                        <button type="button" onclick="window.location.href='#signup'" class="brutalist-button w-full text-center mt-8">Launch Basic</button>
+                    </div>
+
+                    <!-- Pro -->
                     <div class="brutalist-card bg-black text-white flex flex-col relative">
-                        <div class="absolute top-0 right-0 bg-white text-black text-xs font-bold font-sans px-2 py-1 uppercase border-l border-b border-black">
+                         <div class="absolute top-0 right-0 bg-white text-black text-xs font-bold font-sans px-2 py-1 uppercase border-l border-b border-black">
                             Most Popular
                         </div>
                         <div class="mb-8">
-                            <p class="text-sm font-bold font-sans uppercase tracking-wide mb-2">Starter</p>
-                            <p class="text-5xl font-sans font-bold">$25</p>
+                            <p class="text-sm font-bold font-sans uppercase tracking-wide mb-2">Pro</p>
+                            <p class="text-4xl font-sans font-bold">$200</p>
                             <p class="text-sm text-gray-400 font-mono">per month</p>
-                            <p class="mt-4 text-sm font-serif">500k events/mo + Gemini summaries for every anomaly.</p>
+                            <p class="mt-4 text-sm font-serif">5M events/mo + Advanced compliance reports.</p>
+                            <p class="mt-2 text-xs text-gray-400 font-mono">Usage-based overage available</p>
                         </div>
                         <ul class="space-y-3 text-sm font-mono border-t border-white pt-4 mt-auto">
-                            <li>[x] Email alerts with plain-English context</li>
-                            <li>[x] Driftlock dashboard + usage analytics</li>
-                            <li>[x] API key rotation & audit logs</li>
+                            <li>[x] DORA/NIS2 Evidence Bundles</li>
+                            <li>[x] Priority Support</li>
+                            <li>[x] 90-day data retention</li>
                         </ul>
-                        <a href="#signup" class="brutalist-button-primary w-full text-center mt-8 border-white hover:bg-white hover:text-black">Launch Starter</a>
+                        <button type="button" onclick="window.location.href='#signup'" class="brutalist-button-primary w-full text-center mt-8 border-white hover:bg-white hover:text-black">Go Pro</button>
                     </div>
 
                     <!-- Enterprise -->
                     <div class="brutalist-card flex flex-col">
                         <div class="mb-8">
-                            <p class="text-sm font-bold font-sans uppercase tracking-wide mb-2">Pro / Enterprise</p>
-                            <p class="text-5xl font-sans font-bold">Custom</p>
-                            <p class="text-sm text-gray-500 font-mono">5M+ events/mo</p>
-                            <p class="mt-4 text-sm font-serif">Unlimited streams, AI agent monitoring, Slack/PagerDuty integrations.</p>
+                            <p class="text-sm font-bold font-sans uppercase tracking-wide mb-2">Enterprise</p>
+                            <p class="text-4xl font-sans font-bold">Custom</p>
+                            <p class="text-sm text-gray-500 font-mono">Unlimited</p>
+                            <p class="mt-4 text-sm font-serif">Custom compression models, private cloud, dedicated support.</p>
                         </div>
                         <ul class="space-y-3 text-sm font-mono border-t border-black pt-4 mt-auto">
-                            <li>[x] Dedicated environments & SOC2 pipeline</li>
-                            <li>[x] Human + LLM explainability packs</li>
-                            <li>[x] Compliance reports (DORA, FFIEC, NIS2)</li>
+                            <li>[x] Custom OpenZL Models</li>
+                            <li>[x] Private Cloud / On-prem</li>
+                            <li>[x] SLA & Account Manager</li>
                         </ul>
                         <a href="mailto:hunter@shannonlabs.dev" class="brutalist-button w-full text-center mt-8">Contact Sales</a>
                     </div>
