@@ -93,7 +93,7 @@ function resolveInvokers(info: ProjectInfo): InvokerConfig {
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 // Cloud Run API endpoint (our main backend)
-const CLOUD_RUN_API = process.env.CLOUD_RUN_API_URL || "https://driftlock-api-run.a.app";
+const CLOUD_RUN_API = process.env.CLOUD_RUN_API_URL || "https://driftlock-api-o6kjgrsowq-uc.a.run.app";
 
 // Proxy signup requests to Cloud Run backend
 export const signup = onRequest({ cors: true }, async (request, response) => {
@@ -304,6 +304,9 @@ export const apiProxy = onRequest({ cors: true }, async (request, response) => {
     // Handle specific rewrites first
     if (request.path === '/webhooks/stripe') {
       apiPath = '/v1/billing/webhook';
+    } else if (request.path === '/api/v1/healthz' || request.path === '/healthz') {
+      // Health check should go directly to backend /healthz (no auth required)
+      apiPath = '/healthz';
     } else if (request.path.startsWith('/api/proxy')) {
       apiPath = request.path.replace('/api/proxy', '');
     } else if (request.path.startsWith('/api/v1')) {
@@ -376,6 +379,7 @@ export const apiProxy = onRequest({ cors: true }, async (request, response) => {
 // Health check for the entire stack
 export const healthCheck = onRequest({ cors: true }, async (request, response) => {
   const health: { [key: string]: any } = {
+    success: true,
     status: "healthy",
     service: "driftlock-saas-backend",
     timestamp: new Date().toISOString(),
@@ -403,11 +407,15 @@ export const healthCheck = onRequest({ cors: true }, async (request, response) =
         database: backendHealth.database || "unknown",
         license: backendHealth.license ? "valid" : "unknown"
       };
+      // Ensure success is true if backend is healthy
+      health.success = backendHealth.success !== false;
     } else {
       health.backend = { status: "unhealthy" };
+      health.success = false;
     }
   } catch (error) {
     health.backend = { status: "unreachable" };
+    health.success = false;
   }
 
   response.json(health);
