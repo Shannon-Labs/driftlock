@@ -21,11 +21,6 @@ generate:
       packageJsonDir: ../../collector-processor/landing-page
       react: false
       angular: false
-    - outputDir: ../../openzl/tools/visualization_app/src/dataconnect-generated
-      package: "@dataconnect/generated"
-      packageJsonDir: ../../openzl/tools/visualization_app
-      react: true
-      angular: false
   adminNodeSdk:
     - outputDir: ../../functions/src/dataconnect-admin-generated
       package: "@dataconnect/admin-generated"
