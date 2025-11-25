@@ -28,7 +28,7 @@ jobs:
             path: cbad-core/Dockerfile
             context: .
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Log in to GHCR
