@@ -1,0 +1,247 @@
+# POST /v1/demo/detect
+
+Try anomaly detection instantly without signing up. This endpoint is rate-limited but requires no authentication.
+
+## Endpoint
+
+```
+POST https://api.driftlock.net/v1/demo/detect
+```
+
+## Authentication
+
+**None required** - This is a public demo endpoint.
+
+## Rate Limits
+
+| Limit | Value |
+|-------|-------|
+| Requests per minute | 10 per IP |
+| Events per request | 50 max |
+
+## Request
+
+### Headers
+```
+Content-Type: application/json
+```
+
+### Body Schema
+
+```json
+{
+  "events": [
+    {
+      "timestamp": "2025-01-01T10:00:00Z",
+      "type": "log|metric|trace|llm",
+      "body": {}
+    }
+  ],
+  "config_override": {
+    "ncd_threshold": 0.3,
+    "compressor": "zstd"
+  }
+}
+```
+
+### Parameters
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `events` | array | **Required** | Array of events to analyze (1-50 events) |
+| `events[].timestamp` | string (ISO 8601) | Recommended | Event timestamp |
+| `events[].type` | string | Recommended | Event type: `log`, `metric`, `trace`, or `llm` |
+| `events[].body` | object | **Required** | Event payload (any JSON object) |
+| `config_override` | object | Optional | Override detection parameters |
+
+## Response
+
+### Success (HTTP 200)
+
+```json
+{
+  "success": true,
+  "total_events": 4,
+  "anomaly_count": 1,
+  "processing_time": "125ms",
+  "compression_algo": "zstd",
+  "anomalies": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "index": 3,
+      "metrics": {
+        "ncd": 0.72,
+        "compression_ratio": 1.41,
+        "entropy_change": 0.13,
+        "p_value": 0.004,
+        "confidence": 0.996
+      },
+      "event": {"latency": 950},
+      "why": "Significant latency spike detected",
+      "detected": true
+    }
+  ],
+  "request_id": "req_abc123",
+  "demo": {
+    "message": "This is a demo response. Sign up for full access with persistence, history, and evidence bundles.",
+    "remaining_calls": 9,
+    "limit_per_minute": 10,
+    "max_events_per_request": 50,
+    "signup_url": "https://driftlock.net/#signup"
+  }
+}
+```
+
+### Demo Info Object
+
+The response includes a `demo` object with:
+
+| Field | Description |
+|-------|-------------|
+| `message` | Reminder that this is demo mode |
+| `remaining_calls` | How many requests you have left this minute |
+| `limit_per_minute` | Always 10 |
+| `max_events_per_request` | Always 50 |
+| `signup_url` | Link to sign up for full access |
+
+## Examples
+
+### Basic Example
+
+```bash
+curl -X POST https://api.driftlock.net/v1/demo/detect \
+  -H "Content-Type: application/json" \
+  -d '{
+    "events": [
+      {"body": {"latency": 120}},
+      {"body": {"latency": 125}},
+      {"body": {"latency": 118}},
+      {"body": {"latency": 950}}
+    ]
+  }'
+```
+
+### Log Data
+
+```bash
+curl -X POST https://api.driftlock.net/v1/demo/detect \
+  -H "Content-Type: application/json" \
+  -d '{
+    "events": [
+      {"type": "log", "body": {"message": "User login successful", "level": "info"}},
+      {"type": "log", "body": {"message": "User login successful", "level": "info"}},
+      {"type": "log", "body": {"message": "User login successful", "level": "info"}},
+      {"type": "log", "body": {"message": "SQL INJECTION ATTEMPT: DROP TABLE users;", "level": "error"}}
+    ]
+  }'
+```
+
+### Python Example
+
+```python
+import requests
+
+response = requests.post(
+    "https://api.driftlock.net/v1/demo/detect",
+    json={
+        "events": [
+            {"body": {"cpu": 45, "memory": 2048}},
+            {"body": {"cpu": 47, "memory": 2100}},
+            {"body": {"cpu": 44, "memory": 2050}},
+            {"body": {"cpu": 99, "memory": 8000}},  # Anomaly
+        ]
+    }
+)
+
+data = response.json()
+print(f"Found {data['anomaly_count']} anomalies")
+print(f"Remaining demo calls: {data['demo']['remaining_calls']}")
+
+for anomaly in data['anomalies']:
+    print(f"  - Index {anomaly['index']}: {anomaly['why']}")
+```
+
+### JavaScript Example
+
+```javascript
+const response = await fetch('https://api.driftlock.net/v1/demo/detect', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    events: [
+      { body: { temperature: 72 } },
+      { body: { temperature: 71 } },
+      { body: { temperature: 73 } },
+      { body: { temperature: 150 } },  // Anomaly
+    ]
+  })
+});
+
+const data = await response.json();
+console.log(`Found ${data.anomaly_count} anomalies`);
+console.log(`Remaining: ${data.demo.remaining_calls}/${data.demo.limit_per_minute}`);
+```
+
+## Error Responses
+
+### 400 Bad Request - No Events
+
+```json
+{
+  "error": {
+    "code": "invalid_argument",
+    "message": "events required",
+    "request_id": "req_abc123"
+  }
+}
+```
+
+### 400 Bad Request - Too Many Events
+
+```json
+{
+  "error": {
+    "code": "invalid_argument",
+    "message": "demo limited to 50 events per request (got 100). Sign up for unlimited access",
+    "request_id": "req_abc123"
+  }
+}
+```
+
+### 429 Rate Limit Exceeded
+
+```json
+{
+  "error": {
+    "code": "rate_limit_exceeded",
+    "message": "Demo rate limit exceeded. Sign up for unlimited access.",
+    "request_id": "req_abc123",
+    "retry_after_seconds": 60
+  }
+}
+```
+
+## Demo vs Full API
+
+| Feature | Demo | Full API |
+|---------|------|----------|
+| Authentication | None | API key required |
+| Events per request | 50 | 256 |
+| Requests per minute | 10 | 60-1000+ |
+| Anomaly persistence | No | Yes |
+| Anomaly history | No | Yes |
+| Evidence bundles | No | Yes |
+| Stream management | No | Yes |
+| Usage tracking | No | Yes |
+
+## Ready for More?
+
+The demo endpoint is perfect for testing and prototyping. When you're ready for production:
+
+1. **[Sign up for free](https://driftlock.net/#signup)** - Get 10,000 events/month free
+2. **[Get your API key](./authentication.md)** - From your dashboard
+3. **[Use the full API](./detect.md)** - With persistence, history, and compliance features
+
+---
+
+**Next**: [Full /v1/detect endpoint →](./detect.md)

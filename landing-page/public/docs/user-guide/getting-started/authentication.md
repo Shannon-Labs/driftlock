@@ -19,7 +19,7 @@ Firebase Auth is used for:
 
 ### Signing Up
 
-1. Visit [https://driftlock.web.app](https://driftlock.web.app)
+1. Visit [https://driftlock.net](https://driftlock.net)
 2. Click **"Sign Up"**
 3. Choose your sign-in method:
    - **Email/Password**: Standard email registration
@@ -50,7 +50,7 @@ await signInWithPopup(auth, provider);
 
 ### Managing Your Account
 
-After logging in, go to [Dashboard → Account Settings](https://driftlock.web.app/dashboard/settings) to:
+After logging in, go to [Dashboard → Account Settings](https://driftlock.net/dashboard/settings) to:
 - Update your email  
 - Change password
 - Enable 2FA (coming soon)
@@ -62,7 +62,7 @@ API keys are used for programmatic access to Driftlock's detection APIs.
 
 ### Creating an API Key
 
-1. Log in to your [Dashboard](https://driftlock.web.app/dashboard)
+1. Log in to your [Dashboard](https://driftlock.net/dashboard)
 2. Navigate to **"API Keys"** section
 3. Click **"Create API Key"**
 4. Fill in the details:
@@ -97,7 +97,7 @@ Limited to:
 Include your API key in the `X-Api-Key` header:
 
 ```bash
-curl -X POST https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1/detect \
+curl -X POST https://api.driftlock.net/v1/detect \
   -H "Content-Type: application/json" \
   -H "X-Api-Key: YOUR_API_KEY" \
   -d '{"stream_id": "default", "events": [...]}'
@@ -205,7 +205,7 @@ import requests
 def detect_with_retry(api_key, payload, max_retries=3):
     for attempt in range(max_retries):
         response = requests.post(
-            "https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1/detect",
+            "https://api.driftlock.net/v1/detect",
             headers={"X-Api-Key": api_key},
             json=payload
         )
@@ -257,7 +257,7 @@ echo $DRIFTLOCK_API_KEY
 
 # Verify header is included
 curl -v -H "X-Api-Key: $DRIFTLOCK_API_KEY" \
-  https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1/detect
+  https://api.driftlock.net/v1/detect
 ```
 
 ### "forbidden" Error

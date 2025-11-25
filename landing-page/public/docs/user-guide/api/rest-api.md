@@ -5,7 +5,7 @@ Complete reference for Driftlock's REST API. All endpoints are versioned under `
 ## Base URL
 
 ```
-Production: https://driftlock-api-o6kjgrsowq-uc.a.run.app
+Production: https://api.driftlock.net
 ```
 
 ## Authentication
@@ -14,7 +14,7 @@ All API requests (except `/healthz`) require an API key in the `X-Api-Key` heade
 
 ```bash
 curl -H "X-Api-Key: YOUR_API_KEY" \
-  https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1/anomalies
+  https://api.driftlock.net/v1/anomalies
 ```
 
 See [Authentication Guide](../getting-started/authentication.md) for details on creating and managing API keys.
@@ -25,9 +25,9 @@ API keys are rate limited based on your plan:
 
 | Plan | Requests/Minute |
 |------|----------------|
-| Developer | 60 |
-| Starter | 300 |
-| Pro | 1,000+ |
+| Pilot (Free) | 60 |
+| Radar ($20/mo) | 300 |
+| Lock ($200/mo) | 1,000+ |
 
 ### Rate Limit Headers
 
@@ -146,7 +146,7 @@ List endpoints use cursor-based pagination:
 
 To get the next page:
 ```bash
-curl "https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1/anomalies?page_token=eyJj..."  \
+curl "https://api.driftlock.net/v1/anomalies?page_token=eyJj..."  \
   -H "X-Api-Key: YOUR_API_KEY"
 ```
 
@@ -188,7 +188,7 @@ Breaking changes will be introduced in v2, v3, etc. with advance notice.
 
 ### Detect Anomalies
 ```bash
-curl -X POST https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1/detect \
+curl -X POST https://api.driftlock.net/v1/detect \
   -H "X-Api-Key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -201,13 +201,13 @@ curl -X POST https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1/detect \
 
 ### List Anomalies
 ```bash
-curl https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1/anomalies \
+curl https://api.driftlock.net/v1/anomalies \
   -H "X-Api-Key: YOUR_API_KEY"
 ```
 
 ### Get Anomaly Details
 ```bash
-curl https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1/anomalies/anom_abc123 \
+curl https://api.driftlock.net/v1/anomalies/anom_abc123 \
   -H "X-Api-Key: YOUR_API_KEY"
 ```
 

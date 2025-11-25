@@ -7,7 +7,7 @@ Complete collection of cURL commands for interacting with Driftlock's REST API.
 Set your API key as an environment variable:
 ```bash
 export DRIFTLOCK_API_KEY="your_api_key_here"
-export DRIFTLOCK_API="https://driftlock-api-o6kjgrsowq-uc.a.run.app"
+export DRIFTLOCK_API="https://api.driftlock.net"
 ```
 
 ## Detection
@@ -274,7 +274,7 @@ set -e
 
 # Configuration
 API_KEY="${DRIFTLOCK_API_KEY:?'Set DRIFTLOCK_API_KEY environment variable'}"
-API_URL="https://driftlock-api-o6kjgrsowq-uc.a.run.app"
+API_URL="https://api.driftlock.net"
 
 # Run detection
 echo "Running detection..."

@@ -2,35 +2,56 @@
 
 Get started with Driftlock in 5 minutes. This guide will walk you through signing up, getting your API key, and running your first anomaly detection.
 
+## Try Without Signing Up (Optional)
+
+Want to test immediately? Use our [demo endpoint](../api/endpoints/demo.md) - no signup required:
+
+```bash
+curl -X POST https://api.driftlock.net/v1/demo/detect \
+  -H "Content-Type: application/json" \
+  -d '{
+    "events": [
+      {"body": {"latency": 120}},
+      {"body": {"latency": 125}},
+      {"body": {"latency": 118}},
+      {"body": {"latency": 950}}
+    ]
+  }'
+```
+
+Ready for full access? Continue below.
+
+---
+
 ## Step 1: Create Your Account
 
-1. Visit [https://driftlock.web.app](https://driftlock.web.app)
-2. Click **"Sign Up"** in the navigation
-3. Sign up with your email or Google account (Firebase Auth)
-4. Verify your email if required
+1. Visit [https://driftlock.net](https://driftlock.net)
+2. Scroll to the **Sign Up** section or click "Get Started"
+3. Enter your email and company name
+4. Check your email for a verification link
+5. Click the link to verify and activate your account
 
-**Developer Plan**: You'll start on the free Developer plan with 10,000 events/month.
+**Pilot Plan**: You'll start on the free Pilot plan with 10,000 events/month.
 
 ## Step 2: Get Your API Key
 
-1. After logging in, go to your [Dashboard](https://driftlock.web.app/dashboard)
-2. Navigate to **"API Keys"** section
-3. Click **"Create API Key"**
-4. Give it a name (e.g., "My First Key")
-5. Copy your API key - you'll need this for authentication
+After verifying your email, you'll receive your API key immediately on the verification page. You can also find it in your dashboard:
 
-> ⚠️ **Important**: Store your API key securely. It won't be shown again after you close the dialog.
+1. Log in to your [Dashboard](https://driftlock.net/dashboard)
+2. Your API key is displayed in the **Quick Start** section
+3. Click the copy button to copy it
+
+> **Important**: Your API key is shown once during signup. Store it securely! You can regenerate a new one from the dashboard if needed.
 
 ## Step 3: Run Your First Detection
 
 Let's detect anomalies in a simple dataset. Copy this cURL command and replace `YOUR_API_KEY`:
 
 ```bash
-curl -X POST https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1/detect \
+curl -X POST https://api.driftlock.net/v1/detect \
   -H "Content-Type: application/json" \
   -H "X-Api-Key: YOUR_API_KEY" \
   -d '{
-    "stream_id": "default",
     "events": [
       {"timestamp": "2025-01-01T10:00:00Z", "type": "metric", "body": {"latency": 120}},
       {"timestamp": "2025-01-01T10:01:00Z", "type": "metric", "body": {"latency": 125}},
@@ -84,20 +105,20 @@ Key metrics in the response:
 
 ## Step 5: View in Dashboard
 
-1. Go back to your [Dashboard](https://driftlock.web.app/dashboard)
-2. Click **"Anomalies"** in the sidebar
-3. You'll see all detected anomalies with their metrics
-4. Click on an anomaly to see detailed evidence and explanations
+1. Go back to your [Dashboard](https://driftlock.net/dashboard)
+2. View your usage statistics and recent activity
+3. Check your detected anomalies in the feed
+4. Click on an anomaly to see detailed metrics and explanations
 
 ## What's Next?
 
 Now that you've run your first detection, you can:
 
 - **[Understand Core Concepts](./concepts.md)** - Learn about NCD, baselines, and how the detection works
-- **[Explore the REST API](../api/rest-api.md)** - Full API reference with all endpoints
-- **[Set Up Authentication](./authentication.md)** - Manage API keys and Firebase auth
-- **[Try GraphQL](../graphql/overview.md)** - Use Firebase Data Connect for richer queries
-- **[View Code Examples](../api/examples/python-examples.md)** - Python, Node.js, and other language examples
+- **[Explore the REST API](../api/endpoints/detect.md)** - Full API reference with all endpoints
+- **[Try the Demo Endpoint](../api/endpoints/demo.md)** - Test without authentication
+- **[View Code Examples](../api/examples/python-examples.md)** - Python and cURL examples
+- **[Error Codes Reference](../api/errors.md)** - Handle errors properly
 
 ## Common Issues
 
@@ -105,18 +126,19 @@ Now that you've run your first detection, you can:
 - Check that your API key is correct
 - Verify you're including the `X-Api-Key` header
 - Ensure your API key hasn't been revoked
+- See [Error Codes](../api/errors.md#unauthorized) for details
 
 ### "rate_limit_exceeded" error
-- Developer plan is limited to 60 requests/minute
+- Pilot plan is limited to 60 requests/minute
 - Implement exponential backoff
-- Consider upgrading to Starter plan ($25/mo) for higher limits
+- Consider upgrading to Radar ($20/mo) for higher limits
+- See [Error Codes](../api/errors.md#rate_limit_exceeded) for retry logic
 
 ### Need Help?
 
-- **Documentation**: [Full API Reference](../api/rest-api.md)
+- **Documentation**: [Full API Reference](../api/endpoints/detect.md)
 - **Support**: support@driftlock.io
-- **Community**: [GitHub Discussions](https://github.com/Shannon-Labs/driftlock/discussions)
 
 ---
 
-**Ready to build?** Check out our [tutorials](../tutorials/) for step-by-step guides on specific use cases like financial monitoring, log analysis, and IoT telemetry.
+**Ready to build?** Check out our [Python examples](../api/examples/python-examples.md) for integration patterns.

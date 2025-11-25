@@ -5,7 +5,7 @@ Retrieve detailed information about a specific anomaly, including full event dat
 ## Endpoint
 
 ```
-GET https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1/anomalies/{id}
+GET https://api.driftlock.net/v1/anomalies/{id}
 ```
 
 ## Authentication
@@ -75,7 +75,7 @@ X-Api-Key: YOUR_API_KEY
 
 ### Get Anomaly Details
 ```bash
-curl "https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1/anomalies/anom_xyz789" \
+curl "https://api.driftlock.net/v1/anomalies/anom_xyz789" \
   -H "X-Api-Key: YOUR_API_KEY"
 ```
 

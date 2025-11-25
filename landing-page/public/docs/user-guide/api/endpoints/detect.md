@@ -5,7 +5,7 @@ Run synchronous anomaly detection on a batch of events. This endpoint processes 
 ## Endpoint
 
 ```
-POST https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1/detect
+POST https://api.driftlock.net/v1/detect
 ```
 
 ## Authentication
@@ -150,7 +150,7 @@ X-Api-Key: YOUR_API_KEY
 ### Basic Detection
 
 ```bash
-curl -X POST https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1/detect \
+curl -X POST https://api.driftlock.net/v1/detect \
   -H "Content-Type: application/json" \
   -H "X-Api-Key: YOUR_API_KEY" \
   -d '{
@@ -173,7 +173,7 @@ curl -X POST https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1/detect \
 ### With Config Override
 
 ```bash
-curl -X POST https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1/detect \
+curl -X POST https://api.driftlock.net/v1/detect \
   -H "Content-Type: application/json" \
   -H "X-Api-Key: YOUR_API_KEY" \
   -d '{
@@ -190,7 +190,7 @@ curl -X POST https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1/detect \
 ### Metric Data
 
 ```bash
-curl -X POST https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1/detect \
+curl -X POST https://api.driftlock.net/v1/detect \
   -H "Content-Type: application/json" \
   -H "X-Api-Key: YOUR_API_KEY" \
   -d '{
@@ -251,11 +251,12 @@ curl -X POST https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1/detect \
 
 ## Limits
 
-| Limit | Developer | Starter | Pro |
-|-------|-----------|---------|-----|
+| Limit | Pilot (Free) | Radar ($20/mo) | Lock ($200/mo) |
+|-------|--------------|----------------|----------------|
 | Events per request | 256 | 256 | 256 |
 | Request size | 10 MB | 10 MB | 50 MB |
 | Requests per minute | 60 | 300 | 1000+ |
+| Events per month | 10,000 | 500,000 | 5,000,000 |
 
 ## Best Practices
 
@@ -297,7 +298,7 @@ adapter = HTTPAdapter(max_retries=retry)
 session.mount('https://', adapter)
 
 response = session.post(
-    'https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1/detect',
+    'https://api.driftlock.net/v1/detect',
     headers={'X-Api-Key': api_key},
     json=payload
 )

@@ -36,7 +36,7 @@ New to Driftlock? Start here:
 
 - **[Multi-Tenancy](./guides/multi-tenancy.md)** - Understanding tenants and streams *(coming soon)*
 - **[Rate Limits](./guides/rate-limits.md)** - Managing API rate limits *(coming soon)*
-- **[Pricing Tiers](./guides/pricing-tiers.md)** - Developer, Starter, and Pro plans *(coming soon)*
+- **[Pricing Tiers](./guides/pricing-tiers.md)** - Pilot, Radar, and Lock plans *(coming soon)*
 - **[Billing](./guides/billing.md)** - Subscription management *(coming soon)*
 
 ## 🎓 Tutorials
@@ -80,7 +80,7 @@ Technical deep-dives and references:
 
 The fastest way to get started:
 
-1. [Sign up](https://driftlock.web.app) for a free Developer account
+1. [Sign up](https://driftlock.net/#signup) for a free Pilot account
 2. Follow the [Quickstart Guide](./getting-started/quickstart.md)
 3. Run your first detection in under 5 minutes!
 
