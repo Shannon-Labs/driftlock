@@ -14,6 +14,12 @@
           </p>
         </div>
         <div class="flex items-center gap-3">
+          <div
+            v-if="isDemo"
+            class="flex items-center gap-2 border-2 border-orange-500 bg-orange-100 px-4 py-2 text-sm font-bold uppercase tracking-wider text-orange-800"
+          >
+            Demo Mode
+          </div>
           <div class="flex items-center gap-2 border-2 border-black bg-white px-4 py-2 text-sm font-bold uppercase tracking-wider text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <span
               class="h-3 w-3 border border-black"
@@ -143,6 +149,41 @@
       </div>
     </section>
 
+    <!-- Demo Mode Conversion Banner -->
+    <section
+      v-if="isDemo && response"
+      class="mt-8 border-2 border-black bg-gradient-to-r from-yellow-100 to-orange-100 p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]"
+    >
+      <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <h3 class="text-xl font-sans font-black uppercase tracking-tighter text-black mb-2">
+            Unlock Full Access
+          </h3>
+          <p class="text-sm font-serif text-gray-800 max-w-xl">
+            You're using the demo mode with limited features. Sign up for free to get:
+            unlimited detection requests, persistent history, evidence bundles, and priority support.
+          </p>
+          <p v-if="demoInfo" class="text-xs font-mono text-gray-600 mt-2">
+            {{ demoInfo.remainingCalls }} demo requests remaining this minute
+          </p>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-3">
+          <a
+            href="/#signup"
+            class="inline-flex items-center justify-center border-2 border-black bg-black px-6 py-3 text-sm font-bold uppercase tracking-widest text-white transition-all hover:bg-white hover:text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+          >
+            Sign Up Free
+          </a>
+          <a
+            href="/#pricing"
+            class="inline-flex items-center justify-center border-2 border-black bg-white px-6 py-3 text-sm font-bold uppercase tracking-widest text-black transition-all hover:bg-black hover:text-white"
+          >
+            View Pricing
+          </a>
+        </div>
+      </div>
+    </section>
+
     <section
       v-if="error"
       class="mt-8 border-2 border-red-600 bg-red-50 p-4 text-sm font-bold text-red-600 shadow-[4px_4px_0px_0px_rgba(220,38,38,1)]"
@@ -164,6 +205,10 @@ import SamplePicker from './SamplePicker.vue'
 import CurlSnippet from './CurlSnippet.vue'
 import AnomalyChart from './AnomalyChart.vue'
 import AnomalyDetail from './AnomalyDetail.vue'
+import { useAuthStore } from '../../stores/auth'
+
+const authStore = useAuthStore()
+const isDemo = computed(() => !authStore.isAuthenticated)
 
 const props = withDefaults(defineProps<{
   variant?: 'full' | 'embedded'
@@ -185,6 +230,10 @@ const lastHealthCheck = ref<Date | null>(null)
 const chartSeries = ref<SeriesPoint[]>([])
 const selectedAnomaly = ref<any | null>(null)
 const loaderIndex = ref(0)
+const demoInfo = ref<{
+  remainingCalls: number
+  message: string
+} | null>(null)
 let loaderTimer: number | null = null
 let healthInterval: number | null = null
 
@@ -352,24 +401,87 @@ async function runDetect() {
   }
 
   try {
-    const q = new URLSearchParams({
-      format: mime.value,
-      baseline: String(params.value.baseline),
-      window: String(params.value.window),
-      hop: String(params.value.hop),
-      algo: params.value.algo,
-    })
-    const res = await fetch(`${apiBase}/v1/detect?${q.toString()}`, {
+    // Use demo endpoint when not authenticated
+    const endpoint = isDemo.value ? '/v1/demo/detect' : '/v1/detect'
+
+    // Build request body - demo endpoint expects { events: [...] }
+    let requestBody: string
+    if (isDemo.value) {
+      // Parse events from raw input
+      let events: any[]
+      if (mime.value === 'ndjson') {
+        events = raw.value
+          .split('\n')
+          .filter(line => line.trim())
+          .map(line => JSON.parse(line))
+      } else {
+        const parsed = JSON.parse(raw.value)
+        events = Array.isArray(parsed) ? parsed : [parsed]
+      }
+      requestBody = JSON.stringify({
+        events,
+        config_override: {
+          baseline_size: params.value.baseline,
+          window_size: params.value.window,
+          hop_size: params.value.hop,
+          compressor: params.value.algo,
+        }
+      })
+    } else {
+      const q = new URLSearchParams({
+        format: mime.value,
+        baseline: String(params.value.baseline),
+        window: String(params.value.window),
+        hop: String(params.value.hop),
+        algo: params.value.algo,
+      })
+      requestBody = raw.value
+    }
+
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+
+    // Add auth token for authenticated requests
+    if (!isDemo.value) {
+      const token = await authStore.getToken()
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`
+      }
+    }
+
+    // Build URL with query params for authenticated endpoint
+    let url = `${apiBase}${endpoint}`
+    if (!isDemo.value) {
+      const q = new URLSearchParams({
+        format: mime.value,
+        baseline: String(params.value.baseline),
+        window: String(params.value.window),
+        hop: String(params.value.hop),
+        algo: params.value.algo,
+      })
+      url = `${url}?${q.toString()}`
+    }
+
+    const res = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: raw.value,
+      headers,
+      body: requestBody,
     })
     const json = await res.json()
     if (!res.ok) {
-      error.value = json?.error || json?.message || `Request failed with status ${res.status}`
+      error.value = json?.error?.message || json?.error || json?.message || `Request failed with status ${res.status}`
       return
     }
     response.value = json
+
+    // Store demo info if available
+    if (json.demo) {
+      demoInfo.value = {
+        remainingCalls: json.demo.remaining_calls,
+        message: json.demo.message,
+      }
+    } else {
+      demoInfo.value = null
+    }
   } catch (e: any) {
     if (e?.name === 'AbortError' || e?.name === 'TimeoutError') {
       error.value = 'Request timed out. The API may be slow or unavailable.'

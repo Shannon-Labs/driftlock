@@ -153,8 +153,55 @@
         </div>
       </div>
 
-      <!-- Success View -->
-      <div v-else class="text-center space-y-8">
+      <!-- Pending Verification View -->
+      <div v-else-if="authState === 'pending_verification'" class="text-center space-y-6">
+        <div class="flex flex-col items-center">
+          <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
+            <svg class="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <h3 class="mt-4 text-2xl font-bold text-gray-900">Check your email</h3>
+          <p class="mt-2 text-sm text-gray-600 max-w-xs">
+            We've sent a verification link to <strong class="text-gray-900">{{ pendingEmail }}</strong>
+          </p>
+        </div>
+
+        <div class="rounded-lg bg-amber-50 border border-amber-200 p-4 text-left">
+          <div class="flex">
+            <svg class="h-5 w-5 text-amber-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <div class="ml-3">
+              <h4 class="text-sm font-medium text-amber-800">Important</h4>
+              <p class="mt-1 text-sm text-amber-700">
+                Click the link in the email to verify your account and receive your API key. The link expires in 24 hours.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-sm text-gray-500">
+          <p>Didn't receive the email?</p>
+          <ul class="mt-2 space-y-1 text-left list-disc list-inside">
+            <li>Check your spam folder</li>
+            <li>Make sure you entered the correct email</li>
+          </ul>
+        </div>
+
+        <button
+          @click="authState = 'initial'"
+          class="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-500"
+        >
+          <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          Back to sign up
+        </button>
+      </div>
+
+      <!-- Success View (API Key Received) -->
+      <div v-else-if="authState === 'submitted'" class="text-center space-y-8">
         <div class="flex flex-col items-center">
            <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
               <svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -238,12 +285,13 @@ const password = ref('')
 const loading = ref(false)
 const error = ref('')
 const successMessage = ref('')
-const authState = ref<'initial' | 'submitted'>('initial')
+const authState = ref<'initial' | 'submitted' | 'pending_verification'>('initial')
 const apiKey = ref('')
 const copied = ref(false)
 const upgrading = ref(false)
 const isLoginMode = ref(false)
-const showPasswordField = ref(true) 
+const showPasswordField = ref(true)
+const pendingEmail = ref('') // Email to show in verification pending message
 let currentUser: any = null
 
 const toggleMode = () => {
@@ -420,10 +468,17 @@ const submitOnboarding = async (idToken: string, userEmail: string, companyName:
       throw new Error(errorMessage)
     }
 
-    if (data.success && data.api_key) {
-      apiKey.value = data.api_key
-      authState.value = 'submitted'
-      
+    if (data.success) {
+      if (data.pending_verification) {
+        // New flow: email verification required
+        pendingEmail.value = userEmail
+        authState.value = 'pending_verification'
+      } else if (data.api_key) {
+        // Legacy flow: immediate API key (shouldn't happen anymore)
+        apiKey.value = data.api_key
+        authState.value = 'submitted'
+      }
+
       if (typeof window !== 'undefined' && (window as any).gtag) {
         (window as any).gtag('event', 'signup', { method: source })
       }
@@ -471,7 +526,7 @@ const copyToClipboard = async () => {
 const handleUpgrade = async (plan: string) => {
   upgrading.value = true
   try {
-    const response = await fetch('/api/proxy/v1/billing/checkout', {
+    const response = await fetch('/api/v1/billing/checkout', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
