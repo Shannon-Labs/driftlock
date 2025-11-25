@@ -94,13 +94,22 @@ Limited to:
 
 ### Using API Keys
 
-Include your API key in the `X-Api-Key` header:
+Include your API key in the `X-Api-Key` header. For backend calls, prefer the Cloud Run URL while the Firebase proxy hardens auth:
 
 ```bash
-curl -X POST https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1/detect \
+# Recommended backend for programmatic calls
+export DRIFTLOCK_API_URL="https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1"
+
+curl -X POST "$DRIFTLOCK_API_URL/detect" \
   -H "Content-Type: application/json" \
   -H "X-Api-Key: YOUR_API_KEY" \
   -d '{"stream_id": "default", "events": [...]}'
+```
+
+If the Firebase Hosting proxy is confirmed to forward `X-Api-Key` correctly in your environment, you can also use:
+
+```
+https://driftlock.web.app/api/v1
 ```
 
 ### Managing API Keys

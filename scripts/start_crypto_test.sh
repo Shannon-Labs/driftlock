@@ -45,13 +45,23 @@ if [ -z "$DRIFTLOCK_API_KEY" ]; then
     fi
 fi
 
-export DRIFTLOCK_API_URL="${DRIFTLOCK_API_URL:-https://driftlock.web.app/api/v1}"
+export DRIFTLOCK_API_URL="${DRIFTLOCK_API_URL:-https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1}"
 
 echo "✅ API Key: ${DRIFTLOCK_API_KEY:0:20}..."
 echo "✅ API URL: $DRIFTLOCK_API_URL"
 echo ""
 echo "📊 Starting 4-hour crypto test..."
-echo "   This will stream live Binance data and detect anomalies"
+echo "   Source: ${CRYPTO_SOURCE:-coingecko} (set CRYPTO_SOURCE=binance for Binance WS)"
+if [ -n "$COINGECKO_IDS" ]; then
+    echo "   Coin override: $COINGECKO_IDS"
+fi
+if [ -n "$COINGECKO_INTERVAL" ]; then
+    echo "   Poll interval override: ${COINGECKO_INTERVAL}s"
+fi
+if [ -n "$COINGECKO_API_KEY" ]; then
+    echo "   CoinGecko API key: set"
+fi
+echo "   This will stream live market data and detect anomalies"
 echo "   Logs will be saved to: logs/crypto-api-test-*.log"
 echo ""
 

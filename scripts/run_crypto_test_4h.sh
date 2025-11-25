@@ -1,7 +1,8 @@
 #!/bin/bash
 # Run Driftlock Crypto API Test for 4 Hours
-# This script streams live Binance data to the Driftlock API for 4 hours
-# and logs all activity for analysis.
+# Streams live crypto market data to the Driftlock API for 4 hours and logs
+# all activity for analysis. CoinGecko (no API key) is the default source;
+# set CRYPTO_SOURCE=binance to use Binance WebSocket when available.
 
 set -e
 
@@ -28,18 +29,23 @@ if [ -z "$DRIFTLOCK_API_KEY" ]; then
     echo ""
     echo "Then run:"
     echo "  export DRIFTLOCK_API_KEY='dlk_...'"
-    echo "  export DRIFTLOCK_API_URL='https://driftlock.web.app/api/v1'"
+    echo "  export DRIFTLOCK_API_URL='https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1'"
     echo "  $0"
     exit 1
 fi
 
 # Default API URL if not set
-export DRIFTLOCK_API_URL="${DRIFTLOCK_API_URL:-https://driftlock.web.app/api/v1}"
+export DRIFTLOCK_API_URL="${DRIFTLOCK_API_URL:-https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1}"
 
 echo "🚀 Starting 4-Hour Driftlock Crypto API Test"
 echo "   Started: $(date)"
 echo "   Will run until: $(date -v+4H 2>/dev/null || date -d '+4 hours' 2>/dev/null || echo '4 hours from now')"
 echo "   API: $DRIFTLOCK_API_URL"
+echo "   Source: ${CRYPTO_SOURCE:-coingecko} (CRYPTO_SOURCE=binance for WS)"
+echo "   Coins (CoinGecko): ${COINGECKO_IDS:-bitcoin,ethereum,solana,chainlink,avalanche-2,dogecoin,litecoin}"
+if [ -n "$COINGECKO_API_KEY" ]; then
+    echo "   CoinGecko API key: set"
+fi
 echo "   Log: $LOG_FILE"
 echo "   PID: $PID_FILE"
 echo ""
@@ -122,4 +128,3 @@ if [ -f "$LOG_FILE" ]; then
     echo "   Anomalies detected: $(grep -c "anomalies detected" "$LOG_FILE" 2>/dev/null || echo "0")"
 fi
 echo ""
-

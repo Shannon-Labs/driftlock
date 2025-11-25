@@ -1,16 +1,19 @@
 #!/usr/bin/env python3
 """
-Driftlock API Crypto Test - Live Binance Data Streaming
-This script streams live Binance cryptocurrency trade data and sends it to the Driftlock API
-for real-time anomaly detection. Perfect for demonstrating the platform's capabilities.
+Driftlock API Crypto Test - Live Market Data Streaming
+Streams live crypto data to the Driftlock API for real-time anomaly detection.
+
+Sources supported:
+- CoinGecko (default): simple REST polling, no API key required
+- Binance WebSocket: high-frequency trades when Binance is reachable
 
 Usage:
     export DRIFTLOCK_API_KEY="dlk_..."
-    export DRIFTLOCK_API_URL="https://driftlock.web.app/api/v1"
+    export DRIFTLOCK_API_URL="https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1"
     python3 scripts/api_crypto_test.py
 
-Or specify API key and URL:
-    python3 scripts/api_crypto_test.py --api-key "dlk_..." --api-url "https://driftlock.web.app/api/v1"
+Or specify options explicitly:
+    python3 scripts/api_crypto_test.py --api-key "dlk_..." --api-url "https://.../v1" --source coingecko
 """
 
 import asyncio
@@ -34,10 +37,13 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Data sources
+DEFAULT_SOURCE = os.environ.get("CRYPTO_SOURCE", "coingecko").lower()
+
 # Binance WebSocket URL
 BINANCE_WS_URL = os.environ.get("BINANCE_WS_URL", "wss://stream.binance.us:9443/ws")
 
-# Default crypto pairs to monitor
+# Default crypto pairs to monitor (Binance)
 DEFAULT_STREAMS = [
     "btcusdt@trade",
     "ethusdt@trade",
@@ -48,9 +54,30 @@ DEFAULT_STREAMS = [
     "ltcusdt@trade",
 ]
 
+def parse_coin_ids(raw: Optional[str]) -> list[str]:
+    if not raw:
+        return []
+    return [c.strip().lower() for c in raw.split(",") if c.strip()]
+
+# CoinGecko polling (no key required)
+_DEFAULT_COINGECKO_IDS = [
+    "bitcoin",
+    "ethereum",
+    "solana",
+    "chainlink",
+    "avalanche-2",
+    "dogecoin",
+    "litecoin",
+]
+DEFAULT_COINGECKO_IDS = parse_coin_ids(os.environ.get("COINGECKO_IDS")) or _DEFAULT_COINGECKO_IDS
+COINGECKO_URL = "https://api.coingecko.com/api/v3/simple/price"
+COINGECKO_VS = os.environ.get("COINGECKO_VS", "usd")
+COINGECKO_INTERVAL = float(os.environ.get("COINGECKO_INTERVAL", "5"))
+COINGECKO_API_KEY = os.environ.get("COINGECKO_API_KEY")
+
 # API Configuration
 API_KEY = os.environ.get("DRIFTLOCK_API_KEY")
-API_URL = os.environ.get("DRIFTLOCK_API_URL", "https://driftlock.web.app/api/v1")
+API_URL = os.environ.get("DRIFTLOCK_API_URL", "https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1")
 DETECT_ENDPOINT = f"{API_URL}/detect"
 
 # Batching settings
@@ -58,15 +85,31 @@ BATCH_SIZE = 10  # Send events in batches
 BATCH_INTERVAL = 5.0  # seconds between batches
 
 class CryptoAPITester:
-    def __init__(self, api_key: str, api_url: str, streams: list):
+    def __init__(
+        self,
+        api_key: str,
+        api_url: str,
+        streams: list,
+        source: str,
+        coingecko_ids: list[str],
+        coingecko_interval: float,
+        coingecko_api_key: Optional[str],
+    ):
         self.api_key = api_key
         self.api_url = api_url
         self.detect_endpoint = f"{api_url}/detect"
         self.streams = streams
+        self.source = source
+        self.coingecko_ids = coingecko_ids
+        # Keep a floor to stay under 30 req/min even if someone sets 1s
+        self.coingecko_interval = max(coingecko_interval, 2.5)
+        self.coingecko_api_key = coingecko_api_key
         self.event_buffer = []
-        self.last_send_time = time.time()
+        # Use monotonic clock to compute batch intervals reliably
+        self.last_send_time = time.monotonic()
         self.total_events = 0
         self.total_anomalies = 0
+        self.session = requests.Session()
 
     def normalize_trade(self, data: dict) -> Optional[dict]:
         """Normalize Binance trade event for Driftlock API."""
@@ -95,6 +138,56 @@ class CryptoAPITester:
             logger.debug(f"Error normalizing trade: {e}")
             return None
 
+    def build_coingecko_events(self) -> list[dict]:
+        """Fetch prices from CoinGecko and normalize for Driftlock."""
+        params = {
+            "ids": ",".join(self.coingecko_ids),
+            "vs_currencies": COINGECKO_VS,
+            "include_24hr_vol": "true",
+            "include_24hr_change": "true",
+            "precision": "8",
+        }
+
+        headers = {}
+        if self.coingecko_api_key:
+            # CoinGecko free/pro plans use this header; harmless if provided
+            headers["x-cg-pro-api-key"] = self.coingecko_api_key
+
+        response = self.session.get(
+            COINGECKO_URL,
+            params=params,
+            headers=headers,
+            timeout=15,
+        )
+        response.raise_for_status()
+        payload = response.json()
+
+        now = datetime.now(timezone.utc)
+        events: list[dict] = []
+
+        for coin_id in self.coingecko_ids:
+            data = payload.get(coin_id)
+            if not data:
+                continue
+
+            price = float(data.get(COINGECKO_VS) or 0.0)
+            volume = float(data.get(f"{COINGECKO_VS}_24h_vol") or 0.0)
+            change = float(data.get(f"{COINGECKO_VS}_24h_change") or 0.0)
+
+            symbol = coin_id.replace("-", "").upper()
+            events.append({
+                "timestamp": now.isoformat(),
+                "id": f"{coin_id}-{int(now.timestamp())}",
+                "type": "crypto_price",
+                "symbol": symbol,
+                "price": price,
+                "volume_usd": volume,
+                "change_24h": change,
+                "message": f"{symbol} price ${price:.4f} (24h {change:+.2f}%)",
+            })
+
+        return events
+
     async def send_batch(self, events: list):
         """Send a batch of events to the Driftlock API."""
         if not events:
@@ -107,7 +200,8 @@ class CryptoAPITester:
         }
 
         try:
-            response = requests.post(
+            logger.info(f"📤 Sending batch: {len(events)} events")
+            response = self.session.post(
                 self.detect_endpoint,
                 headers={
                     "X-Api-Key": self.api_key,
@@ -141,9 +235,11 @@ class CryptoAPITester:
         if normalized:
             self.event_buffer.append(normalized)
             self.total_events += 1
+            if self.total_events % 50 == 0:
+                logger.info(f"ℹ️  Received {self.total_events} events (buffer={len(self.event_buffer)})")
 
             # Check if we should send a batch
-            current_time = asyncio.get_event_loop().time()
+            current_time = time.monotonic()
             should_send = (
                 len(self.event_buffer) >= BATCH_SIZE or
                 (self.event_buffer and current_time - self.last_send_time >= BATCH_INTERVAL)
@@ -155,13 +251,15 @@ class CryptoAPITester:
                 self.last_send_time = current_time
                 await self.send_batch(batch)
 
-    async def connect_and_stream(self):
+    async def stream_binance(self):
         """Connect to Binance WebSocket and stream data."""
         backoff = 1
         ssl_context = ssl.create_default_context(cafile=certifi.where())
 
-        logger.info(f"🚀 Starting Driftlock Crypto API Test")
+        logger.info("🚀 Starting Driftlock Crypto API Test")
+        logger.info(f"   Source: Binance WebSocket")
         logger.info(f"   API: {self.api_url}")
+        logger.info(f"   WS URL: {BINANCE_WS_URL}")
         logger.info(f"   Streams: {self.streams}")
         logger.info(f"   Batch size: {BATCH_SIZE} events")
         logger.info(f"   Batch interval: {BATCH_INTERVAL}s")
@@ -169,9 +267,8 @@ class CryptoAPITester:
 
         while True:
             try:
-                logger.info(f"Connecting to Binance WebSocket...")
+                logger.info("Connecting to Binance WebSocket...")
                 async with websockets.connect(BINANCE_WS_URL, ssl=ssl_context) as websocket:
-                    # Subscribe to streams
                     payload = {
                         "method": "SUBSCRIBE",
                         "params": self.streams,
@@ -188,7 +285,6 @@ class CryptoAPITester:
                     async for message in websocket:
                         try:
                             data = json.loads(message)
-                            # Handle subscription response
                             if "result" in data and data["id"] == 1:
                                 continue
 
@@ -205,6 +301,51 @@ class CryptoAPITester:
             except Exception as e:
                 logger.error(f"Unexpected error: {e}")
                 await asyncio.sleep(5)
+
+    async def poll_coingecko(self):
+        """Poll CoinGecko every few seconds and send price batches."""
+        backoff = self.coingecko_interval
+
+        logger.info("🚀 Starting Driftlock Crypto API Test")
+        logger.info("   Source: CoinGecko (REST polling, no API key required)")
+        logger.info(f"   API: {self.api_url}")
+        logger.info(f"   Coins: {', '.join(self.coingecko_ids)}")
+        logger.info(f"   Poll interval: {self.coingecko_interval}s (rate-limit safe)")
+        logger.info("")
+
+        while True:
+            try:
+                events = self.build_coingecko_events()
+                if events:
+                    self.total_events += len(events)
+                    self.last_send_time = time.monotonic()
+                    await self.send_batch(events)
+                else:
+                    logger.warning("CoinGecko returned no data; check coin IDs")
+                backoff = self.coingecko_interval
+                await asyncio.sleep(self.coingecko_interval)
+            except requests.exceptions.HTTPError as err:
+                status = err.response.status_code if err.response else None
+                backoff = min(backoff * 2, 90)
+                if status == 429:
+                    logger.warning(f"CoinGecko rate limited (429). Backing off {backoff:.0f}s")
+                else:
+                    logger.warning(f"CoinGecko HTTP error {status}: {err}")
+                await asyncio.sleep(backoff)
+            except requests.exceptions.RequestException as err:
+                backoff = min(backoff * 2, 60)
+                logger.warning(f"CoinGecko request failed: {err}. Retrying in {backoff:.0f}s")
+                await asyncio.sleep(backoff)
+            except Exception as err:
+                backoff = min(backoff * 2, 60)
+                logger.error(f"Unexpected CoinGecko error: {err}")
+                await asyncio.sleep(backoff)
+
+    async def run(self):
+        if self.source == "binance":
+            await self.stream_binance()
+        else:
+            await self.poll_coingecko()
 
     async def shutdown(self):
         """Send any remaining events before shutdown."""
@@ -223,7 +364,7 @@ class CryptoAPITester:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Stream live Binance crypto data to Driftlock API for anomaly detection"
+        description="Stream live crypto data to Driftlock API for anomaly detection"
     )
     parser.add_argument(
         "--api-key",
@@ -236,9 +377,31 @@ def main():
         help="Driftlock API base URL (or set DRIFTLOCK_API_URL env var)"
     )
     parser.add_argument(
+        "--source",
+        default=DEFAULT_SOURCE,
+        choices=["coingecko", "binance"],
+        help="Data source to use (coingecko|binance). Default: coingecko"
+    )
+    parser.add_argument(
         "--streams",
         default=",".join(DEFAULT_STREAMS),
         help="Comma-separated list of Binance streams (e.g., btcusdt@trade,ethusdt@trade)"
+    )
+    parser.add_argument(
+        "--coins",
+        default=",".join(DEFAULT_COINGECKO_IDS),
+        help="Comma-separated list of CoinGecko coin IDs (coingecko source)"
+    )
+    parser.add_argument(
+        "--poll-interval",
+        type=float,
+        default=COINGECKO_INTERVAL,
+        help="Seconds between CoinGecko polls (default: 5s; floored to 2.5s to avoid rate limits)"
+    )
+    parser.add_argument(
+        "--cg-api-key",
+        default=COINGECKO_API_KEY,
+        help="CoinGecko API key (optional; set COINGECKO_API_KEY)"
     )
 
     args = parser.parse_args()
@@ -249,10 +412,20 @@ def main():
 
     streams = [s.strip().lower() for s in args.streams.split(",") if s.strip()]
 
-    tester = CryptoAPITester(args.api_key, args.api_url, streams)
+    coingecko_ids = [c.strip().lower() for c in args.coins.split(",") if c.strip()]
+
+    tester = CryptoAPITester(
+        args.api_key,
+        args.api_url,
+        streams,
+        args.source.lower(),
+        coingecko_ids,
+        args.poll_interval,
+        args.cg_api_key,
+    )
 
     try:
-        asyncio.run(tester.connect_and_stream())
+        asyncio.run(tester.run())
     except KeyboardInterrupt:
         logger.info("")
         logger.info("Stopping test...")

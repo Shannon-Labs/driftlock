@@ -112,7 +112,8 @@ deploy_backend() {
 
     # Submit Cloud Build which will deploy to Cloud Run
     echo "🔨 Building and deploying container with Cloud SQL integration..."
-    gcloud builds submit --config=cloudbuild.yaml --project="$PROJECT_ID"
+    local_short_sha=$(git rev-parse --short HEAD)
+    gcloud builds submit --config=cloudbuild.yaml --project="$PROJECT_ID" --substitutions=SHORT_SHA="$local_short_sha"
 
     echo "✅ Backend deployment complete"
 }
@@ -122,7 +123,25 @@ configure_cloudrun_permissions() {
     echo "🔧 Configuring Cloud Run IAM permissions..."
 
     # Get the Cloud Run service account
-    service_account="$PROJECT_ID-compute@developer.gserviceaccount.com"
+    MAX_RETRIES=10
+    RETRY_DELAY=10 # seconds
+    service_account=""
+    for i in $(seq 1 $MAX_RETRIES); do
+        echo "Attempt $i/$MAX_RETRIES to retrieve Cloud Run service account name..."
+        service_account=$(gcloud run services describe driftlock-api \
+            --project="$PROJECT_ID" \
+            --region="$REGION" \
+            --format="value(status.serviceAccountName)" 2>/dev/null || true)
+        if [ -n "$service_account" ]; then
+            break
+        fi
+        sleep "$RETRY_DELAY"
+    done
+
+    if [ -z "$service_account" ]; then
+        echo "❌ Failed to retrieve Cloud Run service account name after multiple attempts."
+        exit 1
+    fi
 
     # Grant Cloud SQL Client role to the service account
     gcloud projects add-iam-policy-binding "$PROJECT_ID" \
@@ -325,8 +344,9 @@ echo ""
 
 verify_cloudsql
 verify_firebase_auth
-configure_cloudrun_permissions
 deploy_backend
+sleep 30
+configure_cloudrun_permissions
 deploy_frontend
 test_deployment
 setup_monitoring

@@ -1,32 +1,52 @@
 <template>
     <main class="bg-background text-foreground">
         <!-- Hero Section -->
-        <section class="section-padding">
-            <div class="container-padding">
+        <!-- Hero Section -->
+        <section class="relative h-[80vh] min-h-[600px] w-full overflow-hidden border-b border-black bg-black text-white">
+            <!-- Video Background -->
+            <div class="absolute inset-0 z-0">
+                <video 
+                    autoplay 
+                    muted 
+                    loop 
+                    playsinline 
+                    poster="/media/anomaly-hero.png"
+                    class="h-full w-full object-cover opacity-60"
+                >
+                    <source src="/media/anomaly-hero.mp4" type="video/mp4">
+                </video>
+                <!-- Overlay Gradient -->
+                <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90"></div>
+            </div>
+
+            <!-- Content -->
+            <div class="container-padding relative z-10 flex h-full flex-col justify-end pb-16">
                 <div class="max-w-4xl">
-                    <div class="inline-block border border-black px-3 py-1 text-xs font-bold font-sans uppercase tracking-widest mb-6 bg-white">
-                        Volatility Radar · DORA Ready · Forensic Audits
+                    <div class="mb-6 flex items-center gap-3">
+                        <div class="inline-block border border-white px-3 py-1 text-xs font-bold font-sans uppercase tracking-widest bg-black text-white">
+                            Anomaly Detected
+                        </div>
+                        <span class="font-mono text-xs text-red-500 animate-pulse">● LIVE RECORDING: KRAKEN XBT/USD</span>
                     </div>
-                    <h1 class="text-6xl sm:text-8xl font-sans font-bold tracking-tight leading-none mb-8 uppercase">
+                    
+                    <h1 class="text-6xl sm:text-8xl font-sans font-bold tracking-tight leading-none mb-8 uppercase text-white mix-blend-difference">
                         When Data Drifts,<br>We Lock On.
                     </h1>
-                    <p class="text-xl sm:text-2xl font-serif leading-relaxed max-w-2xl mb-10 border-l border-black pl-6">
-                        Quantify the entropy in your data streams.
-                        <br>
-                        How much chaos do you want to find?
-                        <br><br>
-                        <strong class="font-sans uppercase text-sm tracking-widest">See Bad. Stop Bad.</strong>
-                    </p>
-                    <div class="flex flex-wrap gap-4">
-                        <a href="#signup" class="brutalist-button-primary text-lg">
-                            Start Free Trial
-                        </a>
-                        <button type="button" @click="triggerLiveScan" class="brutalist-button text-lg">
-                            Live Signal Scan →
-                        </button>
-                        <a href="#api-demo" class="brutalist-button text-lg">
-                            View API Demo
-                        </a>
+                    
+                    <div class="grid gap-8 lg:grid-cols-2 items-end">
+                        <p class="text-xl font-serif leading-relaxed text-gray-200 border-l-2 border-white pl-6">
+                            <strong>Analysis:</strong> Live capture: Kraken XBT/USD sell, score 0.0215 with ΔH≈+0.0155 and ΔCR≈+0.0275. 
+                            Compression efficiency dropped while entropy rose, flagging a micro-size sell near local highs—exactly the “sharp signal” we use to surface premium events for Pro/Enterprise.
+                        </p>
+                        
+                        <div class="flex flex-wrap gap-4">
+                            <a href="#signup" class="brutalist-button-primary text-lg border-white hover:bg-white hover:text-black transition-colors">
+                                Start Free Trial
+                            </a>
+                            <button type="button" @click="triggerLiveScan" class="brutalist-button text-lg bg-transparent text-white border-white hover:bg-white hover:text-black">
+                                Live Signal Scan →
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -44,7 +64,7 @@
                         <p class="text-xl font-serif mb-8">
                             Create your account and receive your API key instantly.
                             <br>
-                            <span class="font-bold underline underline-offset-2">No credit card required for Developer plan.</span>
+                            <span class="font-bold underline underline-offset-2">No credit card required for Free plan.</span>
                         </p>
                         <ul class="space-y-4 font-mono text-sm border-t border-black pt-4">
                             <li class="flex items-center gap-3">

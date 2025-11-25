@@ -163,8 +163,9 @@ func withAuth(store *store, limiter *tenantRateLimiter, next http.Handler) http.
 			return
 		}
 
-		// Verify secret
-		if !verifyAPIKey(rec.KeyHash, parts[1]) {
+		// Verify secret (hash stored over the full key string)
+		candidateKey := fmt.Sprintf("dlk_%s.%s", keyID.String(), parts[1])
+		if !verifyAPIKey(rec.KeyHash, candidateKey) {
 			writeError(w, r, http.StatusUnauthorized, fmt.Errorf("invalid api key secret"))
 			return
 		}

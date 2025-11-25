@@ -86,14 +86,14 @@ func onboardSignupHandler(store *store) http.HandlerFunc {
 		result, err := createTenant(ctx, cfg, tenantCreateParams{
 			Name:                req.Company,
 			Slug:                slugify(req.Company),
-			Plan:                "trial",
+			Plan:                "free", // Set to "free" plan
 			StreamSlug:          "default",
 			StreamType:          "logs",
 			StreamDescription:   "Default stream from onboarding",
 			StreamRetentionDays: 14,
 			KeyRole:             "admin",
 			KeyName:             "onboarding-key",
-			TenantRateLimit:     60,
+			TenantRateLimit:     60, // Default rate limit for free tier
 			DefaultBaseline:     cfg.DefaultBaseline,
 			DefaultWindow:       cfg.DefaultWindow,
 			DefaultHop:          cfg.DefaultHop,
@@ -103,7 +103,7 @@ func onboardSignupHandler(store *store) http.HandlerFunc {
 			DefaultCompressor:   cfg.DefaultAlgo,
 			Email:               req.Email,
 			SignupIP:            ip,
-			Source:              req.Source,
+			Source:              "firebase_frontend", // Explicitly set the source
 		})
 		if err != nil {
 			writeError(w, r, http.StatusInternalServerError, err)
