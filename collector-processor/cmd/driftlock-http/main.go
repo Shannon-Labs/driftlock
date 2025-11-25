@@ -290,6 +290,16 @@ func buildHTTPHandler(cfg config, store *store, queue jobQueue, limiter *tenantR
 	mux.HandleFunc("/v1/onboard/signup", onboardSignupHandler(cfg, store, emailer))
 	mux.HandleFunc("/v1/onboard/verify", verifyHandler(store, emailer))
 
+	// Demo endpoint (no auth, rate limited by IP)
+	demoLimiter := newDemoRateLimiter()
+	go func() {
+		ticker := time.NewTicker(5 * time.Minute)
+		for range ticker.C {
+			demoLimiter.cleanup()
+		}
+	}()
+	mux.HandleFunc("/v1/demo/detect", demoDetectHandler(cfg, demoLimiter))
+
 	mux.Handle("/v1/detect", withAuth(store, limiter, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		detectHandler(w, r, cfg, store, tracker)
 	})))
@@ -299,11 +309,16 @@ func buildHTTPHandler(cfg config, store *store, queue jobQueue, limiter *tenantR
 	// Billing endpoints
 	mux.Handle("/v1/billing/checkout", withAuth(store, limiter, billingCheckoutHandler(store)))
 	mux.Handle("/v1/billing/portal", withFirebaseAuth(store, billingPortalHandler(store)))
-	mux.HandleFunc("/v1/billing/webhook", billingWebhookHandler(store))
+	mux.HandleFunc("/v1/billing/webhook", billingWebhookHandler(store, emailer))
 
 	// Dashboard/User endpoints (Firebase Auth)
 	mux.Handle("/v1/me/keys", withFirebaseAuth(store, http.HandlerFunc(handleListKeys(store))))
+	mux.Handle("/v1/me/keys/create", withFirebaseAuth(store, http.HandlerFunc(handleCreateKey(store))))
+	mux.Handle("/v1/me/keys/regenerate", withFirebaseAuth(store, http.HandlerFunc(handleRegenerateKey(store))))
+	mux.Handle("/v1/me/keys/revoke", withFirebaseAuth(store, http.HandlerFunc(handleRevokeKey(store))))
 	mux.Handle("/v1/me/usage", withFirebaseAuth(store, http.HandlerFunc(handleGetUsage(store))))
+	mux.Handle("/v1/me/usage/details", withFirebaseAuth(store, http.HandlerFunc(handleGetUsageDetails(store))))
+	mux.Handle("/v1/me/billing", withFirebaseAuth(store, http.HandlerFunc(handleGetBillingStatus(store))))
 
 	return withCommon(withRequestContext(mux))
 }

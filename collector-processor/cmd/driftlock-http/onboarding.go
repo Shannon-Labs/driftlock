@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -29,16 +31,30 @@ type onboardSignupRequest struct {
 }
 
 type onboardSignupResponse struct {
-	Success bool   `json:"success"`
-	Message string `json:"message"`
-	APIKey  string `json:"api_key,omitempty"`
-	Tenant  struct {
+	Success          bool   `json:"success"`
+	Message          string `json:"message"`
+	APIKey           string `json:"api_key,omitempty"`
+	PendingVerify    bool   `json:"pending_verification,omitempty"`
+	VerificationSent bool   `json:"verification_sent,omitempty"`
+	Tenant           struct {
 		ID        string    `json:"id"`
 		Name      string    `json:"name"`
 		Slug      string    `json:"slug"`
 		Plan      string    `json:"plan"`
 		CreatedAt time.Time `json:"created_at"`
 	} `json:"tenant"`
+}
+
+type verifyResponse struct {
+	Success bool   `json:"success"`
+	Message string `json:"message"`
+	APIKey  string `json:"api_key,omitempty"`
+	Tenant  struct {
+		ID   string `json:"id"`
+		Name string `json:"name"`
+		Slug string `json:"slug"`
+		Plan string `json:"plan"`
+	} `json:"tenant,omitempty"`
 }
 
 func onboardSignupHandler(cfg config, store *store, emailer *emailService) http.HandlerFunc {
@@ -111,13 +127,20 @@ func onboardSignupHandler(cfg config, store *store, emailer *emailService) http.
 			}
 		}
 
-		// Create tenant with active status and API key immediately
+		// Generate verification token
+		verificationToken, err := generateVerificationToken()
+		if err != nil {
+			writeError(w, r, http.StatusInternalServerError, fmt.Errorf("failed to generate verification token"))
+			return
+		}
+
+		// Create pending tenant (no API key until verified)
 		plan := req.Plan
 		if plan == "" {
 			plan = "trial"
 		}
 
-		result, err := store.createTenantWithKey(ctx, tenantCreateParams{
+		result, err := store.createPendingTenant(ctx, tenantCreateParams{
 			Name:                req.CompanyName,
 			Slug:                slugify(req.CompanyName),
 			Plan:                plan,
@@ -125,9 +148,6 @@ func onboardSignupHandler(cfg config, store *store, emailer *emailService) http.
 			StreamType:          "logs",
 			StreamDescription:   "Default stream created during onboarding",
 			StreamRetentionDays: 14,
-			KeyRole:             "admin",
-			KeyName:             "default-key",
-			KeyRateLimit:        cfg.DefaultRateLimit(),
 			TenantRateLimit:     cfg.DefaultRateLimit(),
 			DefaultBaseline:     cfg.DefaultBaseline,
 			DefaultWindow:       cfg.DefaultWindow,
@@ -140,7 +160,7 @@ func onboardSignupHandler(cfg config, store *store, emailer *emailService) http.
 			SignupIP:            ip,
 			Source:              req.Source,
 			Seed:                int64(cfg.Seed),
-			Status:              "active",    // Explicitly active
+			VerificationToken:   verificationToken,
 			FirebaseUID:         firebaseUID, // Link to Firebase Auth user if provided
 		})
 		if err != nil {
@@ -148,16 +168,17 @@ func onboardSignupHandler(cfg config, store *store, emailer *emailService) http.
 			return
 		}
 
-		// Send welcome email (async)
+		// Send verification email (async)
 		if emailer != nil {
-			go emailer.sendWelcomeEmail(req.Email, req.CompanyName, result.APIKey)
+			go emailer.sendVerificationEmail(req.Email, req.CompanyName, verificationToken)
 		}
 
-		// Build response
+		// Build response - no API key yet, pending verification
 		resp := onboardSignupResponse{
-			Success: true,
-			Message: "Signup successful! Your API key is included below.",
-			APIKey:  result.APIKey,
+			Success:          true,
+			Message:          "Please check your email to verify your account and receive your API key.",
+			PendingVerify:    true,
+			VerificationSent: true,
 		}
 		resp.Tenant.ID = result.Tenant.ID.String()
 		resp.Tenant.Name = result.Tenant.Name
@@ -171,12 +192,58 @@ func onboardSignupHandler(cfg config, store *store, emailer *emailService) http.
 
 func verifyHandler(store *store, emailer *emailService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Verification is now optional/post-signup since we give access immediately.
-		// We can keep this handler for future email verification flows if needed,
-		// or just return a "Already Verified" page.
-		// For now, leaving it as is, but it won't be the primary flow.
-		writeError(w, r, http.StatusNotImplemented, fmt.Errorf("verification flow deprecated in favor of instant access"))
+		if r.Method != http.MethodGet {
+			writeError(w, r, http.StatusMethodNotAllowed, fmt.Errorf("use GET"))
+			return
+		}
+
+		token := r.URL.Query().Get("token")
+		if token == "" {
+			writeError(w, r, http.StatusBadRequest, fmt.Errorf("verification token required"))
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+		defer cancel()
+
+		// Verify and activate the tenant, generating the API key
+		result, err := store.verifyAndActivateTenant(ctx, token)
+		if err != nil {
+			if strings.Contains(err.Error(), "invalid or expired") {
+				writeError(w, r, http.StatusBadRequest, err)
+				return
+			}
+			writeError(w, r, http.StatusInternalServerError, fmt.Errorf("verification failed: %w", err))
+			return
+		}
+
+		// Send welcome email with API key
+		if emailer != nil {
+			go emailer.sendWelcomeEmail(result.Tenant.Name, result.Tenant.Name, result.APIKey)
+		}
+
+		// Return the API key
+		resp := verifyResponse{
+			Success: true,
+			Message: "Email verified! Your API key is below. Store it securely - it won't be shown again.",
+			APIKey:  result.APIKey,
+		}
+		resp.Tenant.ID = result.Tenant.ID.String()
+		resp.Tenant.Name = result.Tenant.Name
+		resp.Tenant.Slug = result.Tenant.Slug
+		resp.Tenant.Plan = result.Tenant.Plan
+
+		writeJSON(w, r, http.StatusOK, resp)
 	}
+}
+
+// generateVerificationToken creates a secure random token for email verification
+func generateVerificationToken() (string, error) {
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return base64.URLEncoding.EncodeToString(b), nil
 }
 
 func validateSignup(req *onboardSignupRequest) error {
@@ -229,24 +296,4 @@ func getSignupLimiter(ip string) *rate.Limiter {
 	return limiter
 }
 
-func getClientIP(r *http.Request) string {
-	// Check X-Forwarded-For header (set by load balancers/proxies)
-	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
-		parts := strings.Split(xff, ",")
-		if len(parts) > 0 {
-			return strings.TrimSpace(parts[0])
-		}
-	}
-
-	// Check X-Real-IP header
-	if xrip := r.Header.Get("X-Real-IP"); xrip != "" {
-		return strings.TrimSpace(xrip)
-	}
-
-	// Fall back to RemoteAddr
-	parts := strings.Split(r.RemoteAddr, ":")
-	if len(parts) > 0 {
-		return parts[0]
-	}
-	return r.RemoteAddr
-}
+// getClientIP is defined in demo.go

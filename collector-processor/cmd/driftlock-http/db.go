@@ -587,6 +587,87 @@ func (s *store) getMonthlyUsage(ctx context.Context, tenantID uuid.UUID) (int64,
 	return total, err
 }
 
+type dailyUsageRecord struct {
+	Date         time.Time `json:"date"`
+	EventCount   int64     `json:"event_count"`
+	RequestCount int64     `json:"request_count"`
+	AnomalyCount int64     `json:"anomaly_count"`
+}
+
+func (s *store) getDailyUsage(ctx context.Context, tenantID uuid.UUID, days int) ([]dailyUsageRecord, error) {
+	rows, err := s.pool.Query(ctx, `
+		WITH date_series AS (
+			SELECT generate_series(
+				CURRENT_DATE - ($2 - 1) * INTERVAL '1 day',
+				CURRENT_DATE,
+				'1 day'::interval
+			)::date AS date
+		)
+		SELECT
+			ds.date,
+			COALESCE(SUM(um.event_count), 0) as event_count,
+			COALESCE(SUM(um.api_request_count), 0) as request_count,
+			COALESCE(SUM(um.anomaly_count), 0) as anomaly_count
+		FROM date_series ds
+		LEFT JOIN usage_metrics um ON um.date = ds.date AND um.tenant_id = $1
+		GROUP BY ds.date
+		ORDER BY ds.date ASC`,
+		tenantID, days)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []dailyUsageRecord
+	for rows.Next() {
+		var rec dailyUsageRecord
+		if err := rows.Scan(&rec.Date, &rec.EventCount, &rec.RequestCount, &rec.AnomalyCount); err != nil {
+			return nil, err
+		}
+		results = append(results, rec)
+	}
+	return results, rows.Err()
+}
+
+type streamUsageRecord struct {
+	StreamID     uuid.UUID `json:"stream_id"`
+	StreamName   string    `json:"stream_name"`
+	EventCount   int64     `json:"event_count"`
+	RequestCount int64     `json:"request_count"`
+	AnomalyCount int64     `json:"anomaly_count"`
+}
+
+func (s *store) getStreamUsage(ctx context.Context, tenantID uuid.UUID) ([]streamUsageRecord, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT
+			um.stream_id,
+			COALESCE(st.name, 'default') as stream_name,
+			COALESCE(SUM(um.event_count), 0) as event_count,
+			COALESCE(SUM(um.api_request_count), 0) as request_count,
+			COALESCE(SUM(um.anomaly_count), 0) as anomaly_count
+		FROM usage_metrics um
+		LEFT JOIN streams st ON st.id = um.stream_id
+		WHERE um.tenant_id = $1
+		  AND date_trunc('month', um.date) = date_trunc('month', CURRENT_DATE)
+		GROUP BY um.stream_id, st.name
+		ORDER BY event_count DESC`,
+		tenantID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []streamUsageRecord
+	for rows.Next() {
+		var rec streamUsageRecord
+		if err := rows.Scan(&rec.StreamID, &rec.StreamName, &rec.EventCount, &rec.RequestCount, &rec.AnomalyCount); err != nil {
+			return nil, err
+		}
+		results = append(results, rec)
+	}
+	return results, rows.Err()
+}
+
 func (s *store) fetchAnomaly(ctx context.Context, tenantID uuid.UUID, anomalyID uuid.UUID) (anomalyDetailRecord, []anomalyEvidenceRecord, error) {
 	var rec anomalyDetailRecord
 	query := `SELECT id, stream_id, ingest_batch_id, ncd, compression_ratio, entropy_change, p_value, confidence, explanation, status, detected_at, details, baseline_snapshot, window_snapshot
@@ -986,4 +1067,123 @@ func slugify(name string) string {
 		slug = fmt.Sprintf("tenant-%d", time.Now().Unix())
 	}
 	return slug
+}
+
+// Billing-related database functions
+
+func (s *store) getTenantByStripeCustomer(ctx context.Context, customerID string) (*tenantRecord, error) {
+	var t tenantRecord
+	err := s.pool.QueryRow(ctx, `
+		SELECT id, name, slug, plan, default_compressor, rate_limit_rps,
+		       stripe_customer_id, stripe_subscription_id, stripe_status, COALESCE(email, '')
+		FROM tenants WHERE stripe_customer_id = $1`, customerID).Scan(
+		&t.ID, &t.Name, &t.Slug, &t.Plan, &t.DefaultCompressor, &t.RateLimitRPS,
+		&t.StripeCustomerID, &t.StripeSubscriptionID, &t.StripeStatus, &t.Email)
+	if err != nil {
+		return nil, err
+	}
+	return &t, nil
+}
+
+func (s *store) setGracePeriod(ctx context.Context, tenantID uuid.UUID, gracePeriodEnd time.Time) error {
+	_, err := s.pool.Exec(ctx, `
+		UPDATE tenants
+		SET grace_period_ends_at = $2,
+		    payment_failure_count = COALESCE(payment_failure_count, 0) + 1,
+		    stripe_status = 'past_due',
+		    updated_at = NOW()
+		WHERE id = $1`, tenantID, gracePeriodEnd)
+	return err
+}
+
+func (s *store) clearGracePeriod(ctx context.Context, tenantID uuid.UUID) error {
+	_, err := s.pool.Exec(ctx, `
+		UPDATE tenants
+		SET grace_period_ends_at = NULL,
+		    payment_failure_count = 0,
+		    stripe_status = 'active',
+		    updated_at = NOW()
+		WHERE id = $1`, tenantID)
+	return err
+}
+
+// BillingStatus represents the billing state for a tenant
+type BillingStatus struct {
+	Status              string     `json:"status"` // free, trialing, active, grace_period, past_due, canceled
+	Plan                string     `json:"plan"`
+	StripeStatus        *string    `json:"stripe_status,omitempty"`
+	TrialEndsAt         *time.Time `json:"trial_ends_at,omitempty"`
+	TrialDaysRemaining  *int       `json:"trial_days_remaining,omitempty"`
+	GracePeriodEndsAt   *time.Time `json:"grace_period_ends_at,omitempty"`
+	PaymentFailureCount int        `json:"payment_failure_count"`
+	CurrentPeriodEnd    *time.Time `json:"current_period_end,omitempty"`
+}
+
+func (s *store) getBillingStatus(ctx context.Context, tenantID uuid.UUID) (*BillingStatus, error) {
+	var bs BillingStatus
+	var trialEndsAt, gracePeriodEndsAt, currentPeriodEnd sql.NullTime
+
+	err := s.pool.QueryRow(ctx, `
+		SELECT plan, stripe_status, trial_ends_at, grace_period_ends_at,
+		       COALESCE(payment_failure_count, 0), current_period_end
+		FROM tenants WHERE id = $1`, tenantID).Scan(
+		&bs.Plan, &bs.StripeStatus, &trialEndsAt, &gracePeriodEndsAt,
+		&bs.PaymentFailureCount, &currentPeriodEnd)
+	if err != nil {
+		return nil, err
+	}
+
+	if trialEndsAt.Valid {
+		bs.TrialEndsAt = &trialEndsAt.Time
+	}
+	if gracePeriodEndsAt.Valid {
+		bs.GracePeriodEndsAt = &gracePeriodEndsAt.Time
+	}
+	if currentPeriodEnd.Valid {
+		bs.CurrentPeriodEnd = &currentPeriodEnd.Time
+	}
+
+	// Compute derived fields
+	bs.Status = computeBillingStatus(bs)
+	if bs.TrialEndsAt != nil && bs.TrialEndsAt.After(time.Now()) {
+		days := int(time.Until(*bs.TrialEndsAt).Hours() / 24)
+		bs.TrialDaysRemaining = &days
+	}
+
+	return &bs, nil
+}
+
+func computeBillingStatus(bs BillingStatus) string {
+	now := time.Now()
+
+	// Check grace period first
+	if bs.GracePeriodEndsAt != nil {
+		if bs.GracePeriodEndsAt.After(now) {
+			return "grace_period"
+		}
+		// Grace period expired - should be downgraded
+		return "expired"
+	}
+
+	// Check trial status
+	if bs.TrialEndsAt != nil && bs.TrialEndsAt.After(now) {
+		return "trialing"
+	}
+
+	// Map Stripe status
+	if bs.StripeStatus != nil {
+		switch *bs.StripeStatus {
+		case "active":
+			return "active"
+		case "past_due":
+			return "past_due"
+		case "canceled", "unpaid":
+			return "canceled"
+		case "trialing":
+			return "trialing"
+		}
+	}
+
+	// Default to free tier
+	return "free"
 }
