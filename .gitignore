@@ -51,6 +51,10 @@ simple_format
 .eslintcache
 .nyc_output
 
+# Firebase DataConnect generated files
+**/dataconnect-generated/
+**/dataconnect-admin-generated/
+
 # Logs
 *.log
 logs/
