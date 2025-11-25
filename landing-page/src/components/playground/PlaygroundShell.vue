@@ -233,7 +233,7 @@ async function checkApiHealth() {
   try {
     const controller = new AbortController()
     const timeoutId = window.setTimeout(() => controller.abort(), 5000)
-    // Health check is at /api/v1/healthz (proxied to backend /healthz)
+    // Health check endpoint - try the Firebase Function healthCheck first
     const res = await fetch(`${apiBase}/v1/healthz`, {
       method: 'GET',
       signal: controller.signal,
@@ -242,13 +242,15 @@ async function checkApiHealth() {
     lastHealthCheck.value = new Date()
     if (res.ok) {
       const data = await res.json()
-      if (data.success === true || data.ok === true) {
+      // Accept either success: true or status: "healthy"
+      if (data.success === true || data.ok === true || data.status === 'healthy') {
         apiStatus.value = 'connected'
         return
       }
     }
     apiStatus.value = 'disconnected'
-  } catch {
+  } catch (err) {
+    console.warn('Health check failed:', err)
     apiStatus.value = 'disconnected'
   }
 }

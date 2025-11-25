@@ -1,0 +1,109 @@
+# Dependabot configuration for automated dependency updates
+# https://docs.github.com/en/code-security/dependabot/dependabot-version-updates
+
+version: 2
+updates:
+  # Go modules (collector-processor, cmd/*)
+  - package-ecosystem: "gomod"
+    directory: "/collector-processor"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "go"
+    commit-message:
+      prefix: "deps(go):"
+
+  # Rust (cbad-core)
+  - package-ecosystem: "cargo"
+    directory: "/cbad-core"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "rust"
+    commit-message:
+      prefix: "deps(rust):"
+
+  # Root package.json
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "npm"
+    commit-message:
+      prefix: "deps(npm):"
+
+  # Landing Page (Vue 3 + Firebase)
+  - package-ecosystem: "npm"
+    directory: "/landing-page"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "npm"
+      - "landing-page"
+    commit-message:
+      prefix: "deps(landing):"
+
+  # Firebase Functions
+  - package-ecosystem: "npm"
+    directory: "/functions"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "npm"
+      - "functions"
+    commit-message:
+      prefix: "deps(functions):"
+
+  # VS Code Extension
+  - package-ecosystem: "npm"
+    directory: "/extensions/vscode-driftlock"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "npm"
+      - "vscode-extension"
+    commit-message:
+      prefix: "deps(vscode):"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "deps(actions):"
+
+  # Docker images (when Dependabot supports Dockerfiles)
+  - package-ecosystem: "docker"
+    directory: "/collector-processor/cmd/driftlock-http"
+    schedule:
+      interval: "monthly"
+    labels:
+      - "dependencies"
+      - "docker"
+    commit-message:
+      prefix: "deps(docker):"

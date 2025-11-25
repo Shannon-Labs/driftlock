@@ -1,20 +1,8 @@
-# 🎯 Next Steps for Driftlock SaaS
+# Next Steps
 
-**Status:** Launch Ready. Documentation Cleaned Up.
+> **🚀 New!** A comprehensive SaaS deployment plan is available at [docs/deployment/FINAL_SAAS_PLAN.md](docs/deployment/FINAL_SAAS_PLAN.md).
 
----
-
-## ✅ Completed Actions
-
-1. **Landing Page Redesign**: "Brutalist Academic" aesthetic deployed (Vue + Tailwind).
-2. **Infrastructure**: Cloud Run, Firebase Auth, Cloud SQL fully configured.
-3. **Documentation Refactor**:
-   - Cleaned up root directory.
-   - Organized into `docs/architecture`, `docs/deployment`, `docs/launch`, `docs/compliance`.
-   - Archived old phases and reports to `.archive/`.
-   - Synced docs to frontend for live viewing.
-
-## 🚀 Immediate Next Steps
+## Immediate Priorities
 
 1. **Verify Docs Links**: Check the live site `driftlock.web.app/docs` to ensure sidebar links work.
 2. **User Onboarding**: Test the signup flow on the new landing page.

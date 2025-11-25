@@ -14,8 +14,13 @@ fn main() {
     println!("=====================================");
     
     // Step 1: Create a compression adapter (using OpenZL if available, otherwise zstd)
+    #[cfg(feature = "openzl")]
     let adapter = create_adapter(CompressionAlgorithm::OpenZL)
         .or_else(|_| create_adapter(CompressionAlgorithm::Zstd))
+        .expect("Failed to create compression adapter");
+
+    #[cfg(not(feature = "openzl"))]
+    let adapter = create_adapter(CompressionAlgorithm::Zstd)
         .expect("Failed to create compression adapter");
     
     println!("✅ Compression adapter created: {}", adapter.name());

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"strings"
 	"time"
 
@@ -24,6 +25,7 @@ var (
 	scanStdin      bool
 	scanShowAll    bool
 	scanMinLineLen int
+	scanAudio      bool
 )
 
 var scanCmd = &cobra.Command{
@@ -35,8 +37,8 @@ Examples:
   # Pipe journalctl output into the analyzer
   journalctl -u api.service | driftlock scan --format raw --threshold 0.4
 
-  # Follow a file and emit NDJSON anomalies
-  driftlock scan /var/log/app.log --follow --output ndjson
+  # Follow a file and emit NDJSON anomalies with audio alerts
+  driftlock scan /var/log/app.log --follow --output ndjson --audio
 `,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runScan,
@@ -52,6 +54,7 @@ func init() {
 	scanCmd.Flags().BoolVar(&scanStdin, "stdin", false, "Force reading from STDIN even if a file path is provided")
 	scanCmd.Flags().BoolVar(&scanShowAll, "show-all", false, "Emit every line instead of anomalies only")
 	scanCmd.Flags().IntVar(&scanMinLineLen, "min-line-length", 12, "Minimum line length required before evaluating anomalies")
+	scanCmd.Flags().BoolVar(&scanAudio, "audio", false, "Play a system sound when an anomaly is detected (macOS only)")
 	rootCmd.AddCommand(scanCmd)
 }
 
@@ -101,7 +104,7 @@ func runScan(cmd *cobra.Command, args []string) error {
 	}
 	defer analyzer.Close()
 
-	emitter := newResultEmitter(scanOutput, scanShowAll)
+	emitter := newResultEmitter(scanOutput, scanShowAll, scanAudio)
 	var handler func(string) error
 	switch format {
 	case "json":
@@ -171,22 +174,28 @@ func streamLines(r io.Reader, handler func(string) error, follow bool) error {
 }
 
 type resultEmitter struct {
-	format  string
-	showAll bool
+	format    string
+	showAll   bool
+	playAudio bool
 }
 
-func newResultEmitter(format string, showAll bool) resultEmitter {
+func newResultEmitter(format string, showAll bool, playAudio bool) resultEmitter {
 	format = strings.ToLower(format)
 	if format != "pretty" {
 		format = "ndjson"
 	}
-	return resultEmitter{format: format, showAll: showAll}
+	return resultEmitter{format: format, showAll: showAll, playAudio: playAudio}
 }
 
 func (re resultEmitter) Emit(res entropywindow.Result) error {
 	if !res.IsAnomaly && !re.showAll {
 		return nil
 	}
+
+	if res.IsAnomaly && re.playAudio {
+		go playAlert()
+	}
+
 	switch re.format {
 	case "pretty":
 		line := res.Line
@@ -207,4 +216,11 @@ func (re resultEmitter) Emit(res entropywindow.Result) error {
 		fmt.Println(string(b))
 	}
 	return nil
+}
+
+func playAlert() {
+	// Simple fire-and-forget audio alert for macOS
+	// Uses the system "Ping" sound or similar
+	cmd := exec.Command("afplay", "/System/Library/Sounds/Ping.aiff")
+	_ = cmd.Run()
 }

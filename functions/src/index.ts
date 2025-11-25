@@ -4,13 +4,12 @@
  * Updated: Force redeploy for invoker config (attempt 3)
  */
 
-import { setGlobalOptions } from "firebase-functions";
-import { onRequest } from "firebase-functions/v2/https";
-import { logger } from "firebase-functions";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { SecretManagerServiceClient } from "@google-cloud/secret-manager";
+import {setGlobalOptions, logger} from "firebase-functions";
+import {onRequest} from "firebase-functions/v2/https";
+import {GoogleGenerativeAI} from "@google/generative-ai";
+import {SecretManagerServiceClient} from "@google-cloud/secret-manager";
 
-type InvokerConfig = "public" | "private" | string | string[];
+// type InvokerConfig = "public" | "private" | string | string[];
 
 interface ProjectInfo {
   projectId?: string;
@@ -18,15 +17,16 @@ interface ProjectInfo {
 }
 
 const projectInfo = resolveProjectInfo();
-const invokerConfig = resolveInvokers(projectInfo);
+// const invokerConfig = resolveInvokers(projectInfo);
 
 // Set global options for cost control
-setGlobalOptions({ maxInstances: 10, invoker: invokerConfig });
-logger.info("Configured function invokers", {
-  invokerConfig,
+setGlobalOptions({maxInstances: 10});
+logger.info("Configured function invokers (Managed manually)", {
+  // invokerConfig,
   projectInfo,
 });
 
+/*
 function parseInvokerList(value?: string): string[] {
   if (!value) return [];
   return value
@@ -34,6 +34,7 @@ function parseInvokerList(value?: string): string[] {
     .map((part) => part.trim())
     .filter((part) => part.length > 0);
 }
+*/
 
 function resolveProjectInfo(): ProjectInfo {
   let firebaseConfig: any;
@@ -57,6 +58,7 @@ function resolveProjectInfo(): ProjectInfo {
   };
 }
 
+/*
 function resolveInvokers(info: ProjectInfo): InvokerConfig {
   const explicit = [
     ...parseInvokerList(process.env.FUNCTIONS_INVOKERS),
@@ -77,9 +79,10 @@ function resolveInvokers(info: ProjectInfo): InvokerConfig {
     derived.add(`${info.projectNumber}-compute@developer.gserviceaccount.com`);
   }
 
-  if (info.projectId) {
-    derived.add(`${info.projectId}@appspot.gserviceaccount.com`);
-  }
+  // Removed non-existent appspot service account
+  // if (info.projectId) {
+  //   derived.add(`${info.projectId}@appspot.gserviceaccount.com`);
+  // }
 
   const invokers = Array.from(derived).filter(Boolean);
   if (invokers.length === 0) {
@@ -88,6 +91,7 @@ function resolveInvokers(info: ProjectInfo): InvokerConfig {
 
   return invokers;
 }
+*/
 
 // Initialize Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
@@ -96,27 +100,27 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 const CLOUD_RUN_API = process.env.CLOUD_RUN_API_URL || "https://driftlock-api-o6kjgrsowq-uc.a.run.app";
 
 // Proxy signup requests to Cloud Run backend
-export const signup = onRequest({ cors: true }, async (request, response) => {
-  logger.info("Signup request received", { structuredData: true });
+export const signup = onRequest({cors: true}, async (request, response) => {
+  logger.info("Signup request received", {structuredData: true});
 
   if (request.method !== "POST") {
-    response.status(405).json({ error: "Method not allowed" });
+    response.status(405).json({error: "Method not allowed"});
     return;
   }
 
   try {
-    const { email, company_name } = request.body;
+    const {email, company_name} = request.body;
 
     // Forward to Cloud Run backend
     const backendResponse = await fetch(`${CLOUD_RUN_API}/v1/onboard/signup`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         email,
         company_name,
-        signup_source: 'firebase_frontend'
+        // signup_source: 'firebase_frontend' // Backend does not support this field
       }),
     });
 
@@ -127,27 +131,28 @@ export const signup = onRequest({ cors: true }, async (request, response) => {
     } else {
       response.status(backendResponse.status).json(result);
     }
-
   } catch (error) {
     logger.error("Signup error", error);
-    response.status(500).json({ error: "Signup failed" });
+    response.status(500).json({error: "Signup failed"});
   }
 });
 
+export * from "./genkit";
+
 // Enhanced anomaly analysis with Gemini
-export const analyzeAnomalies = onRequest({ cors: true }, async (request, response) => {
-  logger.info("Anomaly analysis request", { structuredData: true });
+export const analyzeAnomalies = onRequest({cors: true}, async (request, response) => {
+  logger.info("Anomaly analysis request", {structuredData: true});
 
   if (request.method !== "POST") {
-    response.status(405).json({ error: "Method not allowed" });
+    response.status(405).json({error: "Method not allowed"});
     return;
   }
 
   try {
-    const { anomalies, query, api_key } = request.body;
+    const {anomalies, query, api_key} = request.body;
 
     if (!anomalies || !Array.isArray(anomalies)) {
-      response.status(400).json({ error: "Invalid anomalies data" });
+      response.status(400).json({error: "Invalid anomalies data"});
       return;
     }
 
@@ -155,15 +160,15 @@ export const analyzeAnomalies = onRequest({ cors: true }, async (request, respon
     if (api_key) {
       try {
         const authResponse = await fetch(`${CLOUD_RUN_API}/v1/anomalies`, {
-          method: 'GET',
+          method: "GET",
           headers: {
-            'Authorization': `Bearer ${api_key}`,
-            'Content-Type': 'application/json',
+            "Authorization": `Bearer ${api_key}`,
+            "Content-Type": "application/json",
           },
         });
 
         if (!authResponse.ok) {
-          response.status(401).json({ error: "Invalid API key" });
+          response.status(401).json({error: "Invalid API key"});
           return;
         }
       } catch (authError) {
@@ -171,19 +176,19 @@ export const analyzeAnomalies = onRequest({ cors: true }, async (request, respon
       }
     }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({model: "gemini-pro"});
 
     const prompt = `
       Analyze these anomalies detected by Driftlock's compression-based system:
       
       ${anomalies.map((anomaly: any) => `
       - ID: ${anomaly.id}
-      - NCD Score: ${anomaly.ncd_score || 'N/A'} 
-      - P-value: ${anomaly.p_value || 'N/A'}
-      - Explanation: ${anomaly.explanation || 'No explanation available'}
-      - Data Type: ${anomaly.stream_type || 'unknown'}
-      - Detected: ${anomaly.detected_at || 'recent'}
-      `).join('\n')}
+      - NCD Score: ${anomaly.ncd_score || "N/A"} 
+      - P-value: ${anomaly.p_value || "N/A"}
+      - Explanation: ${anomaly.explanation || "No explanation available"}
+      - Data Type: ${anomaly.stream_type || "unknown"}
+      - Detected: ${anomaly.detected_at || "recent"}
+      `).join("\n")}
       
       User Query: ${query || "Provide insights about these anomalies"}
       
@@ -205,40 +210,39 @@ export const analyzeAnomalies = onRequest({ cors: true }, async (request, respon
       analysis,
       processed_anomalies: anomalies.length,
       timestamp: new Date().toISOString(),
-      confidence: "high"
+      confidence: "high",
     });
-
   } catch (error) {
     logger.error("Error analyzing anomalies", error);
-    response.status(500).json({ error: "Analysis failed" });
+    response.status(500).json({error: "Analysis failed"});
   }
 });
 
 // Generate compliance reports
-export const generateComplianceReport = onRequest({ cors: true }, async (request, response) => {
-  logger.info("Compliance report generation", { structuredData: true });
+export const generateComplianceReport = onRequest({cors: true}, async (request, response) => {
+  logger.info("Compliance report generation", {structuredData: true});
 
   if (request.method !== "POST") {
-    response.status(405).json({ error: "Method not allowed" });
+    response.status(405).json({error: "Method not allowed"});
     return;
   }
 
   try {
-    const { anomalies, regulation, tenant_info, api_key } = request.body;
+    const {anomalies, regulation, tenant_info, api_key} = request.body;
 
     // Verify API key if provided
     if (api_key) {
       try {
         const authResponse = await fetch(`${CLOUD_RUN_API}/v1/anomalies`, {
-          method: 'GET',
+          method: "GET",
           headers: {
-            'Authorization': `Bearer ${api_key}`,
-            'Content-Type': 'application/json',
+            "Authorization": `Bearer ${api_key}`,
+            "Content-Type": "application/json",
           },
         });
 
         if (!authResponse.ok) {
-          response.status(401).json({ error: "Invalid API key" });
+          response.status(401).json({error: "Invalid API key"});
           return;
         }
       } catch (authError) {
@@ -246,12 +250,12 @@ export const generateComplianceReport = onRequest({ cors: true }, async (request
       }
     }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({model: "gemini-pro"});
 
     const prompt = `
-      Generate a ${regulation || 'DORA'} compliance report for these anomalies:
+      Generate a ${regulation || "DORA"} compliance report for these anomalies:
       
-      Company: ${tenant_info?.company_name || 'Customer'}
+      Company: ${tenant_info?.company_name || "Customer"}
       Report Date: ${new Date().toLocaleDateString()}
       
       Detected Anomalies:
@@ -261,13 +265,13 @@ export const generateComplianceReport = onRequest({ cors: true }, async (request
       - NCD Score: ${anomaly.ncd_score} (Mathematical Evidence)
       - Statistical Significance: P-value ${anomaly.p_value}
       - Technical Explanation: ${anomaly.explanation}
-      - Risk Level: ${anomaly.ncd_score > 0.7 ? 'HIGH' : anomaly.ncd_score > 0.4 ? 'MEDIUM' : 'LOW'}
-      `).join('\n')}
+      - Risk Level: ${anomaly.ncd_score > 0.7 ? "HIGH" : anomaly.ncd_score > 0.4 ? "MEDIUM" : "LOW"}
+      `).join("\n")}
       
       Generate a formal compliance report including:
       1. Executive Summary with business impact
       2. Technical Analysis with mathematical evidence (NCD, p-values)
-      3. Risk Assessment per ${regulation || 'DORA'} requirements  
+      3. Risk Assessment per ${regulation || "DORA"} requirements  
       4. Audit Trail and Evidence Documentation
       5. Recommended Immediate Actions
       6. Long-term Monitoring Recommendations
@@ -282,57 +286,56 @@ export const generateComplianceReport = onRequest({ cors: true }, async (request
     response.json({
       success: true,
       report,
-      regulation: regulation || 'DORA',
+      regulation: regulation || "DORA",
       anomaly_count: anomalies.length,
       generated_at: new Date().toISOString(),
-      company: tenant_info?.company_name || 'Customer'
+      company: tenant_info?.company_name || "Customer",
     });
-
   } catch (error) {
     logger.error("Error generating compliance report", error);
-    response.status(500).json({ error: "Report generation failed" });
+    response.status(500).json({error: "Report generation failed"});
   }
 });
 
 // Proxy API requests to Cloud Run backend
-export const apiProxy = onRequest({ cors: true }, async (request, response) => {
-  logger.info("API proxy request", { path: request.path, method: request.method });
+export const apiProxy = onRequest({cors: true}, async (request, response) => {
+  logger.info("API proxy request", {path: request.path, method: request.method});
 
   try {
     let apiPath = request.path;
-    
+
     // Handle specific rewrites first
-    if (request.path === '/webhooks/stripe') {
-      apiPath = '/v1/billing/webhook';
-    } else if (request.path === '/api/v1/healthz' || request.path === '/healthz') {
+    if (request.path === "/webhooks/stripe") {
+      apiPath = "/v1/billing/webhook";
+    } else if (request.path === "/api/v1/healthz" || request.path === "/healthz") {
       // Health check should go directly to backend /healthz (no auth required)
-      apiPath = '/healthz';
-    } else if (request.path.startsWith('/api/proxy')) {
-      apiPath = request.path.replace('/api/proxy', '');
-    } else if (request.path.startsWith('/api/v1')) {
-      apiPath = request.path.replace('/api', '');
+      apiPath = "/healthz";
+    } else if (request.path.startsWith("/api/proxy")) {
+      apiPath = request.path.replace("/api/proxy", "");
+    } else if (request.path.startsWith("/api/v1")) {
+      apiPath = request.path.replace("/api", "");
     }
-    
+
     const backendUrl = `${CLOUD_RUN_API}${apiPath}`;
-    
+
     // Determine headers to forward
     const headers: HeadersInit = {
-        'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     };
-    
+
     // Forward Authorization header
     if (request.headers.authorization) {
-        headers['Authorization'] = request.headers.authorization;
+      headers["Authorization"] = request.headers.authorization;
     }
-    
+
     // Forward Stripe headers for webhooks
-    if (request.headers['stripe-signature']) {
-        headers['Stripe-Signature'] = request.headers['stripe-signature'] as string;
+    if (request.headers["stripe-signature"]) {
+      headers["Stripe-Signature"] = request.headers["stripe-signature"] as string;
     }
-    
+
     // Forward X-Api-Key if present
-    if (request.headers['x-api-key']) {
-        headers['X-Api-Key'] = request.headers['x-api-key'] as string;
+    if (request.headers["x-api-key"]) {
+      headers["X-Api-Key"] = request.headers["x-api-key"] as string;
     }
 
     // For webhooks, we need raw body sometimes, but fetch takes body as string/buffer
@@ -344,14 +347,14 @@ export const apiProxy = onRequest({ cors: true }, async (request, response) => {
     // However, passing JSON.stringify(request.body) might break signature verification
     // if the parsing/stringifying changes the byte order.
     // Since we are acting as a proxy, we should ideally forward the raw bytes.
-    
+
     let body: any;
-    if (request.method !== 'GET' && request.method !== 'HEAD') {
-        if (request.path === '/webhooks/stripe' && (request as any).rawBody) {
-             body = (request as any).rawBody;
-        } else {
-             body = JSON.stringify(request.body);
-        }
+    if (request.method !== "GET" && request.method !== "HEAD") {
+      if (request.path === "/webhooks/stripe" && (request as any).rawBody) {
+        body = (request as any).rawBody;
+      } else {
+        body = JSON.stringify(request.body);
+      }
     }
 
     const backendResponse = await fetch(backendUrl, {
@@ -363,21 +366,20 @@ export const apiProxy = onRequest({ cors: true }, async (request, response) => {
     // Check content type of response
     const contentType = backendResponse.headers.get("content-type");
     if (contentType && contentType.includes("application/json")) {
-        const result = await backendResponse.json();
-        response.status(backendResponse.status).json(result);
+      const result = await backendResponse.json();
+      response.status(backendResponse.status).json(result);
     } else {
-        const text = await backendResponse.text();
-        response.status(backendResponse.status).send(text);
+      const text = await backendResponse.text();
+      response.status(backendResponse.status).send(text);
     }
-
   } catch (error) {
     logger.error("API proxy error", error);
-    response.status(500).json({ error: "Backend service unavailable" });
+    response.status(500).json({error: "Backend service unavailable"});
   }
 });
 
 // Health check for the entire stack
-export const healthCheck = onRequest({ cors: true }, async (request, response) => {
+export const healthCheck = onRequest({cors: true}, async (request, response) => {
   const health: { [key: string]: any } = {
     success: true,
     status: "healthy",
@@ -389,68 +391,88 @@ export const healthCheck = onRequest({ cors: true }, async (request, response) =
       "anomaly-analysis",
       "compliance-reporting",
       "gemini-integration",
-      "cloud-run-proxy"
+      "cloud-run-proxy",
     ],
-    backend: { status: "unknown" }
+    backend: {status: "unknown"},
   };
 
   // Check Cloud Run backend health
   try {
-    const backendResponse = await fetch(`${CLOUD_RUN_API}/healthz`, {
-      method: 'GET',
-    });
+    const candidates = [
+      `${CLOUD_RUN_API}/healthz`,
+      `${CLOUD_RUN_API}/v1/healthz`,
+    ];
 
-    if (backendResponse.ok) {
+    let backendResponse: any = null;
+
+    for (const url of candidates) {
+      const attempt = await fetch(url, {method: "GET"});
+      if (attempt.ok) {
+        backendResponse = attempt;
+        health.backend.checked = url;
+        break;
+      }
+
+      // Keep last response for context if all fail
+      backendResponse = attempt;
+    }
+
+    if (backendResponse && backendResponse.ok) {
       const backendHealth = await backendResponse.json();
       health.backend = {
         status: "healthy",
         database: backendHealth.database || "unknown",
-        license: backendHealth.license ? "valid" : "unknown"
+        license: backendHealth.license ? "valid" : "unknown",
       };
       // Ensure success is true if backend is healthy
       health.success = backendHealth.success !== false;
     } else {
-      health.backend = { status: "unhealthy" };
+      const code = backendResponse?.status;
+      health.backend = {status: code ? `unhealthy (${code})` : "unhealthy"};
       health.success = false;
     }
   } catch (error) {
-    health.backend = { status: "unreachable" };
+    health.backend = {status: "unreachable"};
     health.success = false;
   }
 
   response.json(health);
 });
 
-export const getFirebaseConfig = onRequest({ cors: true }, async (request, response) => {
-  logger.info("Firebase config request received", { structuredData: true });
+export const getFirebaseConfig = onRequest({cors: true}, async (request, response) => {
+  logger.info("Firebase config request received", {structuredData: true});
 
   try {
     const secretManagerClient = new SecretManagerServiceClient();
     const secretName = "projects/driftlock/secrets/VITE_FIREBASE_API_KEY/versions/latest";
 
-    const [version] = await secretManagerClient.accessSecretVersion({
-      name: secretName,
-    });
-
-    const apiKey = version.payload?.data?.toString();
+    let apiKey: string | undefined = process.env.VITE_FIREBASE_API_KEY;
 
     if (!apiKey) {
-      throw new Error("API key not found in Secret Manager.");
+      const [version] = await secretManagerClient.accessSecretVersion({
+        name: secretName,
+      });
+
+      apiKey = version.payload?.data?.toString();
+    }
+
+    if (!apiKey) {
+      throw new Error("API key not found in Secret Manager or env.");
     }
 
     const firebaseConfig = {
       apiKey: apiKey,
-      authDomain: "driftlock.firebaseapp.com",
-      projectId: "driftlock",
-      storageBucket: "driftlock.appspot.com",
-      messagingSenderId: "131489574303",
-      appId: "1:131489574303:web:e83e3e433912d05a8d61aa",
-      measurementId: "G-CXBMVS3G8H",
+      authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN || "driftlock.firebaseapp.com",
+      projectId: process.env.VITE_FIREBASE_PROJECT_ID || "driftlock",
+      storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET || "driftlock.appspot.com",
+      messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "131489574303",
+      appId: process.env.VITE_FIREBASE_APP_ID || "1:131489574303:web:e83e3e433912d05a8d61aa",
+      measurementId: process.env.VITE_FIREBASE_MEASUREMENT_ID || "G-CXBMVS3G8H",
     };
 
     response.json(firebaseConfig);
   } catch (error) {
     logger.error("Error getting Firebase config", error);
-    response.status(500).json({ error: "Could not retrieve Firebase configuration." });
+    response.status(500).json({error: "Could not retrieve Firebase configuration."});
   }
 });

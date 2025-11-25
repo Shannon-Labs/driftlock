@@ -57,7 +57,7 @@
                  <dl class="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
                     <div class="sm:col-span-1">
                       <dt class="text-xs font-bold uppercase tracking-widest text-gray-500">Current Plan</dt>
-                      <dd class="mt-1 text-2xl font-sans font-black text-black uppercase">{{ usage.plan || 'Developer' }}</dd>
+                      <dd class="mt-1 text-2xl font-sans font-black text-black uppercase">{{ usage.plan || 'Free' }}</dd>
                     </div>
                     <div class="sm:col-span-1">
                       <dt class="text-xs font-bold uppercase tracking-widest text-gray-500">Next Reset</dt>

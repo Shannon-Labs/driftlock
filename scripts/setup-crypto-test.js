@@ -9,7 +9,7 @@
  * 1. Ensures .env has an API key (Cloud Run job path; safe with Cloud SQL socket URL)
  * 2. Loads environment variables
  * 3. Performs a quick API smoke test
- * 4. Starts the 4-hour Binance stream when ready
+ * 4. Starts the 4-hour crypto stream when ready (CoinGecko default; Binance optional)
  * 5. Provides monitoring commands
  */
 
@@ -190,8 +190,9 @@ async function smokeTest(apiUrl, apiKey) {
 function startCryptoTest() {
   return new Promise((resolve, reject) => {
     const scriptPath = path.join(__dirname, 'start_crypto_test.sh');
-    
-    log('\n📊 Starting 4-hour Binance stream...', 'cyan');
+
+    log('\n📊 Starting 4-hour crypto stream...', 'cyan');
+    log('   Source: ' + (process.env.CRYPTO_SOURCE || 'coingecko') + ' (set CRYPTO_SOURCE=binance for WS)', 'cyan');
     log('   Logs will be saved to: logs/crypto-api-test-*.log', 'cyan');
     
     const child = spawn('bash', [scriptPath], {
@@ -264,7 +265,7 @@ async function main() {
   // Merge loaded env with process.env
   Object.assign(process.env, env);
   
-  const apiUrl = env.DRIFTLOCK_API_URL || process.env.DRIFTLOCK_API_URL || 'https://driftlock.web.app/api/v1';
+  const apiUrl = env.DRIFTLOCK_API_URL || process.env.DRIFTLOCK_API_URL || 'https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1';
   
   log(`   ✅ API Key: ${apiKey.substring(0, 20)}...`, 'green');
   log(`   ✅ API URL: ${apiUrl}`, 'green');
@@ -279,8 +280,8 @@ async function main() {
     log('   Continuing anyway...', 'yellow');
   }
   
-  // Step 4: Start the 4-hour Binance stream
-  logStep('4', 'Starting 4-hour Binance stream');
+  // Step 4: Start the 4-hour crypto stream
+  logStep('4', 'Starting 4-hour crypto stream');
   log('   (Press Ctrl+C to stop)', 'yellow');
   
   try {
@@ -304,3 +305,7 @@ main().catch((err) => {
   console.error(err);
   process.exit(1);
 });
+
+
+
+

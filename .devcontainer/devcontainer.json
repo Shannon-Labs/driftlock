@@ -1,0 +1,59 @@
+{
+  "name": "Driftlock Dev",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+  "features": {
+    "ghcr.io/devcontainers/features/go:1": {
+      "version": "1.24"
+    },
+    "ghcr.io/devcontainers/features/rust:1": {},
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "22"
+    },
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.11"
+    },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "postCreateCommand": "bash .devcontainer/post-create.sh && just setup",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "go.toolsManagement.autoUpdate": true,
+        "go.useLanguageServer": true,
+        "rust-analyzer.cargo.targetDir": "${containerWorkspaceFolder}/cbad-core/target",
+        "editor.formatOnSave": true,
+        "terminal.integrated.defaultProfile.linux": "zsh",
+        "files.trimTrailingWhitespace": true,
+        "files.insertFinalNewline": true
+      },
+      "extensions": [
+        "golang.go",
+        "rust-lang.rust-analyzer",
+        "ms-azuretools.vscode-docker",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "Vue.volar",
+        "GitHub.copilot",
+        "tamasfe.even-better-toml",
+        "serayuzgur.crates",
+        "skellock.just"
+      ]
+    }
+  },
+  "remoteUser": "vscode",
+  "containerEnv": {
+    "LD_LIBRARY_PATH": "${containerWorkspaceFolder}/cbad-core/target/release",
+    "CARGO_HOME": "/home/vscode/.cargo",
+    "GOPATH": "/home/vscode/go"
+  },
+  "mounts": [
+    "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached"
+  ],
+  "forwardPorts": [3000, 5173, 8080],
+  "portsAttributes": {
+    "3000": { "label": "Firebase Emulator" },
+    "5173": { "label": "Vite Dev Server" },
+    "8080": { "label": "API Server" }
+  }
+}

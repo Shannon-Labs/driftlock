@@ -6,38 +6,53 @@ let auth: Auth | null = null;
 let firebasePromise: Promise<void> | null = null;
 
 const initializeFirebase = async () => {
-  if (app) {
-    return;
+  if (app) return;
+
+  const buildConfigFromEnv = () => {
+    const envConfig = {
+      apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+      authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+      projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+      storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+      messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+      appId: import.meta.env.VITE_FIREBASE_APP_ID,
+      measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
+    }
+
+    const hasRequired = envConfig.apiKey && envConfig.authDomain && envConfig.projectId && envConfig.appId
+    return hasRequired ? envConfig : null
   }
+
+  let firebaseConfig: any = null
 
   try {
     // In production, the function is at the root. In dev, it's proxied by vite.
     const functionUrl = import.meta.env.PROD
       ? '/getFirebaseConfig' // Relative path for prod
-      : 'http://127.0.0.1:5001/driftlock/us-central1/getFirebaseConfig'; // Local emulator
+      : 'http://127.0.0.1:5001/driftlock/us-central1/getFirebaseConfig' // Local emulator
 
-    const response = await fetch(functionUrl);
+    const response = await fetch(functionUrl)
     if (!response.ok) {
-      throw new Error(`Failed to fetch Firebase config: ${response.statusText}`);
+      throw new Error(`Failed to fetch Firebase config: ${response.statusText}`)
     }
-    const firebaseConfig = await response.json();
+    firebaseConfig = await response.json()
 
-    // Validate fetched Firebase configuration
-    const isFirebaseConfigValid = firebaseConfig.apiKey &&
-                                  firebaseConfig.authDomain &&
-                                  firebaseConfig.projectId &&
-                                  firebaseConfig.appId;
-
-    if (!isFirebaseConfigValid) {
-      console.warn('Fetched Firebase configuration is incomplete.');
-      return;
+    const isValid = firebaseConfig?.apiKey && firebaseConfig?.authDomain && firebaseConfig?.projectId && firebaseConfig?.appId
+    if (!isValid) {
+      console.warn('Fetched Firebase configuration is incomplete; falling back to env config.')
+      firebaseConfig = buildConfigFromEnv()
     }
-
-    app = initializeApp(firebaseConfig);
-    auth = getAuth(app);
   } catch (error) {
-    console.error("Error initializing Firebase:", error);
+    console.error('Error initializing Firebase via function:', error)
+    firebaseConfig = buildConfigFromEnv()
   }
+
+  if (!firebaseConfig) {
+    throw new Error('Firebase configuration unavailable (function + env fallback failed).')
+  }
+
+  app = initializeApp(firebaseConfig)
+  auth = getAuth(app)
 };
 
 const getFirebaseAuth = async () => {
@@ -49,5 +64,4 @@ const getFirebaseAuth = async () => {
 };
 
 export { getFirebaseAuth };
-
 

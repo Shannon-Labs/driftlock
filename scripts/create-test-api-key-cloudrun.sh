@@ -29,6 +29,10 @@ echo ""
 
 # Create the job
 echo "📝 Creating Cloud Run Job..."
+TIMESTAMP=$(date +%s)
+TENANT_NAME="Crypto Test Runner ${TIMESTAMP}"
+TENANT_SLUG="crypto-test-${TIMESTAMP}"
+KEY_NAME="crypto-test-key-${TIMESTAMP}"
 gcloud run jobs create "$JOB_NAME" \
     --image="$IMAGE" \
     --region="$REGION" \
@@ -36,7 +40,7 @@ gcloud run jobs create "$JOB_NAME" \
     --set-secrets="DATABASE_URL=driftlock-db-url:latest" \
     --set-env-vars="DRIFTLOCK_DEV_MODE=true" \
     --command="/usr/local/bin/driftlock-http" \
-    --args="create-tenant,--name,Crypto Test Runner,--slug,crypto-test-runner,--plan,trial,--key-role,admin,--key-name,crypto-test-key,--json" \
+    --args="create-tenant,--name,${TENANT_NAME},--slug,${TENANT_SLUG},--plan,trial,--key-role,admin,--key-name,${KEY_NAME},--json" \
     --max-retries=1 \
     --task-timeout=60 \
     --memory=512Mi \
@@ -124,4 +128,3 @@ fi
 echo ""
 echo "🎉 Test API key created and saved to .env"
 echo ""
-

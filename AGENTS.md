@@ -8,6 +8,21 @@ These instructions are for **AI agents and automation** working in this reposito
 
 **IMPORTANT**: This repo has transformed from a public-facing demo to a **SaaS platform foundation**.
 
+### Agent-First Workflows (NEW)
+We have standardized workflows to help you navigate the repo. **ALWAYS** check these first:
+-   **Setup**: `.agent/workflows/setup.md`
+-   **Test**: `.agent/workflows/test.md`
+-   **Build**: `.agent/workflows/build.md`
+-   **Lint**: `.agent/workflows/lint.md`
+-   **Deploy**: `.agent/workflows/deploy.md`
+
+### Unified Command Runner
+We use `just` to standardize commands. Run `just --list` to see all available recipes.
+-   `just setup`: Install dependencies
+-   `just test`: Run all tests
+-   `just build`: Build all artifacts
+-   `just lint`: Lint all code
+
 ### Architecture Overview:
 - **Firebase Hosting** (`landing-page/`) - Professional customer-facing website
 - **Firebase Functions** (`functions/`) - API layer with AI integration 
@@ -22,9 +37,10 @@ These instructions are for **AI agents and automation** working in this reposito
 - `README.md` - Project overview
 
 ### Developer Tooling Inventory (November 2025 update):
+- **`Justfile`** – The single source of truth for running tasks.
 - **`cmd/driftlock-cli`** – `driftlock scan` streams NDJSON/STDIN through `pkg/entropywindow`; keep flags (`--format`, `--follow`, `--stdin`) stable.
 - **`pkg/entropywindow/`** – Shared Go analyzer for CLI + MCP. Never break its API without updating both callers.
-- **`extensions/vscode-driftlock/`** – VS Code Live Radar extension. Use `npm run lint`, `npm run compile`, and `npm run test` before publishing.
+- **`extensions/vscode-driftlock/`** – VS Code Live Radar extension. Use `just build-extension` and `just test-extension`.
 - **`cmd/driftlock-mcp/`** – Claude/Cursor MCP server with local entropy fallback. `detect_anomalies` tool must always accept raw strings.
 - **Landing page automation** – `scripts/deploy-landing.sh`, `scripts/verify-horizon-datasets.ts`, and Playwright specs under `landing-page/tests/` gate the Horizon Showcase.
 - **Live Soak Test** – `scripts/soak_runner.py` and `scripts/crypto_bridge.py` for long-running validation against live Crypto Volatility data (see `docs/launch/SOAK_TEST.md`).

@@ -1,6 +1,6 @@
 # OpenZL Integration Status
 
-_Last updated: 2025-01-27_
+_Last updated: 2025-11-24_
 
 **IMPORTANT: OpenZL is optional and experimental.** Driftlock works with generic compressors (zstd, lz4, gzip) by default, which are always available and sufficient for all demo and production use cases. OpenZL is a format-aware compression adapter (BSD licensed, available at https://github.com/facebook/openzl) that can provide better compression ratios but is **disabled by default** (`USE_OPENZL=false` in all demo scripts). The OpenZL path is strictly opt-in and requires building the submodule.
 
@@ -12,7 +12,33 @@ _Last updated: 2025-01-27_
 - Requests that specify `algo=openzl` automatically fall back to `zstd` when OpenZL isn't compiled in; the HTTP response includes `"fallback_from_algo": "openzl"` so operators can see the downgrade.
 - **All demo scripts use `USE_OPENZL=false`** - the default user experience does not require or use OpenZL.
 
-## How to Enable OpenZL Locally
+## Quick Start with `just` Commands (Recommended)
+
+The easiest way to work with OpenZL is using the standardized `just` commands:
+
+```bash
+# Check OpenZL status
+just openzl-status
+
+# Build OpenZL library (first time only)
+just build-openzl-lib
+
+# Build cbad-core with OpenZL
+just build-core-openzl
+
+# Test OpenZL integration (Rust + Go)
+just test-openzl
+
+# Build Docker image with OpenZL
+just docker-build-openzl
+
+# Clean OpenZL artifacts
+just clean-openzl
+```
+
+## Manual Build Steps (Alternative)
+
+If you prefer manual builds or need to customize the process:
 
 1. **Sync the OpenZL submodule** so nested dependencies (like the bundled zstd) are available:
    ```bash
