@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/sendgrid/sendgrid-go"
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
@@ -115,6 +116,101 @@ If you didn't sign up for Driftlock, you can ignore this email.`, verifyLink)
 			log.Printf("ERROR: SendGrid API returned %d for verification email to %s: %s", response.StatusCode, toEmail, response.Body)
 		} else {
 			log.Printf("Sent verification email to %s", toEmail)
+		}
+	}()
+}
+
+func (s *emailService) sendTrialEndingEmail(toEmail, companyName string, daysRemaining int) {
+	if s == nil {
+		log.Printf("MOCK EMAIL: Trial ending for %s (%s) in %d days", toEmail, companyName, daysRemaining)
+		return
+	}
+
+	from := mail.NewEmail(s.fromName, s.fromAddress)
+	subject := fmt.Sprintf("Your Driftlock trial ends in %d days", daysRemaining)
+	to := mail.NewEmail(companyName, toEmail)
+
+	plainTextContent := fmt.Sprintf(`Hi %s,
+
+Your Driftlock trial ends in %d days. To continue using all features, please add a payment method.
+
+Upgrade now: https://driftlock.net/dashboard
+
+Thanks,
+The Driftlock Team`, companyName, daysRemaining)
+
+	htmlContent := fmt.Sprintf(`
+		<div style="font-family: sans-serif; color: #333;">
+			<h2>Your trial is ending soon</h2>
+			<p>Hi %s,</p>
+			<p>Your Driftlock trial ends in <strong>%d days</strong>. To continue enjoying all features, please add a payment method.</p>
+			<p>
+				<a href="https://driftlock.net/dashboard" style="background: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Upgrade Now</a>
+			</p>
+			<p>Thanks,<br>The Driftlock Team</p>
+		</div>
+	`, companyName, daysRemaining)
+
+	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
+
+	go func() {
+		response, err := s.client.Send(message)
+		if err != nil {
+			log.Printf("ERROR: Failed to send trial ending email to %s: %v", toEmail, err)
+		} else if response.StatusCode >= 400 {
+			log.Printf("ERROR: SendGrid returned %d for trial ending email to %s", response.StatusCode, toEmail)
+		} else {
+			log.Printf("Sent trial ending email to %s", toEmail)
+		}
+	}()
+}
+
+func (s *emailService) sendPaymentFailedEmail(toEmail, companyName string, gracePeriodEnd time.Time) {
+	if s == nil {
+		log.Printf("MOCK EMAIL: Payment failed for %s (%s), grace period until %s", toEmail, companyName, gracePeriodEnd)
+		return
+	}
+
+	from := mail.NewEmail(s.fromName, s.fromAddress)
+	subject := "Action required: Payment failed for your Driftlock subscription"
+	to := mail.NewEmail(companyName, toEmail)
+
+	formattedDate := gracePeriodEnd.Format("January 2, 2006")
+
+	plainTextContent := fmt.Sprintf(`Hi %s,
+
+We were unable to process your payment. Please update your payment method to avoid service interruption.
+
+Your service will remain active until %s.
+
+Update payment: https://driftlock.net/dashboard
+
+Thanks,
+The Driftlock Team`, companyName, formattedDate)
+
+	htmlContent := fmt.Sprintf(`
+		<div style="font-family: sans-serif; color: #333;">
+			<h2 style="color: #dc2626;">Payment Failed</h2>
+			<p>Hi %s,</p>
+			<p>We were unable to process your payment. Please update your payment method to avoid service interruption.</p>
+			<p>Your service will remain active until <strong>%s</strong>.</p>
+			<p>
+				<a href="https://driftlock.net/dashboard" style="background: #dc2626; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Update Payment Method</a>
+			</p>
+			<p>Thanks,<br>The Driftlock Team</p>
+		</div>
+	`, companyName, formattedDate)
+
+	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
+
+	go func() {
+		response, err := s.client.Send(message)
+		if err != nil {
+			log.Printf("ERROR: Failed to send payment failed email to %s: %v", toEmail, err)
+		} else if response.StatusCode >= 400 {
+			log.Printf("ERROR: SendGrid returned %d for payment failed email to %s", response.StatusCode, toEmail)
+		} else {
+			log.Printf("Sent payment failed email to %s", toEmail)
 		}
 	}()
 }
