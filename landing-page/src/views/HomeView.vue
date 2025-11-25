@@ -168,7 +168,13 @@
                             <li>[x] Email alerts with context</li>
                             <li>[x] 30-day retention</li>
                         </ul>
-                        <button type="button" onclick="window.location.href='#signup'" class="brutalist-button w-full text-center mt-8">Get Radar</button>
+                        <button type="button"
+                                @click="handleCheckout('radar')"
+                                :disabled="checkoutLoading === 'radar'"
+                                class="brutalist-button w-full text-center mt-8"
+                                :class="{ 'opacity-70 cursor-wait': checkoutLoading === 'radar' }">
+                            {{ checkoutLoading === 'radar' ? 'Processing...' : 'Get Radar' }}
+                        </button>
                     </div>
 
                     <!-- Pro -->
@@ -188,7 +194,13 @@
                             <li>[x] DORA/NIS2 Evidence</li>
                             <li>[x] Priority Support</li>
                         </ul>
-                        <button type="button" onclick="window.location.href='#signup'" class="brutalist-button-primary w-full text-center mt-8 border-white hover:bg-white hover:text-black">Engage Lock</button>
+                        <button type="button"
+                                @click="handleCheckout('lock')"
+                                :disabled="checkoutLoading === 'lock'"
+                                class="brutalist-button-primary w-full text-center mt-8 border-white hover:bg-white hover:text-black"
+                                :class="{ 'opacity-70 cursor-wait': checkoutLoading === 'lock' }">
+                            {{ checkoutLoading === 'lock' ? 'Processing...' : 'Engage Lock' }}
+                        </button>
                     </div>
 
                     <!-- Enterprise -->
@@ -290,6 +302,24 @@
                 </div>
              </div>
         </section>
+
+        <!-- Checkout Error Toast -->
+        <div v-if="checkoutError"
+             class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50
+                    bg-red-600 text-white px-6 py-4
+                    border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]
+                    flex items-center gap-3 max-w-md">
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span class="text-sm">{{ checkoutError }}</span>
+            <button @click="checkoutError = null" class="ml-2 text-red-200 hover:text-white">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
     </main>
 </template>
 
@@ -298,6 +328,11 @@ import { computed, reactive, ref, nextTick } from 'vue'
 import PlaygroundShell from '../components/playground/PlaygroundShell.vue'
 import SignupForm from '../components/cta/SignupForm.vue'
 import HorizonShowcase from '../components/sections/HorizonShowcase.vue'
+import { useAuthStore } from '../stores/auth'
+
+const authStore = useAuthStore()
+const checkoutLoading = ref<string | null>(null)
+const checkoutError = ref<string | null>(null)
 
 const playgroundRef = ref<InstanceType<typeof PlaygroundShell> | null>(null)
 const contactEndpoint = '/api/v1/contact'
@@ -356,6 +391,42 @@ const loadScenario = async (url: string) => {
     // I will need to access the SamplePicker inside or call onSample directly if I expose it
     if (playgroundRef.value?.loadSample) {
         await playgroundRef.value.loadSample(url)
+    }
+}
+
+// Handle pricing tier checkout
+const handleCheckout = async (plan: string) => {
+    checkoutError.value = null
+
+    // If not authenticated, scroll to signup
+    if (!authStore.isAuthenticated) {
+        const el = document.getElementById('signup')
+        el?.scrollIntoView({ behavior: 'smooth' })
+        return
+    }
+
+    // Authenticated: call checkout endpoint
+    checkoutLoading.value = plan
+    try {
+        const token = await authStore.getToken()
+        const res = await fetch('/api/v1/billing/checkout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ plan })
+        })
+        if (res.ok) {
+            const data = await res.json()
+            if (data.url) window.location.href = data.url
+        } else {
+            checkoutError.value = 'Unable to start checkout. Please try again.'
+        }
+    } catch (e) {
+        checkoutError.value = 'Network error. Please check your connection.'
+    } finally {
+        checkoutLoading.value = null
     }
 }
 

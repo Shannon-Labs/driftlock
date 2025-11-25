@@ -9,27 +9,35 @@ const navigation = [
   {
     title: 'Getting Started',
     items: [
-      { title: 'Quickstart', href: '/docs/deployment/DEPLOYMENT_QUICKSTART' },
-      { title: 'Core Concepts', href: '/docs/architecture/ALGORITHMS' },
-      { title: 'Authentication', href: '/docs/architecture/API' },
+      { title: 'Quickstart', href: '/docs/user-guide/getting-started/quickstart' },
+      { title: 'Core Concepts', href: '/docs/user-guide/getting-started/concepts' },
+      { title: 'Authentication', href: '/docs/user-guide/getting-started/authentication' },
+    ]
+  },
+  {
+    title: 'API Reference',
+    items: [
+      { title: 'POST /v1/detect', href: '/docs/user-guide/api/endpoints/detect' },
+      { title: 'POST /v1/demo/detect', href: '/docs/user-guide/api/endpoints/demo' },
+      { title: 'GET /v1/anomalies', href: '/docs/user-guide/api/endpoints/anomalies' },
+      { title: 'Error Codes', href: '/docs/user-guide/api/errors' },
+    ]
+  },
+  {
+    title: 'Examples',
+    items: [
+      { title: 'cURL', href: '/docs/user-guide/api/examples/curl-examples' },
+      { title: 'Python', href: '/docs/user-guide/api/examples/python-examples' },
     ]
   },
   {
     title: 'Compliance',
     items: [
       { title: 'DORA', href: '/docs/compliance/COMPLIANCE_DORA' },
-      { title: 'Runtime AI', href: '/docs/compliance/COMPLIANCE_RUNTIME_AI' },
-      { title: 'US Regulations', href: '/docs/compliance/COMPLIANCE_US' },
+      { title: 'NIS2', href: '/docs/compliance/COMPLIANCE_NIS2' },
+      { title: 'AI Act', href: '/docs/compliance/COMPLIANCE_RUNTIME_AI' },
     ]
   },
-  {
-    title: 'Architecture',
-    items: [
-      { title: 'Overview', href: '/docs/architecture/ARCHITECTURE' },
-      { title: 'Deployment', href: '/docs/deployment/DEPLOYMENT' },
-      { title: 'Kafka Setup', href: '/docs/deployment/KAFKA_SETUP' },
-    ]
-  }
 ];
 
 const openSections = ref<Set<string>>(new Set(navigation.map(n => n.title)));
