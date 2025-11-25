@@ -29,4 +29,4 @@ env_logger = "0.11.8"
 # Note: Using std::os::raw for C FFI types instead of libc to avoid network dependency
 
 [build-dependencies]
-cc = "1.0"  # For linking C/C++ libraries
+cc = "1.2"  # For linking C/C++ libraries
