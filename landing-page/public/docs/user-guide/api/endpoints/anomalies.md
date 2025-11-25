@@ -5,7 +5,7 @@ List detected anomalies with support for filtering, pagination, and sorting.
 ## Endpoint
 
 ```
-GET https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1/anomalies
+GET https://api.driftlock.net/v1/anomalies
 ```
 
 ## Authentication
@@ -70,30 +70,30 @@ X-Api-Key: YOUR_API_KEY
 
 ### Basic List
 ```bash
-curl "https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1/anomalies" \
+curl "https://api.driftlock.net/v1/anomalies" \
   -H "X-Api-Key: YOUR_API_KEY"
 ```
 
 ### Filter by Stream and Score
 ```bash
-curl "https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1/anomalies?stream_id=prod-logs&min_ncd=0.5" \
+curl "https://api.driftlock.net/v1/anomalies?stream_id=prod-logs&min_ncd=0.5" \
   -H "X-Api-Key: YOUR_API_KEY"
 ```
 
 ### Date Range Filtering
 ```bash
-curl "https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1/anomalies?since=2025-01-01T00:00:00Z&until=2025-01-02T00:00:00Z" \
+curl "https://api.driftlock.net/v1/anomalies?since=2025-01-01T00:00:00Z&until=2025-01-02T00:00:00Z" \
   -H "X-Api-Key: YOUR_API_KEY"
 ```
 
 ### Pagination
 ```bash
 # Get first page
-curl "https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1/anomalies?limit=10" \
+curl "https://api.driftlock.net/v1/anomalies?limit=10" \
   -H "X-Api-Key: YOUR_API_KEY"
 
 # Get next page using token from response
-curl "https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1/anomalies?page_token=eyJ..." \
+curl "https://api.driftlock.net/v1/anomalies?page_token=eyJ..." \
   -H "X-Api-Key: YOUR_API_KEY"
 ```
 

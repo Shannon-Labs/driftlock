@@ -25,7 +25,7 @@ import time
 class DriftlockClient:
     """Simple Driftlock API client"""
     
-    def __init__(self, api_key: str, base_url: str = "https://driftlock-api-o6kjgrsowq-uc.a.run.app"):
+    def __init__(self, api_key: str, base_url: str = "https://api.driftlock.net"):
         self.api_key = api_key
         self.base_url = base_url.rstrip('/')
         self.session = requests.Session()
@@ -244,7 +244,7 @@ from typing import List, Dict
 class AsyncDriftlockClient:
     """Async Driftlock API client"""
     
-    def __init__(self, api_key: str, base_url: str = "https://driftlock-api-o6kjgrsowq-uc.a.run.app"):
+    def __init__(self, api_key: str, base_url: str = "https://api.driftlock.net"):
         self.api_key = api_key
         self.base_url = base_url
         self.headers = {
