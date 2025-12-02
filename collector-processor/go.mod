@@ -7,6 +7,7 @@ toolchain go1.24.1
 require (
 	firebase.google.com/go/v4 v4.18.0
 	github.com/Shannon-Labs/driftlock/collector-processor/driftlockcbad v0.0.0-20251111000142-2f22cd0950fc
+	github.com/anthropics/anthropic-sdk-go v1.19.0
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.1
 	github.com/jackc/pgx/v5 v5.7.6
@@ -80,6 +81,10 @@ require (
 	github.com/sendgrid/rest v2.6.9+incompatible // indirect
 	github.com/sethvargo/go-retry v0.3.0 // indirect
 	github.com/spiffe/go-spiffe/v2 v2.5.0 // indirect
+	github.com/tidwall/gjson v1.18.0 // indirect
+	github.com/tidwall/match v1.1.1 // indirect
+	github.com/tidwall/pretty v1.2.1 // indirect
+	github.com/tidwall/sjson v1.2.5 // indirect
 	github.com/zeebo/errs v1.4.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
 	go.opentelemetry.io/collector/component/componenttest v0.138.0 // indirect

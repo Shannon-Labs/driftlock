@@ -62,8 +62,7 @@ func (ut *usageTracker) track(ctx context.Context, tenantID, streamID uuid.UUID,
 	if usagePercent >= 1.0 {
 		// Over limit
 		log.Printf("WARNING: Tenant %s (Plan: %s) is OVER LIMIT (%d/%d events)", tenantID, plan, totalUsage, limit)
-		// TODO: Rate limit or send email (once per day?)
-		// Implementing "send email once" requires state. skipping for MVP.
+		// TODO(P2): Rate limit or send email (once per day?) - requires state tracking
 	} else if usagePercent >= 0.8 {
 		// Near limit
 		log.Printf("INFO: Tenant %s (Plan: %s) is near limit (%.1f%% - %d/%d events)", tenantID, plan, usagePercent*100, totalUsage, limit)

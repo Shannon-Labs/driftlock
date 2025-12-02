@@ -1,0 +1,128 @@
+name: driftlock
+version: 1.0.0
+description: Real-time compression-based anomaly detection for Claude Code sessions
+author: Driftlock Inc.
+license: MIT
+repository: https://github.com/driftlock/claude-code-plugin
+
+# Plugin configuration
+config:
+  # Required environment variables
+  required_env:
+    - DRIFTLOCK_API_KEY
+    - DRIFTLOCK_TENANT_ID
+
+  # Optional configuration with defaults
+  optional_config:
+    api_endpoint: https://api.driftlock.ai
+    max_events_per_batch: 100
+    anomaly_threshold: 0.7
+    enable_real_time: true
+
+# Commands provided by this plugin
+commands:
+  - name: detect
+    description: Detect anomalies in codebase changes or AI interactions
+    usage: /detect [scope] [--model=haiku|sonnet|opus]
+    parameters:
+      - name: scope
+        type: string
+        description: "What to analyze: 'changes', 'session', or 'file:path'"
+        default: "changes"
+      - name: model
+        type: string
+        description: "AI model for analysis: haiku, sonnet, or opus"
+        default: "haiku"
+
+  - name: monitor
+    description: Start real-time monitoring of Claude Code session
+    usage: /monitor [--threshold=0.7] [--batch-size=50]
+    parameters:
+      - name: threshold
+        type: float
+        description: "Anomaly confidence threshold (0.0-1.0)"
+        default: 0.7
+      - name: batch-size
+        type: int
+        description: "Number of events to batch before analysis"
+        default: 50
+
+  - name: status
+    description: Show current monitoring status and recent anomalies
+    usage: /status [--format=table|json]
+
+  - name: config
+    description: Configure Driftlock settings
+    usage: /config [key] [value]
+    examples:
+      - "/config model sonnet"
+      - "/config threshold 0.8"
+      - "/config"  # Show current config
+
+# Agents provided by this plugin
+agents:
+  - name: code-anomaly-detector
+    description: Detects anomalies in code changes and patterns
+    triggers:
+      - on_file_change
+      - on_directory_scan
+    tools:
+      - read
+      - grep
+      - analyze
+    settings:
+      file_patterns:
+        - "*.go"
+        - "*.js"
+        - "*.ts"
+        - "*.py"
+        - "*.java"
+        - "*.rb"
+        - "*.php"
+        - "*.cpp"
+        - "*.h"
+        - "*.rs"
+      exclude_patterns:
+        - "*.min.js"
+        - "node_modules/*"
+        - ".git/*"
+        - "vendor/*"
+
+  - name: ai-interaction-monitor
+    description: Monitors Claude interactions for anomaly patterns
+    triggers:
+      - on_claude_request
+      - on_claude_response
+      - on_tool_use
+    tools:
+      - analyze
+      - track
+    settings:
+      track_metrics:
+        - response_length
+        - token_usage
+        - response_time
+        - tool_call_patterns
+        - error_rates
+
+# Event handlers
+event_handlers:
+  - event: session_start
+    handler: initialize_monitoring
+  - event: session_end
+    handler: finalize_and_report
+  - event: file_saved
+    handler: analyze_file_change
+  - event: command_executed
+    handler: track_command_pattern
+
+# Hooks for system integration
+hooks:
+  pre_tool_use:
+    - check_anomaly_risk
+  post_tool_use:
+    - record_tool_metrics
+  pre_file_edit:
+    - validate_change_safety
+  post_file_edit:
+    - record_change_metrics

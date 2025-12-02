@@ -215,3 +215,34 @@ The Driftlock Team`, companyName, formattedDate)
 	}()
 }
 
+func (s *emailService) sendAdminAlert(toEmail, subject, body string) {
+	if s == nil {
+		log.Printf("MOCK ADMIN ALERT to %s: %s - %s", toEmail, subject, body)
+		return
+	}
+
+	from := mail.NewEmail(s.fromName, s.fromAddress)
+	to := mail.NewEmail("Admin", toEmail)
+
+	plainTextContent := body
+	htmlContent := fmt.Sprintf(`
+		<div style="font-family: monospace; color: #333; background: #f4f4f4; padding: 20px;">
+			<h2 style="color: #dc2626;">%s</h2>
+			<pre style="white-space: pre-wrap; background: white; padding: 15px; border-radius: 5px;">%s</pre>
+		</div>
+	`, subject, body)
+
+	message := mail.NewSingleEmail(from, "[Driftlock Alert] "+subject, to, plainTextContent, htmlContent)
+
+	go func() {
+		response, err := s.client.Send(message)
+		if err != nil {
+			log.Printf("ERROR: Failed to send admin alert to %s: %v", toEmail, err)
+		} else if response.StatusCode >= 400 {
+			log.Printf("ERROR: SendGrid returned %d for admin alert to %s", response.StatusCode, toEmail)
+		} else {
+			log.Printf("Sent admin alert to %s: %s", toEmail, subject)
+		}
+	}()
+}
+

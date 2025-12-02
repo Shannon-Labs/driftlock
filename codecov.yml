@@ -1,0 +1,55 @@
+# Codecov configuration
+# https://docs.codecov.com/docs/codecovyml-reference
+
+coverage:
+  precision: 2
+  round: down
+  range: "60...100"
+
+  status:
+    project:
+      default:
+        target: 70%
+        threshold: 2%
+        if_ci_failed: error
+
+    patch:
+      default:
+        target: 80%
+        threshold: 5%
+        if_ci_failed: error
+
+parsers:
+  gcov:
+    branch_detection:
+      conditional: true
+      loop: true
+      macro: false
+      method: false
+
+comment:
+  layout: "reach,diff,flags,files"
+  behavior: default
+  require_changes: true
+  require_base: false
+  require_head: true
+
+ignore:
+  - "**/*_test.go"
+  - "**/testdata/**"
+  - "**/mocks/**"
+  - "**/*.pb.go"
+  - "tools/**"
+  - "scripts/**"
+
+flags:
+  backend:
+    paths:
+      - collector-processor/
+      - api-server/
+    carryforward: true
+
+  rust:
+    paths:
+      - cbad-core/
+    carryforward: true

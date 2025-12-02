@@ -10,10 +10,10 @@ The complete setup can be completed in 3 main steps:
 
 ```bash
 # 1. Set up Cloud SQL + Firebase Auth infrastructure
-./scripts/setup-gcp-cloudsql-firebase.sh
+./scripts/deployment/setup-gcp-cloudsql-firebase.sh
 
 # 2. Deploy to production
-./scripts/deploy-production-cloudsql-firebase.sh
+./scripts/deployment/deploy-production-cloudsql-firebase.sh
 
 # 3. Test the complete setup
 ./scripts/test-deployment-complete.sh
@@ -72,7 +72,7 @@ firebase --version
 ### 1.1 Run the Setup Script
 
 ```bash
-./scripts/setup-gcp-cloudsql-firebase.sh
+./scripts/deployment/setup-gcp-cloudsql-firebase.sh
 ```
 
 This script will:
@@ -117,7 +117,7 @@ gcloud sql connect driftlock-db --user=driftlock_user --project=driftlock
 ### 2.1 Deploy to Production
 
 ```bash
-./scripts/deploy-production-cloudsql-firebase.sh
+./scripts/deployment/deploy-production-cloudsql-firebase.sh
 ```
 
 This will:

@@ -317,7 +317,7 @@ mod tests {
 
         println!("NCD(1,2): {:.4}, NCD(2,1): {:.4}", ncd_1_2, ncd_2_1);
 
-        // NCD should be approximately symmetric; compressors introduce some variance so allow a small tolerance
+        // NCD should be approximately symmetric (allowing for small floating point differences)
         assert!(
             (ncd_1_2 - ncd_2_1).abs() < 0.05,
             "NCD should be symmetric within compressor tolerance"

@@ -383,6 +383,10 @@
             </div>
           </div>
 
+          <!-- AI Usage Widget - temporarily disabled pending TypeScript fixes
+          <AIUsageWidget v-if="userPlan !== 'trial'" class="lg:col-span-1" @upgrade="handleUpgrade" @config-changed="onAIConfigChanged" />
+          -->
+
           <!-- API Keys Card -->
           <div class="bg-white border-2 border-black lg:col-span-3 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
             <div class="px-6 py-6">
@@ -582,6 +586,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import DashboardLayout from '../layouts/DashboardLayout.vue'
 import UsageChart from '../components/dashboard/UsageChart.vue'
+// import AIUsageWidget from '../components/dashboard/AIUsageWidget.vue' // TODO: Fix TypeScript errors
 import { useAuthStore } from '../stores/auth'
 
 const authStore = useAuthStore()

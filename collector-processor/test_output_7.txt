@@ -1,0 +1,149 @@
+# github.com/Shannon-Labs/driftlock/collector-processor/cmd/driftlock-http.test
+ld: warning: ignoring duplicate libraries: '-lcbad_core'
+=== RUN   TestBillingStatusEndpoint
+2025/12/01 21:33:33 {"event":"request_start","method":"POST","path":"/v1/onboard/signup","query":"","remote":"127.0.0.1:59834","request_id":"1764646413799718000","ts":"2025-12-01T21:33:33.799732-06:00","user_agent":"Go-http-client/1.1"}
+2025/12/01 21:33:33 {"details":"status=201","event":"request_complete","method":"POST","path":"/v1/onboard/signup","query":"","remote":"127.0.0.1:59834","request_id":"1764646413799718000","ts":"2025-12-01T21:33:33.804598-06:00","user_agent":"Go-http-client/1.1"}
+2025/12/01 21:33:33 {"event":"request_start","method":"GET","path":"/v1/onboard/verify","query":"token=iDUzNONqKJDqpWMVZgSRAirvcZNEy9R3z2ERrBOTEU4=","remote":"127.0.0.1:59834","request_id":"1764646413805577000","ts":"2025-12-01T21:33:33.805578-06:00","user_agent":"Go-http-client/1.1"}
+2025/12/01 21:33:33 {"details":"status=200","event":"request_complete","method":"GET","path":"/v1/onboard/verify","query":"token=iDUzNONqKJDqpWMVZgSRAirvcZNEy9R3z2ERrBOTEU4=","remote":"127.0.0.1:59834","request_id":"1764646413805577000","ts":"2025-12-01T21:33:33.856551-06:00","user_agent":"Go-http-client/1.1"}
+=== RUN   TestBillingStatusEndpoint/BillingStatusViaAPIKey
+2025/12/01 21:33:33 {"event":"request_start","method":"GET","path":"/v1/me/billing","query":"","remote":"127.0.0.1:59834","request_id":"1764646413957979000","ts":"2025-12-01T21:33:33.95798-06:00","user_agent":"Go-http-client/1.1"}
+2025/12/01 21:33:33 {"details":"http_status=401","error":"missing bearer token","error_type":"unauthorized","event":"error","method":"GET","path":"/v1/me/billing","remote":"127.0.0.1:59834","request_id":"1764646413957979000","ts":"2025-12-01T21:33:33.958002-06:00"}
+2025/12/01 21:33:33 {"details":"status=401","event":"request_complete","method":"GET","path":"/v1/me/billing","query":"","remote":"127.0.0.1:59834","request_id":"1764646413957979000","ts":"2025-12-01T21:33:33.958023-06:00","user_agent":"Go-http-client/1.1"}
+    e2e_billing_test.go:58: Billing endpoint requires Firebase Auth (expected in production)
+--- PASS: TestBillingStatusEndpoint (0.19s)
+    --- PASS: TestBillingStatusEndpoint/BillingStatusViaAPIKey (0.00s)
+=== RUN   TestCheckoutSessionCreation
+    e2e_billing_test.go:72: STRIPE_SECRET_KEY not set, skipping checkout test
+--- SKIP: TestCheckoutSessionCreation (0.00s)
+=== RUN   TestTrialCountdownAccuracy
+2025/12/01 21:33:33 {"event":"request_start","method":"POST","path":"/v1/onboard/signup","query":"","remote":"127.0.0.1:59839","request_id":"1764646413972149000","ts":"2025-12-01T21:33:33.97215-06:00","user_agent":"Go-http-client/1.1"}
+2025/12/01 21:33:33 {"details":"status=201","event":"request_complete","method":"POST","path":"/v1/onboard/signup","query":"","remote":"127.0.0.1:59839","request_id":"1764646413972149000","ts":"2025-12-01T21:33:33.976337-06:00","user_agent":"Go-http-client/1.1"}
+2025/12/01 21:33:33 {"event":"request_start","method":"GET","path":"/v1/onboard/verify","query":"token=a0uH7amJ-e5PrlYQBXVRLIKpB6iDo_zQnpzLzEheQ84=","remote":"127.0.0.1:59839","request_id":"1764646413977032000","ts":"2025-12-01T21:33:33.977032-06:00","user_agent":"Go-http-client/1.1"}
+2025/12/01 21:33:34 {"details":"status=200","event":"request_complete","method":"GET","path":"/v1/onboard/verify","query":"token=a0uH7amJ-e5PrlYQBXVRLIKpB6iDo_zQnpzLzEheQ84=","remote":"127.0.0.1:59839","request_id":"1764646413977032000","ts":"2025-12-01T21:33:34.01994-06:00","user_agent":"Go-http-client/1.1"}
+    e2e_billing_test.go:188: Trial ends at 2025-12-08T21:33:34-06:00, 6 days remaining
+--- PASS: TestTrialCountdownAccuracy (0.06s)
+=== RUN   TestGracePeriodLogic
+2025/12/01 21:33:34 {"event":"request_start","method":"POST","path":"/v1/onboard/signup","query":"","remote":"127.0.0.1:59845","request_id":"1764646414034434000","ts":"2025-12-01T21:33:34.034434-06:00","user_agent":"Go-http-client/1.1"}
+2025/12/01 21:33:34 {"details":"status=201","event":"request_complete","method":"POST","path":"/v1/onboard/signup","query":"","remote":"127.0.0.1:59845","request_id":"1764646414034434000","ts":"2025-12-01T21:33:34.03769-06:00","user_agent":"Go-http-client/1.1"}
+2025/12/01 21:33:34 {"event":"request_start","method":"GET","path":"/v1/onboard/verify","query":"token=rK5xIyrO6QT2PbfiVrFk3RYqKpwtxSSxKXCZO3j-wKk=","remote":"127.0.0.1:59845","request_id":"1764646414038256000","ts":"2025-12-01T21:33:34.038257-06:00","user_agent":"Go-http-client/1.1"}
+2025/12/01 21:33:34 {"details":"status=200","event":"request_complete","method":"GET","path":"/v1/onboard/verify","query":"token=rK5xIyrO6QT2PbfiVrFk3RYqKpwtxSSxKXCZO3j-wKk=","remote":"127.0.0.1:59845","request_id":"1764646414038256000","ts":"2025-12-01T21:33:34.074928-06:00","user_agent":"Go-http-client/1.1"}
+=== RUN   TestGracePeriodLogic/SetGracePeriod
+    e2e_billing_test.go:248: Grace period set until 2025-12-08T21:33:34-06:00, failure count: 1
+=== RUN   TestGracePeriodLogic/ClearGracePeriod
+    e2e_billing_test.go:274: Grace period cleared successfully
+--- PASS: TestGracePeriodLogic (0.06s)
+    --- PASS: TestGracePeriodLogic/SetGracePeriod (0.00s)
+    --- PASS: TestGracePeriodLogic/ClearGracePeriod (0.00s)
+=== RUN   TestWebhookSignatureRequired
+2025/12/01 21:33:34 {"event":"request_start","method":"POST","path":"/v1/billing/webhook","query":"","remote":"127.0.0.1:59849","request_id":"1764646414090272000","ts":"2025-12-01T21:33:34.090273-06:00","user_agent":"Go-http-client/1.1"}
+2025/12/01 21:33:34 Error verifying webhook signature: webhook has no Stripe-Signature header
+2025/12/01 21:33:34 {"details":"status=400","event":"request_complete","method":"POST","path":"/v1/billing/webhook","query":"","remote":"127.0.0.1:59849","request_id":"1764646414090272000","ts":"2025-12-01T21:33:34.090314-06:00","user_agent":"Go-http-client/1.1"}
+    e2e_billing_test.go:300: Webhook correctly rejected (status 400)
+--- PASS: TestWebhookSignatureRequired (0.01s)
+=== RUN   TestOnboardingFlow
+=== RUN   TestOnboardingFlow/SignupCreatesUnverifiedTenant
+2025/12/01 21:33:34 {"event":"request_start","method":"POST","path":"/v1/onboard/signup","query":"","remote":"127.0.0.1:59853","request_id":"1764646414099755000","ts":"2025-12-01T21:33:34.099755-06:00","user_agent":"Go-http-client/1.1"}
+2025/12/01 21:33:34 {"details":"status=201","event":"request_complete","method":"POST","path":"/v1/onboard/signup","query":"","remote":"127.0.0.1:59853","request_id":"1764646414099755000","ts":"2025-12-01T21:33:34.103542-06:00","user_agent":"Go-http-client/1.1"}
+    e2e_onboarding_test.go:36: Expected status 'pending', got "pending_verification"
+=== RUN   TestOnboardingFlow/VerifyActivatesTenant
+2025/12/01 21:33:34 {"event":"request_start","method":"GET","path":"/v1/onboard/verify","query":"token=LMTGsrK6txa2qH71zx39hpIiR3RxEEBfiLe72lEbLwA=","remote":"127.0.0.1:59853","request_id":"1764646414104800000","ts":"2025-12-01T21:33:34.104801-06:00","user_agent":"Go-http-client/1.1"}
+2025/12/01 21:33:34 {"details":"status=200","event":"request_complete","method":"GET","path":"/v1/onboard/verify","query":"token=LMTGsrK6txa2qH71zx39hpIiR3RxEEBfiLe72lEbLwA=","remote":"127.0.0.1:59853","request_id":"1764646414104800000","ts":"2025-12-01T21:33:34.140474-06:00","user_agent":"Go-http-client/1.1"}
+    e2e_onboarding_test.go:83: Got API key: dlk_567430...
+--- FAIL: TestOnboardingFlow (0.05s)
+    --- FAIL: TestOnboardingFlow/SignupCreatesUnverifiedTenant (0.00s)
+    --- PASS: TestOnboardingFlow/VerifyActivatesTenant (0.04s)
+=== RUN   TestSignupValidation
+=== RUN   TestSignupValidation/MissingEmail
+2025/12/01 21:33:34 {"event":"request_start","method":"POST","path":"/v1/onboard/signup","query":"","remote":"127.0.0.1:59857","request_id":"1764646414152121000","ts":"2025-12-01T21:33:34.152122-06:00","user_agent":"Go-http-client/1.1"}
+2025/12/01 21:33:34 {"details":"http_status=400","error":"email is required","error_type":"invalid_argument","event":"error","method":"POST","path":"/v1/onboard/signup","remote":"127.0.0.1:59857","request_id":"1764646414152121000","ts":"2025-12-01T21:33:34.152145-06:00"}
+2025/12/01 21:33:34 {"details":"status=400","event":"request_complete","method":"POST","path":"/v1/onboard/signup","query":"","remote":"127.0.0.1:59857","request_id":"1764646414152121000","ts":"2025-12-01T21:33:34.152156-06:00","user_agent":"Go-http-client/1.1"}
+=== RUN   TestSignupValidation/InvalidEmail
+2025/12/01 21:33:34 {"event":"request_start","method":"POST","path":"/v1/onboard/signup","query":"","remote":"127.0.0.1:59857","request_id":"1764646414152296000","ts":"2025-12-01T21:33:34.152296-06:00","user_agent":"Go-http-client/1.1"}
+2025/12/01 21:33:34 {"details":"http_status=400","error":"invalid email format","error_type":"invalid_argument","event":"error","method":"POST","path":"/v1/onboard/signup","remote":"127.0.0.1:59857","request_id":"1764646414152296000","ts":"2025-12-01T21:33:34.152308-06:00"}
+2025/12/01 21:33:34 {"details":"status=400","event":"request_complete","method":"POST","path":"/v1/onboard/signup","query":"","remote":"127.0.0.1:59857","request_id":"1764646414152296000","ts":"2025-12-01T21:33:34.152314-06:00","user_agent":"Go-http-client/1.1"}
+=== RUN   TestSignupValidation/MissingCompanyName
+2025/12/01 21:33:34 {"event":"request_start","method":"POST","path":"/v1/onboard/signup","query":"","remote":"127.0.0.1:59857","request_id":"1764646414152446000","ts":"2025-12-01T21:33:34.152447-06:00","user_agent":"Go-http-client/1.1"}
+2025/12/01 21:33:34 {"details":"http_status=400","error":"company_name is required","error_type":"invalid_argument","event":"error","method":"POST","path":"/v1/onboard/signup","remote":"127.0.0.1:59857","request_id":"1764646414152446000","ts":"2025-12-01T21:33:34.152454-06:00"}
+2025/12/01 21:33:34 {"details":"status=400","event":"request_complete","method":"POST","path":"/v1/onboard/signup","query":"","remote":"127.0.0.1:59857","request_id":"1764646414152446000","ts":"2025-12-01T21:33:34.152458-06:00","user_agent":"Go-http-client/1.1"}
+=== RUN   TestSignupValidation/CompanyNameTooShort
+2025/12/01 21:33:34 {"event":"request_start","method":"POST","path":"/v1/onboard/signup","query":"","remote":"127.0.0.1:59857","request_id":"1764646414152579000","ts":"2025-12-01T21:33:34.152579-06:00","user_agent":"Go-http-client/1.1"}
+2025/12/01 21:33:34 {"details":"http_status=400","error":"company_name must be at least 2 characters","error_type":"invalid_argument","event":"error","method":"POST","path":"/v1/onboard/signup","remote":"127.0.0.1:59857","request_id":"1764646414152579000","ts":"2025-12-01T21:33:34.15259-06:00"}
+2025/12/01 21:33:34 {"details":"status=400","event":"request_complete","method":"POST","path":"/v1/onboard/signup","query":"","remote":"127.0.0.1:59857","request_id":"1764646414152579000","ts":"2025-12-01T21:33:34.152598-06:00","user_agent":"Go-http-client/1.1"}
+=== RUN   TestSignupValidation/InvalidPlan
+2025/12/01 21:33:34 {"event":"request_start","method":"POST","path":"/v1/onboard/signup","query":"","remote":"127.0.0.1:59857","request_id":"1764646414152709000","ts":"2025-12-01T21:33:34.152709-06:00","user_agent":"Go-http-client/1.1"}
+2025/12/01 21:33:34 {"details":"http_status=400","error":"invalid plan: must be one of trial, starter, growth, pilot","error_type":"invalid_argument","event":"error","method":"POST","path":"/v1/onboard/signup","remote":"127.0.0.1:59857","request_id":"1764646414152709000","ts":"2025-12-01T21:33:34.152721-06:00"}
+2025/12/01 21:33:34 {"details":"status=400","event":"request_complete","method":"POST","path":"/v1/onboard/signup","query":"","remote":"127.0.0.1:59857","request_id":"1764646414152709000","ts":"2025-12-01T21:33:34.152727-06:00","user_agent":"Go-http-client/1.1"}
+--- PASS: TestSignupValidation (0.01s)
+    --- PASS: TestSignupValidation/MissingEmail (0.00s)
+    --- PASS: TestSignupValidation/InvalidEmail (0.00s)
+    --- PASS: TestSignupValidation/MissingCompanyName (0.00s)
+    --- PASS: TestSignupValidation/CompanyNameTooShort (0.00s)
+    --- PASS: TestSignupValidation/InvalidPlan (0.00s)
+=== RUN   TestDuplicateEmailRejected
+2025/12/01 21:33:34 {"event":"request_start","method":"POST","path":"/v1/onboard/signup","query":"","remote":"127.0.0.1:59861","request_id":"1764646414162302000","ts":"2025-12-01T21:33:34.162302-06:00","user_agent":"Go-http-client/1.1"}
+2025/12/01 21:33:34 {"details":"status=201","event":"request_complete","method":"POST","path":"/v1/onboard/signup","query":"","remote":"127.0.0.1:59861","request_id":"1764646414162302000","ts":"2025-12-01T21:33:34.165736-06:00","user_agent":"Go-http-client/1.1"}
+2025/12/01 21:33:34 {"event":"request_start","method":"POST","path":"/v1/onboard/signup","query":"","remote":"127.0.0.1:59861","request_id":"1764646414165847000","ts":"2025-12-01T21:33:34.165847-06:00","user_agent":"Go-http-client/1.1"}
+2025/12/01 21:33:34 {"details":"http_status=409","error":"email already registered","error_type":"internal","event":"error","method":"POST","path":"/v1/onboard/signup","remote":"127.0.0.1:59861","request_id":"1764646414165847000","ts":"2025-12-01T21:33:34.166146-06:00"}
+2025/12/01 21:33:34 {"details":"status=409","event":"request_complete","method":"POST","path":"/v1/onboard/signup","query":"","remote":"127.0.0.1:59861","request_id":"1764646414165847000","ts":"2025-12-01T21:33:34.166158-06:00","user_agent":"Go-http-client/1.1"}
+--- PASS: TestDuplicateEmailRejected (0.02s)
+=== RUN   TestVerificationTokenValidation
+=== RUN   TestVerificationTokenValidation/MissingToken
+2025/12/01 21:33:34 {"event":"request_start","method":"GET","path":"/v1/onboard/verify","query":"","remote":"127.0.0.1:59865","request_id":"1764646414178194000","ts":"2025-12-01T21:33:34.178195-06:00","user_agent":"Go-http-client/1.1"}
+2025/12/01 21:33:34 {"details":"http_status=400","error":"verification token required","error_type":"invalid_argument","event":"error","method":"GET","path":"/v1/onboard/verify","remote":"127.0.0.1:59865","request_id":"1764646414178194000","ts":"2025-12-01T21:33:34.178212-06:00"}
+2025/12/01 21:33:34 {"details":"status=400","event":"request_complete","method":"GET","path":"/v1/onboard/verify","query":"","remote":"127.0.0.1:59865","request_id":"1764646414178194000","ts":"2025-12-01T21:33:34.178219-06:00","user_agent":"Go-http-client/1.1"}
+=== RUN   TestVerificationTokenValidation/InvalidToken
+2025/12/01 21:33:34 {"event":"request_start","method":"GET","path":"/v1/onboard/verify","query":"token=invalid_token_xyz","remote":"127.0.0.1:59865","request_id":"1764646414178339000","ts":"2025-12-01T21:33:34.17834-06:00","user_agent":"Go-http-client/1.1"}
+2025/12/01 21:33:34 {"details":"http_status=400","error":"invalid or expired verification token","error_type":"invalid_argument","event":"error","method":"GET","path":"/v1/onboard/verify","remote":"127.0.0.1:59865","request_id":"1764646414178339000","ts":"2025-12-01T21:33:34.178841-06:00"}
+2025/12/01 21:33:34 {"details":"status=400","event":"request_complete","method":"GET","path":"/v1/onboard/verify","query":"token=invalid_token_xyz","remote":"127.0.0.1:59865","request_id":"1764646414178339000","ts":"2025-12-01T21:33:34.178848-06:00","user_agent":"Go-http-client/1.1"}
+--- PASS: TestVerificationTokenValidation (0.01s)
+    --- PASS: TestVerificationTokenValidation/MissingToken (0.00s)
+    --- PASS: TestVerificationTokenValidation/InvalidToken (0.00s)
+=== RUN   TestSignupRateLimiting
+2025/12/01 21:33:34 {"event":"request_start","method":"POST","path":"/v1/onboard/signup","query":"","remote":"127.0.0.1:59869","request_id":"1764646414188250000","ts":"2025-12-01T21:33:34.18825-06:00","user_agent":"Go-http-client/1.1"}
+2025/12/01 21:33:34 {"details":"status=201","event":"request_complete","method":"POST","path":"/v1/onboard/signup","query":"","remote":"127.0.0.1:59869","request_id":"1764646414188250000","ts":"2025-12-01T21:33:34.191942-06:00","user_agent":"Go-http-client/1.1"}
+2025/12/01 21:33:34 {"event":"request_start","method":"POST","path":"/v1/onboard/signup","query":"","remote":"127.0.0.1:59869","request_id":"1764646414192067000","ts":"2025-12-01T21:33:34.192068-06:00","user_agent":"Go-http-client/1.1"}
+2025/12/01 21:33:34 {"details":"http_status=500","error":"failed to create tenant: ERROR: duplicate key value violates unique constraint \"tenants_slug_key\" (SQLSTATE 23505)","error_type":"internal","event":"error","method":"POST","path":"/v1/onboard/signup","remote":"127.0.0.1:59869","request_id":"1764646414192067000","ts":"2025-12-01T21:33:34.193213-06:00"}
+2025/12/01 21:33:34 {"details":"status=500","event":"request_complete","method":"POST","path":"/v1/onboard/signup","query":"","remote":"127.0.0.1:59869","request_id":"1764646414192067000","ts":"2025-12-01T21:33:34.193223-06:00","user_agent":"Go-http-client/1.1"}
+2025/12/01 21:33:34 {"event":"request_start","method":"POST","path":"/v1/onboard/signup","query":"","remote":"127.0.0.1:59869","request_id":"1764646414193332000","ts":"2025-12-01T21:33:34.193333-06:00","user_agent":"Go-http-client/1.1"}
+2025/12/01 21:33:34 {"details":"http_status=500","error":"failed to create tenant: ERROR: duplicate key value violates unique constraint \"tenants_slug_key\" (SQLSTATE 23505)","error_type":"internal","event":"error","method":"POST","path":"/v1/onboard/signup","remote":"127.0.0.1:59869","request_id":"1764646414193332000","ts":"2025-12-01T21:33:34.194244-06:00"}
+2025/12/01 21:33:34 {"details":"status=500","event":"request_complete","method":"POST","path":"/v1/onboard/signup","query":"","remote":"127.0.0.1:59869","request_id":"1764646414193332000","ts":"2025-12-01T21:33:34.194252-06:00","user_agent":"Go-http-client/1.1"}
+2025/12/01 21:33:34 {"event":"request_start","method":"POST","path":"/v1/onboard/signup","query":"","remote":"127.0.0.1:59869","request_id":"1764646414194333000","ts":"2025-12-01T21:33:34.194334-06:00","user_agent":"Go-http-client/1.1"}
+2025/12/01 21:33:34 {"details":"http_status=500","error":"failed to create tenant: ERROR: duplicate key value violates unique constraint \"tenants_slug_key\" (SQLSTATE 23505)","error_type":"internal","event":"error","method":"POST","path":"/v1/onboard/signup","remote":"127.0.0.1:59869","request_id":"1764646414194333000","ts":"2025-12-01T21:33:34.195161-06:00"}
+2025/12/01 21:33:34 {"details":"status=500","event":"request_complete","method":"POST","path":"/v1/onboard/signup","query":"","remote":"127.0.0.1:59869","request_id":"1764646414194333000","ts":"2025-12-01T21:33:34.19517-06:00","user_agent":"Go-http-client/1.1"}
+2025/12/01 21:33:34 {"event":"request_start","method":"POST","path":"/v1/onboard/signup","query":"","remote":"127.0.0.1:59869","request_id":"1764646414195251000","ts":"2025-12-01T21:33:34.195251-06:00","user_agent":"Go-http-client/1.1"}
+2025/12/01 21:33:34 {"details":"http_status=500","error":"failed to create tenant: ERROR: duplicate key value violates unique constraint \"tenants_slug_key\" (SQLSTATE 23505)","error_type":"internal","event":"error","method":"POST","path":"/v1/onboard/signup","remote":"127.0.0.1:59869","request_id":"1764646414195251000","ts":"2025-12-01T21:33:34.196041-06:00"}
+2025/12/01 21:33:34 {"details":"status=500","event":"request_complete","method":"POST","path":"/v1/onboard/signup","query":"","remote":"127.0.0.1:59869","request_id":"1764646414195251000","ts":"2025-12-01T21:33:34.196047-06:00","user_agent":"Go-http-client/1.1"}
+2025/12/01 21:33:34 {"event":"request_start","method":"POST","path":"/v1/onboard/signup","query":"","remote":"127.0.0.1:59869","request_id":"1764646414196121000","ts":"2025-12-01T21:33:34.196121-06:00","user_agent":"Go-http-client/1.1"}
+2025/12/01 21:33:34 {"details":"http_status=500","error":"failed to create tenant: ERROR: duplicate key value violates unique constraint \"tenants_slug_key\" (SQLSTATE 23505)","error_type":"internal","event":"error","method":"POST","path":"/v1/onboard/signup","remote":"127.0.0.1:59869","request_id":"1764646414196121000","ts":"2025-12-01T21:33:34.196926-06:00"}
+2025/12/01 21:33:34 {"details":"status=500","event":"request_complete","method":"POST","path":"/v1/onboard/signup","query":"","remote":"127.0.0.1:59869","request_id":"1764646414196121000","ts":"2025-12-01T21:33:34.196932-06:00","user_agent":"Go-http-client/1.1"}
+    e2e_onboarding_test.go:220: Warning: Rate limiting may not have triggered in test environment
+--- PASS: TestSignupRateLimiting (0.02s)
+=== RUN   TestAPIKeyAuthAfterVerification
+2025/12/01 21:33:34 {"event":"request_start","method":"POST","path":"/v1/onboard/signup","query":"","remote":"127.0.0.1:59873","request_id":"1764646414209376000","ts":"2025-12-01T21:33:34.209377-06:00","user_agent":"Go-http-client/1.1"}
+2025/12/01 21:33:34 {"details":"status=201","event":"request_complete","method":"POST","path":"/v1/onboard/signup","query":"","remote":"127.0.0.1:59873","request_id":"1764646414209376000","ts":"2025-12-01T21:33:34.212321-06:00","user_agent":"Go-http-client/1.1"}
+2025/12/01 21:33:34 {"event":"request_start","method":"GET","path":"/v1/onboard/verify","query":"token=9DUvvIdJALZaBfXPr-ym-om7aKAVZ_jFqEPChXKuvOc=","remote":"127.0.0.1:59873","request_id":"1764646414212832000","ts":"2025-12-01T21:33:34.212833-06:00","user_agent":"Go-http-client/1.1"}
+2025/12/01 21:33:34 {"details":"status=200","event":"request_complete","method":"GET","path":"/v1/onboard/verify","query":"token=9DUvvIdJALZaBfXPr-ym-om7aKAVZ_jFqEPChXKuvOc=","remote":"127.0.0.1:59873","request_id":"1764646414212832000","ts":"2025-12-01T21:33:34.253301-06:00","user_agent":"Go-http-client/1.1"}
+2025/12/01 21:33:34 {"event":"request_start","method":"POST","path":"/v1/detect","query":"","remote":"127.0.0.1:59873","request_id":"1764646414353881000","ts":"2025-12-01T21:33:34.353882-06:00","user_agent":"Go-http-client/1.1"}
+2025/12/01 21:33:34 {"details":"status=200","event":"request_complete","method":"POST","path":"/v1/detect","query":"","remote":"127.0.0.1:59873","request_id":"1764646414353881000","ts":"2025-12-01T21:33:34.394118-06:00","user_agent":"Go-http-client/1.1"}
+    e2e_onboarding_test.go:282: Detection successful: 3 events, 0 anomalies
+--- PASS: TestAPIKeyAuthAfterVerification (0.20s)
+=== RUN   TestUnauthorizedDetection
+2025/12/01 21:33:34 {"event":"request_start","method":"POST","path":"/v1/detect","query":"","remote":"127.0.0.1:59878","request_id":"1764646414415180000","ts":"2025-12-01T21:33:34.41518-06:00","user_agent":"Go-http-client/1.1"}
+2025/12/01 21:33:34 {"details":"http_status=401","error":"missing api key","error_type":"unauthorized","event":"error","method":"POST","path":"/v1/detect","remote":"127.0.0.1:59878","request_id":"1764646414415180000","ts":"2025-12-01T21:33:34.415201-06:00"}
+2025/12/01 21:33:34 {"details":"status=401","event":"request_complete","method":"POST","path":"/v1/detect","query":"","remote":"127.0.0.1:59878","request_id":"1764646414415180000","ts":"2025-12-01T21:33:34.41521-06:00","user_agent":"Go-http-client/1.1"}
+--- PASS: TestUnauthorizedDetection (0.01s)
+=== RUN   TestLoadLicenseValid
+--- PASS: TestLoadLicenseValid (0.00s)
+=== RUN   TestLoadLicenseInvalidSignature
+--- PASS: TestLoadLicenseInvalidSignature (0.00s)
+=== RUN   TestLoadLicenseExpired
+--- PASS: TestLoadLicenseExpired (0.00s)
+=== RUN   TestTenantRateLimiter_TenantLimit
+--- PASS: TestTenantRateLimiter_TenantLimit (0.00s)
+=== RUN   TestTenantRateLimiter_KeyLimit
+--- PASS: TestTenantRateLimiter_KeyLimit (0.00s)
+=== RUN   TestDecorateRateLimitHeaders
+--- PASS: TestDecorateRateLimitHeaders (0.00s)
+FAIL
+FAIL	github.com/Shannon-Labs/driftlock/collector-processor/cmd/driftlock-http	1.088s
+FAIL

@@ -13,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Shannon-Labs/driftlock/collector-processor/internal/ai"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -55,10 +56,32 @@ func setupTestEnv(t *testing.T) *testEnv {
 		t.Fatalf("Failed to connect to test database: %v", err)
 	}
 
+	// Set DATABASE_URL for runMigrations
+	os.Setenv("DATABASE_URL", dbURL)
+
 	// Verify connection
 	if err := pool.Ping(ctx); err != nil {
 		pool.Close()
 		t.Fatalf("Failed to ping test database: %v", err)
+	}
+
+	// Run migrations
+	// Assuming running from collector-processor/cmd/driftlock-http or collector-processor
+	// We need to point to api/migrations which is at ../../../api/migrations from here?
+	// No, from collector-processor it is ../api/migrations
+	// Let's try to find it
+	cwd, _ := os.Getwd()
+	migrationsDir := ""
+	if strings.HasSuffix(cwd, "driftlock-http") {
+		migrationsDir = "../../../api/migrations"
+	} else {
+		migrationsDir = "../api/migrations"
+	}
+	os.Setenv("MIGRATIONS_DIR", migrationsDir)
+
+	if err := runMigrations(ctx, "up"); err != nil {
+		pool.Close()
+		t.Fatalf("Failed to run migrations: %v", err)
 	}
 
 	store := newStore(pool)
@@ -75,7 +98,14 @@ func setupTestEnv(t *testing.T) *testEnv {
 	var emailer *emailService = nil
 	tracker := newUsageTracker(store, emailer)
 
-	handler := buildHTTPHandler(cfg, store, queue, limiter, emailer, tracker)
+	// Initialize AI components with mocks
+	mockConfigRepo := &ai.MockConfigRepository{}
+	costLimiter := ai.NewCostLimiter(mockConfigRepo)
+	router := ai.NewRouter(costLimiter)
+	mockAIClient := &ai.MockAIClient{}
+
+	// For tests, we pass nil for webhookStore - billing will fall back to synchronous processing
+	handler := buildHTTPHandler(cfg, store, queue, limiter, emailer, tracker, router, mockAIClient, nil)
 	server := httptest.NewServer(handler)
 
 	return &testEnv{
@@ -134,7 +164,7 @@ func (te *testEnv) getTenantStatus(email string) (status string, verified bool, 
 
 	var verifiedAt *time.Time
 	err = te.store.pool.QueryRow(ctx, `
-		SELECT status, email_verified_at FROM tenants WHERE email = $1
+		SELECT status, verified_at FROM tenants WHERE email = $1
 	`, email).Scan(&status, &verifiedAt)
 	if err != nil {
 		return "", false, err

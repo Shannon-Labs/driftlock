@@ -47,7 +47,7 @@ func billingCheckoutHandler(store *store) http.HandlerFunc {
 		// Determine Price ID based on plan
 		var priceID string
 		switch req.Plan {
-		case "lock", "transistor", "pro": // "lock" is new, others back-compat
+		case "tensor", "sentinel", "lock", "transistor", "pro": // "tensor" is new, others back-compat
 			priceID = os.Getenv("STRIPE_PRICE_ID_PRO")
 		case "radar", "signal", "basic": // "radar" is new, others back-compat
 			priceID = os.Getenv("STRIPE_PRICE_ID_BASIC")
@@ -55,7 +55,7 @@ func billingCheckoutHandler(store *store) http.HandlerFunc {
 			// Default to radar (basic) as the entry paid tier
 			priceID = os.Getenv("STRIPE_PRICE_ID_BASIC")
 			if priceID == "" {
-				// Fallback to Lock (Pro) if Radar not set (migration path)
+				// Fallback to Tensor (Pro) if Radar not set (migration path)
 				priceID = os.Getenv("STRIPE_PRICE_ID_PRO")
 			}
 		}
@@ -117,9 +117,7 @@ func billingPortalHandler(store *store) http.HandlerFunc {
 
 		// We need the Stripe Customer ID from the tenant record
 		// If they don't have one, we can't send them to portal (they need to checkout first)
-		// We'll need to fetch the full tenant record if it's not fully populated in context
 
-		// TODO: Fetch full tenant details including stripe_customer_id
 		var customerID string
 		err := store.pool.QueryRow(r.Context(), "SELECT stripe_customer_id FROM tenants WHERE id = $1", tc.Tenant.ID).Scan(&customerID)
 		if err != nil || customerID == "" {
@@ -150,7 +148,7 @@ func billingPortalHandler(store *store) http.HandlerFunc {
 	}
 }
 
-func billingWebhookHandler(store *store, emailer *emailService) http.HandlerFunc {
+func billingWebhookHandler(store *store, emailer *emailService, webhookStore *WebhookEventStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const MaxBodyBytes = int64(65536)
 		r.Body = http.MaxBytesReader(w, r.Body, MaxBodyBytes)
@@ -169,6 +167,30 @@ func billingWebhookHandler(store *store, emailer *emailService) http.HandlerFunc
 			return
 		}
 
+		// Store event for durability before processing
+		// This ensures we can retry if processing fails
+		if webhookStore != nil {
+			ctx := r.Context()
+			eventID, isNew, err := webhookStore.StoreEvent(ctx, event.ID, string(event.Type), event.Data.Raw)
+			if err != nil {
+				log.Printf("Failed to store webhook event %s: %v", event.ID, err)
+				// Fall through to synchronous processing as fallback
+			} else if !isNew {
+				// Duplicate event - already processed or in queue
+				log.Printf("Webhook event %s already stored, skipping", event.ID)
+				w.WriteHeader(http.StatusOK)
+				return
+			} else {
+				// Event stored successfully - return 200 immediately
+				// The retry worker will process it
+				log.Printf("Stored webhook event %s (type: %s) for processing", eventID, event.Type)
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+		}
+
+		// Fallback: synchronous processing if webhookStore is nil or storage failed
+		// This maintains backward compatibility and handles edge cases
 		switch event.Type {
 		case "checkout.session.completed":
 			var sess stripe.CheckoutSession
@@ -244,10 +266,10 @@ func handleCheckoutSessionCompleted(store *store, sess stripe.CheckoutSession) {
 	customerID := sess.Customer.ID
 	subscriptionID := sess.Subscription.ID
 
-	// Retrieve plan from metadata, default to "transistor" (previously pro) if missing
+	// Retrieve plan from metadata, default to "tensor" (previously pro/transistor) if missing
 	plan := sess.Metadata["plan"]
 	if plan == "" {
-		plan = "transistor"
+		plan = "tensor"
 	}
 
 	// Fetch subscription to get trial_end (Stripe is source of truth)
@@ -284,7 +306,7 @@ func handleSubscriptionUpdated(store *store, sub stripe.Subscription) {
 	if len(sub.Items.Data) > 0 {
 		priceID := sub.Items.Data[0].Price.ID
 		if priceID == os.Getenv("STRIPE_PRICE_ID_PRO") {
-			plan = "transistor"
+			plan = "tensor"
 		} else if priceID == os.Getenv("STRIPE_PRICE_ID_BASIC") {
 			plan = "signal"
 		}
