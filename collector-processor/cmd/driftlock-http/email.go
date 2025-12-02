@@ -31,7 +31,7 @@ func newEmailService() *emailService {
 
 func (s *emailService) sendWelcomeEmail(toEmail, companyName, apiKey string) {
 	if s == nil {
-		log.Printf("MOCK EMAIL: Welcome to %s (%s). API Key: %s...", toEmail, companyName, apiKey[:5])
+		log.Printf("MOCK EMAIL: Welcome email to %s (%s) [API key redacted]", toEmail, companyName)
 		return
 	}
 
@@ -78,7 +78,7 @@ The Driftlock Team`, companyName, apiKey)
 
 func (s *emailService) sendVerificationEmail(toEmail, companyName, token string) {
 	if s == nil {
-		log.Printf("MOCK EMAIL: Verification for %s (%s). Token: %s", toEmail, companyName, token)
+		log.Printf("MOCK EMAIL: Verification email to %s (%s) [token redacted]", toEmail, companyName)
 		return
 	}
 

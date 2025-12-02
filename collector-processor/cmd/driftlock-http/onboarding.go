@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"net/mail"
 	"os"
@@ -214,6 +215,11 @@ func verifyHandler(store *store, emailer *emailService) http.HandlerFunc {
 				writeError(w, r, http.StatusBadRequest, err)
 				return
 			}
+			if strings.Contains(err.Error(), "token has expired") {
+				// 410 Gone indicates the resource existed but is no longer available
+				writeError(w, r, http.StatusGone, fmt.Errorf("verification token has expired - please request a new one"))
+				return
+			}
 			writeError(w, r, http.StatusInternalServerError, fmt.Errorf("verification failed: %w", err))
 			return
 		}
@@ -245,6 +251,110 @@ func generateVerificationToken() (string, error) {
 		return "", err
 	}
 	return base64.URLEncoding.EncodeToString(b), nil
+}
+
+type resendVerificationRequest struct {
+	Email string `json:"email"`
+}
+
+type resendVerificationResponse struct {
+	Success bool   `json:"success"`
+	Message string `json:"message"`
+}
+
+// Rate limiter for resend endpoint (3 per hour per email)
+var resendLimiter = struct {
+	mu       sync.Mutex
+	limiters map[string]*rate.Limiter
+}{
+	limiters: make(map[string]*rate.Limiter),
+}
+
+func getResendLimiter(email string) *rate.Limiter {
+	resendLimiter.mu.Lock()
+	defer resendLimiter.mu.Unlock()
+
+	if limiter, exists := resendLimiter.limiters[email]; exists {
+		return limiter
+	}
+
+	// 3 requests per hour
+	limit := rate.Limit(3) / rate.Limit(time.Hour.Seconds())
+	burst := 3
+	if os.Getenv("DRIFTLOCK_DEV_MODE") == "true" {
+		limit = rate.Inf
+		burst = 100
+	}
+
+	limiter := rate.NewLimiter(limit, burst)
+	resendLimiter.limiters[email] = limiter
+	return limiter
+}
+
+func resendVerificationHandler(store *store, emailer *emailService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			writeError(w, r, http.StatusMethodNotAllowed, fmt.Errorf("use POST"))
+			return
+		}
+		defer r.Body.Close()
+		r.Body = http.MaxBytesReader(w, r.Body, 4*1024)
+
+		var req resendVerificationRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			writeError(w, r, http.StatusBadRequest, fmt.Errorf("invalid request body"))
+			return
+		}
+
+		// Validate email
+		if req.Email == "" {
+			writeError(w, r, http.StatusBadRequest, fmt.Errorf("email is required"))
+			return
+		}
+		if _, err := mail.ParseAddress(req.Email); err != nil {
+			writeError(w, r, http.StatusBadRequest, fmt.Errorf("invalid email format"))
+			return
+		}
+
+		// Rate limit by email address
+		if !getResendLimiter(req.Email).Allow() {
+			writeError(w, r, http.StatusTooManyRequests, fmt.Errorf("too many resend requests, please wait before trying again"))
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+		defer cancel()
+
+		// Generate new token
+		newToken, err := generateVerificationToken()
+		if err != nil {
+			writeError(w, r, http.StatusInternalServerError, fmt.Errorf("failed to generate token"))
+			return
+		}
+
+		// Update tenant with new token
+		companyName, err := store.regenerateVerificationToken(ctx, req.Email, newToken)
+		if err != nil {
+			// Don't leak whether email exists - return generic success
+			// This prevents email enumeration attacks
+			log.Printf("Resend verification failed for %s: %v", req.Email, err)
+			writeJSON(w, r, http.StatusOK, resendVerificationResponse{
+				Success: true,
+				Message: "If an account with this email exists and is pending verification, a new verification email has been sent.",
+			})
+			return
+		}
+
+		// Send new verification email
+		if emailer != nil {
+			go emailer.sendVerificationEmail(req.Email, companyName, newToken)
+		}
+
+		writeJSON(w, r, http.StatusOK, resendVerificationResponse{
+			Success: true,
+			Message: "If an account with this email exists and is pending verification, a new verification email has been sent.",
+		})
+	}
 }
 
 func validateSignup(req *onboardSignupRequest) error {
@@ -302,6 +412,22 @@ func getSignupLimiter(ip string) *rate.Limiter {
 	limiter := rate.NewLimiter(limit, burst)
 	signupLimiter.limiters[ip] = limiter
 	return limiter
+}
+
+// cleanupSignupLimiters clears old entries to prevent memory leaks.
+// Since rate.Limiter doesn't track last access time, we use a size-based approach:
+// when the map exceeds maxSignupLimiters entries, we clear it entirely.
+// This is safe because limiters auto-recover their token bucket state.
+const maxSignupLimiters = 10000
+
+func cleanupSignupLimiters() {
+	signupLimiter.mu.Lock()
+	defer signupLimiter.mu.Unlock()
+
+	if len(signupLimiter.limiters) > maxSignupLimiters {
+		log.Printf("Signup limiter cleanup: clearing %d entries", len(signupLimiter.limiters))
+		signupLimiter.limiters = make(map[string]*rate.Limiter)
+	}
 }
 
 // getClientIP is defined in demo.go

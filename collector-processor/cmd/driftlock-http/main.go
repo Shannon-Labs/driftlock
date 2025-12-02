@@ -314,6 +314,7 @@ func buildHTTPHandler(cfg config, store *store, queue jobQueue, limiter *tenantR
 	// Onboarding endpoints
 	mux.HandleFunc("/v1/onboard/signup", onboardSignupHandler(cfg, store, emailer))
 	mux.HandleFunc("/v1/onboard/verify", verifyHandler(store, emailer))
+	mux.HandleFunc("/v1/onboard/resend-verification", resendVerificationHandler(store, emailer))
 
 	// Demo endpoint (no auth, rate limited by IP)
 	demoLimiter := newDemoRateLimiter()
@@ -321,6 +322,7 @@ func buildHTTPHandler(cfg config, store *store, queue jobQueue, limiter *tenantR
 		ticker := time.NewTicker(5 * time.Minute)
 		for range ticker.C {
 			demoLimiter.cleanup()
+			cleanupSignupLimiters() // Prevent memory leak from signup rate limiters
 		}
 	}()
 	mux.HandleFunc("/v1/demo/detect", demoDetectHandler(cfg, demoLimiter))

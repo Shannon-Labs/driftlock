@@ -1,4 +1,4 @@
-ARG RUST_VERSION=1.82
+ARG RUST_VERSION=1.89
 ARG GO_VERSION=1.24
 ARG GO_TARBALL=1.24.0
 ARG DEBIAN_FRONTEND=noninteractive
@@ -66,5 +66,11 @@ COPY --from=builder /workspace/bin/driftlock-http /usr/local/bin/driftlock-http
 # Copy migrations directory so they're available at runtime
 COPY --from=builder /workspace/api/migrations /usr/local/share/driftlock/migrations
 ENV MIGRATIONS_DIR=/usr/local/share/driftlock/migrations
+
+# Security: Run as non-root user
+RUN useradd -r -s /bin/false driftlock && \
+    chown driftlock:driftlock /usr/local/bin/driftlock-http
+USER driftlock
+
 EXPOSE 8080
 CMD ["/usr/local/bin/driftlock-http"]
