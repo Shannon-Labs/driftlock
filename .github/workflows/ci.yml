@@ -84,8 +84,36 @@ jobs:
       - name: Lint
         run: just lint
 
-      - name: Test
-        run: just test
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.62
+          working-directory: collector-processor
+          args: --timeout=5m
+
+      - name: Test Go with Coverage
+        working-directory: collector-processor
+        run: |
+          go test ./... -coverprofile=coverage.out -covermode=atomic
+          go tool cover -func=coverage.out | grep total
+
+      - name: Test Rust
+        working-directory: cbad-core
+        run: cargo test
+
+      - name: Test Frontend
+        run: |
+          cd landing-page && npm run type-check
+          cd ../functions && npm run lint
+
+      - name: Upload Coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: collector-processor/coverage.out
+          flags: backend
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   docker:
     runs-on: ubuntu-latest

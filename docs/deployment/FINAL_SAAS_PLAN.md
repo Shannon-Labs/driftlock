@@ -56,7 +56,7 @@ Use the existing automation to provision Cloud SQL and Firebase resources.
 
 ```bash
 # Sets up Cloud SQL, creates database, enables APIs
-./scripts/setup-gcp-cloudsql-firebase.sh
+./scripts/deployment/setup-gcp-cloudsql-firebase.sh
 ```
 
 **Manual Verification:**
@@ -69,7 +69,7 @@ Deploy the backend (Cloud Run) and frontend (Firebase Hosting) together.
 
 ```bash
 # Deploys Cloud Run service 'driftlock-api' and Firebase Hosting site
-./scripts/deploy-production-cloudsql-firebase.sh
+./scripts/deployment/deploy-production-cloudsql-firebase.sh
 ```
 
 This script performs the following:

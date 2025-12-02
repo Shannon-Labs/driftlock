@@ -26,10 +26,10 @@ const initializeFirebase = async () => {
   let firebaseConfig: any = null
 
   try {
-    // In production, the function is at the root. In dev, it's proxied by vite.
-    const functionUrl = import.meta.env.PROD
-      ? '/getFirebaseConfig' // Relative path for prod
-      : 'http://127.0.0.1:5001/driftlock/us-central1/getFirebaseConfig' // Local emulator
+    // Fetch Firebase config from Firebase Function
+    // In prod, this is served via Firebase Hosting rewrite → getFirebaseConfig function
+    // In dev, you can run Firebase emulators or rely on env fallback
+    const functionUrl = '/getFirebaseConfig'
 
     const response = await fetch(functionUrl)
     if (!response.ok) {

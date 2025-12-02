@@ -716,6 +716,11 @@ func (s *store) fetchAnomaly(ctx context.Context, tenantID uuid.UUID, anomalyID 
 	return rec, evidence, nil
 }
 
+func (s *store) updateAnomalyExplanation(ctx context.Context, anomalyID string, explanation string) error {
+	_, err := s.pool.Exec(ctx, `UPDATE anomalies SET explanation = $1, status = 'analyzed' WHERE id = $2`, explanation, anomalyID)
+	return err
+}
+
 func (s *store) createExportJob(ctx context.Context, tenantID uuid.UUID, format string, filters, delivery []byte) (uuid.UUID, error) {
 	if len(filters) == 0 {
 		filters = []byte("{}")

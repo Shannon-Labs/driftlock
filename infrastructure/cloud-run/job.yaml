@@ -1,0 +1,38 @@
+apiVersion: run.googleapis.com/v1
+kind: Job
+metadata:
+  name: driftlock-migrate
+  annotations:
+    run.googleapis.com/launch-stage: BETA
+spec:
+  template:
+    metadata:
+      annotations:
+        run.googleapis.com/execution-environment: gen2
+        run.googleapis.com/cloudsql-instances: driftlock:us-central1:driftlock-db
+    spec:
+      template:
+        spec:
+          containers:
+          - image: gcr.io/driftlock/driftlock-api:amd64-v1
+            command: ["/usr/local/bin/driftlock-http", "migrate", "up"]
+            env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: driftlock-db-url
+                  key: latest
+            - name: DRIFTLOCK_LICENSE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: driftlock-license-key
+                  key: latest
+            - name: MIGRATIONS_DIR
+              value: "/usr/local/share/driftlock/migrations"
+            - name: LD_LIBRARY_PATH
+              value: "/usr/local/lib"
+            - name: DRIFTLOCK_DEV_MODE
+              value: "true"
+          maxRetries: 0
+          timeoutSeconds: 600
+

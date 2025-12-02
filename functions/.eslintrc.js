@@ -20,6 +20,7 @@ module.exports = {
   ignorePatterns: [
     "/lib/**/*", // Ignore built files.
     "/generated/**/*", // Ignore generated files.
+    "/src/dataconnect-admin-generated/**/*", // Ignore generated dataconnect files.
   ],
   plugins: [
     "@typescript-eslint",
@@ -29,14 +30,10 @@ module.exports = {
     "quotes": ["error", "double"],
     "import/no-unresolved": 0,
     "indent": ["error", 2],
-    "max-len": [
-      "warn",
-      {
-        code: 140,
-        ignoreComments: true,
-        ignoreStrings: true,
-        ignoreTemplateLiterals: true,
-      },
-    ],
+    "max-len": "off",
+    "object-curly-spacing": "off",
+    "require-jsdoc": "off",
+    "valid-jsdoc": "off",
+    "camelcase": "off",
   },
 };

@@ -3,8 +3,10 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"strings"
 	"sync"
@@ -236,8 +238,14 @@ func demoDetectHandler(cfg config, limiter *demoRateLimiter) http.HandlerFunc {
 		requestCounter.Inc()
 		start := time.Now()
 
-		anomalies, _, err := runDetection(detector, payload.Events)
+		anomalies, _, err := runDetectionWithRecovery(r.Context(), detector, payload.Events)
 		if err != nil {
+			// Distinguish between user errors and internal FFI errors
+			if errors.Is(err, ErrCBADPanic) || errors.Is(err, ErrCBADTimeout) {
+				log.Printf("CBAD FFI error in demo: %v", err)
+				writeError(w, r, http.StatusInternalServerError, fmt.Errorf("detection service temporarily unavailable"))
+				return
+			}
 			writeError(w, r, http.StatusBadRequest, err)
 			return
 		}

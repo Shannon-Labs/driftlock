@@ -32,8 +32,8 @@ func TestOnboardingFlow(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to get tenant status: %v", err)
 		}
-		if status != "pending" {
-			t.Errorf("Expected status 'pending', got %q", status)
+		if status != "pending_verification" {
+			t.Errorf("Expected status 'pending_verification', got %q", status)
 		}
 		if verified {
 			t.Error("Expected tenant to be unverified")

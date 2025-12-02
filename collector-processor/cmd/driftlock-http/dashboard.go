@@ -26,8 +26,7 @@ func handleListKeys(store *store) http.HandlerFunc {
 		// Mask keys for security (though these are hashes in DB mostly, except if we stored them differently?)
 		// Actually api_keys table stores key_hash. We can't show the original key.
 		// Users have to generate a new one if they lost it.
-		// TODO: Add "Create Key" endpoint that returns the raw key once.
-		
+
 		type keyResponse struct {
 			ID        string `json:"id"`
 			Name      string `json:"name"`

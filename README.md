@@ -78,7 +78,7 @@ See `docs/deployment/CLOUDSQL_FIREBASE_SETUP_GUIDE.md` for the authoritative run
 
 ```bash
 # Quick infrastructure setup
-./scripts/setup-gcp-cloudsql-firebase.sh
+./scripts/deployment/setup-gcp-cloudsql-firebase.sh
 ```
 
 ---

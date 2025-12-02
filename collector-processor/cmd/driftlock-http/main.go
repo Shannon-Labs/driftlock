@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/Shannon-Labs/driftlock/collector-processor/driftlockcbad"
+	"github.com/Shannon-Labs/driftlock/collector-processor/internal/ai"
 	"github.com/google/uuid"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -246,7 +247,31 @@ func main() {
 	emailer := newEmailService()
 	tracker := newUsageTracker(store, emailer)
 
-	handler := buildHTTPHandler(cfg, store, queue, limiter, emailer, tracker)
+	// Initialize webhook event store and retry worker
+	// Use a long-lived context for the worker (not the 10-second startup context)
+	webhookStore := NewWebhookEventStore(pool, DefaultRetryConfig())
+	workerCtx, workerCancel := context.WithCancel(context.Background())
+	webhookRetryWorker := NewWebhookRetryWorker(store, webhookStore, emailer, 30*time.Second, 50)
+	webhookRetryWorker.Start(workerCtx)
+	defer func() {
+		workerCancel()
+		webhookRetryWorker.Stop()
+	}()
+
+	// Initialize AI components
+	configRepo := ai.NewConfigRepository(store.pool)
+	costLimiter := ai.NewCostLimiter(configRepo)
+	router := ai.NewRouter(costLimiter)
+
+	var aiClient ai.AIClient
+	aiClient, err = ai.NewAIClientFromEnv()
+	if err != nil {
+		log.Printf("WARNING: Failed to initialize AI client: %v. AI analysis will be disabled.", err)
+	} else {
+		log.Printf("AI client initialized: provider=%s", aiClient.Provider())
+	}
+
+	handler := buildHTTPHandler(cfg, store, queue, limiter, emailer, tracker, router, aiClient, webhookStore)
 
 	addr := env("PORT", "8080")
 	log.Printf("driftlock-http listening on :%s", addr)
@@ -281,7 +306,7 @@ func main() {
 	}
 }
 
-func buildHTTPHandler(cfg config, store *store, queue jobQueue, limiter *tenantRateLimiter, emailer *emailService, tracker *usageTracker) http.Handler {
+func buildHTTPHandler(cfg config, store *store, queue jobQueue, limiter *tenantRateLimiter, emailer *emailService, tracker *usageTracker, router *ai.Router, aiClient ai.AIClient, webhookStore *WebhookEventStore) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", healthHandler(store, queue))
 	mux.Handle("/metrics", promhttp.Handler())
@@ -301,7 +326,7 @@ func buildHTTPHandler(cfg config, store *store, queue jobQueue, limiter *tenantR
 	mux.HandleFunc("/v1/demo/detect", demoDetectHandler(cfg, demoLimiter))
 
 	mux.Handle("/v1/detect", withAuth(store, limiter, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		detectHandler(w, r, cfg, store, tracker)
+		detectHandler(w, r, cfg, store, tracker, router, aiClient)
 	})))
 	mux.Handle("/v1/anomalies", withAuth(store, limiter, anomaliesHandler(store)))
 	mux.Handle("/v1/anomalies/", withAuth(store, limiter, anomalyRouter(cfg, store, queue)))
@@ -309,7 +334,7 @@ func buildHTTPHandler(cfg config, store *store, queue jobQueue, limiter *tenantR
 	// Billing endpoints
 	mux.Handle("/v1/billing/checkout", withAuth(store, limiter, billingCheckoutHandler(store)))
 	mux.Handle("/v1/billing/portal", withFirebaseAuth(store, billingPortalHandler(store)))
-	mux.HandleFunc("/v1/billing/webhook", billingWebhookHandler(store, emailer))
+	mux.HandleFunc("/v1/billing/webhook", billingWebhookHandler(store, emailer, webhookStore))
 
 	// Dashboard/User endpoints (Firebase Auth)
 	mux.Handle("/v1/me/keys", withFirebaseAuth(store, http.HandlerFunc(handleListKeys(store))))
@@ -319,6 +344,8 @@ func buildHTTPHandler(cfg config, store *store, queue jobQueue, limiter *tenantR
 	mux.Handle("/v1/me/usage", withFirebaseAuth(store, http.HandlerFunc(handleGetUsage(store))))
 	mux.Handle("/v1/me/usage/details", withFirebaseAuth(store, http.HandlerFunc(handleGetUsageDetails(store))))
 	mux.Handle("/v1/me/billing", withFirebaseAuth(store, http.HandlerFunc(handleGetBillingStatus(store))))
+	mux.Handle("/v1/me/usage/ai", withFirebaseAuth(store, aiUsageHandler(store)))
+	mux.Handle("/v1/me/ai/config", withFirebaseAuth(store, aiConfigHandler(store)))
 
 	return withCommon(withRequestContext(mux))
 }
@@ -658,7 +685,7 @@ func decodeExportRequest(r *http.Request, maxBody int64) (exportRequest, error) 
 	return req, nil
 }
 
-func detectHandler(w http.ResponseWriter, r *http.Request, cfg config, store *store, tracker *usageTracker) {
+func detectHandler(w http.ResponseWriter, r *http.Request, cfg config, store *store, tracker *usageTracker, router *ai.Router, aiClient ai.AIClient) {
 	if r.Method == http.MethodOptions {
 		handlePreflight(w, r)
 		return
@@ -734,8 +761,14 @@ func detectHandler(w http.ResponseWriter, r *http.Request, cfg config, store *st
 	requestCounter.Inc()
 	start := time.Now()
 
-	anomalies, records, err := runDetection(detector, payload.Events)
+	anomalies, records, err := runDetectionWithRecovery(r.Context(), detector, payload.Events)
 	if err != nil {
+		// Distinguish between user errors and internal FFI errors
+		if errors.Is(err, ErrCBADPanic) || errors.Is(err, ErrCBADTimeout) {
+			log.Printf("CBAD FFI error: %v", err)
+			writeError(w, r, http.StatusInternalServerError, fmt.Errorf("detection service temporarily unavailable"))
+			return
+		}
 		writeError(w, r, http.StatusBadRequest, err)
 		return
 	}
@@ -753,6 +786,53 @@ func detectHandler(w http.ResponseWriter, r *http.Request, cfg config, store *st
 
 	// Track usage asynchronously
 	go tracker.track(context.Background(), tc.Tenant.ID, stream.ID, tc.Tenant.Plan, len(payload.Events), len(anomalies))
+
+	// AI Analysis (Async)
+	if router != nil && aiClient != nil {
+		go func() {
+			ctx := context.Background()
+			for _, anomaly := range anomalies {
+				// Create event object for router
+				event := ai.Event{
+					ID:           anomaly.ID,
+					TenantID:     tc.Tenant.ID.String(),
+					StreamID:     stream.ID.String(),
+					AnomalyScore: anomaly.Metrics.ConfidenceLevel, // Use confidence as score
+					CreatedAt:    time.Now(),
+				}
+
+				decision, err := router.RouteEvent(ctx, event)
+				if err != nil {
+					log.Printf("Failed to route event %s: %v", anomaly.ID, err)
+					continue
+				}
+
+				if decision.ShouldAnalyze {
+					// Construct prompt
+					prompt := fmt.Sprintf("Analyze this anomaly: %+v", anomaly) // Simplified prompt
+
+					explanation, inputTokens, outputTokens, err := aiClient.AnalyzeAnomaly(ctx, decision.Model, prompt)
+					if err != nil {
+						log.Printf("Failed to analyze anomaly %s: %v", anomaly.ID, err)
+						continue
+					}
+
+					// Update anomaly with explanation
+					err = store.updateAnomalyExplanation(ctx, anomaly.ID, explanation)
+					if err != nil {
+						log.Printf("Failed to update anomaly explanation %s: %v", anomaly.ID, err)
+					}
+
+					// Track AI usage
+					cost := router.CalculateCost(decision.Model, inputTokens, outputTokens)
+					err = trackAIUsage(store, tc.Tenant.ID.String(), stream.ID.String(), decision.Model, inputTokens, outputTokens, cost)
+					if err != nil {
+						log.Printf("Failed to track AI usage for %s: %v", anomaly.ID, err)
+					}
+				}
+			}
+		}()
+	}
 
 	resp := detectResponse{
 		Success:         true,
@@ -846,6 +926,51 @@ func buildDetectionSettings(cfg config, stream streamRecord, settings streamSett
 		plan.CompressionAlgorithm = "openzl"
 	}
 	return plan
+}
+
+// cbadTimeout is the maximum time allowed for CBAD FFI operations
+const cbadTimeout = 15 * time.Second
+
+// ErrCBADPanic is returned when the CBAD detector panics
+var ErrCBADPanic = errors.New("CBAD detector panic recovered")
+
+// ErrCBADTimeout is returned when a CBAD operation times out
+var ErrCBADTimeout = errors.New("CBAD detector operation timed out")
+
+// runDetectionWithRecovery wraps runDetection with panic recovery and timeout
+func runDetectionWithRecovery(ctx context.Context, detector *driftlockcbad.Detector, events []json.RawMessage) (outputs []anomalyOutput, records []persistedAnomaly, err error) {
+	// Create a context with timeout for the entire detection operation
+	ctx, cancel := context.WithTimeout(ctx, cbadTimeout)
+	defer cancel()
+
+	// Channel to receive results
+	type result struct {
+		outputs []anomalyOutput
+		records []persistedAnomaly
+		err     error
+	}
+	resultCh := make(chan result, 1)
+
+	go func() {
+		// Recover from any panics in the CBAD FFI code
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("CBAD FFI panic recovered: %v", r)
+				resultCh <- result{nil, nil, fmt.Errorf("%w: %v", ErrCBADPanic, r)}
+			}
+		}()
+
+		outputs, records, err := runDetection(detector, events)
+		resultCh <- result{outputs, records, err}
+	}()
+
+	select {
+	case <-ctx.Done():
+		log.Printf("CBAD detection timed out after %v", cbadTimeout)
+		return nil, nil, ErrCBADTimeout
+	case res := <-resultCh:
+		return res.outputs, res.records, res.err
+	}
 }
 
 func runDetection(detector *driftlockcbad.Detector, events []json.RawMessage) ([]anomalyOutput, []persistedAnomaly, error) {

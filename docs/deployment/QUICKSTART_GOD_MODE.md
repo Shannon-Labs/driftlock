@@ -75,8 +75,8 @@ See the script output for any TODOs (env files, firebase setup, migrations).
 When you’re ready to push a pilot:
 
 ```bash
-./scripts/setup-gcp-cloudsql-firebase.sh   # infra bootstrap
-./scripts/deploy-production-cloudsql-firebase.sh
+./scripts/deployment/setup-gcp-cloudsql-firebase.sh   # infra bootstrap
+./scripts/deployment/deploy-production-cloudsql-firebase.sh
 ./scripts/test-deployment-complete.sh
 firebase deploy   # hosts landing page + functions
 ```

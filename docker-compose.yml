@@ -17,6 +17,7 @@ services:
       - DRIFTLOCK_DEV_MODE=${DRIFTLOCK_DEV_MODE:-true}
       - USE_OPENZL=${USE_OPENZL:-false}
       - PREFER_OPENZL=${PREFER_OPENZL:-false}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8080/healthz || exit 1"]
       interval: 10s

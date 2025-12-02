@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/mail"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -290,8 +291,15 @@ func getSignupLimiter(ip string) *rate.Limiter {
 		return limiter
 	}
 
-	// 5 requests per hour
-	limiter := rate.NewLimiter(rate.Every(time.Hour/5), 5)
+	// 5 requests per hour (or 1000 in dev mode)
+	limit := rate.Limit(5) / rate.Limit(time.Hour.Seconds())
+	burst := 5
+	if os.Getenv("DRIFTLOCK_DEV_MODE") == "true" {
+		limit = rate.Inf
+		burst = 1000
+	}
+
+	limiter := rate.NewLimiter(limit, burst)
 	signupLimiter.limiters[ip] = limiter
 	return limiter
 }

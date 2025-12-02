@@ -13,7 +13,15 @@ import (
 )
 
 func TestLoadLicenseValid(t *testing.T) {
+	// Setup test key
 	priv := testPrivateKey()
+	oldKey := licensePublicKey
+	licensePublicKey = &priv.PublicKey
+	defer func() { licensePublicKey = oldKey }()
+
+	// Disable dev mode
+	t.Setenv("DRIFTLOCK_DEV_MODE", "false")
+
 	expiry := time.Now().Add(24 * time.Hour).Unix()
 	key := makeLicenseKey(priv, "EVAL", expiry)
 	t.Setenv("DRIFTLOCK_LICENSE_KEY", key)
@@ -27,7 +35,15 @@ func TestLoadLicenseValid(t *testing.T) {
 }
 
 func TestLoadLicenseInvalidSignature(t *testing.T) {
+	// Setup test key
 	priv := testPrivateKey()
+	oldKey := licensePublicKey
+	licensePublicKey = &priv.PublicKey
+	defer func() { licensePublicKey = oldKey }()
+
+	// Disable dev mode
+	t.Setenv("DRIFTLOCK_DEV_MODE", "false")
+
 	expiry := time.Now().Add(24 * time.Hour).Unix()
 	key := makeLicenseKey(priv, "EVAL", expiry)
 	key = key + "tamper"
@@ -38,7 +54,15 @@ func TestLoadLicenseInvalidSignature(t *testing.T) {
 }
 
 func TestLoadLicenseExpired(t *testing.T) {
+	// Setup test key
 	priv := testPrivateKey()
+	oldKey := licensePublicKey
+	licensePublicKey = &priv.PublicKey
+	defer func() { licensePublicKey = oldKey }()
+
+	// Disable dev mode
+	t.Setenv("DRIFTLOCK_DEV_MODE", "false")
+
 	expiry := time.Now().Add(-1 * time.Hour).Unix()
 	key := makeLicenseKey(priv, "EVAL", expiry)
 	t.Setenv("DRIFTLOCK_LICENSE_KEY", key)
