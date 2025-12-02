@@ -3,22 +3,11 @@
         <!-- Hero Section -->
         <!-- Hero Section -->
         <section class="relative h-[80vh] min-h-[600px] w-full overflow-hidden border-b border-black bg-black text-white">
-            <!-- Video Background -->
-            <div class="absolute inset-0 z-0">
-                <video 
-                    autoplay 
-                    muted 
-                    loop 
-                    playsinline 
-                    poster="/media/anomaly-hero.png"
-                    class="h-full w-full object-cover opacity-60"
-                >
-                    <source src="/media/anomaly-hero.mp4" type="video/mp4">
-                </video>
-                <!-- Overlay Gradient -->
-                <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90"></div>
+            <!-- Brutalist Grid Background -->
+            <div class="absolute inset-0 z-0 opacity-20"
+                 style="background-image: linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px); background-size: 40px 40px;">
             </div>
-
+            
             <!-- Content -->
             <div class="container-padding relative z-10 flex h-full flex-col justify-end pb-16">
                 <div class="max-w-4xl">
@@ -158,7 +147,7 @@
                     <div class="brutalist-card flex flex-col relative">
                         <div class="mb-8">
                             <p class="text-sm font-bold font-sans uppercase tracking-wide mb-2">2. Radar</p>
-                            <p class="text-4xl font-sans font-bold">$20</p>
+                            <p class="text-4xl font-sans font-bold">$15</p>
                             <p class="text-sm text-gray-500 font-mono">per month</p>
                             <p class="mt-4 text-sm font-serif">Detect standard deviation. Filter the background noise.</p>
                             <p class="mt-2 text-xs text-gray-400 font-mono">Usage-based overage available</p>
@@ -183,8 +172,8 @@
                             Most Popular
                         </div>
                         <div class="mb-8">
-                            <p class="text-sm font-bold font-sans uppercase tracking-wide mb-2">3. Lock</p>
-                            <p class="text-4xl font-sans font-bold">$200</p>
+                            <p class="text-sm font-bold font-sans uppercase tracking-wide mb-2">3. Tensor</p>
+                            <p class="text-4xl font-sans font-bold">$100</p>
                             <p class="text-sm text-gray-400 font-mono">per month</p>
                             <p class="mt-4 text-sm font-serif">Full entropy surveillance. High-fidelity chaos detection & compliance.</p>
                             <p class="mt-2 text-xs text-gray-400 font-mono">Usage-based overage available</p>
@@ -195,11 +184,11 @@
                             <li>[x] Priority Support</li>
                         </ul>
                         <button type="button"
-                                @click="handleCheckout('lock')"
-                                :disabled="checkoutLoading === 'lock'"
+                                @click="handleCheckout('tensor')"
+                                :disabled="checkoutLoading === 'tensor'"
                                 class="brutalist-button-primary w-full text-center mt-8 border-white hover:bg-white hover:text-black"
-                                :class="{ 'opacity-70 cursor-wait': checkoutLoading === 'lock' }">
-                            {{ checkoutLoading === 'lock' ? 'Processing...' : 'Engage Lock' }}
+                                :class="{ 'opacity-70 cursor-wait': checkoutLoading === 'tensor' }">
+                            {{ checkoutLoading === 'tensor' ? 'Processing...' : 'Engage Tensor' }}
                         </button>
                     </div>
 

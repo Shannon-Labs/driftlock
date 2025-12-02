@@ -418,6 +418,56 @@ Hey Claude! Check the LAUNCH DEVELOPMENT GUIDE section in CLAUDE.md for:
 
 ---
 
+## Project Management
+
+**Primary**: [Linear - shannon-labs/driftlock](https://linear.app/shannon-labs/project/driftlock-a8c80503816c/overview)
+**Automation Level**: Heavy (auto-triage, daily standups, velocity reports)
+**Free until**: March 2026
+
+### For Claude Sessions
+
+Linear MCP is configured. You can interact with the project tracker directly:
+
+```
+# View current sprint
+"Show me issues in the driftlock project"
+
+# Create an issue
+"Create a Linear issue: Bug - API returns 500 on empty payload"
+
+# Update status
+"Mark DRI-123 as Done"
+
+# Check what's blocked
+"What issues are blocked or need attention?"
+```
+
+### Available Automation
+
+| Command/Agent | Description | Trigger |
+|---------------|-------------|---------|
+| **Auto-triage** | Labels new GitHub issues with priority/type/team | On issue creation |
+| **daily-standup** | Generates standup summary from Linear | Manual: ask Claude |
+| **/velocity** | Weekly velocity report with metrics | Manual: `/velocity` |
+| **todo-to-linear** | Scans TODOs and creates Linear issues | Manual: ask Claude |
+
+### Workflow
+
+1. **Check Linear** for current priorities before starting work
+2. **Pick an issue** and move it to "In Progress"
+3. **Create branch** with issue ID: `git checkout -b DRI-123-description`
+4. **Code & commit** - PRs auto-link to Linear issues
+5. **Merge** - Issue auto-closes when PR merges
+
+### GitHub Secrets Required
+
+For auto-triage to work, add these secrets to the repo:
+- `LLM_API_BASE` - e.g., `https://api.deepseek.com/v1`
+- `LLM_API_KEY` - Your DeepSeek/GLM API key
+- `LLM_MODEL` - e.g., `deepseek-chat` or `glm-4-flash`
+
+---
+
 ## LAUNCH CHECKLIST
 
 ### Phase 1: User Onboarding (COMPLETE)
@@ -584,14 +634,14 @@ For Firebase Auth testing and user management
 
 ## PRICING & COST ANALYSIS
 
-### Current Pricing Tiers
+### Current Pricing Tiers (Verified 2025-12-02)
 
 | Tier | Price | Events/Month | Features |
 |------|-------|--------------|----------|
-| **Pilot** (Free) | $0 | 10,000 | Basic detection, 14-day retention |
-| **Radar** | $20/mo | 500,000 | Email alerts, 30-day retention |
-| **Lock** | $200/mo | 5,000,000 | DORA/NIS2 evidence, priority support |
-| **Orbit** | Custom | Unlimited | Dedicated support, SLA |
+| **Pulse** (Free) | $0 | 10,000 | Basic detection, 14-day retention |
+| **Radar** | $15/mo | 500,000 | Email alerts, 30-day retention |
+| **Tensor** | $100/mo | 5,000,000 | DORA/NIS2 evidence, priority support |
+| **Orbit** | $499/mo | Unlimited | Dedicated support, SLA |
 
 ### Infrastructure Costs (Estimated Monthly)
 
