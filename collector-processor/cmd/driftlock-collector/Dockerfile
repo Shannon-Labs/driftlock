@@ -1,4 +1,4 @@
-ARG RUST_VERSION=1.82
+ARG RUST_VERSION=1.89
 ARG GO_VERSION=1.24
 ARG GO_TARBALL=1.24.0
 ARG DEBIAN_FRONTEND=noninteractive
@@ -62,4 +62,10 @@ ENV LD_LIBRARY_PATH="/usr/local/lib:${LD_LIBRARY_PATH}"
 COPY --from=cbad /src/cbad-core/target/release/libcbad_core.so /usr/local/lib/libcbad_core.so
 COPY --from=cbad /src/cbad-core/target/release/libcbad_core.a /usr/local/lib/libcbad_core.a
 COPY --from=builder /workspace/bin/driftlock-collector /usr/local/bin/driftlock-collector
+
+# Security: Run as non-root user
+RUN useradd -r -s /bin/false driftlock && \
+    chown driftlock:driftlock /usr/local/bin/driftlock-collector
+USER driftlock
+
 CMD ["/usr/local/bin/driftlock-collector"]

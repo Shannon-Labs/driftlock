@@ -317,15 +317,17 @@ func (s *store) createPendingTenant(ctx context.Context, params tenantCreatePara
 
 	now := time.Now()
 	status := "pending_verification"
+	// Verification tokens expire after 15 minutes for security
+	tokenExpiresAt := now.Add(15 * time.Minute)
 
 	// Insert tenant (firebase_uid is optional, use NULL if empty)
 	var firebaseUID *string
 	if params.FirebaseUID != "" {
 		firebaseUID = &params.FirebaseUID
 	}
-	_, err = tx.Exec(ctx, `INSERT INTO tenants (id, name, slug, plan, default_compressor, rate_limit_rps, email, signup_ip, signup_source, created_at, verification_token, status, firebase_uid) 
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
-		tenantID, params.Name, slug, params.Plan, params.DefaultCompressor, params.TenantRateLimit, params.Email, params.SignupIP, params.Source, now, params.VerificationToken, status, firebaseUID)
+	_, err = tx.Exec(ctx, `INSERT INTO tenants (id, name, slug, plan, default_compressor, rate_limit_rps, email, signup_ip, signup_source, created_at, verification_token, verification_token_expires_at, status, firebase_uid)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
+		tenantID, params.Name, slug, params.Plan, params.DefaultCompressor, params.TenantRateLimit, params.Email, params.SignupIP, params.Source, now, params.VerificationToken, tokenExpiresAt, status, firebaseUID)
 	if err != nil {
 		return nil, err
 	}
@@ -367,22 +369,30 @@ func (s *store) createPendingTenant(ctx context.Context, params tenantCreatePara
 	return result, nil
 }
 
+var errTokenExpired = errors.New("verification token has expired")
+
 func (s *store) verifyAndActivateTenant(ctx context.Context, token string) (*tenantCreateResult, error) {
 	var tenantID uuid.UUID
 	var tenantName, tenantSlug, tenantPlan, tenantCompressor string
 	var tenantRateLimit int
 	var createdAt time.Time
+	var tokenExpiresAt sql.NullTime
 
 	// 1. Find pending tenant by token
-	err := s.pool.QueryRow(ctx, `SELECT id, name, slug, plan, default_compressor, rate_limit_rps, created_at 
+	err := s.pool.QueryRow(ctx, `SELECT id, name, slug, plan, default_compressor, rate_limit_rps, created_at, verification_token_expires_at
 		FROM tenants WHERE verification_token = $1 AND status = 'pending_verification'`, token).Scan(
-		&tenantID, &tenantName, &tenantSlug, &tenantPlan, &tenantCompressor, &tenantRateLimit, &createdAt)
+		&tenantID, &tenantName, &tenantSlug, &tenantPlan, &tenantCompressor, &tenantRateLimit, &createdAt, &tokenExpiresAt)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, fmt.Errorf("invalid or expired verification token")
 		}
 		return nil, err
+	}
+
+	// Check if token has expired (15-minute TTL)
+	if tokenExpiresAt.Valid && time.Now().After(tokenExpiresAt.Time) {
+		return nil, errTokenExpired
 	}
 
 	// 2. Generate API Key
@@ -489,7 +499,9 @@ func (s *store) listKeys(ctx context.Context, tenantSlug string) ([]apiKeyInfo, 
 }
 
 func (s *store) revokeKey(ctx context.Context, keyID uuid.UUID) (int64, error) {
-	tag, err := s.pool.Exec(ctx, `DELETE FROM api_keys WHERE id=$1`, keyID)
+	// Soft delete: set revoked_at instead of deleting
+	// This allows for audit trail and prevents key reuse
+	tag, err := s.pool.Exec(ctx, `UPDATE api_keys SET revoked_at = NOW() WHERE id = $1 AND revoked_at IS NULL`, keyID)
 	if err != nil {
 		return 0, err
 	}
@@ -497,9 +509,10 @@ func (s *store) revokeKey(ctx context.Context, keyID uuid.UUID) (int64, error) {
 }
 
 func (s *store) resolveAPIKey(ctx context.Context, id uuid.UUID) (*apiKeyRecord, error) {
+	// Exclude revoked keys - they should not authenticate
 	row := s.pool.QueryRow(ctx, `SELECT ak.id, ak.tenant_id, ak.role, ak.key_hash, ak.stream_id, ak.name, ak.rate_limit_rps,
         t.name, t.slug, t.default_compressor, t.rate_limit_rps
-        FROM api_keys ak JOIN tenants t ON ak.tenant_id = t.id WHERE ak.id=$1`, id)
+        FROM api_keys ak JOIN tenants t ON ak.tenant_id = t.id WHERE ak.id=$1 AND ak.revoked_at IS NULL`, id)
 	var rec apiKeyRecord
 	var streamID *uuid.UUID
 	err := row.Scan(&rec.ID, &rec.TenantID, &rec.Role, &rec.KeyHash, &streamID, &rec.Name, &rec.KeyRateLimit,
@@ -1191,4 +1204,34 @@ func computeBillingStatus(bs BillingStatus) string {
 
 	// Default to free tier
 	return "free"
+}
+
+// regenerateVerificationToken generates a new token for a pending tenant
+func (s *store) regenerateVerificationToken(ctx context.Context, email string, newToken string) (string, error) {
+	now := time.Now()
+	expiresAt := now.Add(15 * time.Minute)
+
+	// Update token for pending tenant with matching email
+	tag, err := s.pool.Exec(ctx, `
+		UPDATE tenants
+		SET verification_token = $2,
+		    verification_token_expires_at = $3
+		WHERE email = $1
+		  AND status = 'pending_verification'`,
+		email, newToken, expiresAt)
+	if err != nil {
+		return "", err
+	}
+	if tag.RowsAffected() == 0 {
+		return "", fmt.Errorf("no pending account found for this email")
+	}
+
+	// Fetch company name for email template
+	var companyName string
+	err = s.pool.QueryRow(ctx, `SELECT name FROM tenants WHERE email = $1 AND status = 'pending_verification'`, email).Scan(&companyName)
+	if err != nil {
+		companyName = "there" // fallback
+	}
+
+	return companyName, nil
 }
