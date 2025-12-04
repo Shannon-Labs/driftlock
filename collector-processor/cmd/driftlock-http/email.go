@@ -76,10 +76,12 @@ The Driftlock Team`, companyName, apiKey)
 	}()
 }
 
-func (s *emailService) sendVerificationEmail(toEmail, companyName, token string) {
+// sendVerificationEmailSync sends a verification email synchronously and returns any error.
+// Use this for critical signup flows where we need to ensure delivery before returning success.
+func (s *emailService) sendVerificationEmailSync(toEmail, companyName, token string) error {
 	if s == nil {
 		log.Printf("MOCK EMAIL: Verification email to %s (%s) [token redacted]", toEmail, companyName)
-		return
+		return nil // Mock mode always succeeds
 	}
 
 	verifyLink := fmt.Sprintf("https://driftlock.net/verify?token=%s", token)
@@ -87,7 +89,7 @@ func (s *emailService) sendVerificationEmail(toEmail, companyName, token string)
 	from := mail.NewEmail(s.fromName, s.fromAddress)
 	subject := "Verify your Driftlock account"
 	to := mail.NewEmail(companyName, toEmail)
-	
+
 	plainTextContent := fmt.Sprintf(`Welcome to Driftlock!
 
 Please verify your email address by clicking the link below:
@@ -108,14 +110,40 @@ If you didn't sign up for Driftlock, you can ignore this email.`, verifyLink)
 
 	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
 
-	go func() {
+	// Synchronous send with retry for transient failures
+	var lastErr error
+	for attempt := 0; attempt < 3; attempt++ {
+		if attempt > 0 {
+			time.Sleep(time.Duration(attempt*500) * time.Millisecond) // Backoff: 0, 500ms, 1s
+		}
 		response, err := s.client.Send(message)
 		if err != nil {
-			log.Printf("ERROR: Failed to send verification email to %s: %v", toEmail, err)
-		} else if response.StatusCode >= 400 {
-			log.Printf("ERROR: SendGrid API returned %d for verification email to %s: %s", response.StatusCode, toEmail, response.Body)
-		} else {
-			log.Printf("Sent verification email to %s", toEmail)
+			lastErr = fmt.Errorf("send failed: %w", err)
+			log.Printf("ERROR: Verification email attempt %d failed for %s: %v", attempt+1, toEmail, err)
+			continue
+		}
+		if response.StatusCode >= 500 {
+			// Server error - retry
+			lastErr = fmt.Errorf("SendGrid returned %d: %s", response.StatusCode, response.Body)
+			log.Printf("ERROR: Verification email attempt %d failed for %s: %v", attempt+1, toEmail, lastErr)
+			continue
+		}
+		if response.StatusCode >= 400 {
+			// Client error - don't retry
+			return fmt.Errorf("SendGrid rejected email: %d - %s", response.StatusCode, response.Body)
+		}
+		log.Printf("Sent verification email to %s", toEmail)
+		return nil
+	}
+	return lastErr
+}
+
+// sendVerificationEmail sends a verification email asynchronously (fire-and-forget).
+// Use sendVerificationEmailSync for critical flows where delivery confirmation is needed.
+func (s *emailService) sendVerificationEmail(toEmail, companyName, token string) {
+	go func() {
+		if err := s.sendVerificationEmailSync(toEmail, companyName, token); err != nil {
+			log.Printf("ERROR: Async verification email failed for %s: %v", toEmail, err)
 		}
 	}()
 }
@@ -242,6 +270,55 @@ func (s *emailService) sendAdminAlert(toEmail, subject, body string) {
 			log.Printf("ERROR: SendGrid returned %d for admin alert to %s", response.StatusCode, toEmail)
 		} else {
 			log.Printf("Sent admin alert to %s: %s", toEmail, subject)
+		}
+	}()
+}
+
+func (s *emailService) sendGraceExpiredEmail(toEmail, companyName string) {
+	if s == nil {
+		log.Printf("MOCK EMAIL: Grace period expired for %s (%s)", toEmail, companyName)
+		return
+	}
+
+	from := mail.NewEmail(s.fromName, s.fromAddress)
+	subject := "Your Driftlock subscription has been downgraded"
+	to := mail.NewEmail(companyName, toEmail)
+
+	plainTextContent := fmt.Sprintf(`Hi %s,
+
+Your grace period has expired and your subscription has been downgraded to our free Pulse tier.
+
+Your data is still safe, but you'll have reduced feature access and lower usage limits.
+
+To restore your subscription, update your payment method:
+https://driftlock.net/dashboard
+
+Thanks,
+The Driftlock Team`, companyName)
+
+	htmlContent := fmt.Sprintf(`
+		<div style="font-family: sans-serif; color: #333;">
+			<h2>Subscription Downgraded</h2>
+			<p>Hi %s,</p>
+			<p>Your grace period has expired and your subscription has been downgraded to our free <strong>Pulse</strong> tier.</p>
+			<p>Your data is still safe, but you'll have reduced feature access and lower usage limits.</p>
+			<p>
+				<a href="https://driftlock.net/dashboard" style="background: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Restore Subscription</a>
+			</p>
+			<p>Thanks,<br>The Driftlock Team</p>
+		</div>
+	`, companyName)
+
+	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
+
+	go func() {
+		response, err := s.client.Send(message)
+		if err != nil {
+			log.Printf("ERROR: Failed to send grace expired email to %s: %v", toEmail, err)
+		} else if response.StatusCode >= 400 {
+			log.Printf("ERROR: SendGrid returned %d for grace expired email to %s", response.StatusCode, toEmail)
+		} else {
+			log.Printf("Sent grace expired email to %s", toEmail)
 		}
 	}()
 }

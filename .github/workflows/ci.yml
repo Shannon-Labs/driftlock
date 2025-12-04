@@ -14,6 +14,27 @@ env:
   LD_LIBRARY_PATH: ${{ github.workspace }}/cbad-core/target/release
 
 jobs:
+  commitlint:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install commitlint
+        run: bun install @commitlint/cli @commitlint/config-conventional
+
+      - name: Validate commits
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: bunx commitlint --from "$BASE_SHA" --to "$HEAD_SHA" --verbose
+
   lint-and-test:
     runs-on: ubuntu-latest
     steps:
@@ -37,9 +58,12 @@ jobs:
           cache: 'npm'
           cache-dependency-path: |
             package-lock.json
-            landing-page/package-lock.json
             functions/package-lock.json
             extensions/vscode-driftlock/package-lock.json
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
 
       - name: Cache cargo
         uses: actions/cache@v4
@@ -68,10 +92,9 @@ jobs:
           path: |
             ~/.npm
             node_modules
-            landing-page/node_modules
             functions/node_modules
             extensions/vscode-driftlock/node_modules
-          key: ${{ runner.os }}-npm-${{ hashFiles('package-lock.json', 'landing-page/package-lock.json', 'functions/package-lock.json', 'extensions/vscode-driftlock/package-lock.json') }}
+          key: ${{ runner.os }}-npm-${{ hashFiles('package-lock.json', 'functions/package-lock.json', 'extensions/vscode-driftlock/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-npm-
 
@@ -103,7 +126,7 @@ jobs:
 
       - name: Test Frontend
         run: |
-          cd landing-page && npm run type-check
+          cd landing-page && bun run type-check
           cd ../functions && npm run lint
 
       - name: Upload Coverage to Codecov

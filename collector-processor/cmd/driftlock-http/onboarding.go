@@ -170,9 +170,13 @@ func onboardSignupHandler(cfg config, store *store, emailer *emailService) http.
 			return
 		}
 
-		// Send verification email (async)
+		// Send verification email synchronously - fail signup if email can't be delivered
 		if emailer != nil {
-			go emailer.sendVerificationEmail(req.Email, req.CompanyName, verificationToken)
+			if err := emailer.sendVerificationEmailSync(req.Email, req.CompanyName, verificationToken); err != nil {
+				log.Printf("ERROR: Signup email delivery failed for %s: %v", req.Email, err)
+				writeError(w, r, http.StatusServiceUnavailable, fmt.Errorf("unable to send verification email, please try again later"))
+				return
+			}
 		}
 
 		// Build response - no API key yet, pending verification

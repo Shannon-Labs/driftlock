@@ -383,9 +383,14 @@
             </div>
           </div>
 
-          <!-- AI Usage Widget - temporarily disabled pending TypeScript fixes
-          <AIUsageWidget v-if="userPlan !== 'trial'" class="lg:col-span-1" @upgrade="handleUpgrade" @config-changed="onAIConfigChanged" />
-          -->
+          <!-- AI Usage Widget - show for paid plans (not free/pulse) -->
+          <AIUsageWidget
+            v-if="billing?.plan && billing.plan !== 'pulse'"
+            :plan="billing?.plan"
+            class="lg:col-span-1"
+            @upgrade="handleUpgrade"
+            @config-changed="onAIConfigChanged"
+          />
 
           <!-- API Keys Card -->
           <div class="bg-white border-2 border-black lg:col-span-3 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
@@ -586,7 +591,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import DashboardLayout from '../layouts/DashboardLayout.vue'
 import UsageChart from '../components/dashboard/UsageChart.vue'
-// import AIUsageWidget from '../components/dashboard/AIUsageWidget.vue' // TODO: Fix TypeScript errors
+import AIUsageWidget from '../components/dashboard/AIUsageWidget.vue'
 import { useAuthStore } from '../stores/auth'
 
 const authStore = useAuthStore()
@@ -719,7 +724,9 @@ const fetchBillingStatus = async () => {
 }
 
 // Upgrade handler for free tier users
-const handleUpgrade = async (plan: string) => {
+const handleUpgrade = async (plan?: string) => {
+  // Default to next tier if no plan specified
+  const targetPlan = plan || getNextTier(billing.value?.plan || 'pulse')
   upgradeError.value = null
   try {
     const token = await authStore.getToken()
@@ -729,7 +736,7 @@ const handleUpgrade = async (plan: string) => {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ plan })
+      body: JSON.stringify({ plan: targetPlan })
     })
     if (res.ok) {
       const data = await res.json()
@@ -740,6 +747,19 @@ const handleUpgrade = async (plan: string) => {
   } catch (e) {
     upgradeError.value = 'Network error. Please try again.'
   }
+}
+
+// Get next tier for upgrade suggestions
+const getNextTier = (currentPlan: string): string => {
+  const tiers = ['pulse', 'radar', 'tensor', 'orbit']
+  const currentIndex = tiers.indexOf(currentPlan)
+  if (currentIndex < 0 || currentIndex >= tiers.length - 1) return 'tensor'
+  return tiers[currentIndex + 1]
+}
+
+// Handle AI config changes
+const onAIConfigChanged = (config: { threshold: number; optimizeFor: string; maxCost: number }) => {
+  showToast('AI configuration updated', 'success')
 }
 
 // Fetch keys from API
