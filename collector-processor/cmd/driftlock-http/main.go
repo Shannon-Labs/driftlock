@@ -22,6 +22,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.uber.org/zap"
 )
 
 type config struct {
@@ -201,14 +203,21 @@ type queueStatus struct {
 }
 
 func main() {
+	// Initialize telemetry (logging + tracing) first
+	telemetryCfg := LoadTelemetryConfig()
+	if err := InitTelemetry(context.Background(), telemetryCfg); err != nil {
+		log.Fatalf("telemetry init failed: %v", err)
+	}
+	defer ShutdownTelemetry(context.Background())
+
 	cfg := loadConfig()
 	var err error
 	licenseInfo, err = loadLicense(time.Now())
 	if err != nil {
-		log.Fatalf("license validation failed: %v", err)
+		Logger().Fatal("license validation failed", zap.Error(err))
 	}
 	if os.Getenv("DRIFTLOCK_DEV_MODE") == "true" {
-		log.Printf("WARNING: Running in development mode - license validation bypassed")
+		Logger().Warn("Running in development mode - license validation bypassed")
 	}
 
 	if handleCLI(os.Args[1:], cfg) {
@@ -220,22 +229,22 @@ func main() {
 
 	pool, err := connectDB(ctx)
 	if err != nil {
-		log.Fatalf("db connection failed: %v", err)
+		Logger().Fatal("db connection failed", zap.Error(err))
 	}
 	store := newStore(pool)
 	if err := store.loadCache(ctx); err != nil {
-		log.Fatalf("load configs failed: %v", err)
+		Logger().Fatal("load configs failed", zap.Error(err))
 	}
 
 	// Initialize Firebase Auth
 	if os.Getenv("FIREBASE_SERVICE_ACCOUNT_KEY") != "" {
 		if err := initFirebaseAuth(); err != nil {
-			log.Printf("WARNING: Failed to init Firebase Auth: %v. Dashboard endpoints will fail.", err)
+			Logger().Warn("Failed to init Firebase Auth - Dashboard endpoints will fail", zap.Error(err))
 		} else {
-			log.Printf("Firebase Auth initialized")
+			Logger().Info("Firebase Auth initialized")
 		}
 	} else {
-		log.Printf("WARNING: FIREBASE_SERVICE_ACCOUNT_KEY not set. Dashboard endpoints disabled.")
+		Logger().Warn("FIREBASE_SERVICE_ACCOUNT_KEY not set - Dashboard endpoints disabled")
 	}
 
 	defer store.Close()
@@ -253,6 +262,11 @@ func main() {
 	workerCtx, workerCancel := context.WithCancel(context.Background())
 	webhookRetryWorker := NewWebhookRetryWorker(store, webhookStore, emailer, 30*time.Second, 50)
 	webhookRetryWorker.Start(workerCtx)
+
+	// Initialize billing cron worker for grace period downgrades and trial reminders
+	billingCronWorker := NewBillingCronWorker(store, emailer)
+	go billingCronWorker.Start(workerCtx)
+
 	defer func() {
 		workerCancel()
 		webhookRetryWorker.Stop()
@@ -266,19 +280,27 @@ func main() {
 	var aiClient ai.AIClient
 	aiClient, err = ai.NewAIClientFromEnv()
 	if err != nil {
-		log.Printf("WARNING: Failed to initialize AI client: %v. AI analysis will be disabled.", err)
+		Logger().Warn("Failed to initialize AI client - AI analysis disabled", zap.Error(err))
 	} else {
-		log.Printf("AI client initialized: provider=%s", aiClient.Provider())
+		Logger().Info("AI client initialized", zap.String("provider", aiClient.Provider()))
 	}
 
 	handler := buildHTTPHandler(cfg, store, queue, limiter, emailer, tracker, router, aiClient, webhookStore)
 
+	// Wrap handler with OpenTelemetry HTTP instrumentation for automatic tracing
+	otelHandler := otelhttp.NewHandler(handler, "driftlock-http",
+		otelhttp.WithMessageEvents(otelhttp.ReadEvents, otelhttp.WriteEvents),
+	)
+
+	// Wrap with Sentry panic recovery (outermost middleware)
+	finalHandler := SentryPanicRecoveryMiddleware(otelHandler)
+
 	addr := env("PORT", "8080")
-	log.Printf("driftlock-http listening on :%s", addr)
+	Logger().Info("driftlock-http starting", zap.String("port", addr))
 
 	srv := &http.Server{
 		Addr:         ":" + addr,
-		Handler:      handler,
+		Handler:      finalHandler,
 		ReadTimeout:  cfg.ReadTimeout,
 		WriteTimeout: cfg.WriteTimeout,
 		IdleTimeout:  cfg.IdleTimeout,
@@ -294,21 +316,23 @@ func main() {
 
 	select {
 	case err := <-serverErrors:
-		log.Fatalf("server failed: %v", err)
+		Logger().Fatal("server failed", zap.Error(err))
 	case sig := <-shutdown:
-		log.Printf("signal %v received, shutting down", sig)
+		Logger().Info("signal received, shutting down", zap.String("signal", sig.String()))
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 		if err := srv.Shutdown(ctx); err != nil {
-			log.Printf("graceful shutdown failed: %v", err)
+			Logger().Error("graceful shutdown failed", zap.Error(err))
 			_ = srv.Close()
 		}
+		Logger().Info("shutdown complete")
 	}
 }
 
 func buildHTTPHandler(cfg config, store *store, queue jobQueue, limiter *tenantRateLimiter, emailer *emailService, tracker *usageTracker, router *ai.Router, aiClient ai.AIClient, webhookStore *WebhookEventStore) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", healthHandler(store, queue))
+	mux.HandleFunc("/readyz", readinessHandler(store))
 	mux.Handle("/metrics", promhttp.Handler())
 
 	// Onboarding endpoints
@@ -401,6 +425,67 @@ func healthHandler(store *store, queue jobQueue) http.HandlerFunc {
 			writeJSON(w, r, http.StatusServiceUnavailable, resp)
 			return
 		}
+		writeJSON(w, r, http.StatusOK, resp)
+	}
+}
+
+// readinessResponse represents the response from the /readyz endpoint.
+type readinessResponse struct {
+	Ready     bool              `json:"ready"`
+	RequestID string            `json:"request_id"`
+	Checks    map[string]string `json:"checks"`
+	Error     string            `json:"error,omitempty"`
+}
+
+// readinessHandler checks if the service is ready to accept traffic.
+// Unlike /healthz (liveness), this checks that all dependencies are ready.
+func readinessHandler(store *store) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodOptions {
+			handlePreflight(w, r)
+			return
+		}
+
+		resp := readinessResponse{
+			Ready:     true,
+			RequestID: requestIDFrom(r.Context()),
+			Checks:    make(map[string]string),
+		}
+
+		ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+		defer cancel()
+
+		// Check 1: Database connectivity
+		if err := store.pool.Ping(ctx); err != nil {
+			resp.Ready = false
+			resp.Checks["database"] = "failed: " + err.Error()
+			Logger().Warn("readiness check failed: database", zap.Error(err))
+		} else {
+			resp.Checks["database"] = "ok"
+		}
+
+		// Check 2: CBAD library validation
+		if err := driftlockcbad.ValidateLibrary(); err != nil {
+			resp.Ready = false
+			resp.Checks["cbad_library"] = "failed: " + err.Error()
+			Logger().Warn("readiness check failed: cbad_library", zap.Error(err))
+		} else {
+			resp.Checks["cbad_library"] = "ok"
+		}
+
+		// Check 3: Config cache loaded (check cache has some entries or is accessible)
+		store.cache.mu.RLock()
+		tenantCount := len(store.cache.tenants)
+		streamCount := len(store.cache.streams)
+		store.cache.mu.RUnlock()
+		resp.Checks["cache"] = fmt.Sprintf("ok (tenants: %d, streams: %d)", tenantCount, streamCount)
+
+		if !resp.Ready {
+			resp.Error = "one or more readiness checks failed"
+			writeJSON(w, r, http.StatusServiceUnavailable, resp)
+			return
+		}
+
 		writeJSON(w, r, http.StatusOK, resp)
 	}
 }

@@ -59,6 +59,23 @@ func NewRouter(limiter *CostLimiter) *Router {
 	return &Router{
 		limiter: limiter,
 		models: map[string]*ModelClient{
+			// Z.AI GLM models (OpenAI-compatible, for trial/free tier)
+			"glm-4": {
+				Name:          "glm-4",
+				CostPerInput:  0.10, // $0.10 per 1M input tokens (much cheaper than Claude)
+				CostPerOutput: 0.10, // $0.10 per 1M output tokens
+				Speed:         8,
+				Quality:       6,
+				BatchDiscount: 1.0, // No batch discount
+			},
+			"glm-4-flash": {
+				Name:          "glm-4-flash",
+				CostPerInput:  0.01, // Very cheap flash model
+				CostPerOutput: 0.01,
+				Speed:         10,
+				Quality:       5,
+				BatchDiscount: 1.0,
+			},
 			// Direct Anthropic API models
 			"claude-haiku-4-5-20251001": {
 				Name:          "haiku-4.5",

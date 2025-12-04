@@ -35,16 +35,14 @@ cd ..
 echo -e "\n${BLUE}🌐 Step 2: Building and deploying Cloudflare Pages...${NC}"
 cd landing-page
 
-if [ ! -d "node_modules" ]; then
-    echo "Installing Pages dependencies..."
-    npm install
-fi
+echo "Installing Pages dependencies..."
+bun install --frozen-lockfile
 
 echo "Building frontend..."
-npm run build
+bun run build
 
 echo "Deploying to Cloudflare Pages..."
-npm run deploy:cloudflare
+bun run deploy:cloudflare
 
 cd ..
 
@@ -56,5 +54,6 @@ echo "3. Update DNS if needed"
 echo "4. Test endpoints: https://api.driftlock.net/healthz"
 echo ""
 echo "See docs/deployment/CLOUDFLARE_MIGRATION.md for details"
+
 
 

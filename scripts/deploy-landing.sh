@@ -17,10 +17,10 @@ fi
 pushd "$LANDING_DIR" >/dev/null
 
 echo "Installing landing page dependencies..."
-npm ci
+bun install --frozen-lockfile
 
 echo "Building landing page..."
-npm run build
+bun run build
 
 DEPLOY_ARGS=(--only hosting)
 if [[ -n "${FIREBASE_PROJECT:-}" ]]; then

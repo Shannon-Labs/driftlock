@@ -40,8 +40,15 @@ func billingCheckoutHandler(store *store) http.HandlerFunc {
 			Plan string `json:"plan"`
 		}
 		// Allow empty body for backward compatibility (default to basic)
+		// But return error for malformed JSON
 		if r.Body != nil {
-			json.NewDecoder(r.Body).Decode(&req)
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil && err != io.EOF {
+				writeJSON(w, r, http.StatusBadRequest, map[string]string{
+					"error":   "invalid JSON body",
+					"details": err.Error(),
+				})
+				return
+			}
 		}
 
 		// Determine Price ID based on plan
