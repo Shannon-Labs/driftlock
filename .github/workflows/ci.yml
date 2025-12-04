@@ -47,7 +47,7 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version: '1.24'
           cache: true
@@ -183,7 +183,7 @@ jobs:
         run: |
           OPENZL_LIB_DIR="${OPENZL_LIB_DIR}" cargo build --release --features openzl
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version: '1.24'
 
