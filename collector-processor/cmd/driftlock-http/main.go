@@ -287,8 +287,20 @@ func main() {
 
 	handler := buildHTTPHandler(cfg, store, queue, limiter, emailer, tracker, router, aiClient, webhookStore)
 
+	// Strip /api prefix for Firebase hosting rewrite compatibility
+	// Firebase routes /api/** to Cloud Run with the full path, but our routes don't have the /api prefix
+	apiPrefixHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// If path starts with /api, strip it for routing
+		if strings.HasPrefix(r.URL.Path, "/api/") {
+			r.URL.Path = strings.TrimPrefix(r.URL.Path, "/api")
+		} else if r.URL.Path == "/api" {
+			r.URL.Path = "/"
+		}
+		handler.ServeHTTP(w, r)
+	})
+
 	// Wrap handler with OpenTelemetry HTTP instrumentation for automatic tracing
-	otelHandler := otelhttp.NewHandler(handler, "driftlock-http",
+	otelHandler := otelhttp.NewHandler(apiPrefixHandler, "driftlock-http",
 		otelhttp.WithMessageEvents(otelhttp.ReadEvents, otelhttp.WriteEvents),
 	)
 
@@ -342,14 +354,19 @@ func buildHTTPHandler(cfg config, store *store, queue jobQueue, limiter *tenantR
 
 	// Demo endpoint (no auth, rate limited by IP)
 	demoLimiter := newDemoRateLimiter()
+	waitlistLimiter := newWaitlistRateLimiter()
 	go func() {
 		ticker := time.NewTicker(5 * time.Minute)
 		for range ticker.C {
 			demoLimiter.cleanup()
+			waitlistLimiter.cleanup()
 			cleanupSignupLimiters() // Prevent memory leak from signup rate limiters
 		}
 	}()
 	mux.HandleFunc("/v1/demo/detect", demoDetectHandler(cfg, demoLimiter))
+
+	// Pre-launch waitlist (no auth, rate limited)
+	mux.HandleFunc("/v1/waitlist", waitlistHandler(store, waitlistLimiter))
 
 	mux.Handle("/v1/detect", withAuth(store, limiter, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		detectHandler(w, r, cfg, store, tracker, router, aiClient)
