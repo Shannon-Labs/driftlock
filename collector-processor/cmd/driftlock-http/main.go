@@ -91,7 +91,7 @@ type configOverride struct {
 
 type detectResponse struct {
 	Success         bool            `json:"success"`
-	BatchID         string          `json:"batch_id"`
+	BatchID         string          `json:"batch_id,omitempty"`
 	StreamID        string          `json:"stream_id"`
 	TotalEvents     int             `json:"total_events"`
 	AnomalyCount    int             `json:"anomaly_count"`
@@ -100,6 +100,34 @@ type detectResponse struct {
 	FallbackFromAlg string          `json:"fallback_from_algo,omitempty"`
 	Anomalies       []anomalyOutput `json:"anomalies"`
 	RequestID       string          `json:"request_id"`
+	// SHA-139: Cold start calibration fields
+	Status      string           `json:"status"`                // "ready" or "calibrating"
+	Calibration *calibrationInfo `json:"calibration,omitempty"` // Present when status is "calibrating"
+	// SHA-140: Drift detection against frozen anchor baseline
+	Drift *driftResult `json:"drift,omitempty"`
+	// SHA-143: Numeric value outliers
+	ValueOutliers []driftlockcbad.ValueOutlier `json:"value_outliers,omitempty"`
+}
+
+// calibrationInfo is returned when a stream is still calibrating (SHA-139)
+type calibrationInfo struct {
+	EventsIngested  int64  `json:"events_ingested"`
+	EventsNeeded    int64  `json:"events_needed"`
+	MinBaselineSize int    `json:"min_baseline_size"`
+	ProgressPercent int    `json:"progress_percent"`
+	Message         string `json:"message"`
+}
+
+// driftResult represents anchor-based drift detection output (SHA-140)
+type driftResult struct {
+	AnchorID         string  `json:"anchor_id"`
+	DriftScore       float64 `json:"drift_score"`
+	DriftThreshold   float64 `json:"drift_threshold"`
+	DriftDetected    bool    `json:"drift_detected"`
+	BaselineEvents   int     `json:"baseline_events"`
+	WindowEvents     int     `json:"window_events"`
+	AnchorCreatedAt  string  `json:"anchor_created_at,omitempty"`
+	DiagnosticReason string  `json:"diagnostic_reason,omitempty"`
 }
 
 type anomalyOutput struct {
@@ -373,6 +401,20 @@ func buildHTTPHandler(cfg config, store *store, queue jobQueue, limiter *tenantR
 	})))
 	mux.Handle("/v1/anomalies", withAuth(store, limiter, anomaliesHandler(store)))
 	mux.Handle("/v1/anomalies/", withAuth(store, limiter, anomalyRouter(cfg, store, queue)))
+
+	// SHA-140: Anchor baseline endpoints for drift detection
+	mux.Handle("/v1/streams/{id}/anchor", withAuth(store, limiter, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			getAnchorHandler(store)(w, r)
+		case http.MethodDelete:
+			deleteAnchorHandler(store)(w, r)
+		default:
+			writeError(w, r, http.StatusMethodNotAllowed, fmt.Errorf("method not allowed"))
+		}
+	})))
+	mux.Handle("/v1/streams/{id}/anchor/details", withAuth(store, limiter, getAnchorDetailsHandler(store)))
+	mux.Handle("/v1/streams/{id}/reset-anchor", withAuth(store, limiter, resetAnchorHandler(store, cfg)))
 
 	// Billing endpoints
 	mux.Handle("/v1/billing/checkout", withAuth(store, limiter, billingCheckoutHandler(store)))
@@ -838,11 +880,111 @@ func detectHandler(w http.ResponseWriter, r *http.Request, cfg config, store *st
 	}
 	plan := buildDetectionSettings(cfg, stream, settings, payload.ConfigOverride)
 
+	anchorSettings, err := store.getAnchorSettings(r.Context(), stream.ID)
+	if err != nil {
+		if err != errNotFound {
+			log.Printf("anchor: failed to read anchor settings (defaulting): %v", err)
+		}
+		anchorSettings = nil
+	}
+
+	// SHA-139: Cold Start Guardrail - Check and update calibration status
+	eventCount := len(payload.Events)
+	calibStatus, calibErr := store.incrementStreamEvents(r.Context(), stream.ID, eventCount)
+	if calibErr != nil {
+		log.Printf("Warning: failed to update stream calibration: %v", calibErr)
+		// Non-fatal - continue with detection (stream might not have calibration columns yet)
+	}
+
+	// If stream is still calibrating, return early with calibration info
+	if calibStatus != nil && !calibStatus.IsCalibrated {
+		resp := detectResponse{
+			Success:        true,
+			StreamID:       stream.ID.String(),
+			TotalEvents:    eventCount,
+			AnomalyCount:   0,
+			ProcessingTime: "0ms",
+			CompressionAlg: plan.CompressionAlgorithm,
+			Anomalies:      []anomalyOutput{},
+			RequestID:      requestIDFrom(r.Context()),
+			Status:         "calibrating",
+			Calibration: &calibrationInfo{
+				EventsIngested:  calibStatus.EventsIngested,
+				EventsNeeded:    calibStatus.EventsNeeded,
+				MinBaselineSize: calibStatus.MinBaselineSize,
+				ProgressPercent: calibStatus.ProgressPercent,
+				Message: fmt.Sprintf(
+					"Stream is calibrating. %d more events needed for statistically significant anomaly detection. Progress: %d/%d events (%d%%).",
+					calibStatus.EventsNeeded, calibStatus.EventsIngested, calibStatus.MinBaselineSize, calibStatus.ProgressPercent,
+				),
+			},
+		}
+
+		// Still track usage even during calibration
+		go tracker.track(context.Background(), tc.Tenant.ID, stream.ID, tc.Tenant.Plan, eventCount, 0)
+
+		writeJSON(w, r, http.StatusOK, resp)
+		return
+	}
+
+	calibrationJustCompleted := false
+	if calibStatus != nil && calibStatus.IsCalibrated {
+		previousTotal := calibStatus.EventsIngested - int64(eventCount)
+		if previousTotal < 0 {
+			previousTotal = 0
+		}
+		if calibStatus.MinBaselineSize > 0 && previousTotal < int64(calibStatus.MinBaselineSize) {
+			calibrationJustCompleted = true
+		}
+	}
+
 	usedAlgo := plan.CompressionAlgorithm
 	fallbackFrom := ""
 	if usedAlgo == "openzl" && !driftlockcbad.HasOpenZL() {
 		fallbackFrom = usedAlgo
 		usedAlgo = "zstd"
+	}
+
+	// SHA-141: Create tokenizer for high-entropy field replacement
+	var tokenizer *driftlockcbad.Tokenizer
+	if settings.TokenizerEnabled {
+		tokenizer = driftlockcbad.GetTokenizer(driftlockcbad.TokenizerConfig{
+			EnableUUID:   settings.TokenizeUUID,
+			EnableHash:   settings.TokenizeHash,
+			EnableBase64: settings.TokenizeBase64,
+			EnableJWT:    settings.TokenizeJWT,
+		})
+	}
+
+	// SHA-140: Capture anchor snapshot when calibration first completes
+	var activeAnchor *StreamAnchor
+	anchorEnabled := anchorSettings == nil || anchorSettings.AnchorEnabled
+	if anchorEnabled {
+		if anchor, err := store.getActiveAnchor(r.Context(), stream.ID); err == nil {
+			activeAnchor = anchor
+		} else if !errors.Is(err, errNotFound) {
+			log.Printf("anchor: failed to load active anchor: %v", err)
+		}
+		if calibrationJustCompleted && activeAnchor == nil {
+			limit := minInt(len(payload.Events), 200)
+			snapshot, count, err := buildSnapshot(payload.Events, tokenizer, limit, false)
+			if err != nil {
+				log.Printf("anchor: unable to build baseline snapshot: %v", err)
+			} else if count > 0 {
+				driftThreshold := defaultAnchorThreshold
+				if anchorSettings != nil {
+					driftThreshold = anchorSettings.DriftNCDThreshold
+				}
+				anchor := newAnchorRecord(stream.ID, usedAlgo, snapshot, count, time.Now().UTC(), driftThreshold, plan.Seed, plan.PermutationCount)
+				if anchor == nil {
+					log.Printf("anchor: snapshot missing, skipping anchor creation")
+				} else if err := store.createStreamAnchor(r.Context(), anchor); err != nil {
+					log.Printf("anchor: failed to persist anchor: %v", err)
+				} else {
+					activeAnchor = anchor
+				}
+			}
+		}
 	}
 
 	detector, err := driftlockcbad.NewDetector(driftlockcbad.DetectorConfig{
@@ -865,7 +1007,24 @@ func detectHandler(w http.ResponseWriter, r *http.Request, cfg config, store *st
 	requestCounter.Inc()
 	start := time.Now()
 
-	anomalies, records, err := runDetectionWithRecovery(r.Context(), detector, payload.Events)
+	// SHA-143: Check for numeric value outliers (registry is shared across requests)
+	var valueOutliers []driftlockcbad.ValueOutlier
+	if settings.NumericOutlierEnabled {
+		for _, ev := range payload.Events {
+			outliers, err := driftlockcbad.CheckForOutliers(
+				numericStatsRegistry,
+				stream.ID.String(),
+				[]byte(ev),
+				settings.NumericKSigma,
+				true,
+			)
+			if err == nil && len(outliers) > 0 {
+				valueOutliers = append(valueOutliers, outliers...)
+			}
+		}
+	}
+
+	anomalies, records, err := runDetectionWithRecovery(r.Context(), detector, payload.Events, tokenizer)
 	if err != nil {
 		// Distinguish between user errors and internal FFI errors
 		if errors.Is(err, ErrCBADPanic) || errors.Is(err, ErrCBADTimeout) {
@@ -938,6 +1097,40 @@ func detectHandler(w http.ResponseWriter, r *http.Request, cfg config, store *st
 		}()
 	}
 
+	// SHA-140: Drift detection against anchor baseline
+	var driftFinding *driftResult
+	if anchorEnabled && activeAnchor != nil && len(activeAnchor.AnchorData) > 0 {
+		baselinePayload, err := decodeAnchorData(activeAnchor.AnchorData, activeAnchor.Compressor)
+		if err != nil {
+			log.Printf("anchor: failed to decode baseline payload: %v", err)
+			driftFinding = &driftResult{DiagnosticReason: "anchor_decode_failed"}
+		} else {
+			windowSnapshot, windowCount, err := buildSnapshot(payload.Events, tokenizer, plan.WindowSize, true)
+			if err != nil {
+				log.Printf("anchor: failed to build window snapshot: %v", err)
+				driftFinding = &driftResult{DiagnosticReason: "window_snapshot_failed"}
+			} else if windowCount > 0 {
+				metrics, err := driftlockcbad.ComputeMetrics(baselinePayload, windowSnapshot, plan.Seed, plan.PermutationCount)
+				if err != nil {
+					log.Printf("anchor: drift computation failed: %v", err)
+					driftFinding = &driftResult{DiagnosticReason: "drift_compute_failed"}
+				} else if metrics != nil {
+					driftFinding = &driftResult{
+						AnchorID:        activeAnchor.ID.String(),
+						DriftScore:      metrics.NCD,
+						DriftThreshold:  activeAnchor.DriftNCDThreshold,
+						DriftDetected:   metrics.NCD >= activeAnchor.DriftNCDThreshold,
+						BaselineEvents:  activeAnchor.EventCount,
+						WindowEvents:    windowCount,
+						AnchorCreatedAt: activeAnchor.CreatedAt.Format(time.RFC3339),
+					}
+				}
+			}
+		}
+	} else if anchorEnabled && driftFinding == nil {
+		driftFinding = &driftResult{DiagnosticReason: "no_active_anchor"}
+	}
+
 	resp := detectResponse{
 		Success:         true,
 		BatchID:         batchID,
@@ -949,6 +1142,9 @@ func detectHandler(w http.ResponseWriter, r *http.Request, cfg config, store *st
 		FallbackFromAlg: fallbackFrom,
 		Anomalies:       anomalies,
 		RequestID:       requestIDFrom(r.Context()),
+		Status:          "ready", // SHA-139: Stream is calibrated and ready
+		Drift:           driftFinding,
+		ValueOutliers:   valueOutliers,
 	}
 	writeJSON(w, r, http.StatusOK, resp)
 	requestDuration.Observe(time.Since(start).Seconds())
@@ -1042,7 +1238,8 @@ var ErrCBADPanic = errors.New("CBAD detector panic recovered")
 var ErrCBADTimeout = errors.New("CBAD detector operation timed out")
 
 // runDetectionWithRecovery wraps runDetection with panic recovery and timeout
-func runDetectionWithRecovery(ctx context.Context, detector *driftlockcbad.Detector, events []json.RawMessage) (outputs []anomalyOutput, records []persistedAnomaly, err error) {
+// SHA-141: Added tokenizer parameter for high-entropy field preprocessing
+func runDetectionWithRecovery(ctx context.Context, detector *driftlockcbad.Detector, events []json.RawMessage, tokenizer *driftlockcbad.Tokenizer) (outputs []anomalyOutput, records []persistedAnomaly, err error) {
 	// Create a context with timeout for the entire detection operation
 	ctx, cancel := context.WithTimeout(ctx, cbadTimeout)
 	defer cancel()
@@ -1064,7 +1261,7 @@ func runDetectionWithRecovery(ctx context.Context, detector *driftlockcbad.Detec
 			}
 		}()
 
-		outputs, records, err := runDetection(detector, events)
+		outputs, records, err := runDetection(detector, events, tokenizer)
 		resultCh <- result{outputs, records, err}
 	}()
 
@@ -1077,11 +1274,17 @@ func runDetectionWithRecovery(ctx context.Context, detector *driftlockcbad.Detec
 	}
 }
 
-func runDetection(detector *driftlockcbad.Detector, events []json.RawMessage) ([]anomalyOutput, []persistedAnomaly, error) {
+func runDetection(detector *driftlockcbad.Detector, events []json.RawMessage, tokenizer *driftlockcbad.Tokenizer) ([]anomalyOutput, []persistedAnomaly, error) {
 	outputs := make([]anomalyOutput, 0)
 	records := make([]persistedAnomaly, 0)
 	for idx, ev := range events {
-		added, err := detector.AddData(ev)
+		// SHA-141: Tokenize high-entropy fields before compression
+		processedEv := ev
+		if tokenizer != nil {
+			processedEv = json.RawMessage(tokenizer.Tokenize([]byte(ev)))
+		}
+
+		added, err := detector.AddData(processedEv)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -1391,6 +1594,8 @@ var (
 		Help: "Whether OpenZL symbols are present in the CBAD core",
 	})
 	registerMetricsOnce sync.Once
+	// SHA-143: Numeric stats registry (shared across requests)
+	numericStatsRegistry = driftlockcbad.NewNumericStatsRegistry()
 )
 
 func registerMetrics() {

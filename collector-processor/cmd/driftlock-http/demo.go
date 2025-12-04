@@ -238,7 +238,10 @@ func demoDetectHandler(cfg config, limiter *demoRateLimiter) http.HandlerFunc {
 		requestCounter.Inc()
 		start := time.Now()
 
-		anomalies, _, err := runDetectionWithRecovery(r.Context(), detector, payload.Events)
+		// SHA-141: Use default tokenizer for demo (all patterns enabled)
+		tokenizer := driftlockcbad.GetTokenizer(driftlockcbad.DefaultTokenizerConfig())
+
+		anomalies, _, err := runDetectionWithRecovery(r.Context(), detector, payload.Events, tokenizer)
 		if err != nil {
 			// Distinguish between user errors and internal FFI errors
 			if errors.Is(err, ErrCBADPanic) || errors.Is(err, ErrCBADTimeout) {

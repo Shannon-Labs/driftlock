@@ -49,6 +49,8 @@ tags:
     description: Manage your account and API keys
   - name: Billing
     description: Subscription and payment management
+  - name: Streams
+    description: Stream-level configuration and anchors
 
 paths:
   # ═══════════════════════════════════════════════════════════════════════════
@@ -335,6 +337,87 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '429':
           $ref: '#/components/responses/RateLimited'
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # STREAM ANCHORS (API Key Auth)
+  # ═══════════════════════════════════════════════════════════════════════════
+  /v1/streams/{id}/anchor:
+    get:
+      summary: Get anchor settings and status
+      tags: [Streams]
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Anchor settings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnchorSettingsResponse'
+    delete:
+      summary: Deactivate anchor (disables drift detection)
+      tags: [Streams]
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Anchor deactivated
+
+  /v1/streams/{id}/anchor/details:
+    get:
+      summary: Get full anchor data including metrics
+      tags: [Streams]
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Anchor details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnchorDetailsResponse'
+
+  /v1/streams/{id}/reset-anchor:
+    post:
+      summary: Create new anchor from provided events
+      tags: [Streams]
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetAnchorRequest'
+      responses:
+        '200':
+          description: Anchor created
+        '412':
+          description: Stream not calibrated
 
   # ═══════════════════════════════════════════════════════════════════════════
   # ANOMALIES (API Key Auth)
@@ -1001,6 +1084,12 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AnomalyOutput'
+        drift:
+          $ref: '#/components/schemas/DriftResult'
+        value_outliers:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValueOutlier'
 
     DemoDetectResponse:
       allOf:
@@ -1122,6 +1211,115 @@ components:
                     type: string
                   checksum:
                     type: string
+
+    AnchorSettingsResponse:
+      type: object
+      properties:
+        anchor_enabled:
+          type: boolean
+        drift_ncd_threshold:
+          type: number
+        anchor_reset_on_drift:
+          type: boolean
+        has_active_anchor:
+          type: boolean
+        anchor_id:
+          type: string
+          format: uuid
+          nullable: true
+
+    AnchorDetailsResponse:
+      type: object
+      properties:
+        anchor:
+          $ref: '#/components/schemas/AnchorResponse'
+          nullable: true
+        message:
+          type: string
+
+    AnchorResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        stream_id:
+          type: string
+          format: uuid
+        compressor:
+          type: string
+        event_count:
+          type: integer
+        calibration_completed_at:
+          type: string
+          format: date-time
+        is_active:
+          type: boolean
+        baseline_entropy:
+          type: number
+          nullable: true
+        baseline_compression_ratio:
+          type: number
+          nullable: true
+        drift_ncd_threshold:
+          type: number
+        created_at:
+          type: string
+          format: date-time
+
+    ResetAnchorRequest:
+      type: object
+      required:
+        - events
+      properties:
+        force_reset:
+          type: boolean
+          default: false
+        events:
+          type: array
+          items:
+            type: object
+          minItems: 1
+
+    DriftResult:
+      type: object
+      nullable: true
+      properties:
+        anchor_id:
+          type: string
+          format: uuid
+        drift_score:
+          type: number
+        drift_threshold:
+          type: number
+        drift_detected:
+          type: boolean
+        baseline_events:
+          type: integer
+        window_events:
+          type: integer
+        anchor_created_at:
+          type: string
+          format: date-time
+        diagnostic_reason:
+          type: string
+          enum: [no_active_anchor, anchor_decode_failed, window_snapshot_failed, drift_compute_failed]
+
+    ValueOutlier:
+      type: object
+      properties:
+        field_path:
+          type: string
+        value:
+          type: number
+        expected_mean:
+          type: number
+        std_dev:
+          type: number
+        z_score:
+          type: number
+        sample_count:
+          type: integer
 
     UsageSummary:
       type: object

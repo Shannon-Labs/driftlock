@@ -395,9 +395,9 @@ See also phase summaries and roadmaps for implementation progress tracking.
 
 > **For AI Assistants:** Start here! This section tracks what's done, what's next, and how to continue development.
 
-## Current Status: ~95% Launch Ready
+## Current Status: ~98% Launch Ready (Deployment In Progress)
 
-**Last Updated:** 2025-11-25
+**Last Updated:** 2025-12-04
 **Target:** Public launch with self-serve signup, working billing, demo/playground, API access
 
 ### What's Done
@@ -406,6 +406,15 @@ See also phase summaries and roadmaps for implementation progress tracking.
 - Documentation updated
 - E2E tests written
 - Security audit passed (no SQL injection, all endpoints auth-protected)
+- **[2025-12-04] AI Agent Integration Complete:**
+  - Fixed Firebase→Cloud Run routing (service name + /api prefix)
+  - Complete OpenAPI 3.0 spec with all 20+ endpoints
+  - AI agent integration guide (`/docs/ai-agents/INTEGRATION.md`)
+  - Use case documentation (`/docs/use-cases/general-anomaly-detection.md`)
+
+### What's In Progress
+- Cloud Build deploying new code (build ID: 37eefe5f)
+- Final production verification pending
 
 ## Quick Start for New AI Sessions
 
@@ -536,7 +545,36 @@ For auto-triage to work, add these secrets to the repo:
 - [x] E2E test: trial → checkout → subscription (`e2e_billing_test.go`)
 - [x] Error code reference page (`landing-page/public/docs/user-guide/api/errors.md`)
 - [ ] Load test Cloud Run deployment (optional pre-launch)
-- [ ] Production deployment verification
+- [x] Production deployment verification (in progress - build 37eefe5f)
+
+### Phase 5: AI Agent Integration (COMPLETE - 2025-12-04)
+
+- [x] **Firebase routing fix** (`landing-page/firebase.json`)
+  - Changed `serviceId: "apiproxy"` → `"driftlock-api"` (line 13)
+  - Was causing 404s because Cloud Run service has different name
+
+- [x] **Path prefix middleware** (`collector-processor/cmd/driftlock-http/main.go`)
+  - Added `/api` prefix stripping middleware
+  - Firebase forwards `/api/healthz` but routes are registered as `/healthz`
+
+- [x] **Complete OpenAPI 3.0 spec** (`docs/architecture/api/openapi.yaml`)
+  - Added all 20+ endpoints (was missing 16)
+  - Fixed server URL: `https://driftlock.net/api`
+  - Removed non-implemented SSE endpoint
+  - Added proper security schemes (ApiKeyAuth, BearerAuth)
+
+- [x] **AI agent integration guide** (`landing-page/public/docs/ai-agents/INTEGRATION.md`)
+  - Quick reference for AI systems
+  - Demo endpoint usage (no auth required)
+  - Python client example
+  - MCP server placeholder
+
+- [x] **Use case documentation** (`landing-page/public/docs/use-cases/general-anomaly-detection.md`)
+  - How CBAD works
+  - Log anomaly detection
+  - Metric spike detection
+  - API traffic analysis
+  - Configuration tips
 
 ---
 
@@ -724,15 +762,19 @@ DRIFTLOCK_DEV_MODE=true
 
 **If you're an AI picking this up, work on these in order:**
 
+### Immediate (if deployment not verified)
+1. **Check build status** - `gcloud builds list --limit=1 --project=driftlock`
+2. **Verify production** - `curl https://driftlock.net/api/healthz`
+3. **Test demo endpoint** - `curl -X POST https://driftlock.net/api/v1/demo/detect -H "Content-Type: application/json" -d '{"events":[{"msg":"test"}]}'`
+
 ### Pre-Launch Verification
-1. **Run E2E tests** - `go test ./collector-processor/cmd/driftlock-http/... -v`
-2. **Test production deployment** - Verify Cloud Run is working
-3. **Verify Stripe webhooks** - Test with `stripe listen`
+4. **Run E2E tests** - `go test ./collector-processor/cmd/driftlock-http/... -v`
+5. **Verify Stripe webhooks** - Test with `stripe listen`
+6. **Test full flow** - Signup → Verify → Detect → Dashboard
 
 ### Optional Enhancements
-4. **Load testing** - Performance verification under load
-5. **Recent anomalies feed** - Populate dashboard with real data
-6. **Redis rate limiting** - Upgrade demo endpoint for multi-instance
+7. **Load testing** - Performance verification under load
+8. **Redis rate limiting** - Upgrade demo endpoint for multi-instance
 
 ### All Major Features Complete
 - [x] User onboarding with email verification
@@ -740,9 +782,12 @@ DRIFTLOCK_DEV_MODE=true
 - [x] Anonymous demo endpoint with rate limiting
 - [x] Dashboard with usage charts
 - [x] Playground demo mode for unauthenticated users
-- [x] API documentation
+- [x] API documentation (OpenAPI 3.0 complete)
+- [x] AI agent integration guide
+- [x] Use case documentation
 - [x] E2E tests for onboarding and billing
 - [x] Security audit passed
+- [x] Firebase→Cloud Run routing fixed
 
 ---
 
@@ -772,4 +817,5 @@ stripe listen --forward-to localhost:8080/api/v1/billing/webhook
 ---
 
 **Last updated by:** Claude (Opus 4.5)
-**Session:** Codebase audit, cleanup, and launch preparation (2025-11-25)
+**Session:** AI agent integration, OpenAPI completion, Firebase routing fix (2025-12-04)
+**Previous:** Codebase audit, cleanup, and launch preparation (2025-11-25)
