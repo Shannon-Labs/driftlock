@@ -60,7 +60,7 @@
               </div>
 
               <!-- Visual/Graph Area (Simulated) -->
-              <div class="bg-gray-50 border border-black p-6 mb-8 flex-grow relative overflow-hidden group min-h-[200px]">
+              <div class="bg-white border border-black p-6 mb-8 flex-grow relative overflow-hidden group min-h-[200px]">
                  <!-- Background Grid -->
                  <div class="absolute inset-0 opacity-10 pointer-events-none" 
                       style="background-image: radial-gradient(#000 1px, transparent 1px); background-size: 20px 20px;">
@@ -81,7 +81,7 @@
                  <!-- Overlay Verdict -->
                  <div class="absolute top-4 right-4 bg-white border border-black px-4 py-3 shadow-sm max-w-xs z-10">
                     <div class="flex items-center gap-2 mb-1">
-                        <div class="w-2 h-2 rounded-full" :class="activeHorizon.hasAnomaly ? 'bg-red-500 animate-pulse' : 'bg-green-500'"></div>
+                        <div class="w-2 h-2 rounded-full" :class="activeHorizon.hasAnomaly ? 'bg-black animate-pulse' : 'border-2 border-black bg-white'"></div>
                         <span class="text-xs font-bold uppercase tracking-widest">Forensic Verdict</span>
                     </div>
                     <p class="font-mono text-xs leading-relaxed mb-2">
@@ -89,7 +89,7 @@
                     </p>
                     <div class="border-t border-black pt-2 mt-2">
                          <div class="flex items-center gap-1 mb-1">
-                            <span class="text-[10px] font-bold uppercase tracking-widest text-blue-600">Gemini Insight</span>
+                            <span class="text-[10px] font-bold uppercase tracking-widest text-black">Gemini Insight</span>
                         </div>
                         <p class="font-serif text-xs italic text-gray-600">
                             "{{ activeHorizon.geminiInsight }}"

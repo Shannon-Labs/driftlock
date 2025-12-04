@@ -861,6 +861,10 @@ type streamRecord struct {
 	Seed          int64
 	Compressor    string
 	RetentionDays int
+	// Cold start calibration fields (SHA-139)
+	EventsIngested  int64
+	IsCalibrated    bool
+	MinBaselineSize int
 }
 
 func (sr streamRecord) cacheKey() string {
@@ -875,6 +879,15 @@ type streamSettings struct {
 	PValueThreshold  float64 `json:"p_value_threshold"`
 	PermutationCount int     `json:"permutation_count"`
 	Compressor       string  `json:"compressor"`
+	// SHA-141: Tokenizer settings
+	TokenizerEnabled bool `json:"tokenizer_enabled"`
+	TokenizeUUID     bool `json:"tokenize_uuid"`
+	TokenizeHash     bool `json:"tokenize_hash"`
+	TokenizeBase64   bool `json:"tokenize_base64"`
+	TokenizeJWT      bool `json:"tokenize_jwt"`
+	// SHA-143: Numeric outlier detection
+	NumericOutlierEnabled bool    `json:"numeric_outlier_enabled"`
+	NumericKSigma         float64 `json:"numeric_k_sigma"`
 }
 
 func (s *streamSettings) applyDefaults() {
@@ -899,6 +912,31 @@ func (s *streamSettings) applyDefaults() {
 	if s.Compressor == "" {
 		s.Compressor = "zstd"
 	}
+	// SHA-141: Tokenizer defaults - disabled by default, all patterns on when enabled
+	// (no defaults needed - bool zero values are false which is correct)
+	// SHA-143: Numeric outlier defaults
+	if s.NumericKSigma == 0 {
+		s.NumericKSigma = 3.0
+	}
+}
+
+// TokenizerEnabled returns true if tokenization is enabled
+func (s *streamSettings) GetTokenizerEnabled() bool {
+	return s.TokenizerEnabled
+}
+
+// GetTokenizerPatterns returns which tokenizer patterns are enabled
+// Returns: enableUUID, enableHash, enableBase64, enableJWT
+func (s *streamSettings) GetTokenizerPatterns() (bool, bool, bool, bool) {
+	if !s.TokenizerEnabled {
+		return false, false, false, false
+	}
+	// If tokenizer is enabled but no specific patterns set, enable all
+	anySet := s.TokenizeUUID || s.TokenizeHash || s.TokenizeBase64 || s.TokenizeJWT
+	if !anySet {
+		return true, true, true, true
+	}
+	return s.TokenizeUUID, s.TokenizeHash, s.TokenizeBase64, s.TokenizeJWT
 }
 
 type configCache struct {
@@ -1234,4 +1272,222 @@ func (s *store) regenerateVerificationToken(ctx context.Context, email string, n
 	}
 
 	return companyName, nil
+}
+
+// addToWaitlist adds an email to the pre-launch waitlist
+func (s *store) addToWaitlist(ctx context.Context, email, source, ipAddress string) error {
+	_, err := s.pool.Exec(ctx, `
+		INSERT INTO waitlist (email, source, ip_address)
+		VALUES ($1, $2, $3)
+		ON CONFLICT (email) DO NOTHING`,
+		email, source, ipAddress)
+	return err
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SHA-139: Cold Start Guardrail - Stream Calibration Functions
+// ─────────────────────────────────────────────────────────────────────────────
+
+// CalibrationStatus holds the current calibration state for a stream
+type CalibrationStatus struct {
+	EventsIngested  int64
+	IsCalibrated    bool
+	MinBaselineSize int
+	EventsNeeded    int64
+	ProgressPercent int
+}
+
+// getStreamCalibrationStatus returns the current calibration state for a stream
+func (s *store) getStreamCalibrationStatus(ctx context.Context, streamID uuid.UUID) (*CalibrationStatus, error) {
+	var status CalibrationStatus
+	err := s.pool.QueryRow(ctx, `
+		SELECT events_ingested, is_calibrated, min_baseline_size
+		FROM streams WHERE id = $1`,
+		streamID).Scan(&status.EventsIngested, &status.IsCalibrated, &status.MinBaselineSize)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, errNotFound
+		}
+		return nil, fmt.Errorf("failed to get stream calibration status: %w", err)
+	}
+
+	// Calculate derived fields
+	status.EventsNeeded = int64(status.MinBaselineSize) - status.EventsIngested
+	if status.EventsNeeded < 0 {
+		status.EventsNeeded = 0
+	}
+	if status.MinBaselineSize > 0 {
+		status.ProgressPercent = int(float64(status.EventsIngested) / float64(status.MinBaselineSize) * 100)
+		if status.ProgressPercent > 100 {
+			status.ProgressPercent = 100
+		}
+	}
+
+	return &status, nil
+}
+
+// incrementStreamEvents atomically increments the events_ingested counter
+// and updates is_calibrated if the threshold is reached.
+// Returns the updated CalibrationStatus.
+func (s *store) incrementStreamEvents(ctx context.Context, streamID uuid.UUID, count int) (*CalibrationStatus, error) {
+	var status CalibrationStatus
+	err := s.pool.QueryRow(ctx, `
+		UPDATE streams
+		SET events_ingested = events_ingested + $2,
+			is_calibrated = CASE
+				WHEN events_ingested + $2 >= min_baseline_size THEN TRUE
+				ELSE is_calibrated
+			END,
+			calibrated_at = CASE
+				WHEN NOT is_calibrated AND events_ingested + $2 >= min_baseline_size THEN NOW()
+				ELSE calibrated_at
+			END
+		WHERE id = $1
+		RETURNING events_ingested, is_calibrated, min_baseline_size`,
+		streamID, count).Scan(&status.EventsIngested, &status.IsCalibrated, &status.MinBaselineSize)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, errNotFound
+		}
+		return nil, fmt.Errorf("failed to increment stream events: %w", err)
+	}
+
+	// Calculate derived fields
+	status.EventsNeeded = int64(status.MinBaselineSize) - status.EventsIngested
+	if status.EventsNeeded < 0 {
+		status.EventsNeeded = 0
+	}
+	if status.MinBaselineSize > 0 {
+		status.ProgressPercent = int(float64(status.EventsIngested) / float64(status.MinBaselineSize) * 100)
+		if status.ProgressPercent > 100 {
+			status.ProgressPercent = 100
+		}
+	}
+
+	return &status, nil
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SHA-140: Anchor Baseline for Drift Detection
+// ─────────────────────────────────────────────────────────────────────────────
+
+// StreamAnchor represents a frozen baseline snapshot for drift detection
+type StreamAnchor struct {
+	ID                       uuid.UUID
+	StreamID                 uuid.UUID
+	AnchorData               []byte
+	Compressor               string
+	EventCount               int
+	CalibrationCompletedAt   time.Time
+	IsActive                 bool
+	BaselineEntropy          *float64
+	BaselineCompressionRatio *float64
+	BaselineNCDSelf          *float64
+	DriftNCDThreshold        float64
+	CreatedAt                time.Time
+}
+
+// createStreamAnchor creates a new anchor for a stream, deactivating any existing one
+func (s *store) createStreamAnchor(ctx context.Context, anchor *StreamAnchor) error {
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	// Deactivate existing active anchor if any
+	_, err = tx.Exec(ctx, `
+		UPDATE stream_anchors
+		SET is_active = FALSE, superseded_at = NOW()
+		WHERE stream_id = $1 AND is_active = TRUE`,
+		anchor.StreamID)
+	if err != nil {
+		return fmt.Errorf("failed to deactivate existing anchor: %w", err)
+	}
+
+	// Insert new anchor
+	err = tx.QueryRow(ctx, `
+		INSERT INTO stream_anchors (
+			stream_id, anchor_data, compressor, event_count,
+			calibration_completed_at, is_active,
+			baseline_entropy, baseline_compression_ratio, baseline_ncd_self,
+			drift_ncd_threshold
+		) VALUES ($1, $2, $3, $4, $5, TRUE, $6, $7, $8, $9)
+		RETURNING id, created_at`,
+		anchor.StreamID, anchor.AnchorData, anchor.Compressor, anchor.EventCount,
+		anchor.CalibrationCompletedAt,
+		anchor.BaselineEntropy, anchor.BaselineCompressionRatio, anchor.BaselineNCDSelf,
+		anchor.DriftNCDThreshold,
+	).Scan(&anchor.ID, &anchor.CreatedAt)
+	if err != nil {
+		return fmt.Errorf("failed to insert anchor: %w", err)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("failed to commit anchor transaction: %w", err)
+	}
+
+	return nil
+}
+
+// getActiveAnchor retrieves the currently active anchor for a stream
+func (s *store) getActiveAnchor(ctx context.Context, streamID uuid.UUID) (*StreamAnchor, error) {
+	var anchor StreamAnchor
+	err := s.pool.QueryRow(ctx, `
+		SELECT id, stream_id, anchor_data, compressor, event_count,
+			   calibration_completed_at, is_active,
+			   baseline_entropy, baseline_compression_ratio, baseline_ncd_self,
+			   drift_ncd_threshold, created_at
+		FROM stream_anchors
+		WHERE stream_id = $1 AND is_active = TRUE`,
+		streamID).Scan(
+		&anchor.ID, &anchor.StreamID, &anchor.AnchorData, &anchor.Compressor,
+		&anchor.EventCount, &anchor.CalibrationCompletedAt, &anchor.IsActive,
+		&anchor.BaselineEntropy, &anchor.BaselineCompressionRatio, &anchor.BaselineNCDSelf,
+		&anchor.DriftNCDThreshold, &anchor.CreatedAt,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil // No active anchor (not an error)
+		}
+		return nil, fmt.Errorf("failed to get active anchor: %w", err)
+	}
+	return &anchor, nil
+}
+
+// deactivateAnchor deactivates the current anchor for a stream
+func (s *store) deactivateAnchor(ctx context.Context, streamID uuid.UUID) error {
+	_, err := s.pool.Exec(ctx, `
+		UPDATE stream_anchors
+		SET is_active = FALSE, superseded_at = NOW()
+		WHERE stream_id = $1 AND is_active = TRUE`,
+		streamID)
+	if err != nil {
+		return fmt.Errorf("failed to deactivate anchor: %w", err)
+	}
+	return nil
+}
+
+// AnchorSettings contains anchor-related settings for a stream
+type AnchorSettings struct {
+	AnchorEnabled      bool
+	DriftNCDThreshold  float64
+	AnchorResetOnDrift bool
+}
+
+// getAnchorSettings retrieves anchor settings for a stream
+func (s *store) getAnchorSettings(ctx context.Context, streamID uuid.UUID) (*AnchorSettings, error) {
+	var settings AnchorSettings
+	err := s.pool.QueryRow(ctx, `
+		SELECT anchor_enabled, drift_ncd_threshold, anchor_reset_on_drift
+		FROM streams WHERE id = $1`,
+		streamID).Scan(&settings.AnchorEnabled, &settings.DriftNCDThreshold, &settings.AnchorResetOnDrift)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, errNotFound
+		}
+		return nil, fmt.Errorf("failed to get anchor settings: %w", err)
+	}
+	return &settings, nil
 }

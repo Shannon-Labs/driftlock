@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { 
-  signOut as firebaseSignOut, 
-  onAuthStateChanged, 
+import {
+  signOut as firebaseSignOut,
+  onAuthStateChanged,
   type User,
   sendSignInLinkToEmail,
   isSignInWithEmailLink,
@@ -19,21 +19,27 @@ export const useAuthStore = defineStore('auth', () => {
 
   // Initialize auth listener
   const init = async () => {
-    const auth = await getFirebaseAuth();
-    return new Promise<void>((resolve) => {
-      if (!auth) {
-        console.warn('Firebase auth not initialized. Please check your Firebase configuration.')
-        loading.value = false
-        resolve()
-        return
-      }
-      
-      onAuthStateChanged(auth, (u) => {
-        user.value = u
-        loading.value = false
-        resolve()
+    try {
+      const auth = await getFirebaseAuth();
+      return new Promise<void>((resolve) => {
+        if (!auth) {
+          console.warn('Firebase auth not initialized. Please check your Firebase configuration.')
+          loading.value = false
+          resolve()
+          return
+        }
+
+        onAuthStateChanged(auth, (u) => {
+          user.value = u
+          loading.value = false
+          resolve()
+        })
       })
-    })
+    } catch (e) {
+      console.error('Failed to initialize auth:', e)
+      loading.value = false
+      return Promise.resolve()
+    }
   }
 
   // Magic Link Login (Passwordless)
@@ -101,7 +107,7 @@ export const useAuthStore = defineStore('auth', () => {
       user.value = null
       return
     }
-    
+
     await firebaseSignOut(auth)
     user.value = null
   }
@@ -123,8 +129,3 @@ export const useAuthStore = defineStore('auth', () => {
     getToken
   }
 })
-
-
-
-
-
