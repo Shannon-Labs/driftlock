@@ -5,16 +5,9 @@ import (
 	"log"
 	"time"
 
+	"github.com/Shannon-Labs/driftlock/collector-processor/cmd/driftlock-http/plans"
 	"github.com/google/uuid"
 )
-
-// Plan limits (monthly events)
-var planLimits = map[string]int64{
-	"trial":      10_000,
-	"starter":    500_000,
-	"growth":     5_000_000,
-	"enterprise": 1_000_000_000, // Custom
-}
 
 type usageTracker struct {
 	store   *store
@@ -43,13 +36,9 @@ func (ut *usageTracker) track(ctx context.Context, tenantID, streamID uuid.UUID,
 	}
 
 	// 2. Check limits (soft enforcement)
-	// Don't check on every single request to reduce load?
-	// For now, check every request but async.
-
-	limit, ok := planLimits[plan]
-	if !ok {
-		limit = planLimits["trial"] // Default
-	}
+	// Normalize plan name and get limit from canonical source
+	normalizedPlan, _ := plans.NormalizePlan(plan)
+	limit := plans.GetLimit(normalizedPlan)
 
 	totalUsage, err := ut.store.getMonthlyUsage(bgCtx, tenantID)
 	if err != nil {
@@ -61,10 +50,10 @@ func (ut *usageTracker) track(ctx context.Context, tenantID, streamID uuid.UUID,
 
 	if usagePercent >= 1.0 {
 		// Over limit
-		log.Printf("WARNING: Tenant %s (Plan: %s) is OVER LIMIT (%d/%d events)", tenantID, plan, totalUsage, limit)
+		log.Printf("WARNING: Tenant %s (Plan: %s) is OVER LIMIT (%d/%d events)", tenantID, normalizedPlan, totalUsage, limit)
 		// TODO(P2): Rate limit or send email (once per day?) - requires state tracking
 	} else if usagePercent >= 0.8 {
 		// Near limit
-		log.Printf("INFO: Tenant %s (Plan: %s) is near limit (%.1f%% - %d/%d events)", tenantID, plan, usagePercent*100, totalUsage, limit)
+		log.Printf("INFO: Tenant %s (Plan: %s) is near limit (%.1f%% - %d/%d events)", tenantID, normalizedPlan, usagePercent*100, totalUsage, limit)
 	}
 }

@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Shannon-Labs/driftlock/collector-processor/cmd/driftlock-http/plans"
 	"github.com/google/uuid"
 )
 
@@ -59,7 +60,7 @@ func createTenantCommand(args []string, cfg config) {
 	var jsonOutput bool
 	fs.StringVar(&name, "name", "", "Tenant name")
 	fs.StringVar(&slug, "slug", "", "Tenant slug (optional)")
-	fs.StringVar(&plan, "plan", "pilot", "Plan tier")
+	fs.StringVar(&plan, "plan", plans.Pulse, "Plan tier (pulse, radar, tensor, orbit)")
 	fs.StringVar(&streamSlug, "stream", "default", "Initial stream slug")
 	fs.StringVar(&streamType, "stream-type", "logs", "Stream type (logs|metrics|traces|llm)")
 	fs.StringVar(&description, "stream-description", "CLI created stream", "Stream description")
@@ -74,13 +75,16 @@ func createTenantCommand(args []string, cfg config) {
 		log.Fatalf("--name is required")
 	}
 
+	// Normalize plan name
+	normalizedPlan, _ := plans.NormalizePlan(plan)
+
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	res, err := createTenant(ctx, cfg, tenantCreateParams{
 		Name:                name,
 		Slug:                slug,
-		Plan:                plan,
+		Plan:                normalizedPlan,
 		StreamSlug:          streamSlug,
 		StreamType:          streamType,
 		StreamDescription:   description,

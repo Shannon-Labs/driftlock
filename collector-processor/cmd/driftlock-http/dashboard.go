@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Shannon-Labs/driftlock/collector-processor/cmd/driftlock-http/plans"
 	"github.com/google/uuid"
 )
 
@@ -70,18 +71,14 @@ func handleGetUsage(store *store) http.HandlerFunc {
 			return
 		}
 
-		limit := 10000 // default Developer
-		switch tc.Tenant.Plan {
-		case "starter":
-			limit = 500000
-		case "growth":
-			limit = 5000000
-		}
+		// Use canonical plan limits
+		normalizedPlan, _ := plans.NormalizePlan(tc.Tenant.Plan)
+		limit := plans.GetLimit(normalizedPlan)
 
 		writeJSON(w, r, http.StatusOK, map[string]interface{}{
 			"current_period_usage": usage,
 			"plan_limit":           limit,
-			"plan":                 tc.Tenant.Plan,
+			"plan":                 normalizedPlan,
 		})
 	}
 }
@@ -257,16 +254,9 @@ func handleGetUsageDetails(store *store) http.HandlerFunc {
 			return
 		}
 
-		// Determine plan limit
-		var limit int64 = 10000 // default trial
-		switch tc.Tenant.Plan {
-		case "starter", "radar":
-			limit = 500000
-		case "growth", "lock":
-			limit = 5000000
-		case "enterprise", "orbit":
-			limit = 1000000000
-		}
+		// Use canonical plan limits
+		normalizedPlan, _ := plans.NormalizePlan(tc.Tenant.Plan)
+		limit := plans.GetLimit(normalizedPlan)
 
 		// Calculate period dates
 		now := time.Now()
@@ -281,7 +271,7 @@ func handleGetUsageDetails(store *store) http.HandlerFunc {
 		resp := usageDetailsResponse{
 			CurrentPeriodUsage: monthlyUsage,
 			PlanLimit:          limit,
-			Plan:               tc.Tenant.Plan,
+			Plan:               normalizedPlan,
 			UsagePercent:       usagePercent,
 			DailyUsage:         dailyUsage,
 			StreamBreakdown:    streamUsage,

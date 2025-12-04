@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/Shannon-Labs/driftlock/collector-processor/cmd/driftlock-http/plans"
 )
 
 // TestOnboardingFlow tests the complete signup → verify → detect flow
@@ -19,7 +21,7 @@ func TestOnboardingFlow(t *testing.T) {
 		resp, body := te.post("/v1/onboard/signup", map[string]interface{}{
 			"email":        testEmail,
 			"company_name": "Test Company E2E",
-			"plan":         "trial",
+			"plan":         plans.Pulse,
 		}, nil)
 
 		te.assertStatus(resp, http.StatusCreated)

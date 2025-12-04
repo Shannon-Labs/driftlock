@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Shannon-Labs/driftlock/collector-processor/cmd/driftlock-http/plans"
 	"github.com/google/uuid"
 	"github.com/stripe/stripe-go/v76"
 	"github.com/stripe/stripe-go/v76/subscription"
@@ -176,9 +177,11 @@ func (w *WebhookRetryWorker) handleCheckoutSessionCompletedWithError(ctx context
 	customerID := sess.Customer.ID
 	subscriptionID := sess.Subscription.ID
 
-	plan := sess.Metadata["plan"]
-	if plan == "" {
-		plan = "tensor"
+	// Normalize plan to canonical name
+	plan, _ := plans.NormalizePlan(sess.Metadata["plan"])
+	if plan == plans.Pulse {
+		// Default to Tensor for paid subscriptions if plan is missing/invalid
+		plan = plans.Tensor
 	}
 
 	// Fetch subscription for trial info
@@ -204,13 +207,14 @@ func (w *WebhookRetryWorker) handleSubscriptionUpdatedWithError(ctx context.Cont
 	customerID := sub.Customer.ID
 	status := string(sub.Status)
 
-	plan := "signal"
+	// Use canonical plan names
+	plan := plans.Radar // Default to basic paid tier
 	if len(sub.Items.Data) > 0 {
 		priceID := sub.Items.Data[0].Price.ID
 		if priceID == getEnvPriceIDPro() {
-			plan = "tensor"
+			plan = plans.Tensor
 		} else if priceID == getEnvPriceIDBasic() {
-			plan = "signal"
+			plan = plans.Radar
 		}
 	}
 
@@ -332,4 +336,3 @@ func stringOrEmpty(s *string) string {
 	}
 	return *s
 }
-

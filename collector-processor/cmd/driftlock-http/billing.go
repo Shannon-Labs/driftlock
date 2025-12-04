@@ -10,6 +10,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/Shannon-Labs/driftlock/collector-processor/cmd/driftlock-http/plans"
 	"github.com/google/uuid"
 	"github.com/stripe/stripe-go/v76"
 	"github.com/stripe/stripe-go/v76/billingportal/session"
@@ -44,18 +45,19 @@ func billingCheckoutHandler(store *store) http.HandlerFunc {
 			json.NewDecoder(r.Body).Decode(&req)
 		}
 
-		// Determine Price ID based on plan
+		// Normalize plan name and determine Price ID
+		normalizedPlan, _ := plans.NormalizePlan(req.Plan)
 		var priceID string
-		switch req.Plan {
-		case "tensor", "sentinel", "lock", "transistor", "pro": // "tensor" is new, others back-compat
+		switch normalizedPlan {
+		case plans.Tensor, plans.Orbit:
 			priceID = os.Getenv("STRIPE_PRICE_ID_PRO")
-		case "radar", "signal", "basic": // "radar" is new, others back-compat
+		case plans.Radar:
 			priceID = os.Getenv("STRIPE_PRICE_ID_BASIC")
 		default:
-			// Default to radar (basic) as the entry paid tier
+			// Default to Radar as the entry paid tier
 			priceID = os.Getenv("STRIPE_PRICE_ID_BASIC")
 			if priceID == "" {
-				// Fallback to Tensor (Pro) if Radar not set (migration path)
+				// Fallback to Tensor if Radar not set
 				priceID = os.Getenv("STRIPE_PRICE_ID_PRO")
 			}
 		}
@@ -84,7 +86,7 @@ func billingCheckoutHandler(store *store) http.HandlerFunc {
 			ClientReferenceID: stripe.String(tc.Tenant.ID.String()),
 			Metadata: map[string]string{
 				"tenant_id": tc.Tenant.ID.String(),
-				"plan":      req.Plan,
+				"plan":      normalizedPlan,
 			},
 			SubscriptionData: &stripe.CheckoutSessionSubscriptionDataParams{
 				TrialPeriodDays: stripe.Int64(14),
@@ -266,10 +268,11 @@ func handleCheckoutSessionCompleted(store *store, sess stripe.CheckoutSession) {
 	customerID := sess.Customer.ID
 	subscriptionID := sess.Subscription.ID
 
-	// Retrieve plan from metadata, default to "tensor" (previously pro/transistor) if missing
-	plan := sess.Metadata["plan"]
-	if plan == "" {
-		plan = "tensor"
+	// Retrieve plan from metadata and normalize to canonical name
+	plan, _ := plans.NormalizePlan(sess.Metadata["plan"])
+	if plan == plans.Pulse {
+		// Default to Tensor for paid subscriptions if plan is missing/invalid
+		plan = plans.Tensor
 	}
 
 	// Fetch subscription to get trial_end (Stripe is source of truth)
@@ -301,14 +304,14 @@ func handleSubscriptionUpdated(store *store, sub stripe.Subscription) {
 	status := string(sub.Status)
 	customerID := sub.Customer.ID
 
-	// Determine plan from subscription items
-	plan := "signal" // Default fallthrough
+	// Determine plan from subscription items using canonical names
+	plan := plans.Radar // Default to basic paid tier
 	if len(sub.Items.Data) > 0 {
 		priceID := sub.Items.Data[0].Price.ID
 		if priceID == os.Getenv("STRIPE_PRICE_ID_PRO") {
-			plan = "tensor"
+			plan = plans.Tensor
 		} else if priceID == os.Getenv("STRIPE_PRICE_ID_BASIC") {
-			plan = "signal"
+			plan = plans.Radar
 		}
 	}
 
@@ -403,10 +406,10 @@ func (s *store) updateTenantStripeInfo(ctx context.Context, tenantID uuid.UUID, 
 }
 
 func (s *store) updateTenantStatusByStripeID(ctx context.Context, customerID, status, plan string, trialEnd *time.Time) error {
-	// Also revert plan if not active?
+	// Revert to free tier if subscription is not active
 	targetPlan := plan
 	if status != "active" && status != "trialing" {
-		targetPlan = "pilot" // Revert to free tier
+		targetPlan = plans.Pulse // Revert to free tier
 	}
 
 	_, err := s.pool.Exec(ctx, `

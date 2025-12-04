@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Shannon-Labs/driftlock/collector-processor/cmd/driftlock-http/plans"
 	"golang.org/x/time/rate"
 )
 
@@ -136,10 +137,8 @@ func onboardSignupHandler(cfg config, store *store, emailer *emailService) http.
 		}
 
 		// Create pending tenant (no API key until verified)
-		plan := req.Plan
-		if plan == "" {
-			plan = "trial"
-		}
+		// Normalize plan to canonical name, default to free tier
+		plan, _ := plans.NormalizePlan(req.Plan)
 
 		result, err := store.createPendingTenant(ctx, tenantCreateParams{
 			Name:                req.CompanyName,
@@ -267,16 +266,14 @@ func validateSignup(req *onboardSignupRequest) error {
 		return fmt.Errorf("company_name must be at most 100 characters")
 	}
 
-	// Validate plan
+	// Validate plan - accept both canonical and legacy names
+	// The plan will be normalized to canonical form in the handler
 	if req.Plan != "" {
-		validPlans := map[string]bool{
-			"trial":   true,
-			"starter": true,
-			"growth":  true,
-			"pilot":   true,
-		}
-		if !validPlans[req.Plan] {
-			return fmt.Errorf("invalid plan: must be one of trial, starter, growth, pilot")
+		// Check if it's a valid canonical plan or a known legacy name
+		if !plans.IsValid(req.Plan) {
+			if _, ok := plans.LegacyNames[req.Plan]; !ok {
+				return fmt.Errorf("invalid plan: must be one of pulse, radar, tensor, orbit")
+			}
 		}
 	}
 

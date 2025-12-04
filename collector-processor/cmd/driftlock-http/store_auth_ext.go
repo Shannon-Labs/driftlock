@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	
+
 	"github.com/google/uuid"
 )
 
@@ -32,7 +32,7 @@ func (s *store) primaryAPIKey(ctx context.Context, tenantID uuid.UUID) (apiKeyRe
 		WHERE tenant_id = $1 AND revoked_at IS NULL 
 		ORDER BY created_at ASC 
 		LIMIT 1`
-		
+
 	err := s.pool.QueryRow(ctx, query, tenantID).Scan(
 		&k.ID, &k.TenantID, &k.KeyHash, &k.StreamID, &k.Name, &k.CreatedAt, &k.ExpiresAt,
 	)
@@ -172,8 +172,3 @@ func (s *store) softRevokeKey(ctx context.Context, keyID, tenantID uuid.UUID) er
 	}
 	return nil
 }
-
-
-
-
-

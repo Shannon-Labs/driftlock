@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Shannon-Labs/driftlock/collector-processor/cmd/driftlock-http/plans"
 	"github.com/google/uuid"
 )
 
@@ -24,7 +25,7 @@ func TestBillingStatusEndpoint(t *testing.T) {
 	resp, _ := te.post("/v1/onboard/signup", map[string]interface{}{
 		"email":        testEmail,
 		"company_name": "Billing Test Co",
-		"plan":         "trial",
+		"plan":         plans.Pulse,
 	}, nil)
 	te.assertStatus(resp, http.StatusCreated)
 
@@ -82,7 +83,7 @@ func TestCheckoutSessionCreation(t *testing.T) {
 	resp, _ := te.post("/v1/onboard/signup", map[string]interface{}{
 		"email":        testEmail,
 		"company_name": "Checkout Test Co",
-		"plan":         "trial",
+		"plan":         plans.Pulse,
 	}, nil)
 	te.assertStatus(resp, http.StatusCreated)
 
@@ -102,7 +103,7 @@ func TestCheckoutSessionCreation(t *testing.T) {
 
 	t.Run("CreateCheckoutSession", func(t *testing.T) {
 		resp, body := te.post("/v1/billing/checkout", map[string]interface{}{
-			"plan": "radar",
+			"plan": plans.Radar,
 		}, map[string]string{
 			"X-Api-Key": apiKey,
 		})
@@ -142,7 +143,7 @@ func TestTrialCountdownAccuracy(t *testing.T) {
 	resp, _ := te.post("/v1/onboard/signup", map[string]interface{}{
 		"email":        testEmail,
 		"company_name": "Trial Test Co",
-		"plan":         "trial",
+		"plan":         plans.Pulse,
 	}, nil)
 	te.assertStatus(resp, http.StatusCreated)
 
@@ -196,11 +197,11 @@ func TestGracePeriodLogic(t *testing.T) {
 	testEmail := generateTestEmail("grace")
 	defer te.cleanupTestTenants("%@e2e-test.driftlock.net")
 
-	// Create and verify a tenant
+	// Create and verify a tenant (use legacy name to test backward compatibility)
 	resp, _ := te.post("/v1/onboard/signup", map[string]interface{}{
 		"email":        testEmail,
 		"company_name": "Grace Period Test Co",
-		"plan":         "trial",
+		"plan":         "trial", // Legacy name - should be normalized to pulse
 	}, nil)
 	te.assertStatus(resp, http.StatusCreated)
 

@@ -38,7 +38,7 @@ func (s *emailService) sendWelcomeEmail(toEmail, companyName, apiKey string) {
 	from := mail.NewEmail(s.fromName, s.fromAddress)
 	subject := "Welcome to Driftlock!"
 	to := mail.NewEmail(companyName, toEmail)
-	
+
 	plainTextContent := fmt.Sprintf(`Welcome to Driftlock, %s!
 
 Your API Key is: %s
@@ -63,7 +63,7 @@ The Driftlock Team`, companyName, apiKey)
 	`, companyName, apiKey)
 
 	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
-	
+
 	go func() {
 		response, err := s.client.Send(message)
 		if err != nil {
@@ -87,7 +87,7 @@ func (s *emailService) sendVerificationEmail(toEmail, companyName, token string)
 	from := mail.NewEmail(s.fromName, s.fromAddress)
 	subject := "Verify your Driftlock account"
 	to := mail.NewEmail(companyName, toEmail)
-	
+
 	plainTextContent := fmt.Sprintf(`Welcome to Driftlock!
 
 Please verify your email address by clicking the link below:
@@ -245,4 +245,3 @@ func (s *emailService) sendAdminAlert(toEmail, subject, body string) {
 		}
 	}()
 }
-
