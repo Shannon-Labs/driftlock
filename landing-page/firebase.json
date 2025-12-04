@@ -10,7 +10,7 @@
       {
         "source": "/api/**",
         "run": {
-          "serviceId": "apiproxy",
+          "serviceId": "driftlock-api",
           "region": "us-central1"
         }
       },
