@@ -50,6 +50,8 @@ func billingCheckoutHandler(store *store) http.HandlerFunc {
 		var priceID string
 		switch normalizedPlan {
 		case plans.Tensor, plans.Orbit:
+			// Orbit (enterprise) uses Pro pricing as fallback; enterprise customers
+			// typically have custom pricing negotiated outside of self-serve checkout.
 			priceID = os.Getenv("STRIPE_PRICE_ID_PRO")
 		case plans.Radar:
 			priceID = os.Getenv("STRIPE_PRICE_ID_BASIC")
@@ -268,10 +270,11 @@ func handleCheckoutSessionCompleted(store *store, sess stripe.CheckoutSession) {
 	customerID := sess.Customer.ID
 	subscriptionID := sess.Subscription.ID
 
-	// Retrieve plan from metadata and normalize to canonical name
+	// Retrieve plan from metadata and normalize to canonical name.
+	// If the plan is missing or maps to Pulse (free tier), default to Tensor
+	// since this is a paid checkout session - free users don't go through checkout.
 	plan, _ := plans.NormalizePlan(sess.Metadata["plan"])
 	if plan == plans.Pulse {
-		// Default to Tensor for paid subscriptions if plan is missing/invalid
 		plan = plans.Tensor
 	}
 

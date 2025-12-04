@@ -17,11 +17,13 @@ UPDATE tenants SET plan = 'orbit' WHERE plan = 'enterprise';
 ALTER TABLE tenants ALTER COLUMN plan SET DEFAULT 'pulse';
 
 -- Add a constraint to validate plan values (optional, but recommended)
--- Note: We only add this if it doesn't already exist
+-- Note: We only add this if it doesn't already exist on this table
 DO $$
 BEGIN
     IF NOT EXISTS (
-        SELECT 1 FROM pg_constraint WHERE conname = 'tenants_plan_check'
+        SELECT 1 FROM pg_constraint c
+        JOIN pg_class t ON c.conrelid = t.oid
+        WHERE c.conname = 'tenants_plan_check' AND t.relname = 'tenants'
     ) THEN
         ALTER TABLE tenants ADD CONSTRAINT tenants_plan_check
             CHECK (plan IN ('pulse', 'radar', 'tensor', 'orbit'));

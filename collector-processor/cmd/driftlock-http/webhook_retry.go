@@ -177,10 +177,11 @@ func (w *WebhookRetryWorker) handleCheckoutSessionCompletedWithError(ctx context
 	customerID := sess.Customer.ID
 	subscriptionID := sess.Subscription.ID
 
-	// Normalize plan to canonical name
+	// Normalize plan to canonical name.
+	// If the plan is missing or maps to Pulse (free tier), default to Tensor
+	// since this is a paid checkout session - free users don't go through checkout.
 	plan, _ := plans.NormalizePlan(sess.Metadata["plan"])
 	if plan == plans.Pulse {
-		// Default to Tensor for paid subscriptions if plan is missing/invalid
 		plan = plans.Tensor
 	}
 
