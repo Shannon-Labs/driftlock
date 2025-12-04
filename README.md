@@ -11,16 +11,20 @@ Driftlock detects data drift and anomalies in milliseconds using deterministic c
 
 ## Status
 
-**Pre-launch** — Production infrastructure deployed, core platform complete, onboarding beta users.
+**Launch hardening** — Core platform built; distribution, monitoring, and compliance items tracked in [docs/launch/ROADMAP.md](docs/launch/ROADMAP.md#-remaining-critical-path-target-ga-by-dec-5-2025).
 
 | Component | Status |
 |-----------|--------|
 | Detection Engine (Rust) | Production-ready |
 | HTTP API (Go) | Production-ready |
-| Dashboard (Vue 3) | Production-ready |
+| Dashboard (Vue 3) | Ready; production cutover pending custom domain/SSL (see roadmap) |
 | Stripe Billing | Integrated |
 | Firebase Auth | Integrated |
-| Cloud Run Deployment | Live |
+| Cloud Run Deployment | Staged; monitoring/alerting and domain selection in progress (see roadmap) |
+| VS Code Extension | Marketplace publish blocked on publisher cert (see roadmap) |
+| CLI Releases | Release binaries WIP for mac/linux (see roadmap) |
+| Analytics & Alerting | Pending Firebase Analytics + Cloud Monitoring + PagerDuty (see roadmap) |
+| Security & Policy | Pentest and privacy policy updates scheduled (see roadmap) |
 
 ---
 
