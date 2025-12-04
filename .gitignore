@@ -88,3 +88,8 @@ test-data/airline/Airline_Delay_Cause.csv
 
 # Orchestrator agents (local development)
 .orchestrator/
+
+# Additional build artifacts
+driftlock
+test-results/
+lib/
