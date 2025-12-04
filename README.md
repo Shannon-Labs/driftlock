@@ -2,104 +2,136 @@
 
 **Regulator-proof anomaly detection for high-compliance environments.**
 
-Driftlock detects data drift and anomalies in milliseconds using deterministic compression mathematics (NCD), then optionally explains them in plain English using Gemini Flash.
+Driftlock detects data drift and anomalies in milliseconds using deterministic compression mathematics, then explains findings in plain English. No training data required. Zero configuration. Provably deterministic.
 
-No training data required. Zero configuration. Provably deterministic.
-
----
-
-## CORE THESIS
-
-Traditional anomaly detection relies on opaque ML models that hallucinate and require massive training sets. Driftlock is different:
-
-1.  **MATHEMATICAL CERTAINTY**: We use **Normalized Compression Distance (NCD)** and Shannon Entropy deltas. If the compression ratio shifts, the data has changed. It is not a guess; it is a measurement.
-2.  **ZERO TRAINING**: The system builds a baseline from your first ~400 events.
-3.  **AI EXPLAINABILITY**: When the math flags an anomaly, the evidence is sent to Gemini Flash to generate a human-readable explanation for your dashboard or Slack alerts.
-
-**Perfect for**: DORA compliance, FFIEC/NIS2 auditing, API abuse detection, and AI agent monitoring.
+[![CI](https://github.com/Shannon-Labs/driftlock/actions/workflows/ci.yml/badge.svg)](https://github.com/Shannon-Labs/driftlock/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
 ---
 
-## QUICK DEMO (CLI)
+## Status
 
-The fastest way to verify the engine is to run the local deterministic demo. It processes 2,000 synthetic financial events and generates an HTML report.
+**Pre-launch** — Production infrastructure deployed, core platform complete, onboarding beta users.
+
+| Component | Status |
+|-----------|--------|
+| Detection Engine (Rust) | Production-ready |
+| HTTP API (Go) | Production-ready |
+| Dashboard (Vue 3) | Production-ready |
+| Stripe Billing | Integrated |
+| Firebase Auth | Integrated |
+| Cloud Run Deployment | Live |
+
+---
+
+## The Problem
+
+Traditional anomaly detection relies on opaque ML models that:
+- Require massive labeled training sets
+- Produce unexplainable results ("the model said so")
+- Fail regulatory audits due to non-determinism
+
+**Regulated industries need provable, auditable detection.**
+
+---
+
+## Our Approach
+
+Driftlock uses **Normalized Compression Distance (NCD)** — information-theoretic mathematics that measures how "surprising" new data is relative to a baseline.
+
+1. **Mathematical Certainty**: If the compression ratio shifts, the data has changed. Not a guess — a measurement.
+2. **Zero Training**: The system builds a baseline from your first ~400 events. No labeled data required.
+3. **AI Explainability**: When math flags an anomaly, we generate human-readable explanations for dashboards and alerts.
+
+**Perfect for**: DORA compliance, NIS2 auditing, API abuse detection, AI agent monitoring.
+
+---
+
+## Quick Demo
 
 ```bash
-# 1. Clone
+# Clone and run the local deterministic demo
 git clone https://github.com/Shannon-Labs/driftlock.git
 cd driftlock
 
-# 2. Run
 make demo
 ./driftlock-demo test-data/financial-demo.json
-
-# 3. View
 open demo-output.html
 ```
 
-**What you will see:**
-- **Baseline Phase**: The first 400 events establish the compression dictionary.
-- **Detection Phase**: The next 1,600 events are scored.
-- **Anomalies**: ~10-30 events will be flagged with high NCD scores (e.g., `0.85+`), indicating they are mathematically distinct from the baseline.
+Processes 2,000 synthetic events. Flags ~10-30 anomalies with NCD scores indicating mathematical distinctness from baseline.
 
 ---
 
-## PRODUCT SURFACE
+## Architecture
 
-Driftlock ships as a complete SaaS platform.
-
-### 1. The Engine (`cbad-core`)
-A high-performance Rust library implementing the Compression-Based Anomaly Detection (CBAD) algorithms. It exposes a C-compatible FFI for integration into any system.
-
-### 2. HTTP API (`driftlock-http`)
-A multi-tenant Go service wrapping the engine.
-- **Endpoint**: `POST /v1/detect`
-- **Auth**: Firebase Auth (JWT) or API Key
-- **Storage**: PostgreSQL (Cloud SQL) + TimeScale
-- **Billing**: Built-in Stripe integration for usage-based metering
-
-### 3. Dashboard (`landing-page`)
-A Vue 3 + Tailwind interface for monitoring real-time streams, managing API keys, and viewing AI-generated explanations.
-
----
-
-## DEPLOYMENT
-
-The repository contains a complete "SaaS-in-a-box" deployment capability.
-
-**Infrastructure Stack:**
-- **Compute**: Google Cloud Run (Serverless)
-- **Database**: Cloud SQL (Postgres)
-- **Auth**: Firebase Auth
-- **Secrets**: Google Secret Manager
-
-**Deploy to Production:**
-See `docs/deployment/CLOUDSQL_FIREBASE_SETUP_GUIDE.md` for the authoritative runbook.
-
-```bash
-# Quick infrastructure setup
-./scripts/deployment/setup-gcp-cloudsql-firebase.sh
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│   Your Data     │────▶│  Driftlock API  │────▶│   Dashboard     │
+│  (OTLP/JSON)    │     │   (Go + Rust)   │     │    (Vue 3)      │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+                               │
+                    ┌──────────┴──────────┐
+                    ▼                     ▼
+             ┌───────────┐         ┌───────────┐
+             │  cbad-core │         │  Gemini   │
+             │   (Rust)   │         │  (Explain) │
+             └───────────┘         └───────────┘
 ```
 
+### Components
+
+| Component | Technology | Purpose |
+|-----------|------------|---------|
+| `cbad-core` | Rust | High-performance NCD/entropy detection engine |
+| `collector-processor` | Go | Multi-tenant HTTP API with billing |
+| `landing-page` | Vue 3 + Tailwind | Real-time dashboard |
+
+### Infrastructure
+
+- **Compute**: Google Cloud Run (serverless, auto-scaling)
+- **Database**: Cloud SQL (PostgreSQL)
+- **Auth**: Firebase Authentication
+- **Billing**: Stripe (usage-based metering)
+- **Secrets**: Google Secret Manager
+
 ---
 
-## DEVELOPMENT
+## Pricing
 
-**Local API Setup:**
+| Tier | Price | Events/Month | Features |
+|------|-------|--------------|----------|
+| Pulse | Free | 10,000 | Basic detection, 14-day retention |
+| Radar | $15/mo | 500,000 | Email alerts, 30-day retention |
+| Tensor | $100/mo | 5,000,000 | DORA/NIS2 evidence bundles |
+| Orbit | $499/mo | Unlimited | Dedicated support, SLA |
+
+---
+
+## Development
+
 ```bash
+# Local API
 export DRIFTLOCK_DEV_MODE=true
 ./scripts/run-api-demo.sh
+
+# Frontend
+cd landing-page && bun install && bun run dev
+
+# Tests
+make test
 ```
 
 **Directory Structure:**
-- `cbad-core/`: Rust anomaly detection engine.
-- `collector-processor/`: Go HTTP API and business logic.
-- `landing-page/`: Frontend dashboard.
-- `docs/`: Comprehensive architectural and deployment documentation.
+- `cbad-core/` — Rust detection engine with C FFI
+- `collector-processor/` — Go HTTP API and business logic
+- `landing-page/` — Vue 3 dashboard
+- `docs/` — Architecture and deployment documentation
 
 ---
 
-## LICENSE
+## License
 
 **Apache 2.0** for open-source components.
-Commercial licenses available for enterprise deployment. See `LICENSE-COMMERCIAL.md`.
+
+Commercial licenses available for enterprise deployment. Contact: hello@shannon-labs.com
