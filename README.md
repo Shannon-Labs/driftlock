@@ -22,7 +22,7 @@ Driftlock detects data drift and anomalies in milliseconds using deterministic c
 | Firebase Auth | Integrated |
 | Cloud Run Deployment | Staged; monitoring/alerting and domain selection in progress (see roadmap) |
 | VS Code Extension | Marketplace publish blocked on publisher cert (see roadmap) |
-| CLI Releases | Release binaries WIP for macOS/Linux (see roadmap) |
+| CLI Releases | Release binaries WIP for mac/linux (see roadmap) |
 | Analytics & Alerting | Pending Firebase Analytics + Cloud Monitoring + PagerDuty (see roadmap) |
 | Security & Policy | Pentest and privacy policy updates scheduled (see roadmap) |
 
