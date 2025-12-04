@@ -1,56 +1,327 @@
 openapi: 3.0.3
 info:
-  title: Driftlock HTTP API
-  version: 0.1.0
-  description: Compression-based anomaly detection over JSON/NDJSON.
+  title: Driftlock API
+  version: 1.0.0
+  description: |
+    Compression-based anomaly detection for any JSON event stream.
+
+    ## Quick Start
+
+    1. **Try without signup**: Use `POST /v1/demo/detect` (10 req/min, 50 events max)
+    2. **Sign up**: `POST /v1/onboard/signup` → verify email → get API key
+    3. **Detect anomalies**: `POST /v1/detect` with `X-Api-Key` header
+
+    ## Authentication
+
+    - **API Key**: Pass `X-Api-Key: dlk_<uuid>.<secret>` header for detection endpoints
+    - **Firebase Auth**: Pass `Authorization: Bearer <firebase-id-token>` for dashboard endpoints
+
+    ## Rate Limits
+
+    - Demo endpoint: 10 requests/minute per IP, max 50 events
+    - Authenticated: Based on your plan (see /v1/me/usage)
+  contact:
+    name: Driftlock Support
+    email: support@driftlock.net
+    url: https://driftlock.net
+  license:
+    name: Proprietary
+    url: https://driftlock.net/terms
+
 servers:
-  - url: https://api.driftlock.net
+  - url: https://driftlock.net/api
     description: Production API
   - url: http://localhost:8080
-    description: Local development API
+    description: Local development
+
+tags:
+  - name: Health
+    description: Health and readiness checks
+  - name: Demo
+    description: Try Driftlock without signing up
+  - name: Onboarding
+    description: Sign up and verify your account
+  - name: Detection
+    description: Submit events for anomaly detection
+  - name: Anomalies
+    description: Query and export detected anomalies
+  - name: Dashboard
+    description: Manage your account and API keys
+  - name: Billing
+    description: Subscription and payment management
+
 paths:
+  # ═══════════════════════════════════════════════════════════════════════════
+  # HEALTH CHECKS (Public)
+  # ═══════════════════════════════════════════════════════════════════════════
   /healthz:
     get:
+      tags: [Health]
       summary: Health check
+      description: Returns service health status. Use for liveness probes.
+      operationId: healthCheck
       responses:
         '200':
-          description: OK
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /readyz:
+    get:
+      tags: [Health]
+      summary: Readiness check
+      description: Returns readiness status including database connectivity. Use for readiness probes.
+      operationId: readinessCheck
+      responses:
+        '200':
+          description: Service is ready
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  ok:
+                  ready:
                     type: boolean
-                  library_status:
+                  database:
                     type: string
-                  openzl_available:
-                    type: boolean
-  /v1/detect:
+                    enum: [connected, disconnected]
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # DEMO (Public - Rate Limited)
+  # ═══════════════════════════════════════════════════════════════════════════
+  /v1/demo/detect:
     post:
-      summary: Detect anomalies in a batch of events
-      parameters:
-        - in: query
-          name: format
-          schema:
-            type: string
-            enum: [json, ndjson]
-          description: Input format (auto-detected if omitted)
-        - in: query
-          name: algo
-          schema:
-            type: string
-            enum: [zstd, lz4, gzip, openzl]
-          description: Compression algorithm
+      tags: [Demo]
+      summary: Demo anomaly detection (no auth required)
+      description: |
+        Try Driftlock without signing up. Results are NOT persisted.
+
+        **Rate limits**: 10 requests/minute per IP, max 50 events per request.
+      operationId: demoDetect
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              oneOf:
-                - type: array
-                  items: { type: object }
-                - type: string
+              $ref: '#/components/schemas/DetectRequest'
+            example:
+              events:
+                - body: { message: "User logged in", level: "info" }
+                - body: { message: "Database query completed", level: "info" }
+                - body: { message: "CRITICAL: Unauthorized access attempt", level: "error" }
+      responses:
+        '200':
+          description: Detection results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DemoDetectResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /v1/waitlist:
+    post:
+      tags: [Demo]
+      summary: Join the waitlist
+      description: Sign up for the pre-launch waitlist.
+      operationId: joinWaitlist
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+                source:
+                  type: string
+                  description: Where the user heard about Driftlock
+      responses:
+        '200':
+          description: Added to waitlist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # ONBOARDING (Public - Rate Limited)
+  # ═══════════════════════════════════════════════════════════════════════════
+  /v1/onboard/signup:
+    post:
+      tags: [Onboarding]
+      summary: Create a new account
+      description: |
+        Sign up for Driftlock. A verification email will be sent.
+
+        **Rate limit**: 5 requests/hour per IP
+      operationId: signup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, company_name]
+              properties:
+                email:
+                  type: string
+                  format: email
+                company_name:
+                  type: string
+                  minLength: 1
+                plan:
+                  type: string
+                  enum: [trial, pulse, radar, tensor, orbit]
+                  default: trial
+            example:
+              email: dev@example.com
+              company_name: Acme Corp
+              plan: trial
+      responses:
+        '200':
+          description: Signup successful - check email for verification
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  tenant_id:
+                    type: string
+                    format: uuid
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: Email already registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /v1/onboard/verify:
+    get:
+      tags: [Onboarding]
+      summary: Verify email address
+      description: Verify email and receive your API key. Link is sent in verification email.
+      operationId: verifyEmail
+      parameters:
+        - name: token
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Verification token from email
+      responses:
+        '200':
+          description: Email verified successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  api_key:
+                    type: string
+                    description: Your API key (store securely!)
+                    example: dlk_abc123-def456.secretkey789
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '410':
+          description: Token expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/onboard/resend-verification:
+    post:
+      tags: [Onboarding]
+      summary: Resend verification email
+      description: Request a new verification email. Rate limited to 3/hour.
+      operationId: resendVerification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          description: Verification email sent (if account exists)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # DETECTION (API Key Auth)
+  # ═══════════════════════════════════════════════════════════════════════════
+  /v1/detect:
+    post:
+      tags: [Detection]
+      summary: Detect anomalies in events
+      description: |
+        Submit a batch of JSON events for anomaly detection using CBAD
+        (Compression-Based Anomaly Detection).
+
+        **How it works**: Events are compressed using zstd/lz4/openzl and compared
+        against a baseline window using Normalized Compression Distance (NCD).
+        Statistical significance is determined via permutation testing.
+
+        **Max events**: 1000 per request (50 for demo endpoint)
+      operationId: detect
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DetectRequest'
+            example:
+              stream_id: logs-production
+              events:
+                - body: { level: "info", message: "Request processed", latency_ms: 45 }
+                - body: { level: "info", message: "Request processed", latency_ms: 52 }
+                - body: { level: "error", message: "Connection timeout", latency_ms: 30000 }
+              config_override:
+                ncd_threshold: 0.3
+                p_value_threshold: 0.05
       responses:
         '200':
           description: Detection results
@@ -58,54 +329,861 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DetectResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
 
-  /v1/stream/anomalies:
+  # ═══════════════════════════════════════════════════════════════════════════
+  # ANOMALIES (API Key Auth)
+  # ═══════════════════════════════════════════════════════════════════════════
+  /v1/anomalies:
     get:
-      summary: Real-time anomaly stream (SSE)
-      description: Connect to this endpoint to receive Server-Sent Events (SSE) for new anomalies.
+      tags: [Anomalies]
+      summary: List detected anomalies
+      description: Query anomalies with optional filtering by stream, time range, and status.
+      operationId: listAnomalies
+      security:
+        - ApiKeyAuth: []
       parameters:
-        - in: query
-          name: api_key
+        - name: stream_id
+          in: query
           schema:
             type: string
-          required: false
-          description: API Key for authentication (alternative to X-Api-Key header)
+          description: Filter by stream ID
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Start of time range (ISO 8601)
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: End of time range (ISO 8601)
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [open, acknowledged, resolved]
+          description: Filter by status
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+          description: Max results to return
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          description: Number of results to skip
       responses:
         '200':
-          description: SSE Stream
+          description: List of anomalies
           content:
-            text/event-stream:
+            application/json:
               schema:
-                type: string
-                example: |
-                  event: anomaly
-                  data: {"id": "...", "ncd": 0.45}
+                type: object
+                properties:
+                  anomalies:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Anomaly'
+                  total:
+                    type: integer
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
 
+  /v1/anomalies/{id}:
+    get:
+      tags: [Anomalies]
+      summary: Get anomaly details
+      description: Get full details of a specific anomaly including evidence.
+      operationId: getAnomaly
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Anomaly ID
+      responses:
+        '200':
+          description: Anomaly details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnomalyDetail'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /v1/anomalies/export:
+    post:
+      tags: [Anomalies]
+      summary: Export anomalies (bulk)
+      description: Export multiple anomalies as an evidence bundle.
+      operationId: exportAnomalies
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                anomaly_ids:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                format:
+                  type: string
+                  enum: [json, pdf, markdown]
+                  default: json
+      responses:
+        '202':
+          description: Export job queued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job_id:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v1/anomalies/{id}/export:
+    post:
+      tags: [Anomalies]
+      summary: Export single anomaly
+      description: Export a single anomaly as an evidence bundle.
+      operationId: exportAnomaly
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                format:
+                  type: string
+                  enum: [json, pdf, markdown]
+                  default: json
+      responses:
+        '202':
+          description: Export job queued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job_id:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # DASHBOARD (Firebase Auth)
+  # ═══════════════════════════════════════════════════════════════════════════
+  /v1/me/keys:
+    get:
+      tags: [Dashboard]
+      summary: List API keys
+      description: List all API keys for your account.
+      operationId: listApiKeys
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of API keys
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  keys:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        name:
+                          type: string
+                        prefix:
+                          type: string
+                          description: First 8 chars of key for identification
+                        created_at:
+                          type: string
+                          format: date-time
+                        last_used_at:
+                          type: string
+                          format: date-time
+                        is_primary:
+                          type: boolean
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v1/me/keys/create:
+    post:
+      tags: [Dashboard]
+      summary: Create a new API key
+      description: Create an additional API key for your account.
+      operationId: createApiKey
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Friendly name for the key
+      responses:
+        '200':
+          description: API key created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  key:
+                    type: string
+                    description: Full API key (only shown once!)
+                  key_id:
+                    type: string
+                    format: uuid
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v1/me/keys/regenerate:
+    post:
+      tags: [Dashboard]
+      summary: Regenerate API key
+      description: Regenerate your primary API key. The old key will be revoked.
+      operationId: regenerateApiKey
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: API key regenerated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  new_key:
+                    type: string
+                    description: New API key (only shown once!)
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v1/me/keys/revoke:
+    post:
+      tags: [Dashboard]
+      summary: Revoke an API key
+      description: Revoke a specific API key.
+      operationId: revokeApiKey
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [key_id]
+              properties:
+                key_id:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: API key revoked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /v1/me/usage:
+    get:
+      tags: [Dashboard]
+      summary: Get usage summary
+      description: Get your current usage statistics.
+      operationId: getUsage
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Usage summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsageSummary'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v1/me/usage/details:
+    get:
+      tags: [Dashboard]
+      summary: Get detailed usage
+      description: Get detailed usage with daily breakdown and per-stream stats.
+      operationId: getUsageDetails
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: days
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 90
+            default: 30
+          description: Number of days of history
+      responses:
+        '200':
+          description: Detailed usage
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsageDetails'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v1/me/billing:
+    get:
+      tags: [Dashboard]
+      summary: Get billing status
+      description: Get your current billing status, plan, and trial info.
+      operationId: getBillingStatus
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Billing status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingStatus'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # BILLING (Mixed Auth)
+  # ═══════════════════════════════════════════════════════════════════════════
+  /v1/billing/checkout:
+    post:
+      tags: [Billing]
+      summary: Create checkout session
+      description: Create a Stripe checkout session to upgrade your plan.
+      operationId: createCheckout
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [plan]
+              properties:
+                plan:
+                  type: string
+                  enum: [radar, tensor, orbit]
+                success_url:
+                  type: string
+                  format: uri
+                cancel_url:
+                  type: string
+                  format: uri
+      responses:
+        '200':
+          description: Checkout session created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  checkout_url:
+                    type: string
+                    format: uri
+                  session_id:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v1/billing/portal:
+    post:
+      tags: [Billing]
+      summary: Open billing portal
+      description: Get a link to the Stripe customer portal to manage subscription.
+      operationId: billingPortal
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Portal URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  portal_url:
+                    type: string
+                    format: uri
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v1/billing/webhook:
+    post:
+      tags: [Billing]
+      summary: Stripe webhook (internal)
+      description: |
+        Receives Stripe webhook events. **Do not call directly.**
+
+        Requires `Stripe-Signature` header for verification.
+      operationId: stripeWebhook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Webhook processed
+        '400':
+          description: Invalid signature
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# COMPONENTS
+# ═══════════════════════════════════════════════════════════════════════════════
 components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-Api-Key
+      description: |
+        API key in format `dlk_<uuid>.<secret>`
+
+        Get your key from the dashboard or via email verification.
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Firebase ID token from client-side Firebase Auth
+
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Unauthorized:
+      description: Missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    RateLimited:
+      description: Rate limit exceeded
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+          description: Seconds to wait before retrying
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
   schemas:
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              description: Machine-readable error code
+              enum:
+                - invalid_argument
+                - unauthorized
+                - forbidden
+                - not_found
+                - method_not_allowed
+                - conflict
+                - gone
+                - rate_limit_exceeded
+                - internal
+                - service_unavailable
+            message:
+              type: string
+              description: Human-readable error message
+            request_id:
+              type: string
+              description: Request ID for debugging
+            retry_after_seconds:
+              type: integer
+              description: Seconds to wait (only for rate_limit_exceeded)
+
+    HealthResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        version:
+          type: string
+        library_status:
+          type: string
+          enum: [healthy, unhealthy]
+        openzl_available:
+          type: boolean
+
+    DetectRequest:
+      type: object
+      required: [events]
+      properties:
+        stream_id:
+          type: string
+          description: |
+            Logical stream identifier (e.g., "logs-production", "api-requests").
+            Creates a new stream if not exists. Uses default stream if omitted.
+        events:
+          type: array
+          description: Array of JSON events to analyze
+          items:
+            type: object
+            additionalProperties: true
+          minItems: 1
+          maxItems: 1000
+        config_override:
+          $ref: '#/components/schemas/ConfigOverride'
+
+    ConfigOverride:
+      type: object
+      description: Override default detection settings for this request
+      properties:
+        baseline_size:
+          type: integer
+          description: Number of events in baseline window
+          default: 400
+          minimum: 10
+          maximum: 10000
+        window_size:
+          type: integer
+          description: Number of events in analysis window
+          default: 50
+          minimum: 5
+          maximum: 1000
+        hop_size:
+          type: integer
+          description: Hop size for sliding window
+          default: 10
+          minimum: 1
+        ncd_threshold:
+          type: number
+          description: NCD threshold for anomaly detection (0-1)
+          default: 0.3
+          minimum: 0
+          maximum: 1
+        p_value_threshold:
+          type: number
+          description: p-value threshold for statistical significance
+          default: 0.05
+          minimum: 0
+          maximum: 1
+        permutation_count:
+          type: integer
+          description: Number of permutations for statistical testing
+          default: 1000
+          minimum: 100
+          maximum: 10000
+        compressor:
+          type: string
+          description: Compression algorithm
+          enum: [zstd, lz4, gzip, openzl]
+          default: zstd
+
     DetectResponse:
       type: object
       properties:
-        total_events: { type: integer }
-        anomaly_count: { type: integer }
-        processing_time: { type: string }
-        compression_algo: { type: string }
+        success:
+          type: boolean
+        batch_id:
+          type: string
+          format: uuid
+          description: Unique ID for this detection batch
+        stream_id:
+          type: string
+          format: uuid
+          description: Stream the events were processed in
+        total_events:
+          type: integer
+          description: Number of events processed
+        anomaly_count:
+          type: integer
+          description: Number of anomalies detected
+        processing_time:
+          type: string
+          description: Time taken to process (e.g., "245ms")
+        compression_algo:
+          type: string
+          description: Compression algorithm used
+        fallback_from_algo:
+          type: string
+          description: Original algorithm if fallback occurred
+        request_id:
+          type: string
+          description: Request ID for debugging
         anomalies:
           type: array
           items:
-            $ref: '#/components/schemas/Anomaly'
+            $ref: '#/components/schemas/AnomalyOutput'
+
+    DemoDetectResponse:
+      allOf:
+        - $ref: '#/components/schemas/DetectResponse'
+        - type: object
+          properties:
+            demo:
+              type: object
+              properties:
+                message:
+                  type: string
+                remaining_calls:
+                  type: integer
+                limit_per_minute:
+                  type: integer
+                max_events_per_request:
+                  type: integer
+                signup_url:
+                  type: string
+                  format: uri
+
+    AnomalyOutput:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        index:
+          type: integer
+          description: Position in input array
+        detected:
+          type: boolean
+          description: Whether this event is anomalous
+        why:
+          type: string
+          description: Human-readable explanation
+        event:
+          type: object
+          description: The original event
+        metrics:
+          $ref: '#/components/schemas/AnomalyMetrics'
+
+    AnomalyMetrics:
+      type: object
+      description: Statistical metrics for the anomaly
+      properties:
+        ncd:
+          type: number
+          description: Normalized Compression Distance (0-1, higher = more anomalous)
+        p_value:
+          type: number
+          description: Statistical significance (lower = more significant)
+        confidence_level:
+          type: number
+          description: Confidence level (1 - p_value)
+        baseline_compression_ratio:
+          type: number
+          description: Compression ratio of baseline
+        window_compression_ratio:
+          type: number
+          description: Compression ratio of window
+        baseline_entropy:
+          type: number
+          description: Shannon entropy of baseline
+        window_entropy:
+          type: number
+          description: Shannon entropy of window
+        entropy_change:
+          type: number
+          description: Change in entropy (window - baseline)
+        compression_ratio_change:
+          type: number
+          description: Change in compression ratio
+        is_statistically_significant:
+          type: boolean
+          description: Whether p_value < threshold
 
     Anomaly:
       type: object
       properties:
-        index: { type: integer }
-        detected: { type: boolean }
-        why: { type: string }
-        event: { type: object }
-        metrics:
-          type: object
+        id:
+          type: string
+          format: uuid
+        stream_id:
+          type: string
+          format: uuid
+        detected_at:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [open, acknowledged, resolved]
+        ncd:
+          type: number
+        p_value:
+          type: number
+        confidence:
+          type: number
+        explanation:
+          type: string
+
+    AnomalyDetail:
+      allOf:
+        - $ref: '#/components/schemas/Anomaly'
+        - type: object
           properties:
-            ncd: { type: number }
-            p_value: { type: number }
-            confidence_level: { type: number }
-            explanation: { type: string }
+            event:
+              type: object
+            metrics:
+              $ref: '#/components/schemas/AnomalyMetrics'
+            evidence:
+              type: array
+              items:
+                type: object
+                properties:
+                  format:
+                    type: string
+                  uri:
+                    type: string
+                  checksum:
+                    type: string
+
+    UsageSummary:
+      type: object
+      properties:
+        events_this_month:
+          type: integer
+        anomalies_this_month:
+          type: integer
+        events_limit:
+          type: integer
+        percentage_used:
+          type: number
+
+    UsageDetails:
+      type: object
+      properties:
+        summary:
+          $ref: '#/components/schemas/UsageSummary'
+        daily:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+                format: date
+              events:
+                type: integer
+              anomalies:
+                type: integer
+        streams:
+          type: array
+          items:
+            type: object
+            properties:
+              stream_id:
+                type: string
+              stream_name:
+                type: string
+              events:
+                type: integer
+              anomalies:
+                type: integer
+              anomaly_rate:
+                type: number
+
+    BillingStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [active, trialing, past_due, canceled, grace_period]
+        plan:
+          type: string
+          enum: [pulse, radar, tensor, orbit]
+        trial_days_remaining:
+          type: integer
+          description: Days left in trial (null if not trialing)
+        grace_period_ends_at:
+          type: string
+          format: date-time
+          description: When grace period ends (null if not in grace period)
+        current_period_end:
+          type: string
+          format: date-time
