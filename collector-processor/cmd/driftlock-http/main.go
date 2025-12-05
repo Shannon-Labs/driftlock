@@ -20,6 +20,7 @@ import (
 	"github.com/Shannon-Labs/driftlock/collector-processor/driftlockcbad"
 	"github.com/Shannon-Labs/driftlock/collector-processor/internal/ai"
 	"github.com/google/uuid"
+	"github.com/go-redis/redis/v8"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -43,6 +44,10 @@ type config struct {
 	RateLimitRPS     int
 	QueueCapacity    int
 	PreferOpenZL     bool
+	BaselineRedisAddr     string
+	BaselineRedisPassword string
+	BaselineRedisDB       int
+	BaselineTTL           time.Duration
 }
 
 func loadConfig() config {
@@ -63,6 +68,10 @@ func loadConfig() config {
 		RateLimitRPS:     envInt("RATE_LIMIT_RPS", 60),
 		QueueCapacity:    envInt("QUEUE_CAPACITY", 512),
 		PreferOpenZL:     envBool("PREFER_OPENZL", false),
+		BaselineRedisAddr:     env("BASELINE_REDIS_ADDR", ""),
+		BaselineRedisPassword: env("BASELINE_REDIS_PASSWORD", ""),
+		BaselineRedisDB:       envInt("BASELINE_REDIS_DB", 0),
+		BaselineTTL:           time.Duration(envInt("BASELINE_TTL_HOURS", 24)) * time.Hour,
 	}
 }
 
@@ -103,6 +112,8 @@ type detectResponse struct {
 	// SHA-139: Cold start calibration fields
 	Status      string           `json:"status"`                // "ready" or "calibrating"
 	Calibration *calibrationInfo `json:"calibration,omitempty"` // Present when status is "calibrating"
+	DetectionReady        bool   `json:"detection_ready"`
+	DetectionEventsNeeded int64  `json:"detection_events_needed,omitempty"`
 	// SHA-140: Drift detection against frozen anchor baseline
 	Drift *driftResult `json:"drift,omitempty"`
 	// SHA-143: Numeric value outliers
@@ -115,6 +126,9 @@ type calibrationInfo struct {
 	EventsNeeded    int64  `json:"events_needed"`
 	MinBaselineSize int    `json:"min_baseline_size"`
 	ProgressPercent int    `json:"progress_percent"`
+	DetectionReady        bool  `json:"detection_ready"`
+	DetectionEventsNeeded int64 `json:"detection_events_needed"`
+	DetectionMinEvents    int   `json:"detection_min_events"`
 	Message         string `json:"message"`
 }
 
@@ -259,7 +273,27 @@ func main() {
 	if err != nil {
 		Logger().Fatal("db connection failed", zap.Error(err))
 	}
+	var baselineRedis *redis.Client
+	if cfg.BaselineRedisAddr != "" {
+		baselineRedis = redis.NewClient(&redis.Options{
+			Addr:     cfg.BaselineRedisAddr,
+			Password: cfg.BaselineRedisPassword,
+			DB:       cfg.BaselineRedisDB,
+		})
+		if err := baselineRedis.Ping(ctx).Err(); err != nil {
+			Logger().Warn("baseline redis unavailable; falling back to in-memory baselines",
+				zap.String("addr", cfg.BaselineRedisAddr),
+				zap.Error(err))
+			_ = baselineRedis.Close()
+			baselineRedis = nil
+		} else {
+			Logger().Info("baseline redis enabled", zap.String("addr", cfg.BaselineRedisAddr))
+		}
+	}
+
 	store := newStore(pool)
+	store.baselineRedis = baselineRedis
+	store.baselineTTL = cfg.BaselineTTL
 	if err := store.loadCache(ctx); err != nil {
 		Logger().Fatal("load configs failed", zap.Error(err))
 	}
@@ -907,6 +941,7 @@ func detectHandler(w http.ResponseWriter, r *http.Request, cfg config, store *st
 		return
 	}
 	plan := buildDetectionSettings(cfg, stream, settings, payload.ConfigOverride)
+	detectionMinEvents := plan.BaselineSize + plan.WindowSize
 
 	anchorSettings, err := store.getAnchorSettings(r.Context(), stream.ID)
 	if err != nil {
@@ -923,9 +958,28 @@ func detectHandler(w http.ResponseWriter, r *http.Request, cfg config, store *st
 		log.Printf("Warning: failed to update stream calibration: %v", calibErr)
 		// Non-fatal - continue with detection (stream might not have calibration columns yet)
 	}
+	detectionReady := true
+	var detectionEventsNeeded int64
+	if calibStatus != nil {
+		if needed := int64(detectionMinEvents) - calibStatus.EventsIngested; needed > 0 {
+			detectionReady = false
+			detectionEventsNeeded = needed
+		}
+	}
 
 	// If stream is still calibrating, return early with calibration info
 	if calibStatus != nil && !calibStatus.IsCalibrated {
+		if store.baselineRedis != nil {
+			tail := tailEventsForBaseline(nil, payload.Events, detectionMinEvents)
+			if len(tail) > 0 {
+				go func() {
+					if err := store.saveBaselineSnapshot(context.Background(), stream.ID, tail, detectionMinEvents); err != nil {
+						log.Printf("baseline: failed to persist snapshot during calibration: %v", err)
+					}
+				}()
+			}
+		}
+
 		resp := detectResponse{
 			Success:        true,
 			StreamID:       stream.ID.String(),
@@ -936,14 +990,19 @@ func detectHandler(w http.ResponseWriter, r *http.Request, cfg config, store *st
 			Anomalies:      []anomalyOutput{},
 			RequestID:      requestIDFrom(r.Context()),
 			Status:         "calibrating",
+			DetectionReady: detectionReady,
+			DetectionEventsNeeded: detectionEventsNeeded,
 			Calibration: &calibrationInfo{
 				EventsIngested:  calibStatus.EventsIngested,
 				EventsNeeded:    calibStatus.EventsNeeded,
 				MinBaselineSize: calibStatus.MinBaselineSize,
 				ProgressPercent: calibStatus.ProgressPercent,
+				DetectionReady:        detectionReady,
+				DetectionEventsNeeded: detectionEventsNeeded,
+				DetectionMinEvents:    detectionMinEvents,
 				Message: fmt.Sprintf(
-					"Stream is calibrating. %d more events needed for statistically significant anomaly detection. Progress: %d/%d events (%d%%).",
-					calibStatus.EventsNeeded, calibStatus.EventsIngested, calibStatus.MinBaselineSize, calibStatus.ProgressPercent,
+					"Stream is calibrating. %d more events needed for statistical calibration (min %d). Detection window requires %d total events; %d more needed for detector readiness.",
+					calibStatus.EventsNeeded, calibStatus.MinBaselineSize, detectionMinEvents, detectionEventsNeeded,
 				),
 			},
 		}
@@ -1015,6 +1074,15 @@ func detectHandler(w http.ResponseWriter, r *http.Request, cfg config, store *st
 		}
 	}
 
+	var persistedBaseline []json.RawMessage
+	if store.baselineRedis != nil {
+		if cachedBaseline, err := store.loadBaselineSnapshot(r.Context(), stream.ID); err != nil {
+			log.Printf("baseline: failed to load persisted baseline: %v", err)
+		} else {
+			persistedBaseline = cachedBaseline
+		}
+	}
+
 	detector, err := driftlockcbad.NewDetector(driftlockcbad.DetectorConfig{
 		BaselineSize:         plan.BaselineSize,
 		WindowSize:           plan.WindowSize,
@@ -1031,6 +1099,10 @@ func detectHandler(w http.ResponseWriter, r *http.Request, cfg config, store *st
 		return
 	}
 	defer detector.Close()
+
+	if len(persistedBaseline) > 0 {
+		primeDetectorWithBaseline(detector, persistedBaseline, tokenizer)
+	}
 
 	requestCounter.Inc()
 	start := time.Now()
@@ -1077,6 +1149,20 @@ func detectHandler(w http.ResponseWriter, r *http.Request, cfg config, store *st
 
 	// Track usage asynchronously
 	go tracker.track(context.Background(), tc.Tenant.ID, stream.ID, tc.Tenant.Plan, len(payload.Events), len(anomalies))
+
+	// Persist trailing events to rebuild baseline across requests (async, best-effort)
+	go func() {
+		if store.baselineRedis == nil {
+			return
+		}
+		tail := tailEventsForBaseline(persistedBaseline, payload.Events, detectionMinEvents)
+		if len(tail) == 0 {
+			return
+		}
+		if err := store.saveBaselineSnapshot(context.Background(), stream.ID, tail, detectionMinEvents); err != nil {
+			log.Printf("baseline: failed to persist snapshot: %v", err)
+		}
+	}()
 
 	// AI Analysis (Async)
 	if router != nil && aiClient != nil {
@@ -1159,6 +1245,22 @@ func detectHandler(w http.ResponseWriter, r *http.Request, cfg config, store *st
 		driftFinding = &driftResult{DiagnosticReason: "no_active_anchor"}
 	}
 
+	var calibrationNote *calibrationInfo
+	if calibStatus != nil && detectionEventsNeeded > 0 {
+		// Warn clients that statistical calibration is done but detector still needs more data to be truly ready.
+		calibrationNote = &calibrationInfo{
+			EventsIngested:        calibStatus.EventsIngested,
+			EventsNeeded:          calibStatus.EventsNeeded,
+			MinBaselineSize:       calibStatus.MinBaselineSize,
+			ProgressPercent:       calibStatus.ProgressPercent,
+			DetectionReady:        false,
+			DetectionEventsNeeded: detectionEventsNeeded,
+			DetectionMinEvents:    detectionMinEvents,
+			Message: fmt.Sprintf("Detector warming up: needs %d total events for baseline/window readiness (currently %d).",
+				detectionMinEvents, calibStatus.EventsIngested),
+		}
+	}
+
 	resp := detectResponse{
 		Success:         true,
 		BatchID:         batchID,
@@ -1171,6 +1273,9 @@ func detectHandler(w http.ResponseWriter, r *http.Request, cfg config, store *st
 		Anomalies:       anomalies,
 		RequestID:       requestIDFrom(r.Context()),
 		Status:          "ready", // SHA-139: Stream is calibrated and ready
+		DetectionReady:  detectionReady,
+		DetectionEventsNeeded: detectionEventsNeeded,
+		Calibration:    calibrationNote,
 		Drift:           driftFinding,
 		ValueOutliers:   valueOutliers,
 	}
@@ -1300,6 +1405,48 @@ func runDetectionWithRecovery(ctx context.Context, detector *driftlockcbad.Detec
 	case res := <-resultCh:
 		return res.outputs, res.records, res.err
 	}
+}
+
+// primeDetectorWithBaseline replays persisted baseline events into a fresh detector instance.
+// Errors are logged but not returned to avoid blocking live requests.
+func primeDetectorWithBaseline(detector *driftlockcbad.Detector, events []json.RawMessage, tokenizer *driftlockcbad.Tokenizer) {
+	for _, ev := range events {
+		processed := ev
+		if tokenizer != nil {
+			processed = json.RawMessage(tokenizer.Tokenize([]byte(ev)))
+		}
+		if len(bytes.TrimSpace(processed)) == 0 {
+			continue
+		}
+		if _, err := detector.AddData(processed); err != nil {
+			log.Printf("baseline prime: add failed: %v", err)
+			return
+		}
+	}
+}
+
+// tailEventsForBaseline returns the trailing "limit" events from prior+current for persistence.
+func tailEventsForBaseline(prior, current []json.RawMessage, limit int) []json.RawMessage {
+	if limit <= 0 {
+		return nil
+	}
+	totalLen := len(prior) + len(current)
+	if totalLen == 0 {
+		return nil
+	}
+	start := totalLen - limit
+	if start < 0 {
+		start = 0
+	}
+	out := make([]json.RawMessage, 0, minInt(limit, totalLen))
+	for i := start; i < totalLen; i++ {
+		if i < len(prior) {
+			out = append(out, prior[i])
+		} else {
+			out = append(out, current[i-len(prior)])
+		}
+	}
+	return out
 }
 
 func runDetection(detector *driftlockcbad.Detector, events []json.RawMessage, tokenizer *driftlockcbad.Tokenizer) ([]anomalyOutput, []persistedAnomaly, error) {

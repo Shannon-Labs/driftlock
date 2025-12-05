@@ -1,5 +1,0 @@
-{"a":1,"service":"api-gateway","latency_ms":42}
-{"a":2,"service":"api-gateway","latency_ms":45}
-{"a":999,"service":"api-gateway","latency_ms":8000}
-
-
