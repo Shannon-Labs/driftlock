@@ -237,7 +237,7 @@
         <div class="text-left">
           <h4 class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Quick Start:</h4>
           <div class="bg-gray-900 rounded-lg p-4 overflow-x-auto">
-              <pre class="text-xs text-gray-300 font-mono"><code>curl -X POST https://driftlock.web.app/api/v1/detect \
+              <pre class="text-xs text-gray-300 font-mono"><code>curl -X POST https://driftlock.net/api/v1/detect \
   -H "X-Api-Key: {{ apiKey }}" \
   -H "Content-Type: application/json" \
   -d '{"events": [...], "window_size": 50}'</code></pre>
@@ -252,11 +252,11 @@
              </div>
              <div class="flex gap-2">
                  <button @click="handleUpgrade('radar')" class="flex-1 inline-flex justify-center items-center rounded-md border border-blue-200 bg-white px-3 py-2 text-xs font-medium text-blue-700 shadow-sm hover:bg-blue-50 focus:outline-none" :disabled="upgrading">
-                    <span v-if="!upgrading">Radar ($20)</span>
+                    <span v-if="!upgrading">Radar ($15)</span>
                     <span v-else>...</span>
                  </button>
-                 <button @click="handleUpgrade('lock')" class="flex-1 inline-flex justify-center items-center rounded-md border border-transparent bg-blue-600 px-3 py-2 text-xs font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none" :disabled="upgrading">
-                    <span v-if="!upgrading">Lock ($200)</span>
+                 <button @click="handleUpgrade('tensor')" class="flex-1 inline-flex justify-center items-center rounded-md border border-transparent bg-blue-600 px-3 py-2 text-xs font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none" :disabled="upgrading">
+                    <span v-if="!upgrading">Pro ($100)</span>
                     <span v-else>...</span>
                  </button>
              </div>

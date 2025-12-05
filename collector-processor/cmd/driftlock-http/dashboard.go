@@ -70,12 +70,14 @@ func handleGetUsage(store *store) http.HandlerFunc {
 			return
 		}
 
-		limit := 10000 // default Developer
+		limit := 10000 // default Developer/Free
 		switch tc.Tenant.Plan {
-		case "starter":
+		case "starter", "radar", "signal", "basic":
 			limit = 500000
-		case "growth":
+		case "growth", "tensor", "pro", "sentinel", "lock", "transistor":
 			limit = 5000000
+		case "orbit", "enterprise", "horizon":
+			limit = 25000000
 		}
 
 		writeJSON(w, r, http.StatusOK, map[string]interface{}{
@@ -258,14 +260,15 @@ func handleGetUsageDetails(store *store) http.HandlerFunc {
 		}
 
 		// Determine plan limit
-		var limit int64 = 10000 // default trial
+		// Tier names: pilot (free), radar ($15), tensor ($100), orbit ($299)
+		var limit int64 = 10000 // default trial/pilot (free tier)
 		switch tc.Tenant.Plan {
-		case "starter", "radar":
-			limit = 500000
-		case "growth", "lock":
-			limit = 5000000
-		case "enterprise", "orbit":
-			limit = 1000000000
+		case "starter", "radar", "signal": // Standard tier ($15/mo)
+			limit = 500_000
+		case "growth", "lock", "tensor": // Pro tier ($100/mo)
+			limit = 5_000_000
+		case "enterprise", "orbit", "horizon": // Enterprise tier ($299/mo)
+			limit = 25_000_000
 		}
 
 		// Calculate period dates
