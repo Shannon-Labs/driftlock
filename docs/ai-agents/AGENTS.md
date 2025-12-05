@@ -220,7 +220,7 @@ We have organized documentation to keep the root clean and context clear:
   - The Go FFI in `collector-processor/driftlockcbad/`.
   - The CLI demo.
 - Compression adapters:
-  - Generic compressors (zstd/lz4/gzip) must continue to work in all builds.
+  - Generic compressors (zlab/zstd/lz4/gzip) must continue to work in all builds.
   - OpenZL adapter is **optional** and must fail gracefully; never make it a hard runtime dependency.
 
 ### Go (`collector-processor/`, `cmd/`)

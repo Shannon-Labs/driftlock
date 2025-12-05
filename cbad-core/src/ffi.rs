@@ -27,7 +27,7 @@ pub struct CBADConfig {
     pub permutation_count: usize,
     pub seed: u64,
     pub require_statistical_significance: c_int, // 0 = false, 1 = true
-    pub compression_algorithm: *const c_char,    // "zstd", "lz4", "gzip", "openzl"
+    pub compression_algorithm: *const c_char,    // "zlab", "zstd", "lz4", "gzip", "openzl"
 }
 
 /// Enhanced metrics structure with additional fields
@@ -77,6 +77,7 @@ pub unsafe extern "C" fn cbad_detector_create(config_ptr: *const CBADConfig) -> 
         CompressionAlgorithm::Zstd
     } else {
         match CStr::from_ptr(config.compression_algorithm).to_str() {
+            Ok("zlab") => CompressionAlgorithm::Zlab,
             Ok("zstd") => CompressionAlgorithm::Zstd,
             Ok("lz4") => CompressionAlgorithm::Lz4,
             Ok("gzip") => CompressionAlgorithm::Gzip,
