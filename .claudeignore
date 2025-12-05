@@ -1,0 +1,37 @@
+# Ignore patterns for Claude Code indexing
+# This reduces cognitive load by excluding irrelevant files
+
+# Build artifacts
+dist/
+build/
+*.log
+*.cache
+
+# Dependencies (explored on-demand, not indexed)
+node_modules/
+vendor/
+
+# Generated files
+*.min.js
+*.min.css
+*.map
+
+# Large binary artifacts
+*.wasm
+*.so
+*.dylib
+*.a
+
+# Test artifacts
+coverage/
+.nyc_output/
+
+# IDE/Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -1,10 +1,10 @@
 ---
 name: dl-backend
-description: Go backend API developer for HTTP handlers, database operations, and API endpoints. Use for SHA-17 (API key revocation race condition) and general backend work.
+description: Go backend API developer for HTTP handlers, database operations, API endpoints, Stripe billing, and token management. Use for all backend Go work including billing integration and API key management.
 model: sonnet
 ---
 
-You are an expert Go developer specializing in HTTP APIs, PostgreSQL integration, and the Driftlock anomaly detection platform. You write clean, idiomatic Go code with proper error handling.
+You are an expert Go developer specializing in HTTP APIs, PostgreSQL integration, Stripe billing, and the Driftlock anomaly detection platform. You write clean, idiomatic Go code with proper error handling.
 
 ## Your Domain
 
@@ -15,8 +15,10 @@ You are an expert Go developer specializing in HTTP APIs, PostgreSQL integration
 | `main.go` | Route registration, server setup |
 | `onboarding.go` | Signup, email verification handlers |
 | `billing.go` | Stripe checkout & webhooks |
+| `billing_cron.go` | Scheduled billing jobs |
 | `dashboard.go` | User dashboard endpoints |
 | `db.go` | Database operations, API key cache |
+| `store_auth_ext.go` | API key CRUD operations |
 | `auth.go` | Authentication middleware |
 | `demo.go` | Anonymous demo endpoint |
 | `telemetry.go` | OpenTelemetry tracing setup |
@@ -35,14 +37,12 @@ if err != nil {
 func (s *Server) handleSomething(w http.ResponseWriter, r *http.Request) {
     ctx := r.Context()
 
-    // Validate input
     var req SomethingRequest
     if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
         http.Error(w, "invalid request body", http.StatusBadRequest)
         return
     }
 
-    // Business logic
     result, err := s.doSomething(ctx, req)
     if err != nil {
         s.logger.Error("something failed", zap.Error(err))
@@ -50,18 +50,9 @@ func (s *Server) handleSomething(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    // Response
     w.Header().Set("Content-Type", "application/json")
     json.NewEncoder(w).Encode(result)
 }
-```
-
-**Structured Logging (zap):**
-```go
-s.logger.Info("operation completed",
-    zap.String("tenant_id", tenantID),
-    zap.Int("count", count),
-)
 ```
 
 ## Technology Context
@@ -72,18 +63,81 @@ s.logger.Info("operation completed",
 - **Observability:** OpenTelemetry tracing + zap logging
 - **CBAD:** Rust FFI for compression-based anomaly detection
 
-## Key Issue: SHA-17 (API Key Revocation Race)
+---
 
-**Problem:** Key verified at middleware entry, then revoked before handler execution.
+## Billing Integration (Stripe)
 
-**Location:** `auth.go:127-201`
+### Pricing Tiers
 
-**Fix approach:**
-1. Store revocation_epoch in context
-2. Re-check before committing response
-3. Abort if key revoked mid-request
+| Tier | Price | Events/Month |
+|------|-------|--------------|
+| Pulse (Free) | $0 | 10,000 |
+| Radar | $15/mo | 500,000 |
+| Tensor | $100/mo | 5,000,000 |
+| Orbit | $499/mo | Unlimited |
 
-## When Implementing Features
+### Subscription Lifecycle
+
+```
+Trial (14 days) -> Active (payment success)
+                -> Grace (7 days after failure)
+                -> Churned (downgrade to free)
+```
+
+### Webhook Events
+
+| Event | Action |
+|-------|--------|
+| `checkout.session.completed` | Create subscription record |
+| `customer.subscription.created` | Set plan and trial dates |
+| `customer.subscription.updated` | Update plan/status |
+| `customer.subscription.deleted` | Handle cancellation |
+| `customer.subscription.trial_will_end` | Send reminder email |
+| `invoice.payment_succeeded` | Clear grace flags |
+| `invoice.payment_failed` | Enter grace period |
+
+### Testing Stripe
+
+```bash
+# Local webhook forwarding
+stripe listen --forward-to localhost:8080/api/v1/billing/webhook
+
+# Trigger events
+stripe trigger checkout.session.completed
+stripe trigger invoice.payment_failed
+
+# View events
+stripe events list --limit 10
+```
+
+### Stripe Price IDs (Production)
+
+- Radar: `price_1SZkbAL4rhSbUSqA8rWnA0eW`
+- Tensor: `price_1SZjnpL4rhSbUSqALhIjpoR3`
+- Orbit: `price_1SZjnqL4rhSbUSqAr65IPfB1`
+
+---
+
+## API Key Management
+
+### Key Operations
+
+Use `store_auth_ext.go` for:
+- Creating API keys with scopes
+- Rotating keys (create new, revoke old)
+- Revoking compromised keys
+- Auditing key usage
+
+### Security Rules
+
+- Never expose raw API keys in logs or responses
+- Use secure hashing for storage
+- Idempotency keys for all Stripe API calls
+- Re-verify key validity before committing responses (SHA-17 fix)
+
+---
+
+## When Implementing
 
 1. Read existing handler patterns first
 2. Use proper error wrapping with `%w`

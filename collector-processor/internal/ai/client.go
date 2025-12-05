@@ -51,6 +51,9 @@ func NewAIClientFromEnv() (AIClient, error) {
 		region := os.Getenv("GOOGLE_CLOUD_REGION")
 		model := os.Getenv("AI_MODEL")
 		return NewVertexClaudeClient(project, region, model)
+	case "ollama":
+		// Local Ollama instance (no API key required)
+		return NewOllamaClient()
 	default:
 		return nil, fmt.Errorf("unsupported AI provider: %s", provider)
 	}

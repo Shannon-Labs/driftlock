@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
 	"crypto/sha256"
@@ -15,6 +16,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/go-redis/redis/v8"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -26,8 +28,10 @@ var base32Enc = base32.StdEncoding.WithPadding(base32.NoPadding)
 var errNotFound = errors.New("record not found")
 
 type store struct {
-	pool  *pgxpool.Pool
-	cache *configCache
+	pool          *pgxpool.Pool
+	cache         *configCache
+	baselineTTL   time.Duration
+	baselineRedis *redis.Client
 }
 
 func newStore(pool *pgxpool.Pool) *store {
@@ -63,6 +67,9 @@ func connectDB(ctx context.Context) (*pgxpool.Pool, error) {
 func (s *store) Close() {
 	if s.pool != nil {
 		s.pool.Close()
+	}
+	if s.baselineRedis != nil {
+		_ = s.baselineRedis.Close()
 	}
 }
 
@@ -161,6 +168,75 @@ func (s *store) loadCache(ctx context.Context) error {
 
 	s.cache.replace(entries)
 	return nil
+}
+
+// baselineKey returns the Redis key for a stream's persisted baseline buffer.
+func baselineKey(streamID uuid.UUID) string {
+	return fmt.Sprintf("cbad:baseline:%s", streamID.String())
+}
+
+// loadBaselineSnapshot fetches a persisted baseline from Redis as a slice of events.
+// Returns (nil, nil) when Redis is disabled or no snapshot exists.
+func (s *store) loadBaselineSnapshot(ctx context.Context, streamID uuid.UUID) ([]json.RawMessage, error) {
+	if s == nil || s.baselineRedis == nil {
+		return nil, nil
+	}
+	data, err := s.baselineRedis.Get(ctx, baselineKey(streamID)).Bytes()
+	if err == redis.Nil {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	lines := bytes.Split(data, []byte{'\n'})
+	events := make([]json.RawMessage, 0, len(lines))
+	for _, line := range lines {
+		line = bytes.TrimSpace(line)
+		if len(line) == 0 {
+			continue
+		}
+		// Skip invalid JSON to avoid poisoning the detector
+		if !json.Valid(line) {
+			continue
+		}
+		copyLine := append([]byte(nil), line...)
+		events = append(events, json.RawMessage(copyLine))
+	}
+	return events, nil
+}
+
+// saveBaselineSnapshot stores the trailing "limit" events in Redis with TTL for reuse across requests.
+func (s *store) saveBaselineSnapshot(ctx context.Context, streamID uuid.UUID, events []json.RawMessage, limit int) error {
+	if s == nil || s.baselineRedis == nil || limit <= 0 || len(events) == 0 {
+		return nil
+	}
+	if len(events) > limit {
+		events = events[len(events)-limit:]
+	}
+
+	var buf bytes.Buffer
+	for i, ev := range events {
+		compact, err := compactEvent(ev, nil) // Store compacted JSON to keep payload small
+		if err != nil {
+			// Skip invalid entries instead of failing persistence
+			continue
+		}
+		buf.Write(compact)
+		if i < len(events)-1 {
+			buf.WriteByte('\n')
+		}
+	}
+
+	if buf.Len() == 0 {
+		return nil
+	}
+
+	ttl := s.baselineTTL
+	if ttl <= 0 {
+		ttl = 24 * time.Hour
+	}
+	return s.baselineRedis.Set(ctx, baselineKey(streamID), buf.Bytes(), ttl).Err()
 }
 
 func (s *store) tenantByID(id uuid.UUID) (tenantRecord, bool) {

@@ -1,6 +1,0 @@
-connectorId: "driftlock"
-
-generate:
-  javascriptSdk:
-    outputDir: "../landing-page/src/generated"
-    package: "@driftlock/dataconnect"

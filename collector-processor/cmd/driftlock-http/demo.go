@@ -16,6 +16,14 @@ import (
 	"github.com/google/uuid"
 )
 
+const (
+	// Demo runs with a much smaller baseline/window so anomaly detection works with the 50-event cap.
+	// This is intentionally lower than production defaults to keep demo latency low while still showing signal.
+	demoBaselineSize = 40
+	demoWindowSize   = 10
+	demoHopSize      = 5
+)
+
 // Demo endpoint rate limiter - 10 requests/min per IP
 type demoRateLimiter struct {
 	mu       sync.Mutex
@@ -211,11 +219,11 @@ func demoDetectHandler(cfg config, limiter *demoRateLimiter) http.HandlerFunc {
 		}
 
 		// Build detection settings with defaults
-		plan := buildDemoDetectionSettings(cfg, payload.ConfigOverride)
+	plan := buildDemoDetectionSettings(cfg, payload.ConfigOverride)
 
-		usedAlgo := plan.CompressionAlgorithm
-		if usedAlgo == "openzl" && !driftlockcbad.HasOpenZL() {
-			usedAlgo = "zstd"
+	usedAlgo := plan.CompressionAlgorithm
+	if usedAlgo == "openzl" && !driftlockcbad.HasOpenZL() {
+		usedAlgo = "zstd"
 		}
 
 		detector, err := driftlockcbad.NewDetector(driftlockcbad.DetectorConfig{
@@ -282,9 +290,9 @@ func demoDetectHandler(cfg config, limiter *demoRateLimiter) http.HandlerFunc {
 
 func buildDemoDetectionSettings(cfg config, override *configOverride) detectionPlan {
 	plan := detectionPlan{
-		BaselineSize:         cfg.DefaultBaseline,
-		WindowSize:           cfg.DefaultWindow,
-		HopSize:              cfg.DefaultHop,
+		BaselineSize:         demoBaselineSize,
+		WindowSize:           demoWindowSize,
+		HopSize:              demoHopSize,
 		NCDThreshold:         cfg.NCDThreshold,
 		PValueThreshold:      cfg.PValueThreshold,
 		PermutationCount:     cfg.PermutationCount,
