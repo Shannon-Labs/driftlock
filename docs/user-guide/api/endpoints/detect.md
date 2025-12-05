@@ -72,7 +72,7 @@ X-Api-Key: YOUR_API_KEY
 | `ncd_threshold` | float | 0.3 | Minimum NCD to flag anomaly (0-1) |
 | `p_value_threshold` | float | 0.05 | Maximum p-value for significance |
 | `permutation_count` | integer | 1000 | Number of permutations for p-value |
-| `compressor` | string | "zstd" | Compression algorithm: `zstd`, `lz4`, `gzip`, `openzl` |
+| `compressor` | string | "zstd" | Compression algorithm: `zlab`, `zstd`, `lz4`, `gzip`, `openzl` |
 
 ## Response
 

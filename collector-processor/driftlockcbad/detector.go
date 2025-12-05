@@ -19,7 +19,7 @@ typedef struct {
     size_t permutation_count;
     uint64_t seed;
     int require_statistical_significance; // 0 = false, 1 = true
-    const char* compression_algorithm; // "zstd", "lz4", "gzip", "openzl"
+    const char* compression_algorithm; // "zlab", "zstd", "lz4", "gzip", "openzl"
 } CBADConfig;
 
 // Enhanced metrics structure with additional fields

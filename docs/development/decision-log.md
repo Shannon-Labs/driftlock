@@ -4,6 +4,7 @@ All significant assumptions and architectural decisions for Driftlock.
 
 | Date       | Decision | Rationale | Consequences |
 |------------|----------|-----------|--------------|
+| 2025-05-04 | Add zlab (zlib) compression adapter | Provide deterministic general-purpose compression for environments that cannot rely on OpenZL while expanding algorithm choice beyond gzip/zstd/lz4. | Health checks and configs surface `zlab`; Rust/Go FFI enums must stay aligned and tests must cover the new adapter. |
 | 2025-01-09 | Adopt Apache 2.0 license | Aligns with OpenTelemetry ecosystem and encourages regulated adopters to contribute improvements without copyleft concerns. | Requires contributor agreement to Apache 2.0; downstreams can use commercially. |
 | 2025-01-09 | Treat Go 1.22 as minimum version | Ensures access to current OTel Collector APIs and generics improvements while staying within LTS support windows. | CI/tooling must install Go 1.22; downstreams on older Go must upgrade. |
 | 2025-01-09 | Implement CBAD core in Rust with FFI | Rust offers memory safety, performance, and easy WASM targeting for future UI analytics; FFI keeps Go processor lean. | Requires Cargo toolchain in CI; additional FFI glue for Go/WASM consumers. |
