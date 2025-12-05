@@ -211,16 +211,21 @@
                     <div class="brutalist-card flex flex-col">
                         <div class="mb-8">
                             <p class="text-sm font-bold font-sans uppercase tracking-wide mb-2">Enterprise</p>
-                            <p class="text-4xl font-sans font-bold">Custom</p>
-                            <p class="text-sm text-gray-500 font-mono">Unlimited</p>
-                            <p class="mt-4 text-sm font-serif">Custom models & on-prem deployment.</p>
+                            <p class="text-4xl font-sans font-bold">$299</p>
+                            <p class="text-sm text-gray-500 font-mono">per month</p>
+                            <p class="mt-4 text-sm font-serif">For large-scale production monitoring.</p>
                         </div>
                         <ul class="space-y-3 text-sm font-mono border-t border-black pt-4 mt-auto">
-                            <li>[x] Custom OpenZL Models</li>
-                            <li>[x] Private Cloud / On-prem</li>
-                            <li>[x] SLA & Account Manager</li>
+                            <li>[x] 25M events/mo</li>
+                            <li>[x] All Pro features</li>
+                            <li>[x] 90-day retention</li>
+                            <li class="text-gray-500">[~] SSO (coming soon)</li>
                         </ul>
-                        <a href="mailto:hunter@shannonlabs.dev" class="brutalist-button w-full text-center mt-8">Contact Sales</a>
+                        <button @click="handleCheckout('orbit')"
+                                :disabled="checkoutLoading === 'orbit'"
+                                class="brutalist-button w-full text-center mt-8">
+                            {{ checkoutLoading === 'orbit' ? 'Loading...' : 'Get Started' }}
+                        </button>
                     </div>
                 </div>
             </div>
