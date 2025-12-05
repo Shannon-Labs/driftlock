@@ -137,9 +137,10 @@ func onboardSignupHandler(cfg config, store *store, emailer *emailService) http.
 		}
 
 		// Create pending tenant (no API key until verified)
-		plan := req.Plan
+		// Normalize plan to canonical name
+		plan := normalizePlan(req.Plan)
 		if plan == "" {
-			plan = "trial"
+			plan = "pilot" // Default to pilot (free tier)
 		}
 
 		result, err := store.createPendingTenant(ctx, tenantCreateParams{

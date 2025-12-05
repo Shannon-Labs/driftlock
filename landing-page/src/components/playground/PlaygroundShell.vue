@@ -299,7 +299,9 @@ async function checkApiHealth() {
     }
     apiStatus.value = 'disconnected'
   } catch (err) {
-    console.warn('Health check failed:', err)
+    if (import.meta.env.DEV) {
+      console.warn('Health check failed:', err)
+    }
     apiStatus.value = 'disconnected'
   }
 }

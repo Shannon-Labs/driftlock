@@ -270,14 +270,15 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { getFirebaseAuth } from '@/firebase'
-import { 
-  createUserWithEmailAndPassword, 
-  GoogleAuthProvider, 
-  GithubAuthProvider, 
-  signInWithPopup, 
+import {
+  createUserWithEmailAndPassword,
+  GoogleAuthProvider,
+  GithubAuthProvider,
+  signInWithPopup,
   signInWithEmailAndPassword,
-  sendPasswordResetEmail 
+  sendPasswordResetEmail
 } from 'firebase/auth'
+import type { APIKey, AuthUser } from '@/types/api'
 
 const email = ref('')
 const company = ref('')
@@ -292,7 +293,7 @@ const upgrading = ref(false)
 const isLoginMode = ref(false)
 const showPasswordField = ref(true)
 const pendingEmail = ref('') // Email to show in verification pending message
-let currentUser: any = null
+let currentUser: AuthUser | null = null
 
 const toggleMode = () => {
     isLoginMode.value = !isLoginMode.value
@@ -398,7 +399,7 @@ const handleSocialAuth = async (providerName: 'google' | 'github') => {
 }
 
 // Fetch API Keys for existing user
-const fetchApiKeys = async (user: any, suppressError = false) => {
+const fetchApiKeys = async (user: AuthUser, suppressError = false) => {
     try {
         const idToken = await user.getIdToken()
         const response = await fetch('/api/v1/me/keys', {
@@ -448,7 +449,9 @@ const submitOnboarding = async (idToken: string, userEmail: string, companyName:
     const contentType = response.headers.get("content-type");
     if (!contentType || !contentType.includes("application/json")) {
         const text = await response.text().catch(() => 'Unknown error');
-        console.error('Non-JSON response:', text);
+        if (import.meta.env.DEV) {
+          console.error('Non-JSON response:', text);
+        }
         throw new Error(`Server returned a non-JSON response (${response.status}). Please try again later.`);
     }
 
@@ -488,8 +491,10 @@ const submitOnboarding = async (idToken: string, userEmail: string, companyName:
 }
 
 const handleAuthError = (err: any) => {
-  console.error('Auth error details:', err);
-  
+  if (import.meta.env.DEV) {
+    console.error('Auth error details:', err);
+  }
+
   if (err.code === 'auth/email-already-in-use') {
       error.value = 'This email is already registered. Please sign in.'
     } else if (err.code === 'auth/invalid-email') {
@@ -519,7 +524,7 @@ const copyToClipboard = async () => {
       copied.value = false
     }, 2000)
   } catch (err) {
-    console.error('Failed to copy:', err)
+    // UI feedback already provided via copied state
   }
 }
 
@@ -540,7 +545,9 @@ const handleUpgrade = async (plan: string) => {
     const data = await response.json()
     if (data.url) window.location.href = data.url
   } catch (err) {
-    console.error('Upgrade error:', err)
+    if (import.meta.env.DEV) {
+      console.error('Upgrade error:', err)
+    }
     alert('Failed to start upgrade process.')
   } finally {
     upgrading.value = false
