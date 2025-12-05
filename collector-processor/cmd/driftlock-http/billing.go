@@ -54,9 +54,11 @@ func billingCheckoutHandler(store *store) http.HandlerFunc {
 		// Determine Price ID based on plan
 		var priceID string
 		switch req.Plan {
-		case "tensor", "sentinel", "lock", "transistor", "pro": // "tensor" is new, others back-compat
+		case "orbit", "enterprise", "horizon": // Enterprise tier ($299/mo, 25M events)
+			priceID = os.Getenv("STRIPE_PRICE_ID_ENTERPRISE")
+		case "tensor", "sentinel", "lock", "transistor", "pro": // Pro tier ($100/mo)
 			priceID = os.Getenv("STRIPE_PRICE_ID_PRO")
-		case "radar", "signal", "basic": // "radar" is new, others back-compat
+		case "radar", "signal", "basic": // Standard tier ($15/mo)
 			priceID = os.Getenv("STRIPE_PRICE_ID_BASIC")
 		default:
 			// Default to radar (basic) as the entry paid tier
@@ -312,7 +314,9 @@ func handleSubscriptionUpdated(store *store, sub stripe.Subscription) {
 	plan := "signal" // Default fallthrough
 	if len(sub.Items.Data) > 0 {
 		priceID := sub.Items.Data[0].Price.ID
-		if priceID == os.Getenv("STRIPE_PRICE_ID_PRO") {
+		if priceID == os.Getenv("STRIPE_PRICE_ID_ENTERPRISE") {
+			plan = "orbit" // Enterprise tier ($299/mo, 25M events)
+		} else if priceID == os.Getenv("STRIPE_PRICE_ID_PRO") {
 			plan = "tensor"
 		} else if priceID == os.Getenv("STRIPE_PRICE_ID_BASIC") {
 			plan = "signal"

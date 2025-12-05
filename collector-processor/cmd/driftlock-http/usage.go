@@ -9,11 +9,18 @@ import (
 )
 
 // Plan limits (monthly events)
+// Tier names: pilot (free), radar ($15), tensor ($100), orbit ($299)
 var planLimits = map[string]int64{
-	"trial":      10_000,
-	"starter":    500_000,
-	"growth":     5_000_000,
-	"enterprise": 1_000_000_000, // Custom
+	"trial":      10_000,       // Free tier (pilot)
+	"pilot":      10_000,       // Free tier alias
+	"starter":    500_000,      // Legacy alias for radar
+	"radar":      500_000,      // Standard $15/mo
+	"signal":     500_000,      // Legacy alias for radar
+	"growth":     5_000_000,    // Legacy alias for tensor
+	"tensor":     5_000_000,    // Pro $100/mo
+	"orbit":      25_000_000,   // Enterprise $299/mo
+	"enterprise": 25_000_000,   // Enterprise alias
+	"horizon":    25_000_000,   // Enterprise alias
 }
 
 type usageTracker struct {
