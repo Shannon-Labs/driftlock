@@ -373,6 +373,7 @@ func buildHTTPHandler(cfg config, store *store, queue jobQueue, limiter *tenantR
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", healthHandler(store, queue))
 	mux.HandleFunc("/readyz", readinessHandler(store))
+	mux.HandleFunc("/v1/version", versionHandler())
 	mux.Handle("/metrics", promhttp.Handler())
 
 	// Onboarding endpoints
@@ -545,6 +546,33 @@ func readinessHandler(store *store) http.HandlerFunc {
 			return
 		}
 
+		writeJSON(w, r, http.StatusOK, resp)
+	}
+}
+
+// versionResponse represents the response from the /v1/version endpoint.
+type versionResponse struct {
+	Version   string `json:"version"`
+	BuildDate string `json:"build_date,omitempty"`
+	GitCommit string `json:"git_commit,omitempty"`
+	GoVersion string `json:"go_version"`
+	RequestID string `json:"request_id"`
+}
+
+// versionHandler returns version information about the API.
+func versionHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodOptions {
+			handlePreflight(w, r)
+			return
+		}
+		resp := versionResponse{
+			Version:   "1.0.0",
+			BuildDate: env("BUILD_DATE", ""),
+			GitCommit: env("GIT_COMMIT", ""),
+			GoVersion: "go1.22",
+			RequestID: requestIDFrom(r.Context()),
+		}
 		writeJSON(w, r, http.StatusOK, resp)
 	}
 }

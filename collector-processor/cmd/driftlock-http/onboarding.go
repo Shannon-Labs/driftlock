@@ -383,15 +383,21 @@ func validateSignup(req *onboardSignupRequest) error {
 	}
 
 	// Validate plan
+	// Accept both legacy names and canonical names (pilot, radar, tensor, orbit)
 	if req.Plan != "" {
 		validPlans := map[string]bool{
+			// Canonical names
+			"pilot":   true, // Free tier
+			"radar":   true, // Standard $15/mo
+			"tensor":  true, // Pro $100/mo
+			"orbit":   true, // Enterprise $299/mo
+			// Legacy aliases (normalized by normalizePlan)
 			"trial":   true,
 			"starter": true,
 			"growth":  true,
-			"pilot":   true,
 		}
 		if !validPlans[req.Plan] {
-			return fmt.Errorf("invalid plan: must be one of trial, starter, growth, pilot")
+			return fmt.Errorf("invalid plan: must be one of pilot, radar, tensor, orbit (or legacy: trial, starter, growth)")
 		}
 	}
 

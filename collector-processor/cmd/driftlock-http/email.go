@@ -38,7 +38,7 @@ func (s *emailService) sendWelcomeEmail(toEmail, companyName, apiKey string) {
 	from := mail.NewEmail(s.fromName, s.fromAddress)
 	subject := "Welcome to Driftlock!"
 	to := mail.NewEmail(companyName, toEmail)
-	
+
 	plainTextContent := fmt.Sprintf(`Welcome to Driftlock, %s!
 
 Your API Key is: %s
@@ -63,7 +63,7 @@ The Driftlock Team`, companyName, apiKey)
 	`, companyName, apiKey)
 
 	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
-	
+
 	go func() {
 		response, err := s.client.Send(message)
 		if err != nil {
@@ -286,7 +286,7 @@ func (s *emailService) sendGraceExpiredEmail(toEmail, companyName string) {
 
 	plainTextContent := fmt.Sprintf(`Hi %s,
 
-Your grace period has expired and your subscription has been downgraded to our free Pulse tier.
+Your grace period has expired and your subscription has been downgraded to our free Pilot tier.
 
 Your data is still safe, but you'll have reduced feature access and lower usage limits.
 
@@ -300,7 +300,7 @@ The Driftlock Team`, companyName)
 		<div style="font-family: sans-serif; color: #333;">
 			<h2>Subscription Downgraded</h2>
 			<p>Hi %s,</p>
-			<p>Your grace period has expired and your subscription has been downgraded to our free <strong>Pulse</strong> tier.</p>
+			<p>Your grace period has expired and your subscription has been downgraded to our free <strong>Pilot</strong> tier.</p>
 			<p>Your data is still safe, but you'll have reduced feature access and lower usage limits.</p>
 			<p>
 				<a href="https://driftlock.net/dashboard" style="background: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Restore Subscription</a>
@@ -322,4 +322,3 @@ The Driftlock Team`, companyName)
 		}
 	}()
 }
-
