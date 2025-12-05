@@ -23,6 +23,16 @@ var planLimits = map[string]int64{
 	"horizon":    25_000_000,   // Enterprise alias
 }
 
+// GetPlanLimit returns the event limit for a given plan name.
+// Falls back to trial (10,000) if plan not found.
+func GetPlanLimit(plan string) int64 {
+	limit, ok := planLimits[plan]
+	if !ok {
+		return planLimits["trial"]
+	}
+	return limit
+}
+
 type usageTracker struct {
 	store   *store
 	emailer *emailService

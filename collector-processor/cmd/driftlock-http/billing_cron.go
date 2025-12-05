@@ -155,7 +155,7 @@ func (s *store) getExpiredGracePeriodTenants(ctx context.Context) ([]TenantBilli
 func (s *store) downgradeToFreeTier(ctx context.Context, tenantID uuid.UUID) error {
 	_, err := s.pool.Exec(ctx, `
 		UPDATE tenants
-		SET plan = 'pulse',
+		SET plan = 'pilot',
 		    grace_period_ends_at = NULL,
 		    stripe_status = 'canceled',
 		    updated_at = NOW()

@@ -356,7 +356,9 @@ const fetchUsage = async () => {
 
     updateAlerts()
   } catch (error) {
-    console.error('Failed to fetch AI usage:', error)
+    if (import.meta.env.DEV) {
+      console.error('Failed to fetch AI usage:', error)
+    }
   } finally {
     loading.value = false
   }
@@ -427,7 +429,9 @@ const updateConfig = async () => {
     })
     emit('config-changed', localConfig.value)
   } catch (error) {
-    console.error('Failed to update AI config:', error)
+    if (import.meta.env.DEV) {
+      console.error('Failed to update AI config:', error)
+    }
   }
 }
 

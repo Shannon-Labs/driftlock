@@ -270,7 +270,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref, nextTick } from 'vue'
+import { ref } from 'vue'
 import WaitlistForm from '../components/cta/WaitlistForm.vue'
 import HorizonShowcase from '../components/sections/HorizonShowcase.vue'
 import { useAuthStore } from '../stores/auth'
@@ -279,51 +279,8 @@ const authStore = useAuthStore()
 const checkoutLoading = ref<string | null>(null)
 const checkoutError = ref<string | null>(null)
 
-const contactEndpoint = '/api/v1/contact'
-const fallbackMailto = 'mailto:hunter@shannonlabs.dev?subject=Driftlock Pilot Program Inquiry'
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-
-const contactForm = reactive({
-    name: '',
-    email: '',
-    company: '',
-    message: '',
-})
-
-const isSubmitting = ref(false)
-const submissionState = ref<'idle' | 'success' | 'error'>('idle')
-const submissionMessage = ref('')
-
-const isFormValid = computed(() => {
-    return (
-        contactForm.name.trim().length >= 2 &&
-        emailRegex.test(contactForm.email.trim()) &&
-        contactForm.message.trim().length >= 20
-    )
-})
-
-const resetForm = () => {
-    contactForm.name = ''
-    contactForm.email = ''
-    contactForm.company = ''
-    contactForm.message = ''
-}
-
-const handleContactSubmit = async () => {
-    // Existing logic... (keeping it minimal for this view update)
-    if (!isFormValid.value) return
-    // ... (simulated)
-    isSubmitting.value = true
-    setTimeout(() => {
-        isSubmitting.value = false
-        submissionState.value = 'success'
-        resetForm()
-    }, 1000)
-}
-
 const loadScenario = async (url: string) => {
     // Placeholder for when we re-add interactivity or link to docs
-    console.log('Load scenario:', url)
 }
 
 // Handle pricing tier checkout

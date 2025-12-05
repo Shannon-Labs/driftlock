@@ -593,11 +593,12 @@ import DashboardLayout from '../layouts/DashboardLayout.vue'
 import UsageChart from '../components/dashboard/UsageChart.vue'
 import AIUsageWidget from '../components/dashboard/AIUsageWidget.vue'
 import { useAuthStore } from '../stores/auth'
+import type { APIKey } from '@/types/api'
 
 const authStore = useAuthStore()
 const route = useRoute()
 
-const keys = ref<any[]>([])
+const keys = ref<APIKey[]>([])
 const usage = ref({
   current_period_usage: 0,
   plan_limit: 10000,
@@ -680,7 +681,7 @@ const keyCopied = ref(false)
 
 // Revoke Key Modal state
 const showRevokeModal = ref(false)
-const keyToRevoke = ref<any>(null)
+const keyToRevoke = ref<APIKey | null>(null)
 const revokeKeyLoading = ref(false)
 
 const apiUrl = window.location.origin // Assuming API is on same domain
@@ -775,7 +776,9 @@ const fetchKeys = async () => {
       keys.value = data.keys || []
     }
   } catch (e) {
-    console.error('Failed to fetch keys', e)
+    if (import.meta.env.DEV) {
+      console.error('Failed to fetch keys', e)
+    }
   }
 }
 
@@ -854,7 +857,7 @@ const copyCurlExample = async () => {
 }
 
 // Open revoke confirmation
-const confirmRevokeKey = (key: any) => {
+const confirmRevokeKey = (key: APIKey) => {
   keyToRevoke.value = key
   showRevokeModal.value = true
 }
@@ -908,7 +911,9 @@ const fetchRecentAnomalies = async () => {
       recentAnomalies.value = data.anomalies || []
     }
   } catch (e) {
-    console.error('Failed to fetch anomalies', e)
+    if (import.meta.env.DEV) {
+      console.error('Failed to fetch anomalies', e)
+    }
   } finally {
     anomaliesLoading.value = false
   }
@@ -997,7 +1002,9 @@ onMounted(async () => {
     await fetchRecentAnomalies()
 
   } catch (e) {
-    console.error('Failed to fetch dashboard data', e)
+    if (import.meta.env.DEV) {
+      console.error('Failed to fetch dashboard data', e)
+    }
   }
 })
 

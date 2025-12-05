@@ -20,11 +20,11 @@
 <script setup lang="ts">
 const props = defineProps<{ curl: string }>()
 async function copy() {
-  try { 
+  try {
     await navigator.clipboard.writeText(props.curl)
     // Could add a toast notification here
   } catch (error) {
-    console.warn('Failed to copy cURL snippet', error)
+    // Silent failure - copy button provides visual feedback
   }
 }
 </script>

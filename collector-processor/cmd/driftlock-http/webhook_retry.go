@@ -176,9 +176,10 @@ func (w *WebhookRetryWorker) handleCheckoutSessionCompletedWithError(ctx context
 	customerID := sess.Customer.ID
 	subscriptionID := sess.Subscription.ID
 
-	plan := sess.Metadata["plan"]
+	// Normalize plan to canonical name
+	plan := normalizePlan(sess.Metadata["plan"])
 	if plan == "" {
-		plan = "tensor"
+		plan = "tensor" // Default to tensor if no plan specified
 	}
 
 	// Fetch subscription for trial info
@@ -204,13 +205,16 @@ func (w *WebhookRetryWorker) handleSubscriptionUpdatedWithError(ctx context.Cont
 	customerID := sub.Customer.ID
 	status := string(sub.Status)
 
-	plan := "signal"
+	// Determine plan from subscription items (use canonical names)
+	plan := "radar" // Default to radar (standard tier)
 	if len(sub.Items.Data) > 0 {
 		priceID := sub.Items.Data[0].Price.ID
-		if priceID == getEnvPriceIDPro() {
-			plan = "tensor"
+		if priceID == getEnvPriceIDEnterprise() {
+			plan = "orbit" // Enterprise tier ($299/mo, 25M events)
+		} else if priceID == getEnvPriceIDPro() {
+			plan = "tensor" // Pro tier ($100/mo, 5M events)
 		} else if priceID == getEnvPriceIDBasic() {
-			plan = "signal"
+			plan = "radar" // Standard tier ($15/mo, 500K events)
 		}
 	}
 
@@ -312,6 +316,10 @@ func parseUUID(s string) (uuid.UUID, error) {
 
 func getStripeSubscription(subscriptionID string) (*stripe.Subscription, error) {
 	return subscription.Get(subscriptionID, nil)
+}
+
+func getEnvPriceIDEnterprise() string {
+	return os.Getenv("STRIPE_PRICE_ID_ENTERPRISE")
 }
 
 func getEnvPriceIDPro() string {

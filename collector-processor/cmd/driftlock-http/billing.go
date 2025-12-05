@@ -22,6 +22,23 @@ func init() {
 	stripe.Key = os.Getenv("STRIPE_SECRET_KEY")
 }
 
+// normalizePlan converts plan aliases to canonical names
+// Canonical names: pilot (free), radar (standard), tensor (pro), orbit (enterprise)
+func normalizePlan(plan string) string {
+	switch plan {
+	case "pilot", "pulse", "trial", "free":
+		return "pilot"
+	case "radar", "signal", "starter", "basic":
+		return "radar"
+	case "tensor", "lock", "growth", "sentinel", "transistor", "pro":
+		return "tensor"
+	case "orbit", "enterprise", "horizon":
+		return "orbit"
+	default:
+		return "pilot" // Default to free tier
+	}
+}
+
 func billingCheckoutHandler(store *store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
@@ -51,17 +68,23 @@ func billingCheckoutHandler(store *store) http.HandlerFunc {
 			}
 		}
 
-		// Determine Price ID based on plan
+		// Normalize plan to canonical name
+		plan := normalizePlan(req.Plan)
+		if plan == "" {
+			plan = "radar" // Default to radar (standard tier)
+		}
+
+		// Determine Price ID based on normalized plan
 		var priceID string
-		switch req.Plan {
-		case "orbit", "enterprise", "horizon": // Enterprise tier ($299/mo, 25M events)
+		switch plan {
+		case "orbit": // Enterprise tier ($299/mo, 25M events)
 			priceID = os.Getenv("STRIPE_PRICE_ID_ENTERPRISE")
-		case "tensor", "sentinel", "lock", "transistor", "pro": // Pro tier ($100/mo)
+		case "tensor": // Pro tier ($100/mo)
 			priceID = os.Getenv("STRIPE_PRICE_ID_PRO")
-		case "radar", "signal", "basic": // Standard tier ($15/mo)
+		case "radar": // Standard tier ($15/mo)
 			priceID = os.Getenv("STRIPE_PRICE_ID_BASIC")
 		default:
-			// Default to radar (basic) as the entry paid tier
+			// Default to radar as the entry paid tier
 			priceID = os.Getenv("STRIPE_PRICE_ID_BASIC")
 			if priceID == "" {
 				// Fallback to Tensor (Pro) if Radar not set (migration path)
@@ -70,7 +93,7 @@ func billingCheckoutHandler(store *store) http.HandlerFunc {
 		}
 
 		if priceID == "" {
-			writeError(w, r, http.StatusInternalServerError, fmt.Errorf("pricing configuration missing for plan: %s", req.Plan))
+			writeError(w, r, http.StatusInternalServerError, fmt.Errorf("pricing configuration missing for plan: %s", plan))
 			return
 		}
 
@@ -93,7 +116,7 @@ func billingCheckoutHandler(store *store) http.HandlerFunc {
 			ClientReferenceID: stripe.String(tc.Tenant.ID.String()),
 			Metadata: map[string]string{
 				"tenant_id": tc.Tenant.ID.String(),
-				"plan":      req.Plan,
+				"plan":      plan, // Use normalized plan name
 			},
 			SubscriptionData: &stripe.CheckoutSessionSubscriptionDataParams{
 				TrialPeriodDays: stripe.Int64(14),
@@ -275,10 +298,10 @@ func handleCheckoutSessionCompleted(store *store, sess stripe.CheckoutSession) {
 	customerID := sess.Customer.ID
 	subscriptionID := sess.Subscription.ID
 
-	// Retrieve plan from metadata, default to "tensor" (previously pro/transistor) if missing
-	plan := sess.Metadata["plan"]
+	// Retrieve plan from metadata and normalize to canonical name
+	plan := normalizePlan(sess.Metadata["plan"])
 	if plan == "" {
-		plan = "tensor"
+		plan = "tensor" // Default to tensor if no plan specified
 	}
 
 	// Fetch subscription to get trial_end (Stripe is source of truth)
@@ -310,16 +333,16 @@ func handleSubscriptionUpdated(store *store, sub stripe.Subscription) {
 	status := string(sub.Status)
 	customerID := sub.Customer.ID
 
-	// Determine plan from subscription items
-	plan := "signal" // Default fallthrough
+	// Determine plan from subscription items (use canonical names)
+	plan := "radar" // Default to radar (standard tier)
 	if len(sub.Items.Data) > 0 {
 		priceID := sub.Items.Data[0].Price.ID
 		if priceID == os.Getenv("STRIPE_PRICE_ID_ENTERPRISE") {
 			plan = "orbit" // Enterprise tier ($299/mo, 25M events)
 		} else if priceID == os.Getenv("STRIPE_PRICE_ID_PRO") {
-			plan = "tensor"
+			plan = "tensor" // Pro tier ($100/mo, 5M events)
 		} else if priceID == os.Getenv("STRIPE_PRICE_ID_BASIC") {
-			plan = "signal"
+			plan = "radar" // Standard tier ($15/mo, 500K events)
 		}
 	}
 
