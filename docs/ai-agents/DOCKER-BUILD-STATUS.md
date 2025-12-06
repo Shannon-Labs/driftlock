@@ -27,7 +27,7 @@ curl -s -X POST http://localhost:8080/v1/detect \
 
 ## Known Issues / Intentional Gaps
 
-1. **OpenZL libraries are proprietary.** The repository does not distribute them. Builds default to zstd/lz4/gzip; OpenZL images are skipped automatically unless the private artifacts are mounted under `openzl/` or `OPENZL_LIB_DIR`.
+1. **OpenZL libraries are proprietary.** The repository does not distribute them. Builds default to zlab/zstd/lz4/gzip; OpenZL images are skipped automatically unless the private artifacts are mounted under `openzl/` or `OPENZL_LIB_DIR`.
 2. **Collector image is experimental.** It compiles but is only enabled when Compose profile `kafka` is selected.
 
 ## Validation Checklist
