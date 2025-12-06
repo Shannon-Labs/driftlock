@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,13 +14,14 @@ import (
 	"time"
 
 	"github.com/Shannon-Labs/driftlock/collector-processor/driftlockcbad"
+	"github.com/Shannon-Labs/driftlock/collector-processor/internal/ai"
 	"github.com/google/uuid"
 )
 
 const (
-	// Demo runs with a much smaller baseline/window so anomaly detection works with the 50-event cap.
-	// This is intentionally lower than production defaults to keep demo latency low while still showing signal.
-	demoBaselineSize = 40
+	// Demo runs with a smaller baseline/window for fast demonstration.
+	// Optimized for showing anomaly detection with fewer events while maintaining effectiveness.
+	demoBaselineSize = 30
 	demoWindowSize   = 10
 	demoHopSize      = 5
 )
@@ -106,7 +108,7 @@ func (d *demoRateLimiter) cleanup() {
 	}
 }
 
-const maxDemoEvents = 50
+const maxDemoEvents = 200
 
 type demoDetectRequest struct {
 	Events         []json.RawMessage `json:"events"`
@@ -122,6 +124,16 @@ type demoDetectResponse struct {
 	Anomalies      []anomalyOutput `json:"anomalies"`
 	RequestID      string          `json:"request_id"`
 	Demo           demoInfo        `json:"demo"`
+	// AI analysis fields (optional, only present when AI is enabled)
+	AIAnalysis *demoAIAnalysis `json:"ai_analysis,omitempty"`
+}
+
+// demoAIAnalysis contains AI-generated analysis for the demo response
+type demoAIAnalysis struct {
+	Provider    string `json:"provider"`
+	Model       string `json:"model"`
+	Explanation string `json:"explanation"`
+	Latency     string `json:"latency"`
 }
 
 type demoInfo struct {
@@ -161,7 +173,7 @@ func getClientIP(r *http.Request) string {
 	return addr
 }
 
-func demoDetectHandler(cfg config, limiter *demoRateLimiter) http.HandlerFunc {
+func demoDetectHandler(cfg config, limiter *demoRateLimiter, aiClient ai.AIClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodOptions {
 			handlePreflight(w, r)
@@ -219,11 +231,11 @@ func demoDetectHandler(cfg config, limiter *demoRateLimiter) http.HandlerFunc {
 		}
 
 		// Build detection settings with defaults
-	plan := buildDemoDetectionSettings(cfg, payload.ConfigOverride)
+		plan := buildDemoDetectionSettings(cfg, payload.ConfigOverride)
 
-	usedAlgo := plan.CompressionAlgorithm
-	if usedAlgo == "openzl" && !driftlockcbad.HasOpenZL() {
-		usedAlgo = "zstd"
+		usedAlgo := plan.CompressionAlgorithm
+		if usedAlgo == "openzl" && !driftlockcbad.HasOpenZL() {
+			usedAlgo = "zstd"
 		}
 
 		detector, err := driftlockcbad.NewDetector(driftlockcbad.DetectorConfig{
@@ -283,8 +295,70 @@ func demoDetectHandler(cfg config, limiter *demoRateLimiter) http.HandlerFunc {
 			},
 		}
 
+		// AI Analysis: Generate explanation for detected anomalies (synchronous for demo)
+		if aiClient != nil && len(anomalies) > 0 {
+			aiAnalysis := generateDemoAIAnalysis(r.Context(), aiClient, anomalies, payload.Events)
+			if aiAnalysis != nil {
+				resp.AIAnalysis = aiAnalysis
+			}
+		}
+
 		writeJSON(w, r, http.StatusOK, resp)
 		requestDuration.Observe(time.Since(start).Seconds())
+	}
+}
+
+// generateDemoAIAnalysis calls the AI client to generate an explanation for detected anomalies
+func generateDemoAIAnalysis(ctx context.Context, aiClient ai.AIClient, anomalies []anomalyOutput, events []json.RawMessage) *demoAIAnalysis {
+	if len(anomalies) == 0 {
+		return nil
+	}
+
+	// Build a concise prompt for the AI
+	var promptBuilder strings.Builder
+	promptBuilder.WriteString("You are a security analyst reviewing log anomalies detected by a compression-based anomaly detection system.\n\n")
+	promptBuilder.WriteString("DETECTED ANOMALIES:\n")
+
+	for i, anomaly := range anomalies {
+		if i >= 3 { // Limit to first 3 anomalies for demo
+			promptBuilder.WriteString(fmt.Sprintf("... and %d more anomalies\n", len(anomalies)-3))
+			break
+		}
+		promptBuilder.WriteString(fmt.Sprintf("\n--- Anomaly %d (index %d) ---\n", i+1, anomaly.Index))
+		promptBuilder.WriteString(fmt.Sprintf("Event: %s\n", string(anomaly.Event)))
+		promptBuilder.WriteString(fmt.Sprintf("NCD Score: %.3f (dissimilarity from baseline)\n", anomaly.Metrics.NCD))
+		promptBuilder.WriteString(fmt.Sprintf("P-Value: %.3f\n", anomaly.Metrics.PValue))
+		promptBuilder.WriteString(fmt.Sprintf("Confidence: %.1f%%\n", anomaly.Metrics.ConfidenceLevel*100))
+		promptBuilder.WriteString(fmt.Sprintf("Compression Ratio Change: %.1f%%\n", anomaly.Metrics.CompressionRatioChange*100))
+	}
+
+	promptBuilder.WriteString("\nProvide a brief (2-3 sentence) security-focused explanation of what these anomalies indicate and recommended actions. Be specific about the log content.")
+
+	prompt := promptBuilder.String()
+
+	// Call AI with timeout
+	aiCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	aiStart := time.Now()
+	explanation, _, _, err := aiClient.AnalyzeAnomaly(aiCtx, "", prompt)
+	aiLatency := time.Since(aiStart)
+
+	if err != nil {
+		log.Printf("Demo AI analysis failed: %v", err)
+		return &demoAIAnalysis{
+			Provider:    aiClient.Provider(),
+			Model:       "error",
+			Explanation: fmt.Sprintf("AI analysis unavailable: %v", err),
+			Latency:     aiLatency.String(),
+		}
+	}
+
+	return &demoAIAnalysis{
+		Provider:    aiClient.Provider(),
+		Model:       "ministral-3:3b", // TODO: get actual model from client
+		Explanation: strings.TrimSpace(explanation),
+		Latency:     aiLatency.String(),
 	}
 }
 
