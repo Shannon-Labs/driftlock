@@ -10,7 +10,7 @@
 ## Executive Summary
 
 **What This Repository Contains:**
-A working demo/engine prototype of explainable, deterministic anomaly detection. The core CBAD (Compression-Based Anomaly Detection) algorithm is implemented and validated. OpenZL is optional/experimental; the system works with generic compressors (zstd, lz4, gzip) by default. This repo ships a CLI demo and HTTP API service, not the full production platform described in the roadmap phases below.
+A working demo/engine prototype of explainable, deterministic anomaly detection. The core CBAD (Compression-Based Anomaly Detection) algorithm is implemented and validated. OpenZL is optional/experimental; the system works with generic compressors (zlab, zstd, lz4, gzip) by default. This repo ships a CLI demo and HTTP API service, not the full production platform described in the roadmap phases below.
 
 **Market Position:**
 Premium enterprise anomaly detection ($50k-$500k ACV) for financial services, healthcare, and critical infrastructure that MUST have explainable, auditable AI.
@@ -38,7 +38,7 @@ Premium enterprise anomaly detection ($50k-$500k ACV) for financial services, he
 
 #### ✅ Completed (Demo Prototype)
 - [x] Core CBAD algorithm (compression-based anomaly detection)
-- [x] Generic compression adapters (zstd, lz4, gzip) - default and required
+- [x] Generic compression adapters (zlab, zstd, lz4, gzip) - default and required
 - [x] OpenZL adapter (optional, experimental, disabled by default)
 - [x] Rust FFI bindings for compression adapters
 - [x] Build system for linking C libraries

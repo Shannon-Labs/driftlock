@@ -3,6 +3,7 @@
 // Used when OpenZL is not suitable (e.g., truly unstructured binary data)
 
 use super::{CompressionAdapter, CompressionError, Result};
+use std::io::Read;
 use std::io::Write;
 
 /// Zstd compression adapter (fallback)
@@ -35,8 +36,9 @@ impl CompressionAdapter for ZstdAdapter {
             return Ok(Vec::new());
         }
 
-        zstd::encode_all(data, self.level)
-            .map_err(|e| CompressionError::CompressionFailed(format!("Zstd compression error: {}", e)))
+        zstd::encode_all(data, self.level).map_err(|e| {
+            CompressionError::CompressionFailed(format!("Zstd compression error: {}", e))
+        })
     }
 
     fn decompress(&self, data: &[u8]) -> Result<Vec<u8>> {
@@ -44,8 +46,9 @@ impl CompressionAdapter for ZstdAdapter {
             return Ok(Vec::new());
         }
 
-        zstd::decode_all(data)
-            .map_err(|e| CompressionError::DecompressionFailed(format!("Zstd decompression error: {}", e)))
+        zstd::decode_all(data).map_err(|e| {
+            CompressionError::DecompressionFailed(format!("Zstd decompression error: {}", e))
+        })
     }
 
     fn name(&self) -> &str {
@@ -54,7 +57,13 @@ impl CompressionAdapter for ZstdAdapter {
 
     fn compress_bound(&self, src_size: usize) -> usize {
         // Zstd bound formula
-        src_size + (src_size >> 8) + (if src_size < 128 * 1024 { (128 * 1024 - src_size) >> 11 } else { 0 })
+        src_size
+            + (src_size >> 8)
+            + (if src_size < 128 * 1024 {
+                (128 * 1024 - src_size) >> 11
+            } else {
+                0
+            })
     }
 }
 
@@ -81,9 +90,10 @@ impl CompressionAdapter for Lz4Adapter {
             return Ok(Vec::new());
         }
 
-        let compressed = lz4::block::compress(data, None, false)
-            .map_err(|e| CompressionError::CompressionFailed(format!("Lz4 compression error: {}", e)))?;
-        
+        let compressed = lz4::block::compress(data, None, false).map_err(|e| {
+            CompressionError::CompressionFailed(format!("Lz4 compression error: {}", e))
+        })?;
+
         Ok(compressed)
     }
 
@@ -95,8 +105,9 @@ impl CompressionAdapter for Lz4Adapter {
         // For lz4 block compression, we need to know the uncompressed size
         // Since we don't store it separately, we'll use a reasonable estimate
         let uncompressed_size = data.len() * 4; // Conservative estimate
-        lz4::block::decompress(data, Some(uncompressed_size as i32))
-            .map_err(|e| CompressionError::DecompressionFailed(format!("Lz4 decompression error: {}", e)))
+        lz4::block::decompress(data, Some(uncompressed_size as i32)).map_err(|e| {
+            CompressionError::DecompressionFailed(format!("Lz4 decompression error: {}", e))
+        })
     }
 
     fn name(&self) -> &str {
@@ -120,6 +131,61 @@ impl Default for GzipAdapter {
     }
 }
 
+/// Zlab compression adapter (deterministic zlib wrapper)
+pub struct ZlabAdapter;
+
+impl Default for ZlabAdapter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl ZlabAdapter {
+    pub fn new() -> Self {
+        Self
+    }
+}
+
+impl CompressionAdapter for ZlabAdapter {
+    fn compress(&self, data: &[u8]) -> Result<Vec<u8>> {
+        if data.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        let mut encoder =
+            flate2::write::ZlibEncoder::new(Vec::new(), flate2::Compression::default());
+        encoder
+            .write_all(data)
+            .map_err(|e| CompressionError::CompressionFailed(format!("Zlab write error: {}", e)))?;
+
+        encoder
+            .finish()
+            .map_err(|e| CompressionError::CompressionFailed(format!("Zlab finish error: {}", e)))
+    }
+
+    fn decompress(&self, data: &[u8]) -> Result<Vec<u8>> {
+        if data.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        let mut decoder = flate2::read::ZlibDecoder::new(data);
+        let mut out = Vec::with_capacity(data.len() * 2);
+        decoder.read_to_end(&mut out).map_err(|e| {
+            CompressionError::DecompressionFailed(format!("Zlab read error: {}", e))
+        })?;
+        Ok(out)
+    }
+
+    fn name(&self) -> &str {
+        "zlab"
+    }
+
+    fn compress_bound(&self, src_size: usize) -> usize {
+        // Zlib bound (conservative estimate)
+        src_size + (src_size / 1000) + 12
+    }
+}
+
 impl GzipAdapter {
     pub fn new() -> Self {
         Self
@@ -133,10 +199,12 @@ impl CompressionAdapter for GzipAdapter {
         }
 
         let mut encoder = flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::default());
-        encoder.write_all(data)
+        encoder
+            .write_all(data)
             .map_err(|e| CompressionError::CompressionFailed(format!("Gzip write error: {}", e)))?;
-        
-        encoder.finish()
+
+        encoder
+            .finish()
             .map_err(|e| CompressionError::CompressionFailed(format!("Gzip finish error: {}", e)))
     }
 
@@ -146,10 +214,12 @@ impl CompressionAdapter for GzipAdapter {
         }
 
         let mut decoder = flate2::write::GzDecoder::new(Vec::new());
-        decoder.write_all(data)
-            .map_err(|e| CompressionError::DecompressionFailed(format!("Gzip write error: {}", e)))?;
-        
-        decoder.finish()
+        decoder.write_all(data).map_err(|e| {
+            CompressionError::DecompressionFailed(format!("Gzip write error: {}", e))
+        })?;
+
+        decoder
+            .finish()
             .map_err(|e| CompressionError::DecompressionFailed(format!("Gzip finish error: {}", e)))
     }
 
@@ -174,23 +244,38 @@ mod tests {
         // Zstd
         let zstd = ZstdAdapter::new();
         let compressed = zstd.compress(data).expect("zstd compress should work");
-        let decompressed = zstd.decompress(&compressed).expect("zstd decompress should work");
+        let decompressed = zstd
+            .decompress(&compressed)
+            .expect("zstd decompress should work");
         assert_eq!(data, decompressed.as_slice());
         assert_eq!(zstd.name(), "zstd");
 
         // Lz4
         let lz4 = Lz4Adapter::new();
         let compressed = lz4.compress(data).expect("lz4 compress should work");
-        let decompressed = lz4.decompress(&compressed).expect("lz4 decompress should work");
+        let decompressed = lz4
+            .decompress(&compressed)
+            .expect("lz4 decompress should work");
         assert_eq!(data, decompressed.as_slice());
         assert_eq!(lz4.name(), "lz4");
 
         // Gzip
         let gzip = GzipAdapter::new();
         let compressed = gzip.compress(data).expect("gzip compress should work");
-        let decompressed = gzip.decompress(&compressed).expect("gzip decompress should work");
+        let decompressed = gzip
+            .decompress(&compressed)
+            .expect("gzip decompress should work");
         assert_eq!(data, decompressed.as_slice());
         assert_eq!(gzip.name(), "gzip");
+
+        // Zlab
+        let zlab = ZlabAdapter::new();
+        let compressed = zlab.compress(data).expect("zlab compress should work");
+        let decompressed = zlab
+            .decompress(&compressed)
+            .expect("zlab decompress should work");
+        assert_eq!(data, decompressed.as_slice());
+        assert_eq!(zlab.name(), "zlab");
     }
 
     #[test]
@@ -205,5 +290,8 @@ mod tests {
 
         let gzip = GzipAdapter::new();
         assert!(gzip.compress_bound(src_size) > src_size);
+
+        let zlab = ZlabAdapter::new();
+        assert!(zlab.compress_bound(src_size) > src_size);
     }
 }
