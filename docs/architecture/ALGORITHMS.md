@@ -3,7 +3,7 @@
 This document captures the Compression-Based Anomaly Detection (CBAD) principles and mathematical foundations for Driftlock.
 
 ## CBAD Core (Phase 1 Implementation)
-- **Compression adapters**: Deterministic wrappers for zstd, lz4, and gzip with level presets. OpenZL placeholder ready for pinned-plan integration.
+- **Compression adapters**: Deterministic wrappers for zlab (zlib), zstd, lz4, and gzip with level presets. OpenZL placeholder ready for pinned-plan integration.
 - **Sliding windows**: Time-aware buffers with baseline/window splits respecting baseline > window > hop guarantees.
 - **Metrics**:
   - Compression ratio: `CR = compressed_bytes / raw_bytes`.

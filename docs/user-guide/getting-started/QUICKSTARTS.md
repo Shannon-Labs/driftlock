@@ -38,7 +38,7 @@ Flags:
 - --baseline: number of events to build the baseline (default 400)
 - --window: events per detection window (default 1)
 - --hop: hop size between windows (default 1)
-- --algo: zstd|lz4|gzip|openzl (default zstd)
+- --algo: zlab|zstd|lz4|gzip|openzl (default zstd)
 
 ## 2) REST API (Docker Compose - Recommended)
 

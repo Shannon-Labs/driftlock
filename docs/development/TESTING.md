@@ -164,7 +164,7 @@ Expected response:
   "request_id": "...",
   "library_status": "healthy",
   "version": "1.0.0",
-  "available_algos": ["zstd", "lz4", "gzip"]
+  "available_algos": ["zlab", "zstd", "lz4", "gzip"]
 }
 ```
 
