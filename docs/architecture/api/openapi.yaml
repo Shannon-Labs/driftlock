@@ -1046,7 +1046,7 @@ components:
         compressor:
           type: string
           description: Compression algorithm
-          enum: [zstd, lz4, gzip, openzl]
+          enum: [zlab, zstd, lz4, gzip, openzl]
           default: zstd
 
     DetectResponse:

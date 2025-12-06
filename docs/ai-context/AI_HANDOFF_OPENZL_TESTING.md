@@ -43,7 +43,7 @@ You are an expert Test Engineer and Systems Architect taking over **Driftlock**,
 ## 🎯 YOUR PRIMARY OBJECTIVES
 
 ### 1. Design OpenZL Integration Test Suite
-Create tests that validate OpenZL compression provides **better anomaly signal** than fallback compressors (zstd, lz4, gzip):
+Create tests that validate OpenZL compression provides **better anomaly signal** than fallback compressors (zlab, zstd, lz4, gzip):
 
 ```bash
 # Goal: Compare compression ratios and anomaly detection between algorithms

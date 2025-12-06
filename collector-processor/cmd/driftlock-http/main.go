@@ -476,16 +476,16 @@ func healthHandler(store *store, queue jobQueue) http.HandlerFunc {
 			handlePreflight(w, r)
 			return
 		}
-		resp := healthResponse{
-			Success:         true,
-			RequestID:       requestIDFrom(r.Context()),
-			LibraryStatus:   "healthy",
-			Version:         "1.0.0",
-			AvailableAlgos:  []string{"zstd", "lz4", "gzip"},
-			OpenZLAvailable: driftlockcbad.HasOpenZL(),
-			License:         currentLicenseStatus(time.Now()),
-			Database:        "connected",
-		}
+                resp := healthResponse{
+                        Success:         true,
+                        RequestID:       requestIDFrom(r.Context()),
+                        LibraryStatus:   "healthy",
+                        Version:         "1.0.0",
+                        AvailableAlgos:  []string{"zlab", "zstd", "lz4", "gzip"},
+                        OpenZLAvailable: driftlockcbad.HasOpenZL(),
+                        License:         currentLicenseStatus(time.Now()),
+                        Database:        "connected",
+                }
 		if queue != nil {
 			stats := queue.Stats()
 			resp.Queue = queueStatus{

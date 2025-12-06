@@ -32,7 +32,10 @@ impl fmt::Display for CompressionError {
         match self {
             Self::CompressionFailed(msg) => write!(f, "Compression failed: {}", msg),
             Self::DecompressionFailed(msg) => write!(f, "Decompression failed: {}", msg),
-            Self::BufferTooSmall { required, available } => {
+            Self::BufferTooSmall {
+                required,
+                available,
+            } => {
                 write!(
                     f,
                     "Buffer too small: required {} bytes, available {} bytes",
@@ -75,6 +78,9 @@ pub enum CompressionAlgorithm {
     #[cfg(feature = "openzl")]
     OpenZL,
 
+    /// Zlab (deterministic zlib-style compression)
+    Zlab,
+
     /// Zstd (fallback for unstructured data)
     Zstd,
 
@@ -90,6 +96,7 @@ impl CompressionAlgorithm {
         match self {
             #[cfg(feature = "openzl")]
             Self::OpenZL => "openzl",
+            Self::Zlab => "zlab",
             Self::Zstd => "zstd",
             Self::Lz4 => "lz4",
             Self::Gzip => "gzip",
@@ -102,6 +109,8 @@ pub fn create_adapter(algo: CompressionAlgorithm) -> Result<Box<dyn CompressionA
     match algo {
         #[cfg(feature = "openzl")]
         CompressionAlgorithm::OpenZL => Ok(Box::new(openzl::OpenZLAdapter::new()?)),
+
+        CompressionAlgorithm::Zlab => Ok(Box::new(fallback::ZlabAdapter::new())),
 
         CompressionAlgorithm::Zstd => Ok(Box::new(fallback::ZstdAdapter::new())),
         CompressionAlgorithm::Lz4 => Ok(Box::new(fallback::Lz4Adapter::new())),
@@ -119,6 +128,7 @@ mod tests {
 
         // Temporarily test only fallback adapters while OpenZL is being fixed
         for algo in [
+            CompressionAlgorithm::Zlab,
             CompressionAlgorithm::Zstd,
             CompressionAlgorithm::Lz4,
             CompressionAlgorithm::Gzip,

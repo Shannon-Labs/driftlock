@@ -279,7 +279,7 @@ Server-Sent Events feed for live anomaly notifications.
 Returns 200 when core dependencies are healthy and exposes compliance-friendly diagnostics. Fields of note:
 
 - `openzl_available` (bool) — true when the binary includes OpenZL symbols.
-- `available_algos` — includes `"openzl"` only when compiled in; requests for `openzl` will fall back to `zstd` when unavailable and surface `fallback_from_algo` in responses.
+- `available_algos` — includes `"zlab"`, `"zstd"`, `"lz4"`, `"gzip"`; `"openzl"` is present only when compiled in, and requests for it will fall back to `zstd` when unavailable while surfacing `fallback_from_algo` in responses.
 - `license.status` — must be `"valid"` outside dev; dev mode is for local demos only.
 
 ```json
@@ -287,7 +287,7 @@ Returns 200 when core dependencies are healthy and exposes compliance-friendly d
   "build": {
     "revision": "5b93f09",
     "cbad_core": "0.3.2",
-    "compressors": ["zstd", "lz4", "gzip", "openzl"]
+    "compressors": ["zlab", "zstd", "lz4", "gzip", "openzl"]
   },
   "license": {
     "status": "dev_mode",

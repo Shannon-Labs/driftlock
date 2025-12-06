@@ -57,13 +57,13 @@ Comprehensively test the entire dockerized Driftlock package to ensure it's prod
    Expected response structure:
    ```json
    {
-     "success": true,
-     "request_id": "...",
-     "library_status": "healthy",
-     "version": "1.0.0",
-     "available_algos": ["zstd", "lz4", "gzip"]
-   }
-   ```
+    "success": true,
+    "request_id": "...",
+    "library_status": "healthy",
+    "version": "1.0.0",
+    "available_algos": ["zlab", "zstd", "lz4", "gzip"]
+  }
+  ```
 
 4. **Verify service logs:**
    ```bash

@@ -73,6 +73,12 @@ curl -X POST https://driftlock.net/api/v1/detect \
 }
 ```
 
+To make `zlab` the default compressor without Docker, set an environment variable before running the Go binary directly:
+
+```bash
+DEFAULT_ALGO=zlab go run ./collector-processor/cmd/driftlock-http
+```
+
 ### Key Metrics Explained
 
 - **NCD (Normalized Compression Distance)**: 0-1 scale. Higher values = more anomalous
@@ -104,9 +110,15 @@ You can customize detection settings per request:
     "hop_size": 10,            // Slide window by this amount
     "ncd_threshold": 0.3,      // NCD threshold for anomaly
     "p_value_threshold": 0.05, // Statistical significance threshold
-    "compressor": "zstd"       // zstd, lz4, or gzip
+    "compressor": "zstd"       // zlab, zstd, lz4, or gzip
   }
 }
+```
+
+To default the HTTP service to the new `zlab` compressor without Docker, set the environment variable before starting the Go binary directly:
+
+```bash
+DEFAULT_ALGO=zlab go run ./collector-processor/cmd/driftlock-http
 ```
 
 ## Best Practices
