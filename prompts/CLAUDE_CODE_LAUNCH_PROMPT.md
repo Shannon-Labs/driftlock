@@ -127,7 +127,7 @@ Tasks:
 
 5. If GEMINI_API_KEY not set, add it:
    gcloud run services update driftlock-api \
-     --set-env-vars="GEMINI_API_KEY=[REDACTED_KEY_1],GEMINI_MODEL=gemini-2.5-flash"
+     --set-env-vars="GEMINI_API_KEY=YOUR_GEMINI_API_KEY,GEMINI_MODEL=gemini-2.5-flash"
 
 Create Linear issues for any infra problems.
 ```
@@ -206,7 +206,7 @@ STRIPE_SECRET_KEY=sk_live_...
 SENDGRID_API_KEY=SG....
 
 # NEW - Add to Cloud Run
-GEMINI_API_KEY=[REDACTED_KEY_1]
+GEMINI_API_KEY=YOUR_GEMINI_API_KEY
 GEMINI_MODEL=gemini-2.5-flash
 AI_PROVIDER=gemini
 ```
