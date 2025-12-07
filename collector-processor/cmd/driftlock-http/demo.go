@@ -223,6 +223,12 @@ func demoDetectHandler(cfg config, limiter *demoRateLimiter, aiClient ai.AIClien
 			return
 		}
 
+		// Validate config overrides to prevent resource abuse (DoS protection)
+		if err := validateConfigOverride(cfg, payload.ConfigOverride); err != nil {
+			writeError(w, r, http.StatusBadRequest, err)
+			return
+		}
+
 		for idx, ev := range payload.Events {
 			if len(bytes.TrimSpace(ev)) == 0 || bytes.Equal(bytes.TrimSpace(ev), []byte("null")) {
 				writeError(w, r, http.StatusBadRequest, fmt.Errorf("event %d is empty", idx))
