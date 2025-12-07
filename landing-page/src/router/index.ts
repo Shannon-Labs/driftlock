@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import LoginView from '../views/LoginView.vue'
-import LoginFinishView from '../views/LoginFinishView.vue'
+import SignupView from '../views/SignupView.vue'
 import { useAuthStore } from '../stores/auth'
 
 const router = createRouter({
@@ -22,9 +22,9 @@ const router = createRouter({
       component: LoginView
     },
     {
-      path: '/login/finish',
-      name: 'login-finish',
-      component: LoginFinishView
+      path: '/signup',
+      name: 'signup',
+      component: SignupView
     },
     {
       path: '/verify',

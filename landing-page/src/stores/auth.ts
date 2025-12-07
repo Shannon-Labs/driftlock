@@ -4,9 +4,11 @@ import {
   signOut as firebaseSignOut,
   onAuthStateChanged,
   type User,
-  sendSignInLinkToEmail,
-  isSignInWithEmailLink,
-  signInWithEmailLink,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
+  sendPasswordResetEmail,
 } from 'firebase/auth'
 import { getFirebaseAuth } from '../firebase'
 
@@ -42,8 +44,8 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  // Magic Link Login (Passwordless)
-  const sendMagicLink = async (email: string) => {
+  // Email/Password Sign Up
+  const signUpWithEmail = async (email: string, password: string) => {
     const auth = await getFirebaseAuth();
     if (!auth) {
       error.value = 'Firebase auth not initialized. Please check your configuration.'
@@ -53,48 +55,79 @@ export const useAuthStore = defineStore('auth', () => {
     loading.value = true
     error.value = null
     try {
-      const actionCodeSettings = {
-        // URL you want to redirect back to. The domain (www.example.com) for this
-        // URL must be in the authorized domains list in the Firebase Console.
-        url: window.location.origin + '/login/finish',
-        handleCodeInApp: true,
-      }
-      await sendSignInLinkToEmail(auth, email, actionCodeSettings)
-      window.localStorage.setItem('emailForSignIn', email)
+      const result = await createUserWithEmailAndPassword(auth, email, password)
+      user.value = result.user
+      return result.user
     } catch (e: any) {
-      error.value = e.message
+      error.value = getErrorMessage(e.code)
       throw e
     } finally {
       loading.value = false
     }
   }
 
-  const completeMagicLinkLogin = async () => {
+  // Email/Password Sign In
+  const signInWithEmail = async (email: string, password: string) => {
     const auth = await getFirebaseAuth();
     if (!auth) {
       error.value = 'Firebase auth not initialized. Please check your configuration.'
-      return false
+      throw new Error(error.value)
     }
-
-    if (!isSignInWithEmailLink(auth, window.location.href)) {
-      return false
-    }
-
-    let email = window.localStorage.getItem('emailForSignIn')
-    if (!email) {
-      email = window.prompt('Please provide your email for confirmation')
-    }
-
-    if (!email) return false
 
     loading.value = true
+    error.value = null
     try {
-      const result = await signInWithEmailLink(auth, email, window.location.href)
-      window.localStorage.removeItem('emailForSignIn')
+      const result = await signInWithEmailAndPassword(auth, email, password)
       user.value = result.user
-      return true
+      return result.user
     } catch (e: any) {
-      error.value = e.message
+      error.value = getErrorMessage(e.code)
+      throw e
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // Google Sign In
+  const signInWithGoogle = async () => {
+    const auth = await getFirebaseAuth();
+    if (!auth) {
+      error.value = 'Firebase auth not initialized. Please check your configuration.'
+      throw new Error(error.value)
+    }
+
+    loading.value = true
+    error.value = null
+    try {
+      const provider = new GoogleAuthProvider()
+      const result = await signInWithPopup(auth, provider)
+      user.value = result.user
+      return result.user
+    } catch (e: any) {
+      // Don't show error if user closed the popup
+      if (e.code !== 'auth/popup-closed-by-user' && e.code !== 'auth/cancelled-popup-request') {
+        error.value = getErrorMessage(e.code)
+      }
+      throw e
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // Password Reset
+  const resetPassword = async (email: string) => {
+    const auth = await getFirebaseAuth();
+    if (!auth) {
+      error.value = 'Firebase auth not initialized. Please check your configuration.'
+      throw new Error(error.value)
+    }
+
+    loading.value = true
+    error.value = null
+    try {
+      await sendPasswordResetEmail(auth, email)
+    } catch (e: any) {
+      error.value = getErrorMessage(e.code)
       throw e
     } finally {
       loading.value = false
@@ -117,15 +150,48 @@ export const useAuthStore = defineStore('auth', () => {
     return await user.value.getIdToken()
   }
 
+  const clearError = () => {
+    error.value = null
+  }
+
+  // Convert Firebase error codes to user-friendly messages
+  const getErrorMessage = (code: string): string => {
+    switch (code) {
+      case 'auth/email-already-in-use':
+        return 'This email is already registered. Try signing in instead.'
+      case 'auth/invalid-email':
+        return 'Please enter a valid email address.'
+      case 'auth/operation-not-allowed':
+        return 'This sign-in method is not enabled.'
+      case 'auth/weak-password':
+        return 'Password should be at least 6 characters.'
+      case 'auth/user-disabled':
+        return 'This account has been disabled.'
+      case 'auth/user-not-found':
+      case 'auth/wrong-password':
+      case 'auth/invalid-credential':
+        return 'Invalid email or password.'
+      case 'auth/too-many-requests':
+        return 'Too many attempts. Please try again later.'
+      case 'auth/network-request-failed':
+        return 'Network error. Please check your connection.'
+      default:
+        return 'An error occurred. Please try again.'
+    }
+  }
+
   return {
     user,
     loading,
     error,
     isAuthenticated,
     init,
-    sendMagicLink,
-    completeMagicLinkLogin,
+    signUpWithEmail,
+    signInWithEmail,
+    signInWithGoogle,
+    resetPassword,
     logout,
-    getToken
+    getToken,
+    clearError,
   }
 })

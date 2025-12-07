@@ -11,93 +11,17 @@
         </div>
       </router-link>
       <h2 class="mt-6 text-center text-3xl font-sans font-black uppercase tracking-tighter text-black">
-        Sign in to dashboard
+        Create your account
       </h2>
       <p class="mt-2 text-center text-sm text-gray-600 font-mono">
-        Or
-        <router-link to="/signup" class="font-bold text-black underline decoration-2 underline-offset-4 hover:bg-black hover:text-white transition-colors px-1">create an account</router-link>
+        Already have an account?
+        <router-link to="/login" class="font-bold text-black underline decoration-2 underline-offset-4 hover:bg-black hover:text-white transition-colors px-1">Sign in</router-link>
       </p>
     </div>
 
     <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
       <div class="bg-white py-8 px-4 border-2 border-black sm:px-10 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-        <!-- Password Reset Success -->
-        <div v-if="resetEmailSent" class="border-2 border-black bg-gray-100 p-4 mb-6">
-          <div class="flex">
-            <div class="flex-shrink-0">
-              <svg class="h-5 w-5 text-black" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-              </svg>
-            </div>
-            <div class="ml-3">
-              <h3 class="text-sm font-bold uppercase tracking-wide text-black">Check your email</h3>
-              <div class="mt-2 text-sm text-gray-800 font-serif">
-                <p>We sent a password reset link to <strong>{{ email }}</strong>.</p>
-              </div>
-              <div class="mt-4">
-                <button
-                  @click="resetEmailSent = false; showForgotPassword = false"
-                  class="text-sm font-bold text-black underline decoration-2 underline-offset-4 hover:bg-black hover:text-white transition-colors px-1 focus:outline-none"
-                >
-                  Back to sign in
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Forgot Password Form -->
-        <form v-else-if="showForgotPassword" class="space-y-6" @submit.prevent="handleResetPassword">
-          <div>
-            <label for="reset-email" class="block text-sm font-bold uppercase tracking-wide text-black">Email address</label>
-            <div class="mt-1">
-              <input
-                id="reset-email"
-                v-model="email"
-                name="email"
-                type="email"
-                autocomplete="email"
-                required
-                class="block w-full appearance-none border-2 border-black px-3 py-3 placeholder-gray-500 shadow-none focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 sm:text-sm font-mono"
-                placeholder="you@example.com"
-              />
-            </div>
-          </div>
-
-          <div v-if="authStore.error" class="text-red-600 text-sm font-bold border border-red-600 p-2 bg-red-50">
-            {{ authStore.error }}
-          </div>
-
-          <div>
-            <button
-              type="submit"
-              :disabled="authStore.loading"
-              class="flex w-full justify-center border-2 border-black bg-black py-3 px-4 text-sm font-bold uppercase tracking-widest text-white hover:bg-white hover:text-black transition-colors focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-[4px_4px_0px_0px_rgba(0,0,0,0)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
-            >
-              <span v-if="authStore.loading" class="flex items-center gap-2">
-                <svg class="animate-spin h-4 w-4 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Sending...
-              </span>
-              <span v-else>Send Reset Link</span>
-            </button>
-          </div>
-
-          <div class="text-center">
-            <button
-              type="button"
-              @click="showForgotPassword = false; authStore.clearError()"
-              class="text-sm font-bold text-black underline decoration-2 underline-offset-4 hover:bg-black hover:text-white transition-colors px-1 focus:outline-none"
-            >
-              Back to sign in
-            </button>
-          </div>
-        </form>
-
-        <!-- Main Login Form -->
-        <form v-else class="space-y-6" @submit.prevent="handleLogin">
+        <form class="space-y-6" @submit.prevent="handleSignup">
           <div>
             <label for="email" class="block text-sm font-bold uppercase tracking-wide text-black">Email address</label>
             <div class="mt-1">
@@ -122,7 +46,25 @@
                 v-model="password"
                 name="password"
                 type="password"
-                autocomplete="current-password"
+                autocomplete="new-password"
+                required
+                minlength="6"
+                class="block w-full appearance-none border-2 border-black px-3 py-3 placeholder-gray-500 shadow-none focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 sm:text-sm font-mono"
+                placeholder="••••••••"
+              />
+            </div>
+            <p class="mt-1 text-xs text-gray-500 font-mono">At least 6 characters</p>
+          </div>
+
+          <div>
+            <label for="confirmPassword" class="block text-sm font-bold uppercase tracking-wide text-black">Confirm password</label>
+            <div class="mt-1">
+              <input
+                id="confirmPassword"
+                v-model="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                autocomplete="new-password"
                 required
                 class="block w-full appearance-none border-2 border-black px-3 py-3 placeholder-gray-500 shadow-none focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 sm:text-sm font-mono"
                 placeholder="••••••••"
@@ -130,14 +72,8 @@
             </div>
           </div>
 
-          <div class="flex items-center justify-end">
-            <button
-              type="button"
-              @click="showForgotPassword = true; authStore.clearError()"
-              class="text-sm font-bold text-black underline decoration-2 underline-offset-4 hover:bg-black hover:text-white transition-colors px-1 focus:outline-none"
-            >
-              Forgot password?
-            </button>
+          <div v-if="localError" class="text-red-600 text-sm font-bold border border-red-600 p-2 bg-red-50">
+            {{ localError }}
           </div>
 
           <div v-if="authStore.error" class="text-red-600 text-sm font-bold border border-red-600 p-2 bg-red-50">
@@ -155,9 +91,9 @@
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                Signing in...
+                Creating account...
               </span>
-              <span v-else>Sign In</span>
+              <span v-else>Create Account</span>
             </button>
           </div>
 
@@ -171,7 +107,7 @@
             </div>
           </div>
 
-          <!-- Google Sign In -->
+          <!-- Google Sign Up -->
           <div>
             <button
               type="button"
@@ -203,14 +139,27 @@ const router = useRouter()
 const authStore = useAuthStore()
 const email = ref('')
 const password = ref('')
-const showForgotPassword = ref(false)
-const resetEmailSent = ref(false)
+const confirmPassword = ref('')
+const localError = ref<string | null>(null)
 
-const handleLogin = async () => {
-  if (!email.value || !password.value) return
+const handleSignup = async () => {
+  localError.value = null
+  authStore.clearError()
+
+  if (!email.value || !password.value || !confirmPassword.value) return
+
+  if (password.value !== confirmPassword.value) {
+    localError.value = 'Passwords do not match.'
+    return
+  }
+
+  if (password.value.length < 6) {
+    localError.value = 'Password must be at least 6 characters.'
+    return
+  }
 
   try {
-    await authStore.signInWithEmail(email.value, password.value)
+    await authStore.signUpWithEmail(email.value, password.value)
     router.push('/dashboard')
   } catch (e) {
     // Error handled in store/UI
@@ -223,17 +172,6 @@ const handleGoogleSignIn = async () => {
     router.push('/dashboard')
   } catch (e) {
     // Error handled in store/UI (except popup closed)
-  }
-}
-
-const handleResetPassword = async () => {
-  if (!email.value) return
-
-  try {
-    await authStore.resetPassword(email.value)
-    resetEmailSent.value = true
-  } catch (e) {
-    // Error handled in store/UI
   }
 }
 </script>
