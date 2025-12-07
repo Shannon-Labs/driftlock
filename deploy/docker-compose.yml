@@ -18,7 +18,9 @@ services:
       - USE_OPENZL=${USE_OPENZL:-false}
       - PREFER_OPENZL=${PREFER_OPENZL:-false}
       # AI Provider configuration (choose one)
-      - AI_PROVIDER=${AI_PROVIDER:-}
+      - AI_PROVIDER=${AI_PROVIDER:-gemini}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-2.5-flash}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
       - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
       - OLLAMA_MODEL=${OLLAMA_MODEL:-ministral-3:3b}

@@ -24,13 +24,15 @@ type ProviderConfig struct {
 func NewAIClientFromEnv() (AIClient, error) {
 	provider := os.Getenv("AI_PROVIDER")
 	if provider == "" {
-		// Default to anthropic if ANTHROPIC_API_KEY is set
+		// Auto-detect provider from available API keys
 		if os.Getenv("ANTHROPIC_API_KEY") != "" {
 			provider = "anthropic"
+		} else if os.Getenv("GEMINI_API_KEY") != "" {
+			provider = "gemini"
 		} else if os.Getenv("AI_API_KEY") != "" {
 			provider = "openai"
 		} else {
-			return nil, fmt.Errorf("no AI provider configured: set AI_PROVIDER and AI_API_KEY or ANTHROPIC_API_KEY")
+			return nil, fmt.Errorf("no AI provider configured: set AI_PROVIDER and API key (GEMINI_API_KEY, ANTHROPIC_API_KEY, or AI_API_KEY)")
 		}
 	}
 
@@ -54,6 +56,9 @@ func NewAIClientFromEnv() (AIClient, error) {
 	case "ollama":
 		// Local Ollama instance (no API key required)
 		return NewOllamaClient()
+	case "gemini", "google":
+		// Google Gemini API
+		return NewGeminiClient()
 	default:
 		return nil, fmt.Errorf("unsupported AI provider: %s", provider)
 	}
