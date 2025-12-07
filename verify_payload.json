@@ -1,0 +1,365 @@
+{
+  "stream_id": "f000d7c7-b6f9-4806-b342-c6ba3d10aab9",
+  "events": [
+    {
+      "timestamp": "2025-11-10T00:00:00Z",
+      "transaction_id": "txn_9a42ec0a7c146e2379f4fc6a",
+      "amount_usd": 1.74,
+      "processing_ms": 88,
+      "origin_country": "UK",
+      "api_endpoint": "/v1/charges",
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-11-10T00:00:18Z",
+      "transaction_id": "txn_88d475147082bd067b325c74",
+      "amount_usd": 287.43,
+      "processing_ms": 62,
+      "origin_country": "US",
+      "api_endpoint": "/v1/charges",
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-11-10T00:00:36Z",
+      "transaction_id": "txn_49e62aafd41fe1ec967ea8a0",
+      "amount_usd": 100.09,
+      "processing_ms": 57,
+      "origin_country": "US",
+      "api_endpoint": "/v1/charges",
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-11-10T00:00:54Z",
+      "transaction_id": "txn_4be45c4711954f482ef5e64a",
+      "amount_usd": 177.53,
+      "processing_ms": 97,
+      "origin_country": "US",
+      "api_endpoint": "/v1/charges",
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-11-10T00:01:12Z",
+      "transaction_id": "txn_05b8662309a50b56819c0568",
+      "amount_usd": 287.16,
+      "processing_ms": 90,
+      "origin_country": "UK",
+      "api_endpoint": "/v1/charges",
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-11-10T00:01:30Z",
+      "transaction_id": "txn_9bd356a299ddf776374eb1d1",
+      "amount_usd": 244.85,
+      "processing_ms": 98,
+      "origin_country": "UK",
+      "api_endpoint": "/v1/charges",
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-11-10T00:01:48Z",
+      "transaction_id": "txn_19454c938166ff180ae5e7a8",
+      "amount_usd": 439.4,
+      "processing_ms": 55,
+      "origin_country": "US",
+      "api_endpoint": "/v1/charges",
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-11-10T00:02:06Z",
+      "transaction_id": "txn_3565879c27bd035b6d411d5e",
+      "amount_usd": 154.79,
+      "processing_ms": 58,
+      "origin_country": "US",
+      "api_endpoint": "/v1/charges",
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-11-10T00:02:24Z",
+      "transaction_id": "txn_903cb10ec5fad5f4817f9b8b",
+      "amount_usd": 313.7,
+      "processing_ms": 88,
+      "origin_country": "UK",
+      "api_endpoint": "/v1/charges",
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-11-10T00:02:42Z",
+      "transaction_id": "txn_12df60f28fb779249933cb8b",
+      "amount_usd": 193.91,
+      "processing_ms": 60,
+      "origin_country": "US",
+      "api_endpoint": "/v1/charges",
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-11-10T00:03:00Z",
+      "transaction_id": "txn_a04a9745cee768898157bf00",
+      "amount_usd": 420.06,
+      "processing_ms": 93,
+      "origin_country": "US",
+      "api_endpoint": "/v1/charges",
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-11-10T00:03:18Z",
+      "transaction_id": "txn_3230334104e489090a94680b",
+      "amount_usd": 49.06,
+      "processing_ms": 58,
+      "origin_country": "US",
+      "api_endpoint": "/v1/charges",
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-11-10T00:03:36Z",
+      "transaction_id": "txn_2eb89c669cc7c206c301ec4d",
+      "amount_usd": 163.0,
+      "processing_ms": 69,
+      "origin_country": "US",
+      "api_endpoint": "/v1/charges",
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-11-10T00:03:54Z",
+      "transaction_id": "txn_71ac0df06f33e96304b447e2",
+      "amount_usd": 190.3,
+      "processing_ms": 80,
+      "origin_country": "UK",
+      "api_endpoint": "/v1/charges",
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-11-10T00:04:12Z",
+      "transaction_id": "txn_b6c12dc57ab71ff5a767d635",
+      "amount_usd": 266.49,
+      "processing_ms": 66,
+      "origin_country": "UK",
+      "api_endpoint": "/v1/charges",
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-11-10T00:04:30Z",
+      "transaction_id": "txn_c2735068aa5632a9b964ca0d",
+      "amount_usd": 461.31,
+      "processing_ms": 96,
+      "origin_country": "UK",
+      "api_endpoint": "/v1/charges",
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-11-10T00:04:48Z",
+      "transaction_id": "txn_0e3e74314f1de460d860ba8c",
+      "amount_usd": 396.93,
+      "processing_ms": 61,
+      "origin_country": "US",
+      "api_endpoint": "/v1/charges",
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-11-10T00:05:06Z",
+      "transaction_id": "txn_ad055d6bbf8cfe0a449b1eb6",
+      "amount_usd": 78.4,
+      "processing_ms": 78,
+      "origin_country": "US",
+      "api_endpoint": "/v1/charges",
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-11-10T00:05:24Z",
+      "transaction_id": "txn_e1862e1655cf19235ecb247a",
+      "amount_usd": 90.97,
+      "processing_ms": 66,
+      "origin_country": "UK",
+      "api_endpoint": "/v1/charges",
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-11-10T00:05:42Z",
+      "transaction_id": "txn_1a20d889bd4f5663c129d09f",
+      "amount_usd": 234.14,
+      "processing_ms": 54,
+      "origin_country": "US",
+      "api_endpoint": "/v1/charges",
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-11-10T00:06:00Z",
+      "transaction_id": "txn_b7ed15f6654283c234d02529",
+      "amount_usd": 223.2,
+      "processing_ms": 55,
+      "origin_country": "US",
+      "api_endpoint": "/v1/charges",
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-11-10T00:06:18Z",
+      "transaction_id": "txn_be996bbd2bf00a3c848318d8",
+      "amount_usd": 137.1,
+      "processing_ms": 69,
+      "origin_country": "US",
+      "api_endpoint": "/v1/charges",
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-11-10T00:06:36Z",
+      "transaction_id": "txn_9a0bd41fee196e23738af63a",
+      "amount_usd": 179.35,
+      "processing_ms": 88,
+      "origin_country": "UK",
+      "api_endpoint": "/v1/charges",
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-11-10T00:06:54Z",
+      "transaction_id": "txn_8f7872f88230e8ec2b749337",
+      "amount_usd": 203.96,
+      "processing_ms": 67,
+      "origin_country": "UK",
+      "api_endpoint": "/v1/charges",
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-11-10T00:07:12Z",
+      "transaction_id": "txn_415b3f97b4238b79a85cca0d",
+      "amount_usd": 350.96,
+      "processing_ms": 67,
+      "origin_country": "UK",
+      "api_endpoint": "/v1/charges",
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-11-10T00:07:30Z",
+      "transaction_id": "txn_602529fde266adf2e4f60d19",
+      "amount_usd": 2.24,
+      "processing_ms": 76,
+      "origin_country": "UK",
+      "api_endpoint": "/v1/charges",
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-11-10T00:07:48Z",
+      "transaction_id": "txn_f23776e32c2d3bf4613568c4",
+      "amount_usd": 113.08,
+      "processing_ms": 95,
+      "origin_country": "UK",
+      "api_endpoint": "/v1/charges",
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-11-10T00:08:06Z",
+      "transaction_id": "txn_07ea372790994e003151f126",
+      "amount_usd": 378.23,
+      "processing_ms": 93,
+      "origin_country": "US",
+      "api_endpoint": "/v1/charges",
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-11-10T00:08:24Z",
+      "transaction_id": "txn_99fc0535a13afa6390a8df8a",
+      "amount_usd": 11.47,
+      "processing_ms": 79,
+      "origin_country": "UK",
+      "api_endpoint": "/v1/charges",
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-11-10T00:08:42Z",
+      "transaction_id": "txn_4b0a400447ae8d7a36463c99",
+      "amount_usd": 8.31,
+      "processing_ms": 91,
+      "origin_country": "UK",
+      "api_endpoint": "/v1/charges",
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-11-10T00:09:00Z",
+      "transaction_id": "txn_24a1a4956227a3aa7a4b5765",
+      "amount_usd": 286.28,
+      "processing_ms": 87,
+      "origin_country": "US",
+      "api_endpoint": "/v1/charges",
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-11-10T00:09:18Z",
+      "transaction_id": "txn_1acf162ce0890529af74db65",
+      "amount_usd": 28.38,
+      "processing_ms": 93,
+      "origin_country": "UK",
+      "api_endpoint": "/v1/charges",
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-11-10T00:09:36Z",
+      "transaction_id": "txn_0fc55d9dbd296b9fa369f4fe",
+      "amount_usd": 390.35,
+      "processing_ms": 83,
+      "origin_country": "UK",
+      "api_endpoint": "/v1/charges",
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-11-10T00:09:54Z",
+      "transaction_id": "txn_2f3b883237adbd03ccd5c407",
+      "amount_usd": 374.34,
+      "processing_ms": 53,
+      "origin_country": "UK",
+      "api_endpoint": "/v1/charges",
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-11-10T00:10:12Z",
+      "transaction_id": "txn_cf1708ab1f716f267b9b2983",
+      "amount_usd": 213.23,
+      "processing_ms": 74,
+      "origin_country": "UK",
+      "api_endpoint": "/v1/charges",
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-11-10T00:10:30Z",
+      "transaction_id": "txn_06ca1f87c6a6d0636608a89d",
+      "amount_usd": 37.09,
+      "processing_ms": 72,
+      "origin_country": "US",
+      "api_endpoint": "/v1/charges",
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-11-10T00:10:48Z",
+      "transaction_id": "txn_ba0e4237ddb87e2cb4ec4d67",
+      "amount_usd": 420.21,
+      "processing_ms": 51,
+      "origin_country": "US",
+      "api_endpoint": "/v1/charges",
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-11-10T00:11:06Z",
+      "transaction_id": "txn_9c3b982dca17167dde0b26f0",
+      "amount_usd": 95.79,
+      "processing_ms": 59,
+      "origin_country": "UK",
+      "api_endpoint": "/v1/charges",
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-11-10T00:11:24Z",
+      "transaction_id": "txn_46651965895f6944effe2178",
+      "amount_usd": 23.3,
+      "processing_ms": 91,
+      "origin_country": "US",
+      "api_endpoint": "/v1/charges",
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-11-10T00:11:42Z",
+      "transaction_id": "txn_aa683d70f6c0a23f09760951",
+      "amount_usd": 257.6,
+      "processing_ms": 61,
+      "origin_country": "UK",
+      "api_endpoint": "/v1/charges",
+      "status": "success"
+    }
+  ]
+}

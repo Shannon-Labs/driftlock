@@ -14,8 +14,22 @@ import (
 	firebase "firebase.google.com/go/v4"
 	"firebase.google.com/go/v4/auth"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 	"google.golang.org/api/option"
 )
+
+// Generic auth error message to prevent enumeration attacks
+var errGenericAuth = fmt.Errorf("authentication failed")
+
+// writeAuthError logs the specific error for debugging but returns a generic message to the client
+func writeAuthError(w http.ResponseWriter, r *http.Request, specificErr error) {
+	Logger().Debug("authentication failed",
+		zap.String("path", r.URL.Path),
+		zap.String("remote_addr", r.RemoteAddr),
+		zap.Error(specificErr),
+	)
+	writeError(w, r, http.StatusUnauthorized, errGenericAuth)
+}
 
 const tenantContextKey ctxKey = "tenant"
 
@@ -80,14 +94,14 @@ func withFirebaseAuth(store *store, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 		if !strings.HasPrefix(authHeader, "Bearer ") {
-			writeError(w, r, http.StatusUnauthorized, fmt.Errorf("missing bearer token"))
+			writeAuthError(w, r, fmt.Errorf("missing bearer token in Authorization header"))
 			return
 		}
 
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 		user, err := verifyFirebaseToken(r.Context(), tokenString)
 		if err != nil {
-			writeError(w, r, http.StatusUnauthorized, fmt.Errorf("invalid token: %v", err))
+			writeAuthError(w, r, fmt.Errorf("firebase token verification failed: %v", err))
 			return
 		}
 
@@ -97,7 +111,9 @@ func withFirebaseAuth(store *store, next http.Handler) http.Handler {
 		// For MVP, we look up tenant by email.
 		tenantID, err := store.tenantIDByEmail(r.Context(), user.Email)
 		if err != nil {
-			writeError(w, r, http.StatusForbidden, fmt.Errorf("no tenant found for email %s", user.Email))
+			// Note: This reveals no tenant exists for this email - acceptable for dashboard auth
+			writeError(w, r, http.StatusForbidden, fmt.Errorf("access denied"))
+			Logger().Debug("no tenant for firebase user", zap.String("email", user.Email), zap.Error(err))
 			return
 		}
 
@@ -109,7 +125,8 @@ func withFirebaseAuth(store *store, next http.Handler) http.Handler {
 		// Fetch a valid API key for this tenant to populate the context fully
 		apiKey, err := store.primaryAPIKey(r.Context(), tenantID)
 		if err != nil {
-			writeError(w, r, http.StatusForbidden, fmt.Errorf("tenant has no active api keys"))
+			writeError(w, r, http.StatusForbidden, fmt.Errorf("access denied"))
+			Logger().Debug("no api key for tenant", zap.String("tenant_id", tenantID.String()), zap.Error(err))
 			return
 		}
 
@@ -136,37 +153,37 @@ func withAuth(store *store, limiter *tenantRateLimiter, next http.Handler) http.
 		}
 
 		if apiKey == "" {
-			writeError(w, r, http.StatusUnauthorized, fmt.Errorf("missing api key"))
+			writeAuthError(w, r, fmt.Errorf("missing api key"))
 			return
 		}
 
 		// Parse Key ID from "dlk_<uuid>.<secret>"
 		if !strings.HasPrefix(apiKey, "dlk_") {
-			writeError(w, r, http.StatusUnauthorized, fmt.Errorf("invalid api key format"))
+			writeAuthError(w, r, fmt.Errorf("invalid api key format: missing dlk_ prefix"))
 			return
 		}
 		parts := strings.Split(strings.TrimPrefix(apiKey, "dlk_"), ".")
 		if len(parts) != 2 {
-			writeError(w, r, http.StatusUnauthorized, fmt.Errorf("invalid api key format"))
+			writeAuthError(w, r, fmt.Errorf("invalid api key format: expected uuid.secret"))
 			return
 		}
 		keyID, err := uuid.Parse(parts[0])
 		if err != nil {
-			writeError(w, r, http.StatusUnauthorized, fmt.Errorf("invalid api key id"))
+			writeAuthError(w, r, fmt.Errorf("invalid api key id: %v", err))
 			return
 		}
 
 		// Lookup key
 		rec, err := store.resolveAPIKey(r.Context(), keyID)
 		if err != nil {
-			writeError(w, r, http.StatusUnauthorized, fmt.Errorf("invalid api key"))
+			writeAuthError(w, r, fmt.Errorf("api key not found: %v", err))
 			return
 		}
 
 		// Verify secret (hash stored over the full key string)
 		candidateKey := fmt.Sprintf("dlk_%s.%s", keyID.String(), parts[1])
 		if !verifyAPIKey(rec.KeyHash, candidateKey) {
-			writeError(w, r, http.StatusUnauthorized, fmt.Errorf("invalid api key secret"))
+			writeAuthError(w, r, fmt.Errorf("api key hash mismatch for key %s", keyID))
 			return
 		}
 
@@ -194,6 +211,17 @@ func withAuth(store *store, limiter *tenantRateLimiter, next http.Handler) http.
 			w.Header().Set("X-RateLimit-Limit", strconv.Itoa(tc.Tenant.RateLimitRPS))
 			w.Header().Set("X-RateLimit-Remaining", strconv.Itoa(tc.Tenant.RateLimitRPS))
 		}
+
+		// Billing status check - block access for past_due/canceled/expired
+		billingStatus, billingErr := checkBillingAccess(r.Context(), store, tc.Tenant.ID)
+		if billingErr != nil {
+			if accessErr, ok := billingErr.(*BillingAccessError); ok {
+				writeBillingError(w, r, accessErr)
+				return
+			}
+		}
+		// Add billing headers for visibility (grace period warnings, trial info)
+		decorateBillingHeaders(w, billingStatus)
 
 		ctx := context.WithValue(r.Context(), tenantContextKey, tc)
 		next.ServeHTTP(w, r.WithContext(ctx))

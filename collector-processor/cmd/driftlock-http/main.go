@@ -325,8 +325,8 @@ func main() {
 	webhookRetryWorker := NewWebhookRetryWorker(store, webhookStore, emailer, 30*time.Second, 50)
 	webhookRetryWorker.Start(workerCtx)
 
-	// Initialize billing cron worker for grace period downgrades and trial reminders
-	billingCronWorker := NewBillingCronWorker(store, emailer)
+	// Initialize billing cron worker for grace period downgrades, trial reminders, and webhook cleanup
+	billingCronWorker := NewBillingCronWorker(store, emailer, webhookStore)
 	go billingCronWorker.Start(workerCtx)
 
 	defer func() {
@@ -408,7 +408,7 @@ func buildHTTPHandler(cfg config, store *store, queue jobQueue, limiter *tenantR
 	mux.HandleFunc("/healthz", healthHandler(store, queue))
 	mux.HandleFunc("/readyz", readinessHandler(store))
 	mux.HandleFunc("/v1/version", versionHandler())
-	mux.Handle("/metrics", promhttp.Handler())
+	mux.Handle("/metrics", metricsAuthMiddleware(promhttp.Handler()))
 
 	// Onboarding endpoints
 	mux.HandleFunc("/v1/onboard/signup", onboardSignupHandler(cfg, store, emailer))
@@ -609,6 +609,34 @@ func versionHandler() http.HandlerFunc {
 		}
 		writeJSON(w, r, http.StatusOK, resp)
 	}
+}
+
+// metricsAuthMiddleware protects the /metrics endpoint from public access.
+// When METRICS_SECRET is set, requires matching X-Metrics-Token header.
+// If METRICS_SECRET is not set, allows all requests (for development).
+func metricsAuthMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		secret := os.Getenv("METRICS_SECRET")
+		// If no secret configured, allow access (development mode)
+		if secret == "" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// Check for matching token
+		token := r.Header.Get("X-Metrics-Token")
+		if token == "" {
+			// Also check query param for Prometheus compatibility
+			token = r.URL.Query().Get("token")
+		}
+
+		if token != secret {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
 
 func anomaliesHandler(store *store) http.Handler {
@@ -1400,7 +1428,8 @@ func buildDetectionSettings(cfg config, stream streamRecord, settings streamSett
 }
 
 // cbadTimeout is the maximum time allowed for CBAD FFI operations
-const cbadTimeout = 15 * time.Second
+// Configurable via CBAD_TIMEOUT_SEC environment variable (default: 30s)
+var cbadTimeout = time.Duration(envInt("CBAD_TIMEOUT_SEC", 30)) * time.Second
 const maxEventBytes = 1 << 20 // 1MB per event
 
 // ErrCBADPanic is returned when the CBAD detector panics

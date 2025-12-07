@@ -331,7 +331,9 @@ func generateDemoAIAnalysis(ctx context.Context, aiClient ai.AIClient, anomalies
 			break
 		}
 		promptBuilder.WriteString(fmt.Sprintf("\n--- Anomaly %d (index %d) ---\n", i+1, anomaly.Index))
-		promptBuilder.WriteString(fmt.Sprintf("Event: %s\n", string(anomaly.Event)))
+		// Sanitize user-provided event data to prevent prompt injection
+		sanitizedEvent := ai.SanitizeEventForPrompt(anomaly.Event, 2048)
+		promptBuilder.WriteString(fmt.Sprintf("Event:\n%s\n", sanitizedEvent))
 		promptBuilder.WriteString(fmt.Sprintf("NCD Score: %.3f (dissimilarity from baseline)\n", anomaly.Metrics.NCD))
 		promptBuilder.WriteString(fmt.Sprintf("P-Value: %.3f\n", anomaly.Metrics.PValue))
 		promptBuilder.WriteString(fmt.Sprintf("Confidence: %.1f%%\n", anomaly.Metrics.ConfidenceLevel*100))

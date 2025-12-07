@@ -61,6 +61,15 @@ import (
 	"unsafe"
 )
 
+// Error codes from CBAD FFI
+const (
+	cbadErrPanic = -99 // Rust panic was caught at FFI boundary
+)
+
+// ErrCBADPanic indicates a Rust panic was caught in the CBAD library.
+// This is a critical error indicating a bug in the Rust code.
+var ErrCBADPanic = errors.New("CBAD internal panic - Rust panic caught at FFI boundary")
+
 // Detector represents a streaming anomaly detector
 type Detector struct {
 	handle C.CBADDetectorHandle
@@ -172,6 +181,8 @@ func (d *Detector) AddData(data []byte) (bool, error) {
 		return false, errors.New("invalid parameters")
 	case -2:
 		return false, errors.New("internal error")
+	case cbadErrPanic:
+		return false, ErrCBADPanic
 	default:
 		return false, fmt.Errorf("unknown error code: %d", result)
 	}
@@ -194,6 +205,8 @@ func (d *Detector) IsReady() (bool, error) {
 		return false, errors.New("invalid detector handle")
 	case -2:
 		return false, errors.New("internal error")
+	case cbadErrPanic:
+		return false, ErrCBADPanic
 	default:
 		return false, fmt.Errorf("unknown error code: %d", result)
 	}
@@ -263,6 +276,8 @@ func (d *Detector) DetectAnomaly() (bool, *EnhancedMetrics, error) {
 		return false, nil, errors.New("not enough data for analysis")
 	case -2: // Internal error
 		return false, nil, errors.New("internal error during anomaly detection")
+	case cbadErrPanic: // Rust panic caught
+		return false, nil, ErrCBADPanic
 	default:
 		return false, nil, fmt.Errorf("unknown error code: %d", result)
 	}
@@ -284,6 +299,8 @@ func (d *Detector) GetStats() (totalEvents uint64, memoryUsage int, isReady bool
 		return 0, 0, false, errors.New("invalid parameters")
 	case -2:
 		return 0, 0, false, errors.New("internal error")
+	case cbadErrPanic:
+		return 0, 0, false, ErrCBADPanic
 	default:
 		return 0, 0, false, fmt.Errorf("unknown error code: %d", result)
 	}

@@ -1,72 +1,54 @@
 # SDK Reference
 
-Driftlock provides official SDKs for high-velocity integration. These libraries handle batching, backpressure, and authentication automatically.
+Official Driftlock SDKs are coming soon! These libraries will provide high-velocity integration with automatic batching, backpressure handling, and authentication.
 
-## Node.js
+> **Status**: SDKs are currently in development. Track progress in [Linear](https://linear.app/shannon-labs/team/Shannon%20Labs) (issues SHA-149, SHA-150).
 
-```bash
-npm install @driftlock/sdk
-```
+## Current Integration Options
 
-```typescript
-import { Driftlock } from '@driftlock/sdk';
+While SDKs are being developed, you can integrate with Driftlock using:
 
-const radar = new Driftlock('your_api_key');
+- **REST API**: Full-featured HTTP API (see [API documentation](../user-guide/api/rest-api.md))
+- **Python Examples**: Ready-to-use client implementations (see [Python examples](../user-guide/api/examples/python-examples.md))
+- **cURL**: Direct API access for testing and integration
 
-// Stream events
-radar.push({
-  id: 'evt_001',
-  user: 'alice',
-  action: 'login'
-});
+## Planned SDKs
 
-// Listen for verdicts
-radar.on('anomaly', (verdict) => {
-  console.error('Security Event:', verdict.explanation);
-  // Trigger automated lockdown
-});
-```
-
-## Python
+### Node.js / TypeScript (Coming Soon)
 
 ```bash
-pip install driftlock
+npm install @driftlock/sdk  # Available soon
 ```
 
-```python
-from driftlock import Radar
+Will provide:
+- OpenAI-compatible wrapper for LLM security
+- Streaming support
+- Automatic batching and retries
+- Full TypeScript support
 
-radar = Radar("your_api_key")
-
-# Check a single batch synchronously
-verdict = radar.scan(events)
-
-if verdict.is_anomaly:
-    print(f"Drift detected: {verdict.explanation}")
-```
-
-## Go
+### Python (Coming Soon)
 
 ```bash
-go get github.com/shannon-labs/driftlock-go
+pip install driftlock  # Available soon
 ```
 
-```go
-import "github.com/shannon-labs/driftlock-go"
+Will provide:
+- Decorator-based API for easy integration
+- Async/await support
+- Context managers for streaming
+- Jupyter notebook integration
 
-func main() {
-    client := driftlock.NewClient("your_api_key")
-    
-    verdict, err := client.Scan(context.Background(), events)
-    if err != nil {
-        log.Fatal(err)
-    }
-    
-    if verdict.IsAnomaly {
-        log.Printf("Entropy Spike: %v", verdict.Variance)
-    }
-}
+### Go (Coming Soon)
+
+```bash
+go get github.com/shannon-labs/driftlock-go  # Available soon
 ```
+
+Will provide:
+- High-performance client
+- Context-aware operations
+- Structured logging integration
+- Production-ready patterns
 
 ---
 

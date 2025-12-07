@@ -75,9 +75,33 @@ case "$COMMAND" in
     echo "All events triggered!"
     ;;
 
+  simulate)
+    echo "Simulating webhook event locally (no Stripe CLI needed)..."
+    TIMESTAMP=$(date +%s)
+    PAYLOAD='{
+      "id": "evt_simulated_123",
+      "type": "checkout.session.completed",
+      "data": {
+        "object": {
+          "id": "cs_test_simulated",
+          "object": "checkout.session",
+          "client_reference_id": "'"${2:-TEST_TENANT_ID}"'",
+          "customer": {"id": "cus_test_sim"},
+          "subscription": {"id": "sub_test_sim", "trial_end": null},
+          "metadata": {"tenant_id": "'"${2:-TEST_TENANT_ID}"'", "plan": "tensor"}
+        }
+      }
+    }'
+    # This requires the server to be running with STRIPE_WEBHOOK_SECRET=whsec_test_secret_12345
+    # or you to calculate the signature for your real secret. 
+    # For now, this is a placeholder for manual extension if needed.
+    echo "This helper requires calculating the HMAC signature manually."
+    echo "For automated testing, run: go test -v ./collector-processor/cmd/driftlock-http/... -run TestE2E_FullBillingLifecycle"
+    ;;
+
   *)
     echo "Unknown command: $COMMAND"
-    echo "Usage: $0 [listen|checkout|payment|failed|trial|all]"
+    echo "Usage: $0 [listen|checkout|payment|failed|trial|all|simulate]"
     exit 1
     ;;
 esac

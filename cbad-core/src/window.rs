@@ -341,6 +341,7 @@ impl SlidingWindow {
         for i in start_idx..end_idx {
             if i < self.events.len() {
                 result.extend_from_slice(&self.events[i].data);
+                result.push(b'\n');
             }
         }
         Some(result)
@@ -365,6 +366,7 @@ impl SlidingWindow {
         for i in start_idx..end_idx {
             if i < self.events.len() {
                 result.extend_from_slice(&self.events[i].data);
+                result.push(b'\n');
             }
         }
         Some(result)
@@ -574,7 +576,7 @@ mod tests {
         // Verify baseline and window are anchored to the tail (most recent events)
         let baseline_len = ["data_5", "data_6", "data_7"]
             .iter()
-            .map(|s| s.len())
+            .map(|s| s.len() + 1) // each event now includes a newline delimiter
             .sum::<usize>();
         assert_eq!(baseline.unwrap().len(), baseline_len);
     }

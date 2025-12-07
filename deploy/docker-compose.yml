@@ -2,7 +2,7 @@ services:
   # HTTP API Server - Main API endpoint for playground and direct API calls
   driftlock-http:
     build:
-      context: .
+      context: ..
       dockerfile: collector-processor/cmd/driftlock-http/Dockerfile
       args:
         - USE_OPENZL=${USE_OPENZL:-false}
@@ -77,7 +77,7 @@ services:
   # Kafka Collector Processor - Optional, processes OpenTelemetry streams via Kafka
   driftlock-collector:
     build:
-      context: .
+      context: ..
       dockerfile: collector-processor/cmd/driftlock-collector/Dockerfile
       args:
         - USE_OPENZL=${USE_OPENZL:-false}
@@ -94,7 +94,7 @@ services:
 
   # Kafka and Zookeeper - Only needed for collector processor
   zookeeper:
-    image: bitnami/zookeeper:3.8
+    image: bitnami/zookeeper:3.9
     environment:
       - ALLOW_ANONYMOUS_LOGIN=yes
     ports:

@@ -67,9 +67,6 @@ func setupTestEnv(t *testing.T) *testEnv {
 
 	// Run migrations
 	// Assuming running from collector-processor/cmd/driftlock-http or collector-processor
-	// We need to point to api/migrations which is at ../../../api/migrations from here?
-	// No, from collector-processor it is ../api/migrations
-	// Let's try to find it
 	cwd, _ := os.Getwd()
 	migrationsDir := ""
 	if strings.HasSuffix(cwd, "driftlock-http") {
@@ -104,8 +101,15 @@ func setupTestEnv(t *testing.T) *testEnv {
 	router := ai.NewRouter(costLimiter)
 	mockAIClient := &ai.MockAIClient{}
 
-	// For tests, we pass nil for webhookStore - billing will fall back to synchronous processing
-	handler := buildHTTPHandler(cfg, store, queue, limiter, emailer, tracker, router, mockAIClient, nil)
+	// Initialize webhook store for tests
+	webhookStore := NewWebhookEventStore(pool, DefaultRetryConfig())
+
+	// Start background worker for webhook processing
+	workerCtx, workerCancel := context.WithCancel(context.Background())
+	retryWorker := NewWebhookRetryWorker(store, webhookStore, nil, 100*time.Millisecond, 10)
+	retryWorker.Start(workerCtx)
+
+	handler := buildHTTPHandler(cfg, store, queue, limiter, emailer, tracker, router, mockAIClient, webhookStore)
 	server := httptest.NewServer(handler)
 
 	return &testEnv{
@@ -116,6 +120,8 @@ func setupTestEnv(t *testing.T) *testEnv {
 		cfg:     cfg,
 		cleanup: func() {
 			server.Close()
+			retryWorker.Stop()
+			workerCancel()
 			pool.Close()
 		},
 	}

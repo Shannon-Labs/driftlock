@@ -436,4 +436,4 @@ if __name__ == '__main__':
 
 ---
 
-**Tip**: Check out the [official Python SDK](https://github.com/Shannon-Labs/driftlock-python) (coming soon) for a fully-featured client!
+**Tip**: An official Python SDK is in development (see [Linear issue SHA-149](https://linear.app/shannon-labs/issue/SHA-149)). For now, use the client examples above or make direct API calls.

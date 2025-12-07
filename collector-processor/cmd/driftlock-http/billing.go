@@ -199,82 +199,36 @@ func billingWebhookHandler(store *store, emailer *emailService, webhookStore *We
 			return
 		}
 
+		// Webhook event store is required for durability
+		// Without it, we cannot guarantee event processing
+		if webhookStore == nil {
+			log.Printf("CRITICAL: webhookStore not initialized, cannot process webhook %s", event.ID)
+			w.WriteHeader(http.StatusServiceUnavailable)
+			return
+		}
+
 		// Store event for durability before processing
 		// This ensures we can retry if processing fails
-		if webhookStore != nil {
-			ctx := r.Context()
-			eventID, isNew, err := webhookStore.StoreEvent(ctx, event.ID, string(event.Type), event.Data.Raw)
-			if err != nil {
-				log.Printf("Failed to store webhook event %s: %v", event.ID, err)
-				// Fall through to synchronous processing as fallback
-			} else if !isNew {
-				// Duplicate event - already processed or in queue
-				log.Printf("Webhook event %s already stored, skipping", event.ID)
-				w.WriteHeader(http.StatusOK)
-				return
-			} else {
-				// Event stored successfully - return 200 immediately
-				// The retry worker will process it
-				log.Printf("Stored webhook event %s (type: %s) for processing", eventID, event.Type)
-				w.WriteHeader(http.StatusOK)
-				return
-			}
+		ctx := r.Context()
+		eventID, isNew, err := webhookStore.StoreEvent(ctx, event.ID, string(event.Type), event.Data.Raw)
+		if err != nil {
+			// Storage failed - return 503 so Stripe will retry
+			// This is safer than silent failure with synchronous processing
+			log.Printf("ERROR: Failed to store webhook event %s: %v (Stripe will retry)", event.ID, err)
+			w.WriteHeader(http.StatusServiceUnavailable)
+			return
 		}
 
-		// Fallback: synchronous processing if webhookStore is nil or storage failed
-		// This maintains backward compatibility and handles edge cases
-		switch event.Type {
-		case "checkout.session.completed":
-			var sess stripe.CheckoutSession
-			err := json.Unmarshal(event.Data.Raw, &sess)
-			if err != nil {
-				log.Printf("Error parsing webhook JSON: %v", err)
-				w.WriteHeader(http.StatusBadRequest)
-				return
-			}
-			handleCheckoutSessionCompleted(store, sess)
-
-		case "customer.subscription.updated", "customer.subscription.deleted":
-			var sub stripe.Subscription
-			err := json.Unmarshal(event.Data.Raw, &sub)
-			if err != nil {
-				log.Printf("Error parsing webhook JSON: %v", err)
-				w.WriteHeader(http.StatusBadRequest)
-				return
-			}
-			handleSubscriptionUpdated(store, sub)
-
-		case "customer.subscription.trial_will_end":
-			var sub stripe.Subscription
-			err := json.Unmarshal(event.Data.Raw, &sub)
-			if err != nil {
-				log.Printf("Error parsing trial_will_end webhook JSON: %v", err)
-				w.WriteHeader(http.StatusBadRequest)
-				return
-			}
-			handleTrialWillEnd(store, emailer, sub)
-
-		case "invoice.payment_failed":
-			var inv stripe.Invoice
-			err := json.Unmarshal(event.Data.Raw, &inv)
-			if err != nil {
-				log.Printf("Error parsing payment_failed webhook JSON: %v", err)
-				w.WriteHeader(http.StatusBadRequest)
-				return
-			}
-			handlePaymentFailed(store, emailer, inv)
-
-		case "invoice.payment_succeeded":
-			var inv stripe.Invoice
-			err := json.Unmarshal(event.Data.Raw, &inv)
-			if err != nil {
-				log.Printf("Error parsing payment_succeeded webhook JSON: %v", err)
-				w.WriteHeader(http.StatusBadRequest)
-				return
-			}
-			handlePaymentSucceeded(store, inv)
+		if !isNew {
+			// Duplicate event - already processed or in queue
+			log.Printf("Webhook event %s already stored, skipping", event.ID)
+			w.WriteHeader(http.StatusOK)
+			return
 		}
 
+		// Event stored successfully - return 200 immediately
+		// The retry worker will process it asynchronously
+		log.Printf("Stored webhook event %s (type: %s) for async processing", eventID, event.Type)
 		w.WriteHeader(http.StatusOK)
 	}
 }

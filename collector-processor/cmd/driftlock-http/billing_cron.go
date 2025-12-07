@@ -8,18 +8,20 @@ import (
 	"github.com/google/uuid"
 )
 
-// BillingCronWorker handles scheduled billing tasks like grace period downgrades
-// and trial expiry notifications.
+// BillingCronWorker handles scheduled billing tasks like grace period downgrades,
+// trial expiry notifications, and webhook event cleanup.
 type BillingCronWorker struct {
-	store   *store
-	emailer *emailService
+	store        *store
+	emailer      *emailService
+	webhookStore *WebhookEventStore
 }
 
 // NewBillingCronWorker creates a new billing cron worker.
-func NewBillingCronWorker(store *store, emailer *emailService) *BillingCronWorker {
+func NewBillingCronWorker(store *store, emailer *emailService, webhookStore *WebhookEventStore) *BillingCronWorker {
 	return &BillingCronWorker{
-		store:   store,
-		emailer: emailer,
+		store:        store,
+		emailer:      emailer,
+		webhookStore: webhookStore,
 	}
 }
 
@@ -53,6 +55,9 @@ func (w *BillingCronWorker) runDailyTasks(ctx context.Context) {
 	// 2. Send trial ending reminders
 	w.sendTrialEndingReminders(ctx)
 
+	// 3. Cleanup old webhook events
+	w.cleanupWebhookEvents(ctx)
+
 	log.Println("Daily billing tasks completed")
 }
 
@@ -84,6 +89,25 @@ func (w *BillingCronWorker) processExpiredGracePeriods(ctx context.Context) {
 		if w.emailer != nil && t.Email != "" {
 			w.emailer.sendGraceExpiredEmail(t.Email, t.Name)
 		}
+	}
+}
+
+// cleanupWebhookEvents removes completed webhook events older than 30 days.
+// This prevents unbounded growth of the stripe_webhook_events table.
+// Dead letter events are preserved for manual investigation.
+func (w *BillingCronWorker) cleanupWebhookEvents(ctx context.Context) {
+	if w.webhookStore == nil {
+		return
+	}
+
+	deleted, err := w.webhookStore.CleanupOldEvents(ctx, 30*24*time.Hour)
+	if err != nil {
+		log.Printf("ERROR: webhook cleanup failed: %v", err)
+		return
+	}
+
+	if deleted > 0 {
+		log.Printf("Cleaned up %d completed webhook events older than 30 days", deleted)
 	}
 }
 

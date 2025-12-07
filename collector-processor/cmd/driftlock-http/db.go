@@ -50,9 +50,13 @@ func connectDB(ctx context.Context) (*pgxpool.Pool, error) {
 	if err != nil {
 		return nil, err
 	}
+	// Pool sizing: defaults increased for production load
+	// DB_MAX_CONNS: Maximum connections (default 25, was 10)
+	// DB_MIN_CONNS: Minimum idle connections to keep warm (default 5)
 	if cfg.MaxConns == 0 {
-		cfg.MaxConns = int32(envInt("DB_MAX_CONNS", 10))
+		cfg.MaxConns = int32(envInt("DB_MAX_CONNS", 25))
 	}
+	cfg.MinConns = int32(envInt("DB_MIN_CONNS", 5))
 	pool, err := pgxpool.NewWithConfig(ctx, cfg)
 	if err != nil {
 		return nil, err
