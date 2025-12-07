@@ -59,6 +59,9 @@ func NewAIClientFromEnv() (AIClient, error) {
 	case "gemini", "google":
 		// Google Gemini API
 		return NewGeminiClient()
+	case "mock":
+		// Mock client for testing
+		return NewMockAIClient()
 	default:
 		return nil, fmt.Errorf("unsupported AI provider: %s", provider)
 	}

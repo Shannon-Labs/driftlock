@@ -21,6 +21,11 @@ func (m *MockAIClient) Provider() string {
 	return "mock"
 }
 
+// NewMockAIClient creates a new mock AI client for testing
+func NewMockAIClient() (AIClient, error) {
+	return &MockAIClient{}, nil
+}
+
 // MockConfigRepository mocks ConfigRepository for testing
 type MockConfigRepository struct {
 	GetConfigFunc func(ctx context.Context, tenantID string) (*CostControlConfig, error)
