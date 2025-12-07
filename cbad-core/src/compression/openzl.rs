@@ -103,7 +103,7 @@ extern "C" {
     // Compression context
     fn ZL_CCtx_create() -> *mut ZL_CCtx;
     fn ZL_CCtx_free(cctx: *mut ZL_CCtx);
-    
+
     // Compression parameter setting
     fn ZL_CCtx_setParameter(cctx: *mut ZL_CCtx, gcparam: ZL_CParam, value: c_int) -> ZL_Report;
 
@@ -168,7 +168,7 @@ fn get_error_message(report: &ZL_Report) -> String {
     if !is_error(report) {
         return "No error".to_string();
     }
-    
+
     unsafe {
         let error_code = report._code as c_int;
         let name_ptr = ZL_ErrorCode_toString(error_code);
@@ -194,9 +194,8 @@ impl OpenZLAdapter {
         // Set the format version parameter (required by OpenZL)
         let format_version = unsafe { ZL_getDefaultEncodingVersion() } as c_int;
         log::debug!("Setting format version to {}", format_version);
-        let result = unsafe {
-            ZL_CCtx_setParameter(cctx, ZL_CParam::FormatVersion, format_version)
-        };
+        let result =
+            unsafe { ZL_CCtx_setParameter(cctx, ZL_CParam::FormatVersion, format_version) };
         if is_error(&result) {
             unsafe { ZL_CCtx_free(cctx) };
             return Err(CompressionError::CompressionFailed(format!(
@@ -217,7 +216,7 @@ impl OpenZLAdapter {
                 test_data.len(),
             )
         };
-        
+
         if is_error(&test_result) {
             unsafe { ZL_CCtx_free(cctx) };
             return Err(CompressionError::CompressionFailed(format!(
@@ -252,9 +251,8 @@ impl CompressionAdapter for OpenZLAdapter {
 
         // Ensure format version is set before compression (OpenZL contexts may need reconfiguration)
         let format_version = unsafe { ZL_getDefaultEncodingVersion() } as c_int;
-        let param_result = unsafe {
-            ZL_CCtx_setParameter(self.cctx, ZL_CParam::FormatVersion, format_version)
-        };
+        let param_result =
+            unsafe { ZL_CCtx_setParameter(self.cctx, ZL_CParam::FormatVersion, format_version) };
         if is_error(&param_result) {
             return Err(CompressionError::CompressionFailed(format!(
                 "Failed to set format version parameter before compression: {}",
@@ -285,7 +283,11 @@ impl CompressionAdapter for OpenZLAdapter {
 
         let compressed_size = get_value(&result);
         dst.truncate(compressed_size);
-        log::debug!("Compression successful: {} -> {} bytes", src_size, compressed_size);
+        log::debug!(
+            "Compression successful: {} -> {} bytes",
+            src_size,
+            compressed_size
+        );
         Ok(dst)
     }
 
@@ -295,9 +297,8 @@ impl CompressionAdapter for OpenZLAdapter {
         }
 
         // Get decompressed size first
-        let decompressed_size_report = unsafe {
-            ZL_getDecompressedSize(data.as_ptr() as *const c_void, data.len())
-        };
+        let decompressed_size_report =
+            unsafe { ZL_getDecompressedSize(data.as_ptr() as *const c_void, data.len()) };
 
         if is_error(&decompressed_size_report) {
             return Err(CompressionError::DecompressionFailed(format!(
@@ -402,7 +403,9 @@ mod tests {
         }
 
         let compressed = adapter.compress(&original).expect("compress large data");
-        let decompressed = adapter.decompress(&compressed).expect("decompress large data");
+        let decompressed = adapter
+            .decompress(&compressed)
+            .expect("decompress large data");
 
         assert_eq!(original, decompressed);
         log::debug!(

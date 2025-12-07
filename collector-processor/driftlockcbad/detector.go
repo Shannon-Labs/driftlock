@@ -16,6 +16,9 @@ typedef struct {
     size_t max_capacity;
     double p_value_threshold;
     double ncd_threshold;
+    double compression_ratio_drop_threshold;
+    double entropy_change_threshold;
+    double composite_threshold;
     size_t permutation_count;
     uint64_t seed;
     int require_statistical_significance; // 0 = false, 1 = true
@@ -85,6 +88,15 @@ func NewDetector(config DetectorConfig) (*Detector, error) {
 	if config.NCDThreshold <= 0 {
 		config.NCDThreshold = 0.3
 	}
+	if config.CompressionRatioDropThreshold <= 0 {
+		config.CompressionRatioDropThreshold = 0.15
+	}
+	if config.EntropyChangeThreshold <= 0 {
+		config.EntropyChangeThreshold = 0.2
+	}
+	if config.CompositeThreshold <= 0 {
+		config.CompositeThreshold = 0.6
+	}
 	if config.PermutationCount <= 0 {
 		config.PermutationCount = 1000
 	}
@@ -103,6 +115,9 @@ func NewDetector(config DetectorConfig) (*Detector, error) {
 		max_capacity:                     C.size_t(config.MaxCapacity),
 		p_value_threshold:                C.double(config.PValueThreshold),
 		ncd_threshold:                    C.double(config.NCDThreshold),
+		compression_ratio_drop_threshold: C.double(config.CompressionRatioDropThreshold),
+		entropy_change_threshold:         C.double(config.EntropyChangeThreshold),
+		composite_threshold:              C.double(config.CompositeThreshold),
 		permutation_count:                C.size_t(config.PermutationCount),
 		seed:                             C.uint64_t(config.Seed),
 		require_statistical_significance: C.int(0),

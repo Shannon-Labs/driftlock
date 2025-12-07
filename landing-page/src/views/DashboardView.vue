@@ -199,6 +199,14 @@
           </div>
         </div>
 
+        <!-- Onboarding Wizard for new users -->
+        <OnboardingWizard 
+            v-if="!keys.length && !billingLoading" 
+            :api-key="newApiKey || 'Generate a key below'"
+            :api-url="apiUrl"
+            @complete="showCreateKeyModal = false"
+        />
+
         <!-- Billing Error -->
         <div v-if="billingError" class="mb-8 border-2 border-gray-300 bg-gray-50 px-6 py-4 flex items-center justify-between">
           <span class="text-sm text-gray-600">{{ billingError }}</span>
@@ -401,9 +409,9 @@
                   <button
                     type="button"
                     @click="showCreateKeyModal = true"
-                    class="inline-flex items-center justify-center border-2 border-black bg-black px-4 py-2 text-sm font-bold uppercase tracking-widest text-white hover:bg-white hover:text-black transition-colors shadow-[4px_4px_0px_0px_rgba(0,0,0,0)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+                    class="inline-flex items-center justify-center border-2 border-black bg-white px-4 py-2 text-sm font-bold uppercase tracking-widest text-black hover:bg-black hover:text-white transition-colors shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
                   >
-                    Create New Key
+                    + Create Key
                   </button>
                 </div>
               </div>
@@ -436,16 +444,8 @@
                             </td>
                             <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-600 font-mono">
                               <div class="flex items-center gap-2">
-                                <span>{{ key.prefix || 'dlk_...' }}</span>
-                                <button
-                                  @click="copyToClipboard(key.prefix || '')"
-                                  class="text-gray-400 hover:text-black transition-colors"
-                                  title="Copy key prefix"
-                                >
-                                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                  </svg>
-                                </button>
+                                <span class="bg-gray-100 px-2 py-1 border border-gray-300 rounded-none">{{ key.prefix || 'dlk_...' }}••••••••••••</span>
+                                <span class="text-[10px] uppercase text-gray-400 font-bold tracking-wider">(Hidden)</span>
                               </div>
                             </td>
                             <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-600 font-mono">
@@ -537,10 +537,21 @@
              </div>
 
              <!-- Empty state -->
-             <div v-else-if="recentAnomalies.length === 0" class="px-6 py-12 text-center text-gray-500 text-sm font-mono">
-                No anomalies detected in the last 24 hours.
-                <br>
-                <span class="text-xs text-gray-400 uppercase tracking-widest mt-2 block">Anomalies will appear here when detected</span>
+             <!-- Empty state with Action -->
+             <div v-else-if="recentAnomalies.length === 0" class="px-6 py-12 flex flex-col items-center text-center">
+                <div class="mb-4 text-4xl">📡</div>
+                <h4 class="text-lg font-bold uppercase tracking-wide text-black mb-2">No Signal Detected</h4>
+                <p class="text-sm font-serif text-gray-600 max-w-md mb-6">
+                  Driftlock is listening, but hasn't heard anything yet. Send a test event to verify your connection.
+                </p>
+                <div class="w-full max-w-xl bg-black text-green-400 p-4 font-mono text-xs text-left relative group">
+                  <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button @click="copyCurlExample" class="bg-white text-black px-2 py-1 text-[10px] font-bold uppercase">Copy</button>
+                  </div>
+                  curl -X POST {{ apiUrl }}/v1/detect \<br>
+                  &nbsp;&nbsp;-H "Authorization: Bearer {{ firstKey }}" \<br>
+                  &nbsp;&nbsp;-d @events.json
+                </div>
              </div>
 
              <!-- Anomalies table -->
@@ -592,6 +603,7 @@ import { useRoute } from 'vue-router'
 import DashboardLayout from '../layouts/DashboardLayout.vue'
 import UsageChart from '../components/dashboard/UsageChart.vue'
 import AIUsageWidget from '../components/dashboard/AIUsageWidget.vue'
+import OnboardingWizard from '../components/dashboard/OnboardingWizard.vue'
 import { useAuthStore } from '../stores/auth'
 import type { APIKey } from '@/types/api'
 

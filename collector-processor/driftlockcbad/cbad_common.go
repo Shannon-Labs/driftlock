@@ -1,6 +1,9 @@
 package driftlockcbad
 
-import "fmt"
+import (
+	"fmt"
+	"sync"
+)
 
 // Metrics represents the anomaly detection results from CBAD.
 type Metrics struct {
@@ -66,4 +69,25 @@ func (m *Metrics) IsStatisticallySignificant() bool {
 // GetConfidenceLevel returns the confidence level as a percentage (0-100).
 func (m *Metrics) GetConfidenceLevel() float64 {
 	return m.ConfidenceLevel * 100
+}
+
+var (
+	availableOnce sync.Once
+	availableErr  error
+)
+
+// IsAvailable reports whether the CBAD Rust core is reachable via CGO.
+func IsAvailable() bool {
+	availableOnce.Do(func() {
+		availableErr = ValidateLibrary()
+	})
+	return availableErr == nil
+}
+
+// AvailabilityError returns the last validation error, if any.
+func AvailabilityError() error {
+	availableOnce.Do(func() {
+		availableErr = ValidateLibrary()
+	})
+	return availableErr
 }

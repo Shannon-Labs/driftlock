@@ -4,7 +4,7 @@
 // See PATENTS.md and LICENSE for details.
 
 //! # Driftlock CBAD Core
-//! 
+//!
 //! Patent-pending compression-based anomaly detection technology.
 //! Licensed under Apache 2.0. Commercial licenses available from Shannon Labs.
 
@@ -48,17 +48,17 @@ impl Default for ComputeConfig {
 }
 
 /// Compute anomaly detection metrics using compression-based analysis
-/// 
+///
 /// This is the main entry point for the CBAD algorithm. It analyzes the
 /// provided data and returns comprehensive metrics including compression
 /// ratios, entropy, NCD scores, and statistical significance testing.
-/// 
+///
 /// # Arguments
 /// * `baseline` - Historical data representing normal patterns
 /// * `window` - Current data to analyze for anomalies  
 /// * `adapter` - Compression adapter to use (OpenZL recommended)
 /// * `config` - Configuration for the analysis
-/// 
+///
 /// # Returns
 /// * `AnomalyMetrics` - Complete metrics with glass-box explanation
 pub fn compute_metrics(
@@ -87,7 +87,10 @@ pub fn compute_metrics_quick(
 }
 
 /// Legacy function for backward compatibility (deprecated)
-#[deprecated(since = "0.1.0", note = "Use compute_metrics with proper parameters instead")]
+#[deprecated(
+    since = "0.1.0",
+    note = "Use compute_metrics with proper parameters instead"
+)]
 pub fn compute_metrics_legacy(_data: &[u8], _cfg: &ComputeConfig) -> Metrics {
     Metrics {
         entropy: 0.0,
@@ -120,7 +123,7 @@ pub extern "C" fn cbad_init_logging() {
 }
 
 /// Compute CBAD metrics via C FFI
-/// 
+///
 /// # Safety
 /// This function is unsafe because it deals with raw pointers from C.
 /// Callers must ensure:
@@ -138,7 +141,7 @@ pub unsafe extern "C" fn cbad_compute_metrics(
 ) -> CBADMetrics {
     // Initialize logger if not already done
     cbad_init_logging();
-    
+
     // Validate pointers
     if baseline_ptr.is_null() || window_ptr.is_null() {
         return CBADMetrics {
@@ -176,9 +179,9 @@ pub unsafe extern "C" fn cbad_compute_metrics(
                     confidence_level: 0.0,
                 };
             }
-        }
+        },
     };
-    
+
     #[cfg(not(feature = "openzl"))]
     let adapter = match compression::create_adapter(compression::CompressionAlgorithm::Zstd) {
         Ok(adapter) => adapter,

@@ -90,7 +90,8 @@ impl CompressionAdapter for Lz4Adapter {
             return Ok(Vec::new());
         }
 
-        let compressed = lz4::block::compress(data, None, false).map_err(|e| {
+        // Prepend uncompressed size so decompression can validate output length
+        let compressed = lz4::block::compress(data, None, true).map_err(|e| {
             CompressionError::CompressionFailed(format!("Lz4 compression error: {}", e))
         })?;
 
@@ -102,10 +103,18 @@ impl CompressionAdapter for Lz4Adapter {
             return Ok(Vec::new());
         }
 
-        // For lz4 block compression, we need to know the uncompressed size
-        // Since we don't store it separately, we'll use a reasonable estimate
-        let uncompressed_size = data.len() * 4; // Conservative estimate
-        lz4::block::decompress(data, Some(uncompressed_size as i32)).map_err(|e| {
+        // Bound input to prevent resource exhaustion on malformed payloads
+        const MAX_LZ4_INPUT: usize = 16 * 1024 * 1024; // 16MB compressed
+        if data.len() > MAX_LZ4_INPUT {
+            return Err(CompressionError::InvalidInput(format!(
+                "Lz4 input too large: {} bytes (max {})",
+                data.len(),
+                MAX_LZ4_INPUT
+            )));
+        }
+
+        // Let the library determine the correct size from the block metadata
+        lz4::block::decompress(data, None).map_err(|e| {
             CompressionError::DecompressionFailed(format!("Lz4 decompression error: {}", e))
         })
     }

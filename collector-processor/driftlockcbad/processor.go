@@ -25,6 +25,10 @@ type cbadProcessor struct {
 	detectorMu     sync.RWMutex // Protect detector access
 	kafkaPublisher *kafka.Publisher
 	redisClient    *redis.Client // For distributed state management
+	baselineMu     sync.Mutex
+	logBaseline    [][]byte
+	metricBaseline [][]byte
+	baselineCap    int
 }
 
 type logSample struct {
@@ -44,13 +48,19 @@ func (p *cbadProcessor) processLogs(ctx context.Context, logs plog.Logs) (plog.L
 	_ = ctx
 	p.logger.Debug("driftlock_cbad.processLogs invoked", zap.Int("resource_logs", logs.ResourceLogs().Len()))
 
-	// Build baseline from historical patterns (simplified - in production, this would come from a database)
+	// Build baseline from historical patterns (updated after each record)
 	baseline := p.buildLogBaseline()
 
-	// Process each log record
-	logs.ResourceLogs().RemoveIf(func(rl plog.ResourceLogs) bool {
-		rl.ScopeLogs().RemoveIf(func(sl plog.ScopeLogs) bool {
-			sl.LogRecords().RemoveIf(func(lr plog.LogRecord) bool {
+	rls := logs.ResourceLogs()
+	for i := 0; i < rls.Len(); i++ {
+		rl := rls.At(i)
+		sls := rl.ScopeLogs()
+		for j := 0; j < sls.Len(); j++ {
+			sl := sls.At(j)
+			lrs := sl.LogRecords()
+			for k := 0; k < lrs.Len(); k++ {
+				lr := lrs.At(k)
+
 				// Publish the log record to Kafka if publisher is available
 				if p.kafkaPublisher != nil {
 					if err := p.kafkaPublisher.PublishLog(ctx, lr); err != nil {
@@ -62,26 +72,21 @@ func (p *cbadProcessor) processLogs(ctx context.Context, logs plog.Logs) (plog.L
 				metrics, err := ComputeMetricsQuick(baseline, logData)
 				if err != nil {
 					p.logger.Warn("CBAD analysis failed", zap.Error(err))
-					return false // Keep the log record if analysis fails
-				}
-
-				if metrics.IsAnomaly {
+				} else if metrics.IsAnomaly {
 					p.addAnomalyAttributes(lr, metrics)
 					p.logger.Info("Anomaly detected in log",
 						zap.String("explanation", metrics.GetAnomalyExplanation()),
 						zap.Float64("ncd", metrics.NCD),
 						zap.Float64("p_value", metrics.PValue),
 					)
-					return false // Keep the anomalous log record
 				}
 
-				return true // Remove the non-anomalous log record
-			})
-			return sl.LogRecords().Len() == 0
-		})
-		return rl.ScopeLogs().Len() == 0
-	})
-
+				// Continuously evolve the baseline with observed traffic
+				p.recordLogBaseline(logData)
+				baseline = p.buildLogBaseline()
+			}
+		}
+	}
 	return logs, nil
 }
 
@@ -128,6 +133,10 @@ func (p *cbadProcessor) processMetrics(ctx context.Context, metrics pmetric.Metr
 						zap.Float64("p_value", cbadMetrics.PValue),
 					)
 				}
+
+				// Evolve baseline for future analyses
+				p.recordMetricBaseline(metricData)
+				baseline = p.buildMetricBaseline()
 			}
 		}
 	}
@@ -137,23 +146,35 @@ func (p *cbadProcessor) processMetrics(ctx context.Context, metrics pmetric.Metr
 
 // buildLogBaseline creates a baseline for log anomaly detection
 func (p *cbadProcessor) buildLogBaseline() []byte {
-	logData := map[string]interface{}{
-		"timestamp": "2025-10-24T00:00:00Z",
-		"severity":  "INFO",
-		"body":      "Request completed successfully",
-		"attributes": map[string]interface{}{
-			"service.name": "test-service",
-		},
+	p.baselineMu.Lock()
+	defer p.baselineMu.Unlock()
+
+	if len(p.logBaseline) == 0 {
+		logData := map[string]interface{}{
+			"timestamp": "2025-10-24T00:00:00Z",
+			"severity":  "INFO",
+			"body":      "Request completed successfully",
+			"attributes": map[string]interface{}{
+				"service.name": "test-service",
+			},
+		}
+		jsonData, _ := json.Marshal(logData)
+		return jsonData
 	}
-	jsonData, _ := json.Marshal(logData)
-	return jsonData
+
+	return flattenBuffers(p.logBaseline)
 }
 
 // buildMetricBaseline creates a baseline for metric anomaly detection
 func (p *cbadProcessor) buildMetricBaseline() []byte {
-	// In a real implementation, this would come from historical data
-	// For now, use a representative normal metric pattern
-	return []byte(`{"name":"http_request_duration","type":"histogram","value":42.0,"labels":{"service":"api-gateway","method":"GET","status":"200"}}`)
+	p.baselineMu.Lock()
+	defer p.baselineMu.Unlock()
+
+	if len(p.metricBaseline) == 0 {
+		return []byte(`{"name":"http_request_duration","type":"histogram","value":42.0,"labels":{"service":"api-gateway","method":"GET","status":"200"}}`)
+	}
+
+	return flattenBuffers(p.metricBaseline)
 }
 
 // logRecordToBytes converts a log record to bytes for CBAD analysis
@@ -179,6 +200,19 @@ func (p *cbadProcessor) logRecordToBytes(logRecord plog.LogRecord) []byte {
 	return jsonData
 }
 
+func (p *cbadProcessor) recordLogBaseline(data []byte) {
+	if p.baselineCap == 0 {
+		p.baselineCap = 512
+	}
+	p.baselineMu.Lock()
+	defer p.baselineMu.Unlock()
+	p.logBaseline = append(p.logBaseline, append([]byte(nil), data...))
+	if len(p.logBaseline) > p.baselineCap {
+		excess := len(p.logBaseline) - p.baselineCap
+		p.logBaseline = p.logBaseline[excess:]
+	}
+}
+
 // metricToBytes converts a metric to bytes for CBAD analysis
 func (p *cbadProcessor) metricToBytes(metric pmetric.Metric) []byte {
 	// Create a JSON representation of the metric
@@ -195,8 +229,102 @@ func (p *cbadProcessor) metricToBytes(metric pmetric.Metric) []byte {
 		metricData["unit"] = unit
 	}
 
+	switch metric.Type() {
+	case pmetric.MetricTypeGauge:
+		points := make([]map[string]interface{}, 0, metric.Gauge().DataPoints().Len())
+		for i := 0; i < metric.Gauge().DataPoints().Len(); i++ {
+			points = append(points, datapointToMap(metric.Gauge().DataPoints().At(i)))
+		}
+		metricData["datapoints"] = points
+	case pmetric.MetricTypeSum:
+		points := make([]map[string]interface{}, 0, metric.Sum().DataPoints().Len())
+		for i := 0; i < metric.Sum().DataPoints().Len(); i++ {
+			points = append(points, datapointToMap(metric.Sum().DataPoints().At(i)))
+		}
+		metricData["datapoints"] = points
+	case pmetric.MetricTypeHistogram:
+		points := make([]map[string]interface{}, 0, metric.Histogram().DataPoints().Len())
+		for i := 0; i < metric.Histogram().DataPoints().Len(); i++ {
+			dp := metric.Histogram().DataPoints().At(i)
+			m := map[string]interface{}{
+				"count":   dp.Count(),
+				"sum":     dp.Sum(),
+				"min":     dp.Min(),
+				"max":     dp.Max(),
+				"bounds":  dp.ExplicitBounds().AsRaw(),
+				"bucket":  dp.BucketCounts().AsRaw(),
+				"attrs":   attributesToMap(dp.Attributes()),
+				"ts":      dp.Timestamp().String(),
+				"startTs": dp.StartTimestamp().String(),
+			}
+			points = append(points, m)
+		}
+		metricData["datapoints"] = points
+	default:
+		// Fallback: note the type without discarding the metric
+		metricData["note"] = "unsupported metric type payload preserved"
+	}
+
 	jsonData, _ := json.Marshal(metricData)
 	return jsonData
+}
+
+func (p *cbadProcessor) recordMetricBaseline(data []byte) {
+	if p.baselineCap == 0 {
+		p.baselineCap = 512
+	}
+	p.baselineMu.Lock()
+	defer p.baselineMu.Unlock()
+	p.metricBaseline = append(p.metricBaseline, append([]byte(nil), data...))
+	if len(p.metricBaseline) > p.baselineCap {
+		excess := len(p.metricBaseline) - p.baselineCap
+		p.metricBaseline = p.metricBaseline[excess:]
+	}
+}
+
+func flattenBuffers(chunks [][]byte) []byte {
+	total := 0
+	for _, c := range chunks {
+		total += len(c)
+	}
+	out := make([]byte, 0, total)
+	for _, c := range chunks {
+		out = append(out, c...)
+	}
+	return out
+}
+
+func attributesToMap(attrs pcommon.Map) map[string]interface{} {
+	out := make(map[string]interface{}, attrs.Len())
+	attrs.Range(func(k string, v pcommon.Value) bool {
+		switch v.Type() {
+		case pcommon.ValueTypeDouble:
+			out[k] = v.Double()
+		case pcommon.ValueTypeInt:
+			out[k] = v.Int()
+		case pcommon.ValueTypeBool:
+			out[k] = v.Bool()
+		default:
+			out[k] = v.AsString()
+		}
+		return true
+	})
+	return out
+}
+
+func datapointToMap(dp pmetric.NumberDataPoint) map[string]interface{} {
+	m := map[string]interface{}{
+		"ts":      dp.Timestamp().String(),
+		"startTs": dp.StartTimestamp().String(),
+		"attrs":   attributesToMap(dp.Attributes()),
+	}
+	switch dp.ValueType() {
+	case pmetric.NumberDataPointValueTypeDouble:
+		m["value"] = dp.DoubleValue()
+	case pmetric.NumberDataPointValueTypeInt:
+		m["value"] = dp.IntValue()
+	}
+	return m
 }
 
 // addAnomalyAttributes adds CBAD anomaly attributes to a log record

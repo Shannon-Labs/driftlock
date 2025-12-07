@@ -20,6 +20,7 @@ const navigation = [
       { title: 'POST /v1/detect', href: '/docs/user-guide/api/endpoints/detect' },
       { title: 'POST /v1/demo/detect', href: '/docs/user-guide/api/endpoints/demo' },
       { title: 'GET /v1/anomalies', href: '/docs/user-guide/api/endpoints/anomalies' },
+      { title: 'Compression Algorithms', href: '/docs/architecture/ALGORITHMS' },
       { title: 'Error Codes', href: '/docs/user-guide/api/errors' },
     ]
   },

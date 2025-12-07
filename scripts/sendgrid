@@ -1,0 +1,11 @@
+#!/bin/bash
+# SendGrid CLI wrapper
+# Usage: ./sendgrid [command] [options]
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Activate the virtual environment
+source /tmp/sendgrid-env/bin/activate
+
+# Run the Python helper
+python "$SCRIPT_DIR/sendgrid_helper.py" "$@"

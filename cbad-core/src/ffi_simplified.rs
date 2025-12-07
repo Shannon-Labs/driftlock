@@ -2,11 +2,11 @@
 
 use crate::anomaly::{AnomalyConfig, AnomalyDetector};
 use crate::compression::CompressionAlgorithm;
-use crate::window::{DataEvent, WindowConfig, PrivacyConfig};
+use crate::window::{DataEvent, PrivacyConfig, WindowConfig};
+use std::collections::HashMap;
 use std::ffi::CString;
 use std::os::raw::{c_char, c_int};
 use std::ptr;
-use std::collections::HashMap;
 
 /// Opaque handle for AnomalyDetector instances
 pub type CBADDetectorHandle = *mut AnomalyDetector;
@@ -30,6 +30,11 @@ pub struct CBADEnhancedMetrics {
 
 /// Create a simple anomaly detector with default configuration
 /// Returns a handle to the detector, or null on error
+///
+/// # Safety
+///
+/// This function is safe to call from any thread. The returned handle must be
+/// freed with `cbad_detector_free` when no longer needed.
 #[no_mangle]
 pub unsafe extern "C" fn cbad_detector_create_simple() -> CBADDetectorHandle {
     let window_config = WindowConfig {
@@ -46,6 +51,9 @@ pub unsafe extern "C" fn cbad_detector_create_simple() -> CBADDetectorHandle {
         compression_algorithm: CompressionAlgorithm::Zstd,
         p_value_threshold: 0.2,
         ncd_threshold: 0.15,
+        compression_ratio_drop_threshold: 0.15,
+        entropy_change_threshold: 0.2,
+        composite_threshold: 0.6,
         permutation_count: 1000,
         seed: 42,
         require_statistical_significance: true,
@@ -59,6 +67,12 @@ pub unsafe extern "C" fn cbad_detector_create_simple() -> CBADDetectorHandle {
 
 /// Add a transaction to the detector (ingestion phase)
 /// Returns 1 on success, 0 on failure
+///
+/// # Safety
+///
+/// - `handle` must be a valid pointer returned by `cbad_detector_create_simple`
+/// - `data` must be a valid pointer to a UTF-8 encoded string of at least `len` bytes
+/// - The caller must ensure the handle is not used concurrently from multiple threads
 #[no_mangle]
 pub unsafe extern "C" fn cbad_add_transaction(
     handle: CBADDetectorHandle,
@@ -70,7 +84,7 @@ pub unsafe extern "C" fn cbad_add_transaction(
     }
 
     let detector = &mut *handle;
-    
+
     // Convert C string to Rust string
     let data_slice = std::slice::from_raw_parts(data as *const u8, len);
     let data_str = match std::str::from_utf8(data_slice) {
@@ -99,10 +113,14 @@ pub unsafe extern "C" fn cbad_add_transaction(
 
 /// Run anomaly detection on the current state
 /// Returns metrics structure with detection results
+///
+/// # Safety
+///
+/// - `handle` must be a valid pointer returned by `cbad_detector_create_simple`
+/// - The caller must ensure the handle is not used concurrently from multiple threads
+/// - The returned `explanation` pointer (if non-null) must be freed with `cbad_free_string`
 #[no_mangle]
-pub unsafe extern "C" fn cbad_detect(
-    handle: CBADDetectorHandle,
-) -> CBADEnhancedMetrics {
+pub unsafe extern "C" fn cbad_detect(handle: CBADDetectorHandle) -> CBADEnhancedMetrics {
     if handle.is_null() {
         return CBADEnhancedMetrics {
             ncd: 0.0,
@@ -157,7 +175,8 @@ pub unsafe extern "C" fn cbad_detect(
                 result.metrics.entropy_change
             );
 
-            let explanation_cstring = CString::new(explanation_str).unwrap_or_else(|_| CString::new("Error").unwrap());
+            let explanation_cstring =
+                CString::new(explanation_str).unwrap_or_else(|_| CString::new("Error").unwrap());
             let explanation_ptr = explanation_cstring.into_raw();
 
             CBADEnhancedMetrics {
@@ -169,7 +188,11 @@ pub unsafe extern "C" fn cbad_detect(
                 window_entropy: result.metrics.window_entropy,
                 is_anomaly: if result.is_anomaly { 1 } else { 0 },
                 confidence_level: result.confidence_level,
-                is_statistically_significant: if result.is_statistically_significant { 1 } else { 0 },
+                is_statistically_significant: if result.is_statistically_significant {
+                    1
+                } else {
+                    0
+                },
                 compression_ratio_change: result.metrics.compression_ratio_change,
                 entropy_change: result.metrics.entropy_change,
                 explanation: explanation_ptr,
@@ -207,6 +230,11 @@ pub unsafe extern "C" fn cbad_detect(
 }
 
 /// Check if detector is ready for anomaly detection
+///
+/// # Safety
+///
+/// - `handle` must be a valid pointer returned by `cbad_detector_create_simple`, or null
+/// - The caller must ensure the handle is not used concurrently from multiple threads
 #[no_mangle]
 pub unsafe extern "C" fn cbad_detector_ready(handle: CBADDetectorHandle) -> c_int {
     if handle.is_null() {
@@ -214,14 +242,25 @@ pub unsafe extern "C" fn cbad_detector_ready(handle: CBADDetectorHandle) -> c_in
     }
 
     let detector = &*handle;
-    
+
     match detector.is_ready() {
-        Ok(ready) => if ready { 1 } else { 0 },
+        Ok(ready) => {
+            if ready {
+                1
+            } else {
+                0
+            }
+        }
         Err(_) => 0,
     }
 }
 
 /// Free the detector
+///
+/// # Safety
+///
+/// - `handle` must be a valid pointer returned by `cbad_detector_create_simple`, or null
+/// - After calling this function, the handle must not be used again
 #[no_mangle]
 pub unsafe extern "C" fn cbad_detector_free(handle: CBADDetectorHandle) {
     if !handle.is_null() {
@@ -230,6 +269,11 @@ pub unsafe extern "C" fn cbad_detector_free(handle: CBADDetectorHandle) {
 }
 
 /// Free a string allocated by Rust
+///
+/// # Safety
+///
+/// - `s` must be a valid pointer returned by a cbad function (e.g., explanation from `cbad_detect`), or null
+/// - After calling this function, the pointer must not be used again
 #[no_mangle]
 pub unsafe extern "C" fn cbad_free_string(s: *mut c_char) {
     if !s.is_null() {

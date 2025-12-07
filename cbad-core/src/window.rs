@@ -1,15 +1,15 @@
 //! Sliding window system for CBAD
-//! 
+//!
 //! This module provides a time-series buffering system with configurable
 //! baseline/window/hop semantics for real-time anomaly detection.
-//! 
+//!
 //! The system maintains:
 //! - A baseline window (reference pattern)
 //! - A current window (to compare against baseline)
 //! - Configurable window sizes and hop distance
 //! - Bounded memory usage
 //! - Thread-safe operations for concurrent access
-//! 
+//!
 //! Key concepts:
 //! - Baseline: Historical "normal" pattern for comparison
 //! - Window: Current data to test for anomalies
@@ -78,7 +78,8 @@ impl Default for PrivacyConfig {
                 "cookie".to_string(),
             ],
             redact_patterns: vec![
-                r"(?i)\b(credit|debit)_?card[:\s]*\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?(\d{4})\b".to_string(),
+                r"(?i)\b(credit|debit)_?card[:\s]*\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?(\d{4})\b"
+                    .to_string(),
                 r"(?i)\bssn[:\s]*\d{3}-?\d{2}-?(\d{4})\b".to_string(),
                 r"(?i)\bemail[:\s]*[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}\b".to_string(),
             ],
@@ -124,7 +125,7 @@ impl DataEvent {
 }
 
 /// The sliding window system
-/// 
+///
 /// This structure manages the baseline and current windows, handles
 /// event insertion, and provides access to the current windows for
 /// anomaly detection.
@@ -141,6 +142,8 @@ pub struct SlidingWindow {
     is_ready: bool,
     /// Total events processed
     total_events: u64,
+    /// Whether we have aligned the first analysis window to the tail
+    aligned: bool,
 }
 
 impl SlidingWindow {
@@ -153,11 +156,12 @@ impl SlidingWindow {
             window_start: 0,
             is_ready: false,
             total_events: 0,
+            aligned: false,
         }
     }
 
     /// Add an event to the sliding window system
-    /// 
+    ///
     /// This will apply privacy redaction if configured, and may trigger
     /// window advancement if the system is ready for analysis.
     pub fn add_event(&mut self, mut event: DataEvent) -> bool {
@@ -179,11 +183,6 @@ impl SlidingWindow {
         // Check if we have enough data to be ready
         self.update_readiness();
 
-        // Advance windows if ready
-        if self.is_ready {
-            self.advance_windows();
-        }
-
         true
     }
 
@@ -202,15 +201,15 @@ impl SlidingWindow {
             // like JSON and redact specific fields
             let field_key = format!("\"{}\":", field);
             let data_str = String::from_utf8_lossy(&event.data);
-            
+
             // Replace "field": "value" with "field": "[REDACTED]"
             let mut modified_str = data_str.to_string();
             let mut pos = 0;
-            
+
             while let Some(start) = modified_str[pos..].find(&field_key) {
                 let abs_start = pos + start;
                 let search_from = &modified_str[abs_start + field_key.len()..];
-                
+
                 // Find the value part (assumes format "field": "value" or "field":value)
                 if let Some(quote_pos) = search_from.find('"') {
                     let value_start = abs_start + field_key.len() + quote_pos;
@@ -228,9 +227,15 @@ impl SlidingWindow {
                     let remaining = &modified_str[abs_start + field_key.len()..];
                     let remaining_trimmed = remaining.trim_start();
                     if !remaining_trimmed.is_empty() {
-                        let token_start = abs_start + field_key.len() + (remaining.len() - remaining_trimmed.len());
-                        let token_end = token_start + remaining_trimmed.split_whitespace().next().map_or(0, |s| s.len());
-                        
+                        let token_start = abs_start
+                            + field_key.len()
+                            + (remaining.len() - remaining_trimmed.len());
+                        let token_end = token_start
+                            + remaining_trimmed
+                                .split_whitespace()
+                                .next()
+                                .map_or(0, |s| s.len());
+
                         if token_end > token_start {
                             let before = &modified_str[..token_start];
                             let after = &modified_str[token_end..];
@@ -244,7 +249,7 @@ impl SlidingWindow {
                     }
                 }
             }
-            
+
             if modified_str != data_str {
                 event.data = modified_str.as_bytes().to_vec();
             }
@@ -255,7 +260,7 @@ impl SlidingWindow {
             if let Ok(re) = regex::Regex::new(pattern) {
                 let data_str = String::from_utf8_lossy(&event.data);
                 let redacted_str = re.replace_all(&data_str, "[REDACTED]");
-                
+
                 if data_str != *redacted_str {
                     event.data = redacted_str.as_bytes().to_vec();
                 }
@@ -277,27 +282,48 @@ impl SlidingWindow {
                 self.window_start -= 1;
             }
         }
+        // If trimming made us lose readiness, realign when we regain it later
+        if self.events.len() < self.config.baseline_size + self.config.window_size {
+            self.aligned = false;
+        }
     }
 
     /// Update the readiness state based on available data
     fn update_readiness(&mut self) {
         let required_events = self.config.baseline_size + self.config.window_size;
         self.is_ready = self.events.len() >= required_events;
+        if self.is_ready && !self.aligned {
+            self.align_to_tail();
+        }
     }
 
-    /// Advance the windows based on hop size
-    fn advance_windows(&mut self) {
-        // Advance the window by hop_size, but not beyond the end
+    /// Align the initial baseline/window to the most recent data tail.
+    fn align_to_tail(&mut self) {
+        if !self.is_ready {
+            return;
+        }
+        let end = self.events.len();
+        self.window_start = end.saturating_sub(self.config.window_size);
+        self.baseline_start = self.window_start.saturating_sub(self.config.baseline_size);
+        self.aligned = true;
+    }
+
+    /// Advance the windows based on hop size after an analysis run
+    pub fn advance_after_analysis(&mut self) {
+        if !self.is_ready {
+            return;
+        }
+
         let max_position = self.events.len().saturating_sub(self.config.window_size);
-        self.window_start = (self.window_start + self.config.hop_size).min(max_position);
-        
-        // Baseline should be before the current window
-        let baseline_max_position = self.window_start.saturating_sub(self.config.window_size);
-        self.baseline_start = baseline_max_position.saturating_sub(self.config.baseline_size).min(baseline_max_position);
+        let next_window = (self.window_start + self.config.hop_size).min(max_position);
+        self.window_start = next_window;
+
+        // Baseline immediately precedes the current window to keep recency
+        self.baseline_start = self.window_start.saturating_sub(self.config.baseline_size);
     }
 
     /// Get the current baseline window for analysis
-    /// 
+    ///
     /// Returns None if there are not enough events to form a complete baseline
     pub fn get_baseline(&self) -> Option<Vec<u8>> {
         if !self.is_ready {
@@ -321,7 +347,7 @@ impl SlidingWindow {
     }
 
     /// Get the current analysis window
-    /// 
+    ///
     /// Returns None if there are not enough events to form a complete window
     pub fn get_window(&self) -> Option<Vec<u8>> {
         if !self.is_ready {
@@ -378,6 +404,7 @@ impl SlidingWindow {
         self.baseline_start = 0;
         self.window_start = 0;
         self.is_ready = false;
+        self.aligned = false;
     }
 
     /// Clear all events and reset the system
@@ -387,11 +414,12 @@ impl SlidingWindow {
         self.window_start = 0;
         self.is_ready = false;
         self.total_events = 0;
+        self.aligned = false;
     }
 }
 
 /// Thread-safe wrapper for the sliding window system
-/// 
+///
 /// This provides concurrent access to the sliding window system without
 /// requiring external synchronization.
 #[derive(Clone)]
@@ -454,6 +482,20 @@ impl ThreadSafeSlidingWindow {
         let window = self.inner.lock().map_err(|e| e.to_string())?;
         Ok(window.config().clone())
     }
+
+    /// Advance the window after analysis to honor hop semantics
+    pub fn advance_after_analysis(&self) -> WindowResult<()> {
+        let mut window = self.inner.lock().map_err(|e| e.to_string())?;
+        window.advance_after_analysis();
+        Ok(())
+    }
+
+    /// Clear all buffered events and positions
+    pub fn clear(&self) -> WindowResult<()> {
+        let mut window = self.inner.lock().map_err(|e| e.to_string())?;
+        window.clear();
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -479,7 +521,7 @@ mod tests {
             max_capacity: 20,
             ..Default::default()
         };
-        
+
         let mut window = SlidingWindow::new(config);
 
         // Add fewer events than needed for readiness
@@ -511,7 +553,7 @@ mod tests {
             max_capacity: 20,
             ..Default::default()
         };
-        
+
         let mut window = SlidingWindow::new(config);
 
         // Add enough events
@@ -525,12 +567,12 @@ mod tests {
         // Check that we can get both baseline and window
         let baseline = window.get_baseline();
         let _window = window.get_window();
-        
+
         assert!(baseline.is_some());
         assert!(_window.is_some());
 
-        // Verify sizes
-        let baseline_len = ["data_0", "data_1", "data_2"]
+        // Verify baseline and window are anchored to the tail (most recent events)
+        let baseline_len = ["data_5", "data_6", "data_7"]
             .iter()
             .map(|s| s.len())
             .sum::<usize>();
@@ -543,7 +585,7 @@ mod tests {
             max_capacity: 5,
             ..Default::default()
         };
-        
+
         let mut window = SlidingWindow::new(config);
 
         // Add more events than capacity
@@ -568,7 +610,7 @@ mod tests {
         let handle = thread::spawn(move || {
             let event = DataEvent::new(b"thread_event".to_vec());
             window_clone.add_event(event).unwrap();
-            
+
             let is_ready = window_clone.is_ready().unwrap();
             (window_clone.total_events().unwrap(), is_ready)
         });
@@ -579,22 +621,46 @@ mod tests {
 
         let (events, _) = handle.join().unwrap();
         assert!(events >= 1);
-        
+
         let total = window.total_events().unwrap();
         assert_eq!(total, 2); // One from each thread
+    }
+
+    #[test]
+    fn test_hop_advances_from_tail() {
+        let mut config = WindowConfig {
+            baseline_size: 3,
+            window_size: 2,
+            hop_size: 1,
+            max_capacity: 20,
+            ..Default::default()
+        };
+        config.privacy_config.redact_fields.clear();
+        let mut window = SlidingWindow::new(config);
+
+        for i in 0..7 {
+            let event = DataEvent::new(format!("evt{}", i).as_bytes().to_vec());
+            window.add_event(event);
+        }
+
+        assert!(window.is_ready());
+        let first_window = window.get_window().unwrap();
+        window.advance_after_analysis();
+        let second_window = window.get_window().unwrap();
+        assert_ne!(first_window, second_window, "window should advance by hop");
     }
 
     #[test]
     fn test_privacy_redaction() {
         let mut config = WindowConfig::default();
         config.privacy_config.redact_fields = vec!["password".to_string()];
-        
+
         let mut window = SlidingWindow::new(config);
 
         // Create an event with sensitive data
         let sensitive_data = r#"{"user":"alice","password":"secret123","action":"login"}"#;
         let event = DataEvent::new(sensitive_data.as_bytes().to_vec());
-        
+
         // Add the event (this should trigger redaction)
         window.add_event(event);
 
@@ -609,9 +675,9 @@ mod tests {
             time_window: Some(Duration::from_secs(60)), // 1 minute window
             ..Default::default()
         };
-        
+
         let window = SlidingWindow::new(config);
-        
+
         assert_eq!(window.config().time_window, Some(Duration::from_secs(60)));
     }
 }

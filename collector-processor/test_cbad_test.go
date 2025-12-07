@@ -52,8 +52,16 @@ func TestEndToEndIntegration(t *testing.T) {
 	err = processor.ConsumeLogs(ctx, normalLogs)
 	require.NoError(t, err)
 
-	// After processing normal logs, no anomalies should be detected yet
-	assert.Len(t, nextConsumer.AllLogs(), 0, "No anomalies should be detected in the baseline")
+	// After processing normal logs, they should flow through but without anomaly attributes
+	if got := len(nextConsumer.AllLogs()); got != 1 {
+		t.Fatalf("expected baseline logs to flow through (1 batch), got %d", got)
+	}
+	batch := nextConsumer.AllLogs()[0]
+	if batch.ResourceLogs().Len() > 0 && batch.ResourceLogs().At(0).ScopeLogs().Len() > 0 {
+		lr := batch.ResourceLogs().At(0).ScopeLogs().At(0).LogRecords().At(0)
+		_, hasExplanation := lr.Attributes().Get("driftlock.explanation")
+		assert.False(t, hasExplanation, "Baseline log should not be marked as anomaly")
+	}
 
 	// 3. Generate an anomalous log
 	anomalousLogs := generateTestLogs(1, "ERROR", "Critical failure: service shutting down, stack_trace=...")
@@ -63,12 +71,12 @@ func TestEndToEndIntegration(t *testing.T) {
 	// 4. Validate anomaly detection
 	time.Sleep(100 * time.Millisecond) // Allow time for processing
 
-	if len(nextConsumer.AllLogs()) == 0 {
+	if len(nextConsumer.AllLogs()) < 2 {
 		t.Skip("CBAD detector did not emit an anomaly with the current sample data")
 	}
 
-	if len(nextConsumer.AllLogs()) > 0 {
-		processedLogs := nextConsumer.AllLogs()[0]
+	if len(nextConsumer.AllLogs()) > 1 {
+		processedLogs := nextConsumer.AllLogs()[len(nextConsumer.AllLogs())-1]
 		rl := processedLogs.ResourceLogs().At(0)
 		sl := rl.ScopeLogs().At(0)
 		lr := sl.LogRecords().At(0)

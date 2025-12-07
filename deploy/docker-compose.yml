@@ -17,7 +17,13 @@ services:
       - DRIFTLOCK_DEV_MODE=${DRIFTLOCK_DEV_MODE:-true}
       - USE_OPENZL=${USE_OPENZL:-false}
       - PREFER_OPENZL=${PREFER_OPENZL:-false}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      # AI Provider configuration (choose one)
+      - AI_PROVIDER=${AI_PROVIDER:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-ministral-3:3b}
+      # Redis for baseline persistence
+      - BASELINE_REDIS_ADDR=driftlock-redis:6379
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8080/healthz || exit 1"]
       interval: 10s
@@ -27,6 +33,7 @@ services:
     restart: unless-stopped
     depends_on:
       - driftlock-postgres
+      - driftlock-redis
     networks:
       - driftlock-network
 
@@ -46,6 +53,22 @@ services:
       retries: 5
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    networks:
+      - driftlock-network
+
+  # Redis for baseline persistence across API requests
+  driftlock-redis:
+    image: redis:7-alpine
+    container_name: driftlock-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - redis-data:/data
     networks:
       - driftlock-network
 
@@ -102,3 +125,4 @@ networks:
 
 volumes:
   postgres-data:
+  redis-data:

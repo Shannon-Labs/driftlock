@@ -10,6 +10,9 @@ type DetectorConfig struct {
 	NCDThreshold                   float64
 	PermutationCount               int
 	Seed                           uint64
+	CompressionRatioDropThreshold  float64
+	EntropyChangeThreshold         float64
+	CompositeThreshold             float64
 	RequireStatisticalSignificance bool
 	CompressionAlgorithm           string
 }

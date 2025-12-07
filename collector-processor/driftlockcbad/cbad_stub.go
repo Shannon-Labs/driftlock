@@ -23,3 +23,9 @@ func ValidateLibrary() error {
 func HasOpenZL() bool {
 	return false
 }
+
+// IsAvailable always reports false in stub builds.
+func IsAvailable() bool { return false }
+
+// AvailabilityError reports why the core is unavailable in stub builds.
+func AvailabilityError() error { return fmt.Errorf("cbad stub build: core unavailable") }

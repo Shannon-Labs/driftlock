@@ -1,11 +1,13 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -14,6 +16,25 @@ import (
 var (
 	detectStdin bool
 )
+
+// Response structs for pretty printing
+type DetectResponse struct {
+	Success        bool            `json:"success"`
+	StreamID       string          `json:"stream_id"`
+	TotalEvents    int             `json:"total_events"`
+	AnomalyCount   int             `json:"anomaly_count"`
+	ProcessingTime string          `json:"processing_time"`
+	Anomalies      []AnomalyOutput `json:"anomalies"`
+	Status         string          `json:"status"`
+}
+
+type AnomalyOutput struct {
+	ID       string                 `json:"id"`
+	Index    int                    `json:"index"`
+	Metrics  map[string]interface{} `json:"metrics"`
+	Why      string                 `json:"why"`
+	Detected bool                   `json:"detected"`
+}
 
 var detectCmd = &cobra.Command{
 	Use:   "detect [file]",
@@ -53,13 +74,14 @@ Example: driftlock detect logs.json`,
 			defer file.Close()
 		}
 
+		start := time.Now()
 		req, err := http.NewRequest("POST", apiURL+"/detect?algo=zstd", bodyReader)
 		if err != nil {
 			fmt.Printf("❌ Error creating request: %v\n", err)
 			return
 		}
 
-		// Detect content type based on extension
+		// Detect content type
 		ext := filepath.Ext(filePath)
 		contentType := "application/json"
 		if ext == ".ndjson" || ext == ".jsonl" {
@@ -71,10 +93,10 @@ Example: driftlock detect logs.json`,
 		req.Header.Set("X-Api-Key", apiKey)
 
 		client := &http.Client{}
-		fmt.Println("⏳ Analyzing...")
+		fmt.Print("⏳ Analyzing... ")
 		resp, err := client.Do(req)
 		if err != nil {
-			fmt.Printf("❌ Error sending request: %v\n", err)
+			fmt.Printf("\n❌ Error sending request: %v\n", err)
 			return
 		}
 		defer resp.Body.Close()
@@ -82,13 +104,45 @@ Example: driftlock detect logs.json`,
 		respBody, _ := io.ReadAll(resp.Body)
 
 		if resp.StatusCode != http.StatusOK {
-			fmt.Printf("❌ API Error (%d): %s\n", resp.StatusCode, string(respBody))
+			fmt.Printf("\n❌ API Error (%d): %s\n", resp.StatusCode, string(respBody))
 			return
 		}
 
-		fmt.Println("✅ Detection Complete:")
-		fmt.Println(string(respBody))
+		fmt.Printf("Done (%v)\n", time.Since(start).Round(time.Millisecond))
+
+		var result DetectResponse
+		if err := json.Unmarshal(respBody, &result); err != nil {
+			fmt.Println("⚠️  Could not parse response JSON. Raw output:")
+			fmt.Println(string(respBody))
+			return
+		}
+
+		printSummary(result)
 	},
+}
+
+func printSummary(r DetectResponse) {
+	fmt.Println("\n📊 Detection Results")
+	fmt.Println("------------------------------------------------")
+	fmt.Printf("Stream ID:       %s\n", r.StreamID)
+	fmt.Printf("Events:          %d\n", r.TotalEvents)
+	fmt.Printf("Server Time:     %s\n", r.ProcessingTime)
+
+	if r.Status == "calibrating" {
+		fmt.Printf("Status:          🚧 Calibrating (Send more data)\n")
+	} else {
+		fmt.Printf("Status:          ✅ Active\n")
+	}
+
+	if r.AnomalyCount > 0 {
+		fmt.Printf("\n🚨 Anomalies Detected: %d\n", r.AnomalyCount)
+		for _, a := range r.Anomalies {
+			fmt.Printf("   - [Idx %d] %s\n", a.Index, a.Why)
+		}
+	} else {
+		fmt.Printf("\n✅ No anomalies detected. System nominal.\n")
+	}
+	fmt.Println("------------------------------------------------")
 }
 
 func init() {

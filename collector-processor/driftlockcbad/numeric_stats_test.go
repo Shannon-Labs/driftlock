@@ -10,7 +10,7 @@ func TestNumericStats_WelfordAlgorithm(t *testing.T) {
 	stats := NewNumericStats()
 
 	// Known values: 2, 4, 4, 4, 5, 5, 7, 9
-	// Mean = 5, Variance = 4, StdDev = 2
+	// Mean = 5, Sample Variance = 32/7 ≈ 4.5714, Sample StdDev ≈ 2.1381
 	values := []float64{2, 4, 4, 4, 5, 5, 7, 9}
 	for _, v := range values {
 		stats.Update(v)
@@ -25,13 +25,13 @@ func TestNumericStats_WelfordAlgorithm(t *testing.T) {
 	}
 
 	variance := stats.Variance()
-	if math.Abs(variance-4.0) > 0.0001 {
-		t.Errorf("Variance: got %f, want 4.0", variance)
+	if math.Abs(variance-4.571429) > 0.0001 {
+		t.Errorf("Variance: got %f, want 4.571429", variance)
 	}
 
 	stddev := stats.StdDev()
-	if math.Abs(stddev-2.0) > 0.0001 {
-		t.Errorf("StdDev: got %f, want 2.0", stddev)
+	if math.Abs(stddev-2.13809) > 0.0001 {
+		t.Errorf("StdDev: got %f, want 2.13809", stddev)
 	}
 
 	if stats.Min != 2 {

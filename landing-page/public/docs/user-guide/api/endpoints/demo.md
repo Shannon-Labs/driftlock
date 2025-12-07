@@ -44,6 +44,27 @@ Content-Type: application/json
 }
 ```
 
+### Config Override Options
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `baseline_size` | integer | 30 | Number of events in baseline (demo max: 30) |
+| `window_size` | integer | 10 | Size of sliding detection window (demo max: 10) |
+| `ncd_threshold` | float | 0.3 | Minimum NCD to flag anomaly (0-1) |
+| `p_value_threshold` | float | 0.05 | Maximum p-value for significance |
+| `compressor` | string | "zstd" | Compression algorithm (see below) |
+
+### Compression Algorithms
+
+| Algorithm | Speed | Use Case |
+|-----------|-------|----------|
+| `zstd` | Fast | **Default** - Best balance of speed and compression |
+| `lz4` | Fastest | High-throughput streaming (10-20x faster) |
+| `zlab` | Medium | Deterministic zlib-based compression |
+| `gzip` | Slow | Universal compatibility |
+
+**Recommendation**: Use `zstd` (default) for most cases. Use `lz4` for high-volume real-time streaming where speed is critical.
+
 ### Parameters
 
 | Field | Type | Required | Description |

@@ -2,6 +2,52 @@
 
 This document captures the Compression-Based Anomaly Detection (CBAD) principles and mathematical foundations for Driftlock.
 
+## Compression Algorithms
+
+Driftlock supports multiple compression algorithms for anomaly detection. Each algorithm has different performance characteristics:
+
+| Algorithm | Speed | Compression Ratio | Use Case |
+|-----------|-------|-------------------|----------|
+| `zstd` | Fast | High | **Default** - Best balance of speed and compression |
+| `lz4` | Fastest | Medium | High-throughput streaming (10-20x faster than others) |
+| `zlab` | Medium | High | Deterministic zlib-based compression |
+| `gzip` | Slow | High | Universal compatibility |
+| `openzl` | Medium | Highest | Format-aware compression (optional feature) |
+
+### Recommendations
+
+- **Default (`zstd`)**: Use for most workloads. Provides excellent compression with good speed.
+- **High-volume streaming (`lz4`)**: Use when processing >10,000 events/second or when latency is critical.
+- **Compliance (`zlab`)**: Use when deterministic zlib output is required for audit trails.
+- **Legacy systems (`gzip`)**: Use when integrating with systems that only support gzip.
+
+### Benchmark Results (500 events, 100 baseline, 20 window)
+
+| Algorithm | Detection Time | Relative Speed |
+|-----------|---------------|----------------|
+| `lz4` | 262 µs | 1x (fastest) |
+| `zstd` | 2,211 µs | 8.4x slower |
+| `zlab` | 4,799 µs | 18.3x slower |
+| `gzip` | 4,928 µs | 18.8x slower |
+
+### API Usage
+
+Set the compression algorithm via `config_override`:
+
+```json
+{
+  "events": [...],
+  "config_override": {
+    "compressor": "lz4"
+  }
+}
+```
+
+Or set the default via environment variable:
+```bash
+DEFAULT_ALGO=lz4
+```
+
 ## CBAD Core (Phase 1 Implementation)
 - **Compression adapters**: Deterministic wrappers for zlab (zlib), zstd, lz4, and gzip with level presets. OpenZL placeholder ready for pinned-plan integration.
 - **Sliding windows**: Time-aware buffers with baseline/window splits respecting baseline > window > hop guarantees.

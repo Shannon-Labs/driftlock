@@ -8,7 +8,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        background: '#f5f5f0',
+        background: '#ffffff',
         foreground: '#0a0a0a',
         black: '#000000',
         white: '#ffffff',
@@ -49,7 +49,7 @@ export default {
         'sm': '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
         'DEFAULT': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
         // Sharp hard shadow if needed, but default to none/minimal
-        'hard': '4px 4px 0px 0px #000000', 
+        'hard': '4px 4px 0px 0px #000000',
       }
     },
   },

@@ -1,13 +1,13 @@
 //! Shannon entropy calculator for CBAD
-//! 
+//!
 //! Shannon entropy measures the randomness or unpredictability of data.
 //! High entropy indicates random/unstructured data, while low entropy
 //! indicates predictable/structured data.
-//! 
+//!
 //! Entropy Formula: H(X) = -Σ p(x) * log2(p(x))
 //! Where p(x) is the probability of symbol x appearing in the data.
-//! 
-//! For byte data, entropy ranges from 0.0 (completely predictable) 
+//!
+//! For byte data, entropy ranges from 0.0 (completely predictable)
 //! to 8.0 (completely random - all bytes equally likely).
 
 use crate::metrics::Result;
@@ -54,7 +54,7 @@ impl EntropyMetrics {
                 unique_count += 1;
                 let probability = count as f64 / total_bytes as f64;
                 entropy -= probability * probability.log2();
-                
+
                 if count > max_freq {
                     max_freq = count;
                     most_frequent = byte as u8;
@@ -105,7 +105,7 @@ impl EntropyMetrics {
 }
 
 /// Compute Shannon entropy for a byte sequence
-/// 
+///
 /// Returns entropy in bits per byte (0.0 to 8.0)
 pub fn compute_entropy(data: &[u8]) -> f64 {
     let frequencies = calculate_byte_frequencies(data);
@@ -114,34 +114,31 @@ pub fn compute_entropy(data: &[u8]) -> f64 {
 }
 
 /// Calculate byte frequency distribution
-/// 
+///
 /// Returns array where index i contains count of byte value i
 pub fn calculate_byte_frequencies(data: &[u8]) -> [u64; 256] {
     let mut frequencies = [0u64; 256];
-    
+
     for &byte in data {
         frequencies[byte as usize] += 1;
     }
-    
+
     frequencies
 }
 
 /// Compare entropy between baseline and window
-/// 
+///
 /// Returns both individual entropies and the change between them
-pub fn compare_entropy(
-    baseline: &[u8],
-    window: &[u8],
-) -> Result<(f64, f64, f64)> {
+pub fn compare_entropy(baseline: &[u8], window: &[u8]) -> Result<(f64, f64, f64)> {
     let baseline_entropy = compute_entropy(baseline);
     let window_entropy = compute_entropy(window);
-    
+
     let entropy_change = if baseline_entropy > 0.0 {
         (window_entropy - baseline_entropy) / baseline_entropy
     } else {
         0.0
     };
-    
+
     Ok((baseline_entropy, window_entropy, entropy_change))
 }
 
@@ -161,9 +158,12 @@ mod tests {
 
         let entropy = compute_entropy(&uniform_data);
         println!("Uniform distribution entropy: {:.2} bits/byte", entropy);
-        
+
         // Should be very close to 8.0 for uniform distribution
-        assert!((entropy - 8.0).abs() < 0.1, "Uniform distribution should have entropy ≈ 8.0");
+        assert!(
+            (entropy - 8.0).abs() < 0.1,
+            "Uniform distribution should have entropy ≈ 8.0"
+        );
     }
 
     #[test]
@@ -173,18 +173,21 @@ mod tests {
 
         let entropy = compute_entropy(&single_byte);
         println!("Single byte entropy: {:.2} bits/byte", entropy);
-        
+
         // Should be very close to 0.0 for single repeated byte
-        assert!(entropy < 0.01, "Single repeated byte should have entropy ≈ 0.0");
+        assert!(
+            entropy < 0.01,
+            "Single repeated byte should have entropy ≈ 0.0"
+        );
     }
 
     #[test]
     fn test_entropy_empty_data() {
         let empty_data = b"";
-        
+
         let entropy = compute_entropy(empty_data);
         assert_eq!(entropy, 0.0, "Empty data should have entropy 0.0");
-        
+
         let metrics = EntropyMetrics::new([0; 256], 0);
         assert_eq!(metrics.total_bytes, 0);
         assert_eq!(metrics.entropy, 0.0);
@@ -194,12 +197,15 @@ mod tests {
     fn test_entropy_otlp_logs() {
         // Test with realistic OTLP log data
         let otlp_log = r#"{"timestamp":"2025-10-24T00:00:00Z","severity":"INFO","service":"api-gateway","message":"Request completed","attributes":{"method":"GET","path":"/api/users","status":200,"duration_ms":42}}"#;
-        
+
         let entropy = compute_entropy(otlp_log.as_bytes());
         println!("OTLP log entropy: {:.2} bits/byte", entropy);
-        
+
         // OTLP JSON should have moderate entropy due to structured format
-        assert!(entropy > 2.0 && entropy < 6.0, "OTLP JSON should have moderate entropy");
+        assert!(
+            entropy > 2.0 && entropy < 6.0,
+            "OTLP JSON should have moderate entropy"
+        );
     }
 
     #[test]
@@ -210,14 +216,17 @@ mod tests {
         let baseline = baseline_log.as_bytes().repeat(100);
         let window = high_entropy_log.as_bytes().repeat(20);
 
-        let (baseline_entropy, window_entropy, entropy_change) = compare_entropy(&baseline, &window)
-            .expect("compare entropy");
+        let (baseline_entropy, window_entropy, entropy_change) =
+            compare_entropy(&baseline, &window).expect("compare entropy");
 
         println!("Baseline entropy: {:.2} bits/byte", baseline_entropy);
         println!("Window entropy: {:.2} bits/byte", window_entropy);
         println!("Entropy change: {:.1}%", entropy_change * 100.0);
 
         // Anomalous window (with stack trace) should have higher entropy
-        assert!(window_entropy > baseline_entropy, "Anomalous data should have higher entropy");
+        assert!(
+            window_entropy > baseline_entropy,
+            "Anomalous data should have higher entropy"
+        );
     }
 }

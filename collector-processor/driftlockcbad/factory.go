@@ -43,6 +43,7 @@ func createDefaultConfig() component.Config {
 func createLogsProcessor(ctx context.Context, set processor.Settings, cfg component.Config, next consumer.Logs) (processor.Logs, error) {
 	c := cfg.(*Config)
 	p := &cbadProcessor{cfg: *c, logger: set.Logger}
+	p.baselineCap = 512
 
 	// Initialize Redis client for distributed state if enabled
 	if c.Redis.Enabled {
@@ -91,6 +92,7 @@ func createLogsProcessor(ctx context.Context, set processor.Settings, cfg compon
 func createMetricsProcessor(ctx context.Context, set processor.Settings, cfg component.Config, next consumer.Metrics) (processor.Metrics, error) {
 	c := cfg.(*Config)
 	p := &cbadProcessor{cfg: *c, logger: set.Logger}
+	p.baselineCap = 512
 
 	// Initialize Redis client for distributed state if enabled
 	if c.Redis.Enabled {

@@ -1,9 +1,9 @@
 //! Delta bits calculator for CBAD
-//! 
+//!
 //! Delta bits measures the change in bit patterns between baseline and window data.
 //! It calculates the compression difference at the bit level, which can reveal
 //! subtle structural changes that might be missed by other metrics.
-//! 
+//!
 //! The approach: compress each sequence individually, then compress their
 //! concatenation. The difference between the concatenated size and the sum
 //! of individual sizes indicates how different the bit patterns are.
@@ -37,11 +37,11 @@ impl DeltaBitsMetrics {
         combined_compressed: usize,
     ) -> Self {
         let individual_sum = baseline_compressed + window_compressed;
-        
+
         // Calculate delta bits as the difference between combined and sum of individuals
         // This represents how much more space is needed to store both together vs separately
         let delta_bits = (combined_compressed as f64) - (individual_sum as f64);
-        
+
         // Calculate percentage difference relative to the sum of individual sizes
         let percentage_difference = if individual_sum > 0 {
             (delta_bits / individual_sum as f64) * 100.0
@@ -90,10 +90,10 @@ impl DeltaBitsMetrics {
 }
 
 /// Calculate delta bits between baseline and window data
-/// 
+///
 /// The delta bits metric measures how much additional space is needed to compress
-/// two sequences together compared to compressing them independently. 
-/// 
+/// two sequences together compared to compressing them independently.
+///
 /// A low delta indicates that the sequences have similar patterns (and can be
 /// compressed efficiently together), while a high delta indicates different patterns.
 pub fn calculate_delta_bits(
@@ -113,31 +113,34 @@ pub fn calculate_delta_bits_detailed(
 ) -> Result<DeltaBitsMetrics> {
     if baseline.is_empty() || window.is_empty() {
         return Err(crate::metrics::MetricsError::InvalidInput(
-            "Baseline and window data must not be empty".to_string()
+            "Baseline and window data must not be empty".to_string(),
         ));
     }
 
     // Compress baseline individually
-    let baseline_compressed = adapter.compress(baseline)
-        .map_err(|e| crate::metrics::MetricsError::CompressionFailed(
-            format!("Baseline compression failed: {}", e)
-        ))?;
+    let baseline_compressed = adapter.compress(baseline).map_err(|e| {
+        crate::metrics::MetricsError::CompressionFailed(format!(
+            "Baseline compression failed: {}",
+            e
+        ))
+    })?;
 
     // Compress window individually
-    let window_compressed = adapter.compress(window)
-        .map_err(|e| crate::metrics::MetricsError::CompressionFailed(
-            format!("Window compression failed: {}", e)
-        ))?;
+    let window_compressed = adapter.compress(window).map_err(|e| {
+        crate::metrics::MetricsError::CompressionFailed(format!("Window compression failed: {}", e))
+    })?;
 
     // Compress concatenated data
     let mut combined = Vec::with_capacity(baseline.len() + window.len());
     combined.extend_from_slice(baseline);
     combined.extend_from_slice(window);
-    
-    let combined_compressed = adapter.compress(&combined)
-        .map_err(|e| crate::metrics::MetricsError::CompressionFailed(
-            format!("Combined compression failed: {}", e)
-        ))?;
+
+    let combined_compressed = adapter.compress(&combined).map_err(|e| {
+        crate::metrics::MetricsError::CompressionFailed(format!(
+            "Combined compression failed: {}",
+            e
+        ))
+    })?;
 
     Ok(DeltaBitsMetrics::new(
         baseline_compressed.len(),
@@ -147,7 +150,7 @@ pub fn calculate_delta_bits_detailed(
 }
 
 /// Calculate normalized delta bits (relative to data size)
-/// 
+///
 /// This normalizes the delta bits by the total input size to make it comparable
 /// across different sized inputs.
 pub fn calculate_normalized_delta_bits(
@@ -156,7 +159,7 @@ pub fn calculate_normalized_delta_bits(
     adapter: &dyn CompressionAdapter,
 ) -> Result<f64> {
     let metrics = calculate_delta_bits_detailed(baseline, window, adapter)?;
-    
+
     let total_input_size = (baseline.len() + window.len()) as f64;
     if total_input_size > 0.0 {
         Ok(metrics.delta_bits / total_input_size)
@@ -173,12 +176,12 @@ pub fn analyze_delta_bits(
     thresholds: &[f64],
 ) -> Result<Vec<(f64, bool)>> {
     let delta_bits = calculate_delta_bits(baseline, window, adapter)?;
-    
+
     let results: Vec<(f64, bool)> = thresholds
         .iter()
         .map(|&threshold| (threshold, delta_bits.abs() >= threshold))
         .collect();
-    
+
     Ok(results)
 }
 
@@ -203,39 +206,60 @@ mod tests {
     fn test_delta_bits_identical_sequences() {
         let adapter = create_test_adapter();
 
-        let data = b"INFO 2025-10-24T00:00:00Z service=api-gateway msg=request_completed duration_ms=42\n";
-        
+        let data =
+            b"INFO 2025-10-24T00:00:00Z service=api-gateway msg=request_completed duration_ms=42\n";
+
         let delta_bits = calculate_delta_bits(data, data, adapter.as_ref())
             .expect("calculate delta bits for identical sequences");
 
         println!("Delta bits for identical sequences: {:.2}", delta_bits);
-        
+
         // Identical sequences should have relatively small delta (may be positive or negative)
         // depending on the compression algorithm's behavior
-        assert!(delta_bits.abs() < 1000.0, "Identical sequences should have small delta bits");
+        assert!(
+            delta_bits.abs() < 1000.0,
+            "Identical sequences should have small delta bits"
+        );
     }
 
     #[test]
     fn test_delta_bits_similar_sequences() {
         let adapter = create_test_adapter();
 
-        let baseline = b"INFO 2025-10-24T00:00:00Z service=api-gateway msg=request_completed duration_ms=42\n".repeat(50);
-        let window = b"INFO 2025-10-24T00:00:01Z service=api-gateway msg=request_completed duration_ms=43\n".repeat(10);
+        let baseline =
+            b"INFO 2025-10-24T00:00:00Z service=api-gateway msg=request_completed duration_ms=42\n"
+                .repeat(50);
+        let window =
+            b"INFO 2025-10-24T00:00:01Z service=api-gateway msg=request_completed duration_ms=43\n"
+                .repeat(10);
 
-        let metrics = calculate_delta_bits_detailed(
-            baseline.as_slice(),
-            window.as_slice(),
-            adapter.as_ref(),
-        ).expect("calculate delta bits for similar sequences");
+        let metrics =
+            calculate_delta_bits_detailed(baseline.as_slice(), window.as_slice(), adapter.as_ref())
+                .expect("calculate delta bits for similar sequences");
 
-        println!("Delta bits for similar sequences: {:.2}", metrics.delta_bits);
-        println!("Baseline compressed: {} bytes", metrics.baseline_compressed_size);
-        println!("Window compressed: {} bytes", metrics.window_compressed_size);
-        println!("Combined compressed: {} bytes", metrics.combined_compressed_size);
+        println!(
+            "Delta bits for similar sequences: {:.2}",
+            metrics.delta_bits
+        );
+        println!(
+            "Baseline compressed: {} bytes",
+            metrics.baseline_compressed_size
+        );
+        println!(
+            "Window compressed: {} bytes",
+            metrics.window_compressed_size
+        );
+        println!(
+            "Combined compressed: {} bytes",
+            metrics.combined_compressed_size
+        );
         println!("Interpretation: {}", metrics.interpretation());
 
         // Similar sequences should have moderate delta bits
-        assert!(metrics.delta_bits.abs() < 2000.0, "Similar sequences should have moderate delta bits");
+        assert!(
+            metrics.delta_bits.abs() < 2000.0,
+            "Similar sequences should have moderate delta bits"
+        );
     }
 
     #[test]
@@ -243,19 +267,25 @@ mod tests {
         let adapter = create_test_adapter();
 
         // Regular structured logs
-        let baseline = b"INFO 2025-10-24T00:00:00Z service=api-gateway msg=request_completed duration_ms=42\n".repeat(50);
-        
+        let baseline =
+            b"INFO 2025-10-24T00:00:00Z service=api-gateway msg=request_completed duration_ms=42\n"
+                .repeat(50);
+
         // Anomalous unstructured data (stack trace)
         let window = b"ERROR 2025-10-24T00:00:01Z service=api-gateway msg=panic stack_trace=\"thread 'main' panicked at 'index out of bounds', src/main.rs:42:13\"\n".repeat(10);
 
-        let metrics = calculate_delta_bits_detailed(
-            baseline.as_slice(),
-            window.as_slice(),
-            adapter.as_ref(),
-        ).expect("calculate delta bits for dissimilar sequences");
+        let metrics =
+            calculate_delta_bits_detailed(baseline.as_slice(), window.as_slice(), adapter.as_ref())
+                .expect("calculate delta bits for dissimilar sequences");
 
-        println!("Delta bits for dissimilar sequences: {:.2}", metrics.delta_bits);
-        println!("Percentage difference: {:.2}%", metrics.percentage_difference);
+        println!(
+            "Delta bits for dissimilar sequences: {:.2}",
+            metrics.delta_bits
+        );
+        println!(
+            "Percentage difference: {:.2}%",
+            metrics.percentage_difference
+        );
         println!("Interpretation: {}", metrics.interpretation());
 
         // Dissimilar sequences may have large delta bits, but let's check the relative difference
@@ -270,14 +300,15 @@ mod tests {
     fn test_normalized_delta_bits() {
         let adapter = create_test_adapter();
 
-        let baseline = b"INFO 2025-10-24T00:00:00Z service=api-gateway msg=request_completed\n".repeat(10);
+        let baseline =
+            b"INFO 2025-10-24T00:00:00Z service=api-gateway msg=request_completed\n".repeat(10);
         let window = b"ERROR 2025-10-24T00:00:01Z service=api-gateway msg=panic\n".repeat(5);
 
         let normalized = calculate_normalized_delta_bits(&baseline, &window, adapter.as_ref())
             .expect("calculate normalized delta bits");
 
         println!("Normalized delta bits: {:.4}", normalized);
-        
+
         // Should be a reasonable value that's normalized by input size
         assert!(normalized.is_finite(), "Normalized delta should be finite");
     }
@@ -325,11 +356,14 @@ mod tests {
         let metrics_high = DeltaBitsMetrics::new(100, 100, 300); // large delta
 
         println!("Low delta interpretation: {}", metrics_low.interpretation());
-        println!("High delta interpretation: {}", metrics_high.interpretation());
+        println!(
+            "High delta interpretation: {}",
+            metrics_high.interpretation()
+        );
 
         // Interpretations should be different for low vs high delta
         assert_ne!(metrics_low.interpretation(), metrics_high.interpretation());
-        
+
         // High delta should be considered anomaly at reasonable threshold
         assert!(metrics_high.is_anomaly(100.0));
     }

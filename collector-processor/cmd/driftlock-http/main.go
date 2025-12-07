@@ -19,8 +19,8 @@ import (
 
 	"github.com/Shannon-Labs/driftlock/collector-processor/driftlockcbad"
 	"github.com/Shannon-Labs/driftlock/collector-processor/internal/ai"
-	"github.com/google/uuid"
 	"github.com/go-redis/redis/v8"
+	"github.com/google/uuid"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -28,22 +28,22 @@ import (
 )
 
 type config struct {
-	MaxBodyBytes     int64
-	ReadTimeout      time.Duration
-	WriteTimeout     time.Duration
-	IdleTimeout      time.Duration
-	MaxEvents        int
-	DefaultBaseline  int
-	DefaultWindow    int
-	DefaultHop       int
-	DefaultAlgo      string
-	PValueThreshold  float64
-	NCDThreshold     float64
-	PermutationCount int
-	Seed             uint64
-	RateLimitRPS     int
-	QueueCapacity    int
-	PreferOpenZL     bool
+	MaxBodyBytes          int64
+	ReadTimeout           time.Duration
+	WriteTimeout          time.Duration
+	IdleTimeout           time.Duration
+	MaxEvents             int
+	DefaultBaseline       int
+	DefaultWindow         int
+	DefaultHop            int
+	DefaultAlgo           string
+	PValueThreshold       float64
+	NCDThreshold          float64
+	PermutationCount      int
+	Seed                  uint64
+	RateLimitRPS          int
+	QueueCapacity         int
+	PreferOpenZL          bool
 	BaselineRedisAddr     string
 	BaselineRedisPassword string
 	BaselineRedisDB       int
@@ -52,22 +52,22 @@ type config struct {
 
 func loadConfig() config {
 	return config{
-		MaxBodyBytes:     int64(envInt("MAX_BODY_MB", 10)) * 1024 * 1024,
-		ReadTimeout:      time.Duration(envInt("READ_TIMEOUT_SEC", 15)) * time.Second,
-		WriteTimeout:     time.Duration(envInt("WRITE_TIMEOUT_SEC", 30)) * time.Second,
-		IdleTimeout:      time.Duration(envInt("IDLE_TIMEOUT_SEC", 60)) * time.Second,
-		MaxEvents:        envInt("MAX_EVENTS", 1000),
-		DefaultBaseline:  envInt("DEFAULT_BASELINE", 400),
-		DefaultWindow:    envInt("DEFAULT_WINDOW", 50),
-		DefaultHop:       envInt("DEFAULT_HOP", 10),
-		DefaultAlgo:      env("DEFAULT_ALGO", "zstd"),
-		PValueThreshold:  envFloat("PVALUE_THRESHOLD", 0.05),
-		NCDThreshold:     envFloat("NCD_THRESHOLD", 0.3),
-		PermutationCount: envInt("PERMUTATION_COUNT", 1000),
-		Seed:             envInt64("SEED", 42),
-		RateLimitRPS:     envInt("RATE_LIMIT_RPS", 60),
-		QueueCapacity:    envInt("QUEUE_CAPACITY", 512),
-		PreferOpenZL:     envBool("PREFER_OPENZL", false),
+		MaxBodyBytes:          int64(envInt("MAX_BODY_MB", 10)) * 1024 * 1024,
+		ReadTimeout:           time.Duration(envInt("READ_TIMEOUT_SEC", 15)) * time.Second,
+		WriteTimeout:          time.Duration(envInt("WRITE_TIMEOUT_SEC", 30)) * time.Second,
+		IdleTimeout:           time.Duration(envInt("IDLE_TIMEOUT_SEC", 60)) * time.Second,
+		MaxEvents:             envInt("MAX_EVENTS", 1000),
+		DefaultBaseline:       envInt("DEFAULT_BASELINE", 400),
+		DefaultWindow:         envInt("DEFAULT_WINDOW", 50),
+		DefaultHop:            envInt("DEFAULT_HOP", 10),
+		DefaultAlgo:           env("DEFAULT_ALGO", "zstd"),
+		PValueThreshold:       envFloat("PVALUE_THRESHOLD", 0.05),
+		NCDThreshold:          envFloat("NCD_THRESHOLD", 0.3),
+		PermutationCount:      envInt("PERMUTATION_COUNT", 1000),
+		Seed:                  envInt64("SEED", 42),
+		RateLimitRPS:          envInt("RATE_LIMIT_RPS", 60),
+		QueueCapacity:         envInt("QUEUE_CAPACITY", 512),
+		PreferOpenZL:          envBool("PREFER_OPENZL", false),
 		BaselineRedisAddr:     env("BASELINE_REDIS_ADDR", ""),
 		BaselineRedisPassword: env("BASELINE_REDIS_PASSWORD", ""),
 		BaselineRedisDB:       envInt("BASELINE_REDIS_DB", 0),
@@ -110,10 +110,10 @@ type detectResponse struct {
 	Anomalies       []anomalyOutput `json:"anomalies"`
 	RequestID       string          `json:"request_id"`
 	// SHA-139: Cold start calibration fields
-	Status      string           `json:"status"`                // "ready" or "calibrating"
-	Calibration *calibrationInfo `json:"calibration,omitempty"` // Present when status is "calibrating"
-	DetectionReady        bool   `json:"detection_ready"`
-	DetectionEventsNeeded int64  `json:"detection_events_needed,omitempty"`
+	Status                string           `json:"status"`                // "ready" or "calibrating"
+	Calibration           *calibrationInfo `json:"calibration,omitempty"` // Present when status is "calibrating"
+	DetectionReady        bool             `json:"detection_ready"`
+	DetectionEventsNeeded int64            `json:"detection_events_needed,omitempty"`
 	// SHA-140: Drift detection against frozen anchor baseline
 	Drift *driftResult `json:"drift,omitempty"`
 	// SHA-143: Numeric value outliers
@@ -122,14 +122,14 @@ type detectResponse struct {
 
 // calibrationInfo is returned when a stream is still calibrating (SHA-139)
 type calibrationInfo struct {
-	EventsIngested  int64  `json:"events_ingested"`
-	EventsNeeded    int64  `json:"events_needed"`
-	MinBaselineSize int    `json:"min_baseline_size"`
-	ProgressPercent int    `json:"progress_percent"`
-	DetectionReady        bool  `json:"detection_ready"`
-	DetectionEventsNeeded int64 `json:"detection_events_needed"`
-	DetectionMinEvents    int   `json:"detection_min_events"`
-	Message         string `json:"message"`
+	EventsIngested        int64  `json:"events_ingested"`
+	EventsNeeded          int64  `json:"events_needed"`
+	MinBaselineSize       int    `json:"min_baseline_size"`
+	ProgressPercent       int    `json:"progress_percent"`
+	DetectionReady        bool   `json:"detection_ready"`
+	DetectionEventsNeeded int64  `json:"detection_events_needed"`
+	DetectionMinEvents    int    `json:"detection_min_events"`
+	Message               string `json:"message"`
 }
 
 // driftResult represents anchor-based drift detection output (SHA-140)
@@ -426,7 +426,7 @@ func buildHTTPHandler(cfg config, store *store, queue jobQueue, limiter *tenantR
 			cleanupSignupLimiters() // Prevent memory leak from signup rate limiters
 		}
 	}()
-	mux.HandleFunc("/v1/demo/detect", demoDetectHandler(cfg, demoLimiter))
+	mux.HandleFunc("/v1/demo/detect", demoDetectHandler(cfg, demoLimiter, aiClient))
 
 	// Pre-launch waitlist (no auth, rate limited)
 	mux.HandleFunc("/v1/waitlist", waitlistHandler(store, waitlistLimiter))
@@ -476,16 +476,16 @@ func healthHandler(store *store, queue jobQueue) http.HandlerFunc {
 			handlePreflight(w, r)
 			return
 		}
-                resp := healthResponse{
-                        Success:         true,
-                        RequestID:       requestIDFrom(r.Context()),
-                        LibraryStatus:   "healthy",
-                        Version:         "1.0.0",
-                        AvailableAlgos:  []string{"zlab", "zstd", "lz4", "gzip"},
-                        OpenZLAvailable: driftlockcbad.HasOpenZL(),
-                        License:         currentLicenseStatus(time.Now()),
-                        Database:        "connected",
-                }
+		resp := healthResponse{
+			Success:         true,
+			RequestID:       requestIDFrom(r.Context()),
+			LibraryStatus:   "healthy",
+			Version:         "1.0.0",
+			AvailableAlgos:  []string{"zlab", "zstd", "lz4", "gzip"},
+			OpenZLAvailable: driftlockcbad.HasOpenZL(),
+			License:         currentLicenseStatus(time.Now()),
+			Database:        "connected",
+		}
 		if queue != nil {
 			stats := queue.Stats()
 			resp.Queue = queueStatus{
@@ -924,8 +924,18 @@ func detectHandler(w http.ResponseWriter, r *http.Request, cfg config, store *st
 		writeError(w, r, http.StatusBadRequest, fmt.Errorf("events required"))
 		return
 	}
-	if cfg.MaxEvents > 0 && len(payload.Events) > cfg.MaxEvents {
-		writeError(w, r, http.StatusBadRequest, fmt.Errorf("too many events: max %d per request", cfg.MaxEvents))
+	maxEvents := cfg.MaxEvents
+	if maxEvents <= 0 {
+		maxEvents = 10000
+	}
+	if len(payload.Events) > maxEvents {
+		writeError(w, r, http.StatusBadRequest, fmt.Errorf("too many events: max %d per request", maxEvents))
+		return
+	}
+
+	// Validate config overrides up front to prevent resource abuse
+	if err := validateConfigOverride(cfg, payload.ConfigOverride); err != nil {
+		writeError(w, r, http.StatusBadRequest, err)
 		return
 	}
 	for idx, ev := range payload.Events {
@@ -981,22 +991,22 @@ func detectHandler(w http.ResponseWriter, r *http.Request, cfg config, store *st
 		}
 
 		resp := detectResponse{
-			Success:        true,
-			StreamID:       stream.ID.String(),
-			TotalEvents:    eventCount,
-			AnomalyCount:   0,
-			ProcessingTime: "0ms",
-			CompressionAlg: plan.CompressionAlgorithm,
-			Anomalies:      []anomalyOutput{},
-			RequestID:      requestIDFrom(r.Context()),
-			Status:         "calibrating",
-			DetectionReady: detectionReady,
+			Success:               true,
+			StreamID:              stream.ID.String(),
+			TotalEvents:           eventCount,
+			AnomalyCount:          0,
+			ProcessingTime:        "0ms",
+			CompressionAlg:        plan.CompressionAlgorithm,
+			Anomalies:             []anomalyOutput{},
+			RequestID:             requestIDFrom(r.Context()),
+			Status:                "calibrating",
+			DetectionReady:        detectionReady,
 			DetectionEventsNeeded: detectionEventsNeeded,
 			Calibration: &calibrationInfo{
-				EventsIngested:  calibStatus.EventsIngested,
-				EventsNeeded:    calibStatus.EventsNeeded,
-				MinBaselineSize: calibStatus.MinBaselineSize,
-				ProgressPercent: calibStatus.ProgressPercent,
+				EventsIngested:        calibStatus.EventsIngested,
+				EventsNeeded:          calibStatus.EventsNeeded,
+				MinBaselineSize:       calibStatus.MinBaselineSize,
+				ProgressPercent:       calibStatus.ProgressPercent,
 				DetectionReady:        detectionReady,
 				DetectionEventsNeeded: detectionEventsNeeded,
 				DetectionMinEvents:    detectionMinEvents,
@@ -1262,22 +1272,22 @@ func detectHandler(w http.ResponseWriter, r *http.Request, cfg config, store *st
 	}
 
 	resp := detectResponse{
-		Success:         true,
-		BatchID:         batchID,
-		StreamID:        stream.ID.String(),
-		TotalEvents:     len(payload.Events),
-		AnomalyCount:    len(anomalies), // Count of anomalies detected in this batch only
-		ProcessingTime:  time.Since(start).String(),
-		CompressionAlg:  usedAlgo,
-		FallbackFromAlg: fallbackFrom,
-		Anomalies:       anomalies,
-		RequestID:       requestIDFrom(r.Context()),
-		Status:          "ready", // SHA-139: Stream is calibrated and ready
-		DetectionReady:  detectionReady,
+		Success:               true,
+		BatchID:               batchID,
+		StreamID:              stream.ID.String(),
+		TotalEvents:           len(payload.Events),
+		AnomalyCount:          len(anomalies), // Count of anomalies detected in this batch only
+		ProcessingTime:        time.Since(start).String(),
+		CompressionAlg:        usedAlgo,
+		FallbackFromAlg:       fallbackFrom,
+		Anomalies:             anomalies,
+		RequestID:             requestIDFrom(r.Context()),
+		Status:                "ready", // SHA-139: Stream is calibrated and ready
+		DetectionReady:        detectionReady,
 		DetectionEventsNeeded: detectionEventsNeeded,
-		Calibration:    calibrationNote,
-		Drift:           driftFinding,
-		ValueOutliers:   valueOutliers,
+		Calibration:           calibrationNote,
+		Drift:                 driftFinding,
+		ValueOutliers:         valueOutliers,
 	}
 	writeJSON(w, r, http.StatusOK, resp)
 	requestDuration.Observe(time.Since(start).Seconds())
@@ -1358,11 +1368,40 @@ func buildDetectionSettings(cfg config, stream streamRecord, settings streamSett
 	if cfg.PreferOpenZL && driftlockcbad.HasOpenZL() && plan.CompressionAlgorithm != "openzl" && !overrodeCompressor {
 		plan.CompressionAlgorithm = "openzl"
 	}
+
+	// Enforce bounds to prevent pathological workloads
+	maxEvents := cfg.MaxEvents
+	if maxEvents <= 0 {
+		maxEvents = 10000
+	}
+	plan.BaselineSize = clampInt(plan.BaselineSize, 10, maxEvents)
+	plan.WindowSize = clampInt(plan.WindowSize, 1, plan.BaselineSize)
+	plan.HopSize = clampInt(plan.HopSize, 1, plan.WindowSize)
+	if plan.PermutationCount > 10000 {
+		plan.PermutationCount = 10000
+	}
+	if plan.PermutationCount > 300 {
+		plan.PermutationCount = 300
+	}
+
+	// Ensure effective capacity is safe (baseline + 3*window)
+	requiredCapacity := plan.BaselineSize + 3*plan.WindowSize
+	maxCapacity := cfg.MaxEvents
+	if maxCapacity <= 0 {
+		maxCapacity = 20000
+	}
+	if requiredCapacity > maxCapacity {
+		plan.BaselineSize = clampInt(plan.BaselineSize, 10, maxCapacity/2)
+		plan.WindowSize = clampInt(plan.WindowSize, 1, maxCapacity/4)
+		plan.HopSize = clampInt(plan.HopSize, 1, plan.WindowSize)
+	}
+
 	return plan
 }
 
 // cbadTimeout is the maximum time allowed for CBAD FFI operations
 const cbadTimeout = 15 * time.Second
+const maxEventBytes = 1 << 20 // 1MB per event
 
 // ErrCBADPanic is returned when the CBAD detector panics
 var ErrCBADPanic = errors.New("CBAD detector panic recovered")
@@ -1418,6 +1457,10 @@ func primeDetectorWithBaseline(detector *driftlockcbad.Detector, events []json.R
 		if len(bytes.TrimSpace(processed)) == 0 {
 			continue
 		}
+		if len(processed) > maxEventBytes {
+			log.Printf("baseline prime: dropping oversized event (%d bytes)", len(processed))
+			continue
+		}
 		if _, err := detector.AddData(processed); err != nil {
 			log.Printf("baseline prime: add failed: %v", err)
 			return
@@ -1459,6 +1502,12 @@ func runDetection(detector *driftlockcbad.Detector, events []json.RawMessage, to
 			processedEv = json.RawMessage(tokenizer.Tokenize([]byte(ev)))
 		}
 
+		if len(processedEv) > maxEventBytes {
+			log.Printf("dropping oversized event (%d bytes)", len(processedEv))
+			droppedEventsCounter.Inc()
+			continue
+		}
+
 		added, err := detector.AddData(processedEv)
 		if err != nil {
 			return nil, nil, err
@@ -1473,13 +1522,16 @@ func runDetection(detector *driftlockcbad.Detector, events []json.RawMessage, to
 		if !ready {
 			continue
 		}
+		detectStart := time.Now()
 		detected, metrics, err := detector.DetectAnomaly()
 		if err != nil {
 			return nil, nil, err
 		}
+		detectionLatency.Observe(time.Since(detectStart).Seconds())
 		if !detected {
 			continue
 		}
+		anomalyCounter.Inc()
 		explanation := metrics.GetDetailedExplanation()
 		snapshot := append([]byte(nil), ev...)
 		outputs = append(outputs, anomalyOutput{
@@ -1721,6 +1773,16 @@ func originAllowed(origin string, allow []string) bool {
 	return false
 }
 
+func clampInt(v, min, max int) int {
+	if v < min {
+		return min
+	}
+	if v > max {
+		return max
+	}
+	return v
+}
+
 func withCommon(next http.Handler) http.Handler {
 	allowed := parseAllowedOrigins(env("CORS_ALLOW_ORIGINS", "*"))
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -1764,6 +1826,19 @@ var (
 		Help:    "Duration of /v1/detect requests",
 		Buckets: prometheus.DefBuckets,
 	})
+	detectionLatency = prometheus.NewHistogram(prometheus.HistogramOpts{
+		Name:    "driftlock_detection_latency_seconds",
+		Help:    "Latency of CBAD detection runs",
+		Buckets: prometheus.DefBuckets,
+	})
+	anomalyCounter = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "driftlock_anomalies_total",
+		Help: "Total anomalies detected",
+	})
+	droppedEventsCounter = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "driftlock_events_dropped_total",
+		Help: "Total events dropped before detection (e.g., oversized)",
+	})
 	openZLAvailable = prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "driftlock_openzl_available",
 		Help: "Whether OpenZL symbols are present in the CBAD core",
@@ -1775,7 +1850,7 @@ var (
 
 func registerMetrics() {
 	registerMetricsOnce.Do(func() {
-		prometheus.MustRegister(requestCounter, requestDuration, openZLAvailable)
+		prometheus.MustRegister(requestCounter, requestDuration, detectionLatency, anomalyCounter, droppedEventsCounter, openZLAvailable)
 		if driftlockcbad.HasOpenZL() {
 			openZLAvailable.Set(1)
 		} else {

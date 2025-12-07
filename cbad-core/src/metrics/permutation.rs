@@ -1,9 +1,9 @@
 //! Permutation testing framework for CBAD
-//! 
+//!
 //! This module provides statistical significance testing using permutation tests.
 //! It's crucial for determining whether observed anomalies are statistically
 //! significant or just random variations.
-//! 
+//!
 //! The approach: shuffle the data many times, compute the metric on each
 //! permutation, and see how often we get results as extreme as the original.
 //! This gives us a p-value that auditors can trust.
@@ -56,11 +56,17 @@ impl PermutationResult {
     /// Get human-readable interpretation
     pub fn interpretation(&self) -> String {
         let confidence = (self.confidence_level() * 100.0).round();
-        
+
         if self.is_significant {
-            format!("Statistically significant (p={:.3}, {:.0}% confidence)", self.p_value, confidence)
+            format!(
+                "Statistically significant (p={:.3}, {:.0}% confidence)",
+                self.p_value, confidence
+            )
         } else {
-            format!("Not statistically significant (p={:.3}, {:.0}% confidence)", self.p_value, confidence)
+            format!(
+                "Not statistically significant (p={:.3}, {:.0}% confidence)",
+                self.p_value, confidence
+            )
         }
     }
 }
@@ -81,7 +87,7 @@ impl PermutationTester {
     }
 
     /// Test statistical significance of NCD between baseline and window
-    /// 
+    ///
     /// This is the primary method for determining if an anomaly is statistically significant.
     pub fn test_ncd_significance(
         &mut self,
@@ -96,17 +102,12 @@ impl PermutationTester {
         let window_segments = Self::split_into_segments(window);
 
         let baseline_count = baseline_segments.len();
-        let mut combined_segments =
-            Vec::with_capacity(baseline_count + window_segments.len());
+        let mut combined_segments = Vec::with_capacity(baseline_count + window_segments.len());
         combined_segments.extend(baseline_segments);
         combined_segments.extend(window_segments);
 
         if combined_segments.is_empty() {
-            return Ok(PermutationResult::new(
-                observed,
-                0,
-                self.num_permutations,
-            ));
+            return Ok(PermutationResult::new(observed, 0, self.num_permutations));
         }
 
         let mut perm_baseline = Vec::new();
@@ -134,7 +135,11 @@ impl PermutationTester {
             }
         }
 
-        Ok(PermutationResult::new(observed, extreme_count, self.num_permutations))
+        Ok(PermutationResult::new(
+            observed,
+            extreme_count,
+            self.num_permutations,
+        ))
     }
 
     fn split_into_segments(data: &[u8]) -> Vec<Vec<u8>> {
@@ -166,7 +171,7 @@ impl PermutationTester {
         segments
     }
 
-    fn write_segments(segments: &[Vec<u8>] , buffer: &mut Vec<u8>) {
+    fn write_segments(segments: &[Vec<u8>], buffer: &mut Vec<u8>) {
         buffer.clear();
 
         let total_len: usize = segments.iter().map(|s| s.len()).sum();
@@ -180,7 +185,7 @@ impl PermutationTester {
     }
 
     /// Test statistical significance using a custom metric function
-    /// 
+    ///
     /// The metric function should return a value where larger absolute values
     /// indicate more extreme results.
     pub fn test_significance<F>(
@@ -219,11 +224,15 @@ impl PermutationTester {
             }
         }
 
-        Ok(PermutationResult::new(observed, extreme_count, self.num_permutations))
+        Ok(PermutationResult::new(
+            observed,
+            extreme_count,
+            self.num_permutations,
+        ))
     }
 
     /// Test compression ratio significance
-    /// 
+    ///
     /// Specifically tests if the difference in compression ratios is statistically significant.
     pub fn test_compression_ratio_significance(
         &mut self,
@@ -234,7 +243,8 @@ impl PermutationTester {
         use crate::metrics::compression_ratio;
 
         // Compute observed compression ratio difference
-        let baseline_ratio = compression_ratio::calculate_single_compression_ratio(baseline, adapter)?;
+        let baseline_ratio =
+            compression_ratio::calculate_single_compression_ratio(baseline, adapter)?;
         let window_ratio = compression_ratio::calculate_single_compression_ratio(window, adapter)?;
         let observed = window_ratio - baseline_ratio;
 
@@ -254,8 +264,10 @@ impl PermutationTester {
             let (perm_baseline, perm_window) = combined.split_at(baseline.len());
 
             // Compute compression ratios on permuted data
-            let perm_baseline_ratio = compression_ratio::calculate_single_compression_ratio(perm_baseline, adapter)?;
-            let perm_window_ratio = compression_ratio::calculate_single_compression_ratio(perm_window, adapter)?;
+            let perm_baseline_ratio =
+                compression_ratio::calculate_single_compression_ratio(perm_baseline, adapter)?;
+            let perm_window_ratio =
+                compression_ratio::calculate_single_compression_ratio(perm_window, adapter)?;
             let perm_difference = perm_window_ratio - perm_baseline_ratio;
 
             // Count if this permutation is as extreme or more extreme than observed
@@ -264,23 +276,24 @@ impl PermutationTester {
             }
         }
 
-        Ok(PermutationResult::new(observed, extreme_count, self.num_permutations))
+        Ok(PermutationResult::new(
+            observed,
+            extreme_count,
+            self.num_permutations,
+        ))
     }
 }
 
 /// Quick permutation test with default parameters
-/// 
+///
 /// Uses 1000 permutations and a fixed seed for reproducibility.
-pub fn quick_permutation_test<F>(
-    baseline: &[u8],
-    window: &[u8],
-    metric_fn: F,
-) -> PermutationResult
+pub fn quick_permutation_test<F>(baseline: &[u8], window: &[u8], metric_fn: F) -> PermutationResult
 where
     F: Fn(&[u8], &[u8]) -> f64,
 {
     let mut tester = PermutationTester::new(42, 1000);
-    tester.test_significance(baseline, window, metric_fn)
+    tester
+        .test_significance(baseline, window, metric_fn)
         .expect("permutation test should succeed with valid data")
 }
 
@@ -315,17 +328,23 @@ mod tests {
     fn test_permutation_test_deterministic() {
         let mut tester = PermutationTester::new(12345, 100);
 
-        let baseline = b"INFO 2025-10-24T00:00:00Z service=api-gateway msg=request_completed duration_ms=42\n".repeat(50);
+        let baseline =
+            b"INFO 2025-10-24T00:00:00Z service=api-gateway msg=request_completed duration_ms=42\n"
+                .repeat(50);
         let window = b"ERROR 2025-10-24T00:00:01Z service=api-gateway msg=panic\n".repeat(20);
 
         // Run same test twice - should get identical results
-        let result1 = tester.test_significance(&baseline, &window, |b, w| {
-            (b.len() as f64 - w.len() as f64).abs()
-        }).expect("first test");
+        let result1 = tester
+            .test_significance(&baseline, &window, |b, w| {
+                (b.len() as f64 - w.len() as f64).abs()
+            })
+            .expect("first test");
 
-        let result2 = tester.test_significance(&baseline, &window, |b, w| {
-            (b.len() as f64 - w.len() as f64).abs()
-        }).expect("second test");
+        let result2 = tester
+            .test_significance(&baseline, &window, |b, w| {
+                (b.len() as f64 - w.len() as f64).abs()
+            })
+            .expect("second test");
 
         assert_eq!(result1.observed, result2.observed);
         assert_eq!(result1.p_value, result2.p_value);
@@ -338,27 +357,39 @@ mod tests {
         let mut tester = PermutationTester::new(42, 100);
 
         // Similar data - should not be significant
-        let baseline_similar = b"INFO 2025-10-24T00:00:00Z service=api-gateway msg=request_completed duration_ms=42\n".repeat(50);
-        let window_similar = b"INFO 2025-10-24T00:00:01Z service=api-gateway msg=request_completed duration_ms=43\n".repeat(20);
+        let baseline_similar =
+            b"INFO 2025-10-24T00:00:00Z service=api-gateway msg=request_completed duration_ms=42\n"
+                .repeat(50);
+        let window_similar =
+            b"INFO 2025-10-24T00:00:01Z service=api-gateway msg=request_completed duration_ms=43\n"
+                .repeat(20);
 
-        let result_similar = tester.test_ncd_significance(&baseline_similar, &window_similar, adapter.as_ref())
+        let result_similar = tester
+            .test_ncd_significance(&baseline_similar, &window_similar, adapter.as_ref())
             .expect("test similar data");
 
         println!("Similar data: {}", result_similar.interpretation());
 
         // Different data - should be significant
         // Use completely different data types to ensure statistical significance
-        let baseline_different = b"INFO 2025-10-24T00:00:00Z service=api-gateway msg=request_completed duration_ms=42\n".repeat(50);
-        let window_different = b"METRIC 2025-10-24T00:00:01Z service=metrics cpu_usage=95.2 memory_usage=87.3\n".repeat(20);
+        let baseline_different =
+            b"INFO 2025-10-24T00:00:00Z service=api-gateway msg=request_completed duration_ms=42\n"
+                .repeat(50);
+        let window_different =
+            b"METRIC 2025-10-24T00:00:01Z service=metrics cpu_usage=95.2 memory_usage=87.3\n"
+                .repeat(20);
 
-        let result_different = tester.test_ncd_significance(&baseline_different, &window_different, adapter.as_ref())
+        let result_different = tester
+            .test_ncd_significance(&baseline_different, &window_different, adapter.as_ref())
             .expect("test different data");
 
         println!("Different data: {}", result_different.interpretation());
 
         // Different data should be more significant than similar data
-        assert!(result_different.p_value < result_similar.p_value, 
-                "Different data should have lower p-value than similar data");
+        assert!(
+            result_different.p_value < result_similar.p_value,
+            "Different data should have lower p-value than similar data"
+        );
     }
 
     #[test]
@@ -367,16 +398,25 @@ mod tests {
         let mut tester = PermutationTester::new(42, 100);
 
         // Structured vs unstructured data should show significant compression difference
-        let baseline = b"INFO 2025-10-24T00:00:00Z service=api-gateway msg=request_completed duration_ms=42\n".repeat(100);
+        let baseline =
+            b"INFO 2025-10-24T00:00:00Z service=api-gateway msg=request_completed duration_ms=42\n"
+                .repeat(100);
         let window = b"ERROR 2025-10-24T00:00:01Z service=api-gateway msg=panic stack_trace=\"random unstructured data with lots of entropy\"\n".repeat(20);
 
-        let result = tester.test_compression_ratio_significance(&baseline, &window, adapter.as_ref())
+        let result = tester
+            .test_compression_ratio_significance(&baseline, &window, adapter.as_ref())
             .expect("test compression ratio significance");
 
-        println!("Compression ratio significance: {}", result.interpretation());
+        println!(
+            "Compression ratio significance: {}",
+            result.interpretation()
+        );
 
         // Should detect significant difference in compression ratios
-        assert!(result.p_value < 0.1, "Should detect significant compression ratio difference");
+        assert!(
+            result.p_value < 0.1,
+            "Should detect significant compression ratio difference"
+        );
     }
 
     #[test]
@@ -389,18 +429,21 @@ mod tests {
         });
 
         println!("Quick test result: {}", result.interpretation());
-        
+
         assert_eq!(result.num_permutations, 1000);
         assert!(result.p_value >= 0.0 && result.p_value <= 1.0);
     }
 
     #[test]
     fn test_permutation_result_interpretation() {
-        let result_significant = PermutationResult::new(0.8, 5, 100);  // 5% extreme
+        let result_significant = PermutationResult::new(0.8, 5, 100); // 5% extreme
         let result_not_significant = PermutationResult::new(0.1, 50, 100); // 50% extreme
 
         println!("Significant: {}", result_significant.interpretation());
-        println!("Not significant: {}", result_not_significant.interpretation());
+        println!(
+            "Not significant: {}",
+            result_not_significant.interpretation()
+        );
 
         assert!(result_significant.is_significant);
         assert!(!result_not_significant.is_significant);
@@ -410,10 +453,9 @@ mod tests {
     #[test]
     fn test_empty_data_handling() {
         let mut tester = PermutationTester::new(42, 10);
-        
-        let result = tester.test_significance(b"", b"", |b, w| {
-            (b.len() as f64 - w.len() as f64).abs()
-        });
+
+        let result =
+            tester.test_significance(b"", b"", |b, w| (b.len() as f64 - w.len() as f64).abs());
 
         // Should handle empty data gracefully
         assert!(result.is_ok() || result.is_err());

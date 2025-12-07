@@ -24,6 +24,9 @@ pub struct CBADConfig {
     pub max_capacity: usize,
     pub p_value_threshold: f64,
     pub ncd_threshold: f64,
+    pub compression_ratio_drop_threshold: f64,
+    pub entropy_change_threshold: f64,
+    pub composite_threshold: f64,
     pub permutation_count: usize,
     pub seed: u64,
     pub require_statistical_significance: c_int, // 0 = false, 1 = true
@@ -97,12 +100,15 @@ pub unsafe extern "C" fn cbad_detector_create(config_ptr: *const CBADConfig) -> 
         privacy_config: Default::default(),
     };
 
-    // Create anomaly configuration
+    // Create anomaly configuration (new fields derive sensible defaults)
     let anomaly_config = AnomalyConfig {
         window_config,
         compression_algorithm: algo,
         p_value_threshold: config.p_value_threshold,
         ncd_threshold: config.ncd_threshold,
+        compression_ratio_drop_threshold: config.compression_ratio_drop_threshold,
+        entropy_change_threshold: config.entropy_change_threshold,
+        composite_threshold: config.composite_threshold,
         permutation_count: config.permutation_count,
         seed: config.seed,
         require_statistical_significance: config.require_statistical_significance != 0,
@@ -331,6 +337,9 @@ mod tests {
             max_capacity: 100,
             p_value_threshold: 0.05,
             ncd_threshold: 0.3,
+            compression_ratio_drop_threshold: 0.15,
+            entropy_change_threshold: 0.2,
+            composite_threshold: 0.6,
             permutation_count: 100,
             seed: 42,
             require_statistical_significance: 1,
@@ -410,6 +419,9 @@ mod tests {
                 max_capacity: 100,
                 p_value_threshold: 0.05,
                 ncd_threshold: 0.3,
+                compression_ratio_drop_threshold: 0.15,
+                entropy_change_threshold: 0.2,
+                composite_threshold: 0.6,
                 permutation_count: 100,
                 seed: 42,
                 require_statistical_significance: 1,
