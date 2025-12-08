@@ -11,7 +11,7 @@ require (
 	github.com/getsentry/sentry-go v0.40.0
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/google/uuid v1.6.0
-	github.com/gorilla/websocket v1.5.1
+	github.com/gorilla/websocket v1.5.3
 	github.com/jackc/pgx/v5 v5.7.6
 	github.com/klauspost/compress v1.18.0
 	github.com/pressly/goose/v3 v3.26.0
