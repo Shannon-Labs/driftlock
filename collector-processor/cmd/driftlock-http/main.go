@@ -467,6 +467,11 @@ func buildHTTPHandler(cfg config, store *store, queue jobQueue, limiter *tenantR
 	mux.Handle("/v1/me/usage/ai", withFirebaseAuth(store, aiUsageHandler(store)))
 	mux.Handle("/v1/me/ai/config", withFirebaseAuth(store, aiConfigHandler(store)))
 
+	// Adaptive Sliding Scales endpoints
+	mux.Handle("/v1/streams/{id}/profile", withAuth(store, limiter, streamProfileHandler(store)))
+	mux.Handle("/v1/streams/{id}/tuning", withAuth(store, limiter, streamTuningHandler(store)))
+	mux.HandleFunc("/v1/profiles", profilesListHandler())
+
 	return withCommon(withRequestContext(mux))
 }
 
@@ -741,6 +746,10 @@ func anomalyRouter(cfg config, store *store, queue jobQueue) http.Handler {
 		}
 		if len(parts) == 2 && strings.EqualFold(parts[1], "export") {
 			handleSingleExport(w, r, cfg, store, queue, id)
+			return
+		}
+		if len(parts) == 2 && strings.EqualFold(parts[1], "feedback") {
+			anomalyFeedbackHandler(store)(w, r)
 			return
 		}
 		writeError(w, r, http.StatusNotFound, fmt.Errorf("resource not found"))
@@ -1122,15 +1131,16 @@ func detectHandler(w http.ResponseWriter, r *http.Request, cfg config, store *st
 	}
 
 	detector, err := driftlockcbad.NewDetector(driftlockcbad.DetectorConfig{
-		BaselineSize:         plan.BaselineSize,
-		WindowSize:           plan.WindowSize,
-		HopSize:              plan.HopSize,
-		MaxCapacity:          plan.BaselineSize + 4*plan.WindowSize + 1024,
-		PValueThreshold:      plan.PValueThreshold,
-		NCDThreshold:         plan.NCDThreshold,
-		PermutationCount:     plan.PermutationCount,
-		Seed:                 plan.Seed,
-		CompressionAlgorithm: usedAlgo,
+		BaselineSize:                   plan.BaselineSize,
+		WindowSize:                     plan.WindowSize,
+		HopSize:                        plan.HopSize,
+		MaxCapacity:                    plan.BaselineSize + 4*plan.WindowSize + 1024,
+		PValueThreshold:                plan.PValueThreshold,
+		NCDThreshold:                   plan.NCDThreshold,
+		PermutationCount:               plan.PermutationCount,
+		Seed:                           plan.Seed,
+		CompressionAlgorithm:           usedAlgo,
+		RequireStatisticalSignificance: plan.RequireStatisticalSignificance,
 	})
 	if err != nil {
 		writeError(w, r, http.StatusInternalServerError, err)
@@ -1203,7 +1213,7 @@ func detectHandler(w http.ResponseWriter, r *http.Request, cfg config, store *st
 	}()
 
 	// AI Analysis (Async)
-	if router != nil && aiClient != nil {
+	if router != nil && aiClient != nil && aiClient.Provider() != "mock" {
 		go func() {
 			ctx := context.Background()
 			for _, anomaly := range anomalies {
@@ -1340,26 +1350,28 @@ func resolveStream(store *store, tc tenantContext, hint string) (streamRecord, s
 }
 
 type detectionPlan struct {
-	BaselineSize         int
-	WindowSize           int
-	HopSize              int
-	NCDThreshold         float64
-	PValueThreshold      float64
-	PermutationCount     int
-	CompressionAlgorithm string
-	Seed                 uint64
+	BaselineSize                   int
+	WindowSize                     int
+	HopSize                        int
+	NCDThreshold                   float64
+	PValueThreshold                float64
+	PermutationCount               int
+	CompressionAlgorithm           string
+	Seed                           uint64
+	RequireStatisticalSignificance bool
 }
 
 func buildDetectionSettings(cfg config, stream streamRecord, settings streamSettings, override *configOverride) detectionPlan {
 	plan := detectionPlan{
-		BaselineSize:         settings.BaselineSize,
-		WindowSize:           settings.WindowSize,
-		HopSize:              settings.HopSize,
-		NCDThreshold:         settings.NCDThreshold,
-		PValueThreshold:      settings.PValueThreshold,
-		PermutationCount:     settings.PermutationCount,
-		CompressionAlgorithm: strings.ToLower(settings.Compressor),
-		Seed:                 uint64(stream.Seed),
+		BaselineSize:                   settings.BaselineSize,
+		WindowSize:                     settings.WindowSize,
+		HopSize:                        settings.HopSize,
+		NCDThreshold:                   settings.NCDThreshold,
+		PValueThreshold:                settings.PValueThreshold,
+		PermutationCount:               settings.PermutationCount,
+		CompressionAlgorithm:           strings.ToLower(settings.Compressor),
+		Seed:                           uint64(stream.Seed),
+		RequireStatisticalSignificance: true,
 	}
 	if plan.Seed == 0 {
 		plan.Seed = cfg.Seed
@@ -1368,6 +1380,14 @@ func buildDetectionSettings(cfg config, stream streamRecord, settings streamSett
 		plan.CompressionAlgorithm = strings.ToLower(cfg.DefaultAlgo)
 	}
 
+	// Apply detection profile settings (profiles override streamSettings thresholds)
+	profile := DetectionProfile(settings.DetectionProfile)
+	if profile == "" {
+		profile = ProfileBalanced
+	}
+	applyProfile(&plan, profile, settings.TunedNCDThreshold, settings.TunedPValueThreshold)
+
+	// Per-request overrides have highest priority
 	overrodeCompressor := false
 	if override != nil {
 		if override.BaselineSize != nil {
@@ -1430,6 +1450,7 @@ func buildDetectionSettings(cfg config, stream streamRecord, settings streamSett
 // cbadTimeout is the maximum time allowed for CBAD FFI operations
 // Configurable via CBAD_TIMEOUT_SEC environment variable (default: 30s)
 var cbadTimeout = time.Duration(envInt("CBAD_TIMEOUT_SEC", 30)) * time.Second
+
 const maxEventBytes = 1 << 20 // 1MB per event
 
 // ErrCBADPanic is returned when the CBAD detector panics

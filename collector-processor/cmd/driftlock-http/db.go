@@ -968,6 +968,16 @@ type streamSettings struct {
 	// SHA-143: Numeric outlier detection
 	NumericOutlierEnabled bool    `json:"numeric_outlier_enabled"`
 	NumericKSigma         float64 `json:"numeric_k_sigma"`
+	// Adaptive Sliding Scales: Detection profiles and auto-tuning
+	DetectionProfile      string   `json:"detection_profile"`
+	AutoTuneEnabled       bool     `json:"auto_tune_enabled"`
+	AdaptiveWindowEnabled bool     `json:"adaptive_window_enabled"`
+	TunedNCDThreshold     *float64 `json:"tuned_ncd_threshold,omitempty"`
+	TunedPValueThreshold  *float64 `json:"tuned_pvalue_threshold,omitempty"`
+	AdaptiveBaselineMin   int      `json:"adaptive_baseline_min"`
+	AdaptiveBaselineMax   int      `json:"adaptive_baseline_max"`
+	AdaptiveWindowMin     int      `json:"adaptive_window_min"`
+	AdaptiveWindowMax     int      `json:"adaptive_window_max"`
 }
 
 func (s *streamSettings) applyDefaults() {
@@ -997,6 +1007,23 @@ func (s *streamSettings) applyDefaults() {
 	// SHA-143: Numeric outlier defaults
 	if s.NumericKSigma == 0 {
 		s.NumericKSigma = 3.0
+	}
+	// Adaptive Sliding Scales defaults
+	if s.DetectionProfile == "" {
+		s.DetectionProfile = "balanced"
+	}
+	// AutoTuneEnabled and AdaptiveWindowEnabled default to false (zero value)
+	if s.AdaptiveBaselineMin <= 0 {
+		s.AdaptiveBaselineMin = 100
+	}
+	if s.AdaptiveBaselineMax <= 0 {
+		s.AdaptiveBaselineMax = 2000
+	}
+	if s.AdaptiveWindowMin <= 0 {
+		s.AdaptiveWindowMin = 10
+	}
+	if s.AdaptiveWindowMax <= 0 {
+		s.AdaptiveWindowMax = 200
 	}
 }
 
