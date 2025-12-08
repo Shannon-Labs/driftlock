@@ -32,7 +32,9 @@ const VALID_SENTINEL: usize = 0xCAFEBABE_CAFEBABE;
 const FREED_SENTINEL: usize = 0xDEADBEEF_DEADBEEF;
 
 /// Wrapper around AnomalyDetector that adds safety validation
-struct DetectorWrapper {
+// Public visibility is required because the opaque handle type is exported via FFI,
+// but fields remain private to keep the wrapper opaque to callers.
+pub struct DetectorWrapper {
     sentinel: usize,
     detector: AnomalyDetector,
 }
