@@ -13,7 +13,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.1
 	github.com/jackc/pgx/v5 v5.7.6
-	github.com/klauspost/compress v1.18.0
+	github.com/klauspost/compress v1.18.2
 	github.com/pressly/goose/v3 v3.26.0
 	github.com/prometheus/client_golang v1.20.5
 	github.com/sendgrid/sendgrid-go v3.16.1+incompatible
