@@ -305,7 +305,7 @@ paths:
         against a baseline window using Normalized Compression Distance (NCD).
         Statistical significance is determined via permutation testing.
 
-        **Max events**: 1000 per request (50 for demo endpoint)
+        **Max events**: 10,000 per request (configurable via MaxEvents; demo endpoint capped at 50)
       operationId: detect
       security:
         - ApiKeyAuth: []
@@ -888,6 +888,140 @@ paths:
         '400':
           description: Invalid signature
 
+  /v1/anomalies/{id}/feedback:
+    post:
+      tags: [Anomalies]
+      summary: Record anomaly feedback
+      description: |
+        Submit feedback for a detected anomaly to improve auto-tuning.
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Anomaly ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FeedbackRequest'
+      responses:
+        '200':
+          description: Feedback recorded
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /v1/streams/{id}/profile:
+    get:
+      tags: [Streams]
+      summary: Get stream detection profile
+      description: Requires ApiKeyAuth (X-Api-Key).
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Stream ID
+      responses:
+        '200':
+          description: Current profile and thresholds
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StreamProfileResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [Streams]
+      summary: Update detection profile
+      description: Requires ApiKeyAuth (X-Api-Key).
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                profile:
+                  type: string
+                  enum: [sensitive, balanced, strict, custom]
+                auto_tune_enabled:
+                  type: boolean
+                adaptive_window_enabled:
+                  type: boolean
+      responses:
+        '200':
+          description: Profile updated
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /v1/streams/{id}/tuning:
+    get:
+      tags: [Streams]
+      summary: Get tuning history and feedback stats
+      description: Requires ApiKeyAuth (X-Api-Key).
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Tuning settings and history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StreamTuningResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /v1/profiles:
+    get:
+      tags: [Streams]
+      summary: List detection profiles
+      responses:
+        '200':
+          description: Available profiles
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  profiles:
+                    type: object
+                    additionalProperties:
+                      $ref: '#/components/schemas/ProfileSummary'
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # COMPONENTS
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1385,3 +1519,94 @@ components:
         current_period_end:
           type: string
           format: date-time
+
+    FeedbackRequest:
+      type: object
+      required:
+        - feedback_type
+      properties:
+        feedback_type:
+          type: string
+          enum: [false_positive, confirmed, dismissed]
+        reason:
+          type: string
+          description: Optional user-supplied reason
+
+    ProfileSummary:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        ncd_threshold:
+          type: number
+        pvalue_threshold:
+          type: number
+        baseline_size:
+          type: integer
+        window_size:
+          type: integer
+
+    StreamProfileResponse:
+      type: object
+      properties:
+        profile:
+          type: string
+          enum: [sensitive, balanced, strict, custom]
+        auto_tune_enabled:
+          type: boolean
+        adaptive_window_enabled:
+          type: boolean
+        current_thresholds:
+          type: object
+          properties:
+            ncd_threshold:
+              type: number
+            pvalue_threshold:
+              type: number
+            baseline_size:
+              type: integer
+            window_size:
+              type: integer
+        profile_descriptions:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/ProfileSummary'
+
+    StreamTuningResponse:
+      type: object
+      properties:
+        current_settings:
+          $ref: '#/components/schemas/StreamProfileResponse'
+        tune_history:
+          type: array
+          items:
+            type: object
+            properties:
+              tune_type:
+                type: string
+              old_value:
+                type: number
+              new_value:
+                type: number
+              reason:
+                type: string
+              confidence:
+                type: number
+              created_at:
+                type: string
+                format: date-time
+        feedback_stats:
+          type: object
+          properties:
+            total_feedback:
+              type: integer
+            false_positives:
+              type: integer
+            confirmed:
+              type: integer
+            dismissed:
+              type: integer
+            false_positive_rate:
+              type: number

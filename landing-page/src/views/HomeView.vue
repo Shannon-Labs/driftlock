@@ -29,27 +29,25 @@
                             <a href="#signup" class="brutalist-button-primary text-lg px-8 py-4">
                                 Join Waitlist
                             </a>
-                            <div class="hidden sm:flex items-center gap-2 text-sm font-mono text-gray-500">
-                                <span>or</span>
-                                <a href="#how-it-works" class="hover:text-black hover:underline underline-offset-4 decoration-1">Learn how it works</a>
-                            </div>
-                        </div>
-
-                        <!-- CLI Command (Factory Style) -->
-                        <div class="mt-12 w-full max-w-md">
-                            <div class="text-xs font-bold uppercase tracking-widest mb-2 text-gray-500">Install via CLI</div>
-                            <div class="bg-gray-100 border border-black p-3 font-mono text-sm flex items-center justify-between group cursor-pointer hover:bg-gray-200 transition-colors"
-                                 @click="copyCommand">
-                                <code class="truncate">$ curl -sL driftlock.net/install | sh</code>
-                                <span class="text-xs uppercase font-bold opacity-0 group-hover:opacity-100 transition-opacity">Copy</span>
-                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Right: Terminal Demo (Replit Style Interactivity) -->
-                <div class="flex flex-col justify-center lg:pl-12 h-full max-h-[600px] lg:max-h-none lg:py-24">
-                    <TerminalDemo />
+                <!-- Right: Clean geometric visual -->
+                <div class="hidden lg:flex flex-col justify-center lg:pl-12 h-full">
+                    <div class="relative w-full max-w-md aspect-square">
+                        <!-- Minimalist geometric pattern -->
+                        <div class="absolute inset-0 border-2 border-black"></div>
+                        <div class="absolute inset-4 border border-black"></div>
+                        <div class="absolute inset-8 border border-black/50"></div>
+                        <div class="absolute inset-12 border border-black/30"></div>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div class="text-center">
+                                <div class="text-6xl font-mono font-bold tracking-tighter">O(1)</div>
+                                <div class="text-xs font-mono uppercase tracking-widest mt-2 text-gray-500">Complexity</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -72,7 +70,11 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-0 border-t border-l border-black">
                     <!-- Feature 1 -->
                     <div class="border-b border-r border-black p-8 hover:bg-gray-50 transition-colors group">
-                        <div class="text-4xl mb-6 group-hover:-translate-y-1 transition-transform">⚡️</div>
+                        <div class="mb-6 group-hover:-translate-y-1 transition-transform">
+                            <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
                         <h3 class="text-xl font-bold font-sans uppercase mb-4">0ms Training Time</h3>
                         <p class="font-serif text-gray-600 leading-relaxed">
                             No learning period. No labeled datasets. Driftlock uses entropy-based compression to detect anomalies from the very first event.
@@ -81,7 +83,12 @@
 
                     <!-- Feature 2 -->
                     <div class="border-b border-r border-black p-8 hover:bg-gray-50 transition-colors group">
-                        <div class="text-4xl mb-6 group-hover:-translate-y-1 transition-transform">🔍</div>
+                        <div class="mb-6 group-hover:-translate-y-1 transition-transform">
+                            <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <circle cx="11" cy="11" r="8"/>
+                                <path d="M21 21l-4.35-4.35" stroke-linecap="round"/>
+                            </svg>
+                        </div>
                         <h3 class="text-xl font-bold font-sans uppercase mb-4">White-Box Proofs</h3>
                         <p class="font-serif text-gray-600 leading-relaxed">
                             Every alert comes with a mathematical proof of *why* it is anomalous. Perfect for compliance workflows (DORA, NIS2, AI Act).
@@ -90,12 +97,25 @@
 
                     <!-- Feature 3 -->
                     <div class="border-b border-r border-black p-8 hover:bg-gray-50 transition-colors group">
-                        <div class="text-4xl mb-6 group-hover:-translate-y-1 transition-transform">🌐</div>
+                        <div class="mb-6 group-hover:-translate-y-1 transition-transform">
+                            <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                            </svg>
+                        </div>
                         <h3 class="text-xl font-bold font-sans uppercase mb-4">OpenTelemetry Native</h3>
                         <p class="font-serif text-gray-600 leading-relaxed">
                             Drop-in replacement for your current collector. Compatible with Prometheus, Datadog, and Honeycomb formats.
                         </p>
                     </div>
+                </div>
+
+                <!-- Adaptive Detection Highlight -->
+                <div class="mt-8 flex flex-wrap items-center gap-4 text-sm font-mono text-gray-500">
+                    <span class="font-bold uppercase">Also included:</span>
+                    <span class="border border-gray-300 px-3 py-1">Adaptive Profiles</span>
+                    <span class="border border-gray-300 px-3 py-1">Auto-Tuning</span>
+                    <span class="border border-gray-300 px-3 py-1">Feedback Learning</span>
                 </div>
             </div>
         </section>
@@ -258,17 +278,11 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import WaitlistForm from '../components/cta/WaitlistForm.vue'
-import TerminalDemo from '../components/hero/TerminalDemo.vue'
 import { useAuthStore } from '../stores/auth'
 
 const authStore = useAuthStore()
 const checkoutLoading = ref<string | null>(null)
 const checkoutError = ref<string | null>(null)
-
-const copyCommand = () => {
-    navigator.clipboard.writeText('curl -sL driftlock.net/install | sh')
-    // In a real app, show a toast here
-}
 
 // Handle pricing tier checkout
 const handleCheckout = async (plan: string) => {

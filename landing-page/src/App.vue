@@ -20,14 +20,16 @@
           <!-- Desktop Menu -->
           <div class="hidden md:flex items-center space-x-8">
             <router-link to="/docs" class="text-sm font-bold font-sans uppercase tracking-widest hover:underline underline-offset-4 decoration-1">Docs</router-link>
-            <a href="#problem" class="text-sm font-bold font-sans uppercase tracking-widest hover:underline underline-offset-4 decoration-1">Problem</a>
-            <a href="#showcase" class="text-sm font-bold font-sans uppercase tracking-widest hover:underline underline-offset-4 decoration-1">Solution</a>
-            <a href="#api-demo" class="text-sm font-bold font-sans uppercase tracking-widest hover:underline underline-offset-4 decoration-1">How It Works</a>
-            <a href="#playground" class="text-sm font-bold font-sans uppercase tracking-widest hover:underline underline-offset-4 decoration-1">Playground</a>
-            
-            <a href="#contact" class="brutalist-button">
-              Partner
-            </a>
+            <a href="/#features" class="text-sm font-bold font-sans uppercase tracking-widest hover:underline underline-offset-4 decoration-1">Features</a>
+            <a href="/#pricing" class="text-sm font-bold font-sans uppercase tracking-widest hover:underline underline-offset-4 decoration-1">Pricing</a>
+            <router-link to="/playground" class="text-sm font-bold font-sans uppercase tracking-widest hover:underline underline-offset-4 decoration-1">Playground</router-link>
+
+            <router-link v-if="!authStore.isAuthenticated" to="/login" class="brutalist-button">
+              Sign In
+            </router-link>
+            <router-link v-else to="/dashboard" class="brutalist-button">
+              Dashboard
+            </router-link>
           </div>
 
           <!-- Mobile Menu Button -->
@@ -47,11 +49,11 @@
       <div v-if="isMobileMenuOpen" class="md:hidden border-t border-black bg-background">
         <div class="container-padding mx-auto py-4 flex flex-col space-y-4">
           <router-link to="/docs" class="text-lg font-bold font-sans uppercase border-b border-gray-200 py-2" @click="isMobileMenuOpen = false">Docs</router-link>
-          <a href="#problem" class="text-lg font-bold font-sans uppercase border-b border-gray-200 py-2" @click="isMobileMenuOpen = false">Problem</a>
-          <a href="#showcase" class="text-lg font-bold font-sans uppercase border-b border-gray-200 py-2" @click="isMobileMenuOpen = false">Solution</a>
-          <a href="#api-demo" class="text-lg font-bold font-sans uppercase border-b border-gray-200 py-2" @click="isMobileMenuOpen = false">How It Works</a>
-          <a href="#playground" class="text-lg font-bold font-sans uppercase border-b border-gray-200 py-2" @click="isMobileMenuOpen = false">Playground</a>
-          <a href="#contact" class="brutalist-button text-center w-full" @click="isMobileMenuOpen = false">Become a Partner</a>
+          <a href="/#features" class="text-lg font-bold font-sans uppercase border-b border-gray-200 py-2" @click="isMobileMenuOpen = false">Features</a>
+          <a href="/#pricing" class="text-lg font-bold font-sans uppercase border-b border-gray-200 py-2" @click="isMobileMenuOpen = false">Pricing</a>
+          <router-link to="/playground" class="text-lg font-bold font-sans uppercase border-b border-gray-200 py-2" @click="isMobileMenuOpen = false">Playground</router-link>
+          <router-link v-if="!authStore.isAuthenticated" to="/login" class="brutalist-button text-center w-full" @click="isMobileMenuOpen = false">Sign In</router-link>
+          <router-link v-else to="/dashboard" class="brutalist-button text-center w-full" @click="isMobileMenuOpen = false">Dashboard</router-link>
         </div>
       </div>
     </nav>
@@ -105,15 +107,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref } from 'vue'
 import { Menu } from 'lucide-vue-next'
-import { useRoute } from 'vue-router'
+import { useAuthStore } from './stores/auth'
 
-const route = useRoute()
+const authStore = useAuthStore()
 const isDarkMode = ref(false) // Force light mode for brutalist style initially
 const isMobileMenuOpen = ref(false)
-
-// Removed scroll handler as sticky nav is removed
 </script>
 
 <style scoped>

@@ -245,15 +245,16 @@ func demoDetectHandler(cfg config, limiter *demoRateLimiter, aiClient ai.AIClien
 		}
 
 		detector, err := driftlockcbad.NewDetector(driftlockcbad.DetectorConfig{
-			BaselineSize:         plan.BaselineSize,
-			WindowSize:           plan.WindowSize,
-			HopSize:              plan.HopSize,
-			MaxCapacity:          plan.BaselineSize + 4*plan.WindowSize + 1024,
-			PValueThreshold:      plan.PValueThreshold,
-			NCDThreshold:         plan.NCDThreshold,
-			PermutationCount:     plan.PermutationCount,
-			Seed:                 plan.Seed,
-			CompressionAlgorithm: usedAlgo,
+			BaselineSize:                   plan.BaselineSize,
+			WindowSize:                     plan.WindowSize,
+			HopSize:                        plan.HopSize,
+			MaxCapacity:                    plan.BaselineSize + 4*plan.WindowSize + 1024,
+			PValueThreshold:                plan.PValueThreshold,
+			NCDThreshold:                   plan.NCDThreshold,
+			PermutationCount:               plan.PermutationCount,
+			Seed:                           plan.Seed,
+			CompressionAlgorithm:           usedAlgo,
+			RequireStatisticalSignificance: plan.RequireStatisticalSignificance,
 		})
 		if err != nil {
 			writeError(w, r, http.StatusInternalServerError, err)
@@ -302,7 +303,7 @@ func demoDetectHandler(cfg config, limiter *demoRateLimiter, aiClient ai.AIClien
 		}
 
 		// AI Analysis: Generate explanation for detected anomalies (synchronous for demo)
-		if aiClient != nil && len(anomalies) > 0 {
+		if aiClient != nil && aiClient.Provider() != "mock" && len(anomalies) > 0 {
 			aiAnalysis := generateDemoAIAnalysis(r.Context(), aiClient, anomalies, payload.Events)
 			if aiAnalysis != nil {
 				resp.AIAnalysis = aiAnalysis
@@ -364,7 +365,7 @@ func generateDemoAIAnalysis(ctx context.Context, aiClient ai.AIClient, anomalies
 
 	return &demoAIAnalysis{
 		Provider:    aiClient.Provider(),
-		Model:       "ministral-3:3b", // TODO: get actual model from client
+		Model:       aiClient.Model(),
 		Explanation: strings.TrimSpace(explanation),
 		Latency:     aiLatency.String(),
 	}
@@ -372,14 +373,15 @@ func generateDemoAIAnalysis(ctx context.Context, aiClient ai.AIClient, anomalies
 
 func buildDemoDetectionSettings(cfg config, override *configOverride) detectionPlan {
 	plan := detectionPlan{
-		BaselineSize:         demoBaselineSize,
-		WindowSize:           demoWindowSize,
-		HopSize:              demoHopSize,
-		NCDThreshold:         cfg.NCDThreshold,
-		PValueThreshold:      cfg.PValueThreshold,
-		PermutationCount:     cfg.PermutationCount,
-		CompressionAlgorithm: strings.ToLower(cfg.DefaultAlgo),
-		Seed:                 cfg.Seed,
+		BaselineSize:                   demoBaselineSize,
+		WindowSize:                     demoWindowSize,
+		HopSize:                        demoHopSize,
+		NCDThreshold:                   cfg.NCDThreshold,
+		PValueThreshold:                cfg.PValueThreshold,
+		PermutationCount:               cfg.PermutationCount,
+		CompressionAlgorithm:           strings.ToLower(cfg.DefaultAlgo),
+		Seed:                           cfg.Seed,
+		RequireStatisticalSignificance: true,
 	}
 
 	if override != nil {

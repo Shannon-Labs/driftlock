@@ -15,8 +15,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/go-redis/redis/v8"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -283,13 +283,15 @@ func (s *store) createTenantWithKey(ctx context.Context, params tenantCreatePara
 	tenantID := uuid.New()
 	streamID := uuid.New()
 	cfg := streamSettings{
-		BaselineSize:     params.DefaultBaseline,
-		WindowSize:       params.DefaultWindow,
-		HopSize:          params.DefaultHop,
-		NCDThreshold:     params.NCDThreshold,
-		PValueThreshold:  params.PValueThreshold,
-		PermutationCount: params.PermutationCount,
-		Compressor:       params.DefaultCompressor,
+		BaselineSize:          params.DefaultBaseline,
+		WindowSize:            params.DefaultWindow,
+		HopSize:               params.DefaultHop,
+		NCDThreshold:          params.NCDThreshold,
+		PValueThreshold:       params.PValueThreshold,
+		PermutationCount:      params.PermutationCount,
+		Compressor:            params.DefaultCompressor,
+		AutoTuneEnabled:       true, // Enable adaptive learning by default
+		AdaptiveWindowEnabled: true, // Enable adaptive windowing by default
 	}
 
 	key, keyID, err := generateAPIKey()
@@ -319,9 +321,9 @@ func (s *store) createTenantWithKey(ctx context.Context, params tenantCreatePara
 		return nil, err
 	}
 
-	_, err = tx.Exec(ctx, `INSERT INTO streams (id, tenant_id, slug, type, description, seed, compressor, queue_mode, retention_days)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
-		streamID, tenantID, streamSlug, params.StreamType, params.StreamDescription, params.Seed, params.DefaultCompressor, "memory", params.StreamRetentionDays)
+	_, err = tx.Exec(ctx, `INSERT INTO streams (id, tenant_id, slug, type, description, seed, compressor, queue_mode, retention_days, auto_tune_enabled, adaptive_window_enabled)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
+		streamID, tenantID, streamSlug, params.StreamType, params.StreamDescription, params.Seed, params.DefaultCompressor, "memory", params.StreamRetentionDays, true, true)
 	if err != nil {
 		return nil, err
 	}
@@ -380,13 +382,15 @@ func (s *store) createPendingTenant(ctx context.Context, params tenantCreatePara
 	tenantID := uuid.New()
 	streamID := uuid.New()
 	cfg := streamSettings{
-		BaselineSize:     params.DefaultBaseline,
-		WindowSize:       params.DefaultWindow,
-		HopSize:          params.DefaultHop,
-		NCDThreshold:     params.NCDThreshold,
-		PValueThreshold:  params.PValueThreshold,
-		PermutationCount: params.PermutationCount,
-		Compressor:       params.DefaultCompressor,
+		BaselineSize:          params.DefaultBaseline,
+		WindowSize:            params.DefaultWindow,
+		HopSize:               params.DefaultHop,
+		NCDThreshold:          params.NCDThreshold,
+		PValueThreshold:       params.PValueThreshold,
+		PermutationCount:      params.PermutationCount,
+		Compressor:            params.DefaultCompressor,
+		AutoTuneEnabled:       true, // Enable adaptive learning by default
+		AdaptiveWindowEnabled: true, // Enable adaptive windowing by default
 	}
 
 	tx, err := s.pool.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.Serializable})
@@ -412,9 +416,9 @@ func (s *store) createPendingTenant(ctx context.Context, params tenantCreatePara
 		return nil, err
 	}
 
-	_, err = tx.Exec(ctx, `INSERT INTO streams (id, tenant_id, slug, type, description, seed, compressor, queue_mode, retention_days)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
-		streamID, tenantID, streamSlug, params.StreamType, params.StreamDescription, params.Seed, params.DefaultCompressor, "memory", params.StreamRetentionDays)
+	_, err = tx.Exec(ctx, `INSERT INTO streams (id, tenant_id, slug, type, description, seed, compressor, queue_mode, retention_days, auto_tune_enabled, adaptive_window_enabled)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
+		streamID, tenantID, streamSlug, params.StreamType, params.StreamDescription, params.Seed, params.DefaultCompressor, "memory", params.StreamRetentionDays, true, true)
 	if err != nil {
 		return nil, err
 	}
@@ -1012,7 +1016,8 @@ func (s *streamSettings) applyDefaults() {
 	if s.DetectionProfile == "" {
 		s.DetectionProfile = "balanced"
 	}
-	// AutoTuneEnabled and AdaptiveWindowEnabled default to false (zero value)
+	// AutoTuneEnabled and AdaptiveWindowEnabled are set to true in stream creation
+	// (see createTenantWithKey and createPendingTenant)
 	if s.AdaptiveBaselineMin <= 0 {
 		s.AdaptiveBaselineMin = 100
 	}

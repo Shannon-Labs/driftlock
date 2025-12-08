@@ -20,10 +20,10 @@ type OpenAIClient struct {
 
 // OpenAI API request/response structures
 type chatCompletionRequest struct {
-	Model       string          `json:"model"`
-	Messages    []chatMessage   `json:"messages"`
-	MaxTokens   int             `json:"max_tokens,omitempty"`
-	Temperature float64         `json:"temperature,omitempty"`
+	Model       string        `json:"model"`
+	Messages    []chatMessage `json:"messages"`
+	MaxTokens   int           `json:"max_tokens,omitempty"`
+	Temperature float64       `json:"temperature,omitempty"`
 }
 
 type chatMessage struct {
@@ -89,6 +89,11 @@ func (c *OpenAIClient) Provider() string {
 		return "openai"
 	}
 	return "openai-compatible"
+}
+
+// Model returns the default model name
+func (c *OpenAIClient) Model() string {
+	return c.defaultModel
 }
 
 // AnalyzeAnomaly analyzes an anomaly using the OpenAI-compatible API

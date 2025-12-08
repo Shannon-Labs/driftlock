@@ -158,3 +158,8 @@ func (v *VertexClaudeClient) AnalyzeAnomaly(ctx context.Context, model, prompt s
 func (v *VertexClaudeClient) Provider() string {
 	return "vertex-claude"
 }
+
+// Model returns the default model name
+func (v *VertexClaudeClient) Model() string {
+	return v.model
+}

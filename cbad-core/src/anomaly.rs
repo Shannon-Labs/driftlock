@@ -212,6 +212,11 @@ impl AnomalyDetector {
         let mut result_metrics = metrics;
         result_metrics.is_anomaly = is_anomaly;
         result_metrics.generate_explanation();
+        result_metrics.apply_recommendations(
+            self.config.ncd_threshold,
+            self.config.window_config.window_size,
+            self.config.window_config.baseline_size,
+        );
 
         // Advance the sliding window after an analysis cycle
         self.window.advance_after_analysis()?;

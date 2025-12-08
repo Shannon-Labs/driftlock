@@ -518,6 +518,75 @@
             </div>
           </div>
 
+          <!-- Detection Settings -->
+          <div class="bg-white border-2 border-black lg:col-span-3 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+            <div class="px-6 py-5">
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <!-- Learning Status Indicator -->
+                <div class="flex items-center gap-3">
+                  <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                  <div>
+                    <span class="text-sm font-bold uppercase tracking-wide text-black">Auto-Tuning Active</span>
+                    <span v-if="feedbackCount > 0" class="ml-2 text-xs font-mono text-gray-600">
+                      ({{ feedbackCount }} feedback{{ feedbackCount === 1 ? '' : 's' }} this session)
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Profile Picker -->
+                <div class="flex items-center gap-3">
+                  <span class="text-xs font-bold uppercase tracking-widest text-gray-500">Sensitivity:</span>
+                  <div class="flex border-2 border-black">
+                    <button
+                      @click="updateDetectionProfile('strict')"
+                      :disabled="profileUpdateLoading"
+                      :class="[
+                        'px-3 py-1.5 text-xs font-bold uppercase tracking-wide transition-colors',
+                        detectionProfile === 'strict'
+                          ? 'bg-black text-white'
+                          : 'bg-white text-black hover:bg-gray-100'
+                      ]"
+                    >
+                      Low
+                    </button>
+                    <button
+                      @click="updateDetectionProfile('balanced')"
+                      :disabled="profileUpdateLoading"
+                      :class="[
+                        'px-3 py-1.5 text-xs font-bold uppercase tracking-wide border-l-2 border-r-2 border-black transition-colors',
+                        detectionProfile === 'balanced'
+                          ? 'bg-black text-white'
+                          : 'bg-white text-black hover:bg-gray-100'
+                      ]"
+                    >
+                      Med
+                    </button>
+                    <button
+                      @click="updateDetectionProfile('sensitive')"
+                      :disabled="profileUpdateLoading"
+                      :class="[
+                        'px-3 py-1.5 text-xs font-bold uppercase tracking-wide transition-colors',
+                        detectionProfile === 'sensitive'
+                          ? 'bg-black text-white'
+                          : 'bg-white text-black hover:bg-gray-100'
+                      ]"
+                    >
+                      High
+                    </button>
+                  </div>
+                  <div v-if="profileUpdateLoading" class="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              </div>
+
+              <!-- Explanation text -->
+              <p class="mt-3 text-xs text-gray-500 font-mono">
+                {{ detectionProfile === 'sensitive' ? 'High: Catches more anomalies, may have more false positives' :
+                   detectionProfile === 'strict' ? 'Low: Only flags clear anomalies, fewer false positives' :
+                   'Medium: Balanced detection for most use cases' }}
+              </p>
+            </div>
+          </div>
+
           <!-- Recent Anomalies -->
           <div class="bg-white border-2 border-black lg:col-span-3 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
              <div class="px-6 py-5 border-b-2 border-black flex items-center justify-between">
@@ -564,6 +633,7 @@
                      <th scope="col" class="px-3 py-3.5 text-left text-xs font-bold uppercase tracking-widest text-gray-500">NCD Score</th>
                      <th scope="col" class="px-3 py-3.5 text-left text-xs font-bold uppercase tracking-widest text-gray-500">Confidence</th>
                      <th scope="col" class="px-3 py-3.5 text-left text-xs font-bold uppercase tracking-widest text-gray-500">Explanation</th>
+                     <th scope="col" class="px-3 py-3.5 text-center text-xs font-bold uppercase tracking-widest text-gray-500">Feedback</th>
                    </tr>
                  </thead>
                  <tbody class="divide-y divide-gray-200 bg-white">
@@ -584,6 +654,36 @@
                      </td>
                      <td class="px-3 py-4 text-sm text-gray-600 max-w-xs truncate">
                        {{ anomaly.explanation || 'Anomaly detected' }}
+                     </td>
+                     <td class="whitespace-nowrap px-3 py-4 text-center">
+                       <!-- Show feedback status if already given -->
+                       <span v-if="anomaly.feedback_given === 'confirmed'" class="inline-flex items-center text-xs font-bold uppercase tracking-wide text-green-700">
+                         <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                         Confirmed
+                       </span>
+                       <span v-else-if="anomaly.feedback_given === 'false_positive'" class="inline-flex items-center text-xs font-bold uppercase tracking-wide text-gray-500">
+                         <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                         False Pos
+                       </span>
+                       <!-- Show buttons if no feedback yet -->
+                       <div v-else class="flex items-center justify-center gap-2">
+                         <button
+                           @click="submitFeedback(anomaly.id, 'confirmed')"
+                           :disabled="feedbackLoading.has(anomaly.id)"
+                           class="p-1.5 border-2 border-black bg-white hover:bg-green-100 disabled:opacity-50"
+                           title="Confirm anomaly"
+                         >
+                           <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z"/></svg>
+                         </button>
+                         <button
+                           @click="submitFeedback(anomaly.id, 'false_positive')"
+                           :disabled="feedbackLoading.has(anomaly.id)"
+                           class="p-1.5 border-2 border-black bg-white hover:bg-red-100 disabled:opacity-50"
+                           title="Mark as false positive"
+                         >
+                           <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M18 9.5a1.5 1.5 0 11-3 0v-6a1.5 1.5 0 013 0v6zM14 9.667v-5.43a2 2 0 00-1.106-1.79l-.05-.025A4 4 0 0011.057 2H5.64a2 2 0 00-1.962 1.608l-1.2 6A2 2 0 004.44 12H8v4a2 2 0 002 2 1 1 0 001-1v-.667a4 4 0 01.8-2.4l1.4-1.866a4 4 0 00.8-2.4z"/></svg>
+                         </button>
+                       </div>
                      </td>
                    </tr>
                  </tbody>
@@ -641,6 +741,7 @@ interface Anomaly {
   confidence: number
   explanation?: string
   detected_at: string
+  feedback_given?: 'confirmed' | 'false_positive' | null // Track user feedback
 }
 
 const usageDetails = ref<{
@@ -669,6 +770,11 @@ const billingLoading = ref(true)
 const billingError = ref<string | null>(null)
 const showCheckoutSuccess = ref(false)
 const upgradeError = ref<string | null>(null)
+
+// Detection settings state
+const detectionProfile = ref<'sensitive' | 'balanced' | 'strict'>('balanced')
+const profileUpdateLoading = ref(false)
+const feedbackCount = ref(0) // Tracks total feedback given this session
 
 // Toast notifications
 const toastMessage = ref('')
@@ -931,6 +1037,88 @@ const fetchRecentAnomalies = async () => {
   }
 }
 
+// Feedback loading state per anomaly
+const feedbackLoading = ref<Set<string>>(new Set())
+
+// Submit feedback for an anomaly (thumbs up = confirmed, thumbs down = false_positive)
+const submitFeedback = async (anomalyId: string, feedbackType: 'confirmed' | 'false_positive') => {
+  if (feedbackLoading.value.has(anomalyId)) return
+
+  feedbackLoading.value.add(anomalyId)
+  try {
+    const token = await authStore.getToken()
+    const res = await fetch(`/api/v1/anomalies/${anomalyId}/feedback`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ feedback_type: feedbackType })
+    })
+    if (res.ok) {
+      // Update the local anomaly to show feedback was given
+      const anomaly = recentAnomalies.value.find(a => a.id === anomalyId)
+      if (anomaly) {
+        anomaly.feedback_given = feedbackType
+      }
+      // Increment session feedback count for learning indicator
+      feedbackCount.value++
+      showToast(feedbackType === 'confirmed' ? 'Anomaly confirmed' : 'Marked as false positive', 'success')
+    } else {
+      const err = await res.json().catch(() => ({}))
+      showToast(err.message || 'Failed to submit feedback', 'error')
+    }
+  } catch (e) {
+    showToast('Network error. Please try again.', 'error')
+  } finally {
+    feedbackLoading.value.delete(anomalyId)
+  }
+}
+
+// Update detection profile for all user's streams
+const updateDetectionProfile = async (profile: 'sensitive' | 'balanced' | 'strict') => {
+  if (profileUpdateLoading.value) return
+
+  profileUpdateLoading.value = true
+  try {
+    const token = await authStore.getToken()
+
+    // Get all streams from usageDetails
+    const streams = usageDetails.value?.stream_breakdown || []
+    if (streams.length === 0) {
+      showToast('No streams found', 'error')
+      return
+    }
+
+    // Update each stream's profile
+    const updatePromises = streams.map(stream =>
+      fetch(`/api/v1/streams/${stream.stream_id}/profile`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ profile })
+      })
+    )
+
+    const results = await Promise.all(updatePromises)
+    const allSucceeded = results.every(res => res.ok)
+
+    if (allSucceeded) {
+      detectionProfile.value = profile
+      const profileLabel = profile === 'sensitive' ? 'High' : profile === 'strict' ? 'Low' : 'Medium'
+      showToast(`Sensitivity set to ${profileLabel}`, 'success')
+    } else {
+      showToast('Failed to update some streams', 'error')
+    }
+  } catch (e) {
+    showToast('Network error. Please try again.', 'error')
+  } finally {
+    profileUpdateLoading.value = false
+  }
+}
+
 // Format relative time (e.g., "2 hours ago")
 const formatRelativeTime = (dateStr: string) => {
   const date = new Date(dateStr)
@@ -1020,7 +1208,21 @@ onMounted(async () => {
   }
 })
 
-const manageBilling = () => {
-  window.location.href = '/api/v1/billing/portal'
+const manageBilling = async () => {
+  try {
+    const token = await authStore.getToken()
+    const res = await fetch('/api/v1/billing/portal', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    if (res.ok) {
+      const data = await res.json()
+      if (data.url) window.location.href = data.url
+    } else {
+      showToast('Unable to open billing portal', 'error')
+    }
+  } catch (e) {
+    if (import.meta.env.DEV) console.error('Failed to open billing portal', e)
+    showToast('Unable to open billing portal', 'error')
+  }
 }
 </script>

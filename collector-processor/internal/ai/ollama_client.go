@@ -45,6 +45,11 @@ func (c *OllamaClient) Provider() string {
 	return "ollama"
 }
 
+// Model returns the default model name
+func (c *OllamaClient) Model() string {
+	return c.defaultModel
+}
+
 // AnalyzeAnomaly analyzes an anomaly using local Ollama instance
 func (c *OllamaClient) AnalyzeAnomaly(ctx context.Context, model string, prompt string) (string, int64, int64, error) {
 	if model == "" {

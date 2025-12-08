@@ -132,7 +132,12 @@ Example explanation:
 
 ## Tuning Parameters
 
-You can adjust detection sensitivity per stream:
+For most users, the default settings work well. Use the **Detection Settings** panel in the dashboard to adjust sensitivity (Low/Medium/High).
+
+<details>
+<summary><strong>Show advanced parameter configuration</strong></summary>
+
+You can adjust detection sensitivity per stream via API:
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
@@ -149,6 +154,8 @@ You can adjust detection sensitivity per stream:
 **Less sensitive** (fewer false positives, might miss subtle anomalies):
 - Higher `ncd_threshold` (e.g., 0.4)
 - Lower `p_value_threshold` (e.g., 0.01)
+
+</details>
 
 ## Best Practices
 

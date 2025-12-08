@@ -45,6 +45,11 @@ func (c *GeminiClient) Provider() string {
 	return "gemini"
 }
 
+// Model returns the default model name
+func (c *GeminiClient) Model() string {
+	return c.defaultModel
+}
+
 // AnalyzeAnomaly analyzes an anomaly using Gemini API
 func (c *GeminiClient) AnalyzeAnomaly(ctx context.Context, model string, prompt string) (string, int64, int64, error) {
 	if model == "" {

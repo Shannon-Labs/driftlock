@@ -12,6 +12,10 @@
     "Other"
   ],
   "activationEvents": [
+    "onCommand:driftlock.startLiveLinting",
+    "onCommand:driftlock.stopLiveLinting",
+    "onCommand:driftlock.startTerminalRadar",
+    "onCommand:driftlock.stopTerminalRadar",
     "onStartupFinished"
   ],
   "main": "./dist/extension.js",

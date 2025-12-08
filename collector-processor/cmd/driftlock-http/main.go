@@ -988,6 +988,48 @@ func detectHandler(w http.ResponseWriter, r *http.Request, cfg config, store *st
 		return
 	}
 	plan := buildDetectionSettings(cfg, stream, settings, payload.ConfigOverride)
+
+	// Adaptive Sliding Scales: override sizes when adaptive windowing is enabled
+	if settings.AdaptiveWindowEnabled {
+		adaptiveCfg := defaultAdaptiveConfig
+		// Respect per-stream bounds
+		if settings.AdaptiveBaselineMin > 0 {
+			adaptiveCfg.MinBaseline = max(adaptiveCfg.MinBaseline, settings.AdaptiveBaselineMin)
+		}
+		if settings.AdaptiveBaselineMax > 0 {
+			adaptiveCfg.MaxBaseline = min(adaptiveCfg.MaxBaseline, settings.AdaptiveBaselineMax)
+		}
+		if settings.AdaptiveWindowMin > 0 {
+			adaptiveCfg.MinWindow = max(adaptiveCfg.MinWindow, settings.AdaptiveWindowMin)
+		}
+		if settings.AdaptiveWindowMax > 0 {
+			adaptiveCfg.MaxWindow = min(adaptiveCfg.MaxWindow, settings.AdaptiveWindowMax)
+		}
+
+		// Use persisted recommendations if available
+		if b, w, err := store.getAdaptiveWindowSizes(r.Context(), stream.ID); err == nil && b > 0 && w > 0 {
+			plan.BaselineSize = clampInt(b, adaptiveCfg.MinBaseline, adaptiveCfg.MaxBaseline)
+			plan.WindowSize = clampInt(w, adaptiveCfg.MinWindow, adaptiveCfg.MaxWindow)
+		} else {
+			// Derive characteristics from the current batch (lightweight sample)
+			chars := deriveStreamCharacteristics(payload.Events)
+			baseline, window := computeAdaptiveWindowSizes(chars, adaptiveCfg)
+			plan.BaselineSize = baseline
+			plan.WindowSize = window
+			// Persist stats asynchronously for future batches
+			go func() {
+				if err := store.updateStreamStatistics(context.Background(), stream.ID, chars); err != nil {
+					log.Printf("adaptive: failed to persist stream stats: %v", err)
+				}
+			}()
+		}
+		// Keep hop size in bounds with adaptive windows
+		if plan.HopSize <= 0 {
+			plan.HopSize = max(plan.WindowSize/2, 1)
+		}
+		plan.HopSize = clampInt(plan.HopSize, 1, plan.WindowSize)
+	}
+
 	detectionMinEvents := plan.BaselineSize + plan.WindowSize
 
 	anchorSettings, err := store.getAnchorSettings(r.Context(), stream.ID)
@@ -1193,6 +1235,22 @@ func detectHandler(w http.ResponseWriter, r *http.Request, cfg config, store *st
 		if i < len(anomalyIDs) {
 			anomalies[i].ID = anomalyIDs[i]
 		}
+	}
+
+	// Auto-apply Rust threshold recommendations (async, best-effort)
+	// Uses the first anomaly's recommendation as it reflects current data characteristics
+	if len(anomalies) > 0 && settings.AutoTuneEnabled {
+		firstMetrics := anomalies[0].Metrics
+		go func() {
+			if err := store.applyRustRecommendation(
+				context.Background(),
+				stream.ID,
+				firstMetrics.RecommendedNCDThreshold,
+				firstMetrics.DataStabilityScore,
+			); err != nil {
+				log.Printf("auto-tune: rust recommendation failed for stream %s: %v", stream.ID, err)
+			}
+		}()
 	}
 
 	// Track usage asynchronously
@@ -1622,6 +1680,9 @@ func metricsToMap(m *driftlockcbad.EnhancedMetrics) map[string]any {
 		"statistically_significant":  m.IsStatisticallySignificant,
 		"compression_ratio_change":   m.CompressionRatioChange,
 		"entropy_change":             m.EntropyChange,
+		"recommended_ncd_threshold":  m.RecommendedNCDThreshold,
+		"recommended_window_size":    m.RecommendedWindowSize,
+		"data_stability_score":       m.DataStabilityScore,
 	}
 }
 

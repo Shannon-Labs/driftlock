@@ -10,6 +10,7 @@ import (
 type AIClient interface {
 	AnalyzeAnomaly(ctx context.Context, model string, prompt string) (string, int64, int64, error)
 	Provider() string
+	Model() string // Returns the default model name for this client
 }
 
 // ProviderConfig holds configuration for an AI provider

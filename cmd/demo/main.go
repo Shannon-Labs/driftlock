@@ -16,6 +16,9 @@ package main
 //     double compression_ratio_change;
 //     double entropy_change;
 //     const char* explanation;
+//     double recommended_ncd_threshold;
+//     size_t recommended_window_size;
+//     double data_stability_score;
 // } CBADEnhancedMetrics;
 //
 // extern void* cbad_detector_create_simple();
@@ -27,16 +30,16 @@ package main
 import "C"
 
 import (
-    "encoding/json"
-    "fmt"
-    "html/template"
-    "log"
-    "os"
-    "path/filepath"
-    "time"
-    "unsafe"
-    "math"
-    "sort"
+	"encoding/json"
+	"fmt"
+	"html/template"
+	"log"
+	"math"
+	"os"
+	"path/filepath"
+	"sort"
+	"time"
+	"unsafe"
 )
 
 type Transaction struct {
@@ -50,12 +53,12 @@ type Transaction struct {
 }
 
 type AnomalyResult struct {
-    Transaction Transaction
-    Metrics     CBADEnhancedMetrics
-    Explanation string
-    Why         []string
-    Compare     BaselineCompare
-    Examples    []Transaction
+	Transaction Transaction
+	Metrics     CBADEnhancedMetrics
+	Explanation string
+	Why         []string
+	Compare     BaselineCompare
+	Examples    []Transaction
 }
 
 type CBADEnhancedMetrics struct {
@@ -71,6 +74,9 @@ type CBADEnhancedMetrics struct {
 	CompressionRatioChange     float64 `json:"compression_ratio_change"`
 	EntropyChange              float64 `json:"entropy_change"`
 	Explanation                string  `json:"explanation"`
+	RecommendedNCDThreshold    float64 `json:"recommended_ncd_threshold"`
+	RecommendedWindowSize      int     `json:"recommended_window_size"`
+	DataStabilityScore         float64 `json:"data_stability_score"`
 }
 
 func main() {
@@ -101,14 +107,14 @@ func main() {
 	}
 	defer C.cbad_detector_free(detector)
 
-    // Configuration (tuned for demo reliability)
-    // - Use a generous warmup to build a stable baseline
-    // - Detect on every transaction to catch brief anomalies
-    // - Process the full dataset so late anomalies are included
-    warmupCount := 400
-    // Detection every 25th transaction reduces anomaly count to the 10-30 band
-    detectionInterval := 25
-    processingLimit := 2000
+	// Configuration (tuned for demo reliability)
+	// - Use a generous warmup to build a stable baseline
+	// - Detect on every transaction to catch brief anomalies
+	// - Process the full dataset so late anomalies are included
+	warmupCount := 400
+	// Detection every 25th transaction reduces anomaly count to the 10-30 band
+	detectionInterval := 25
+	processingLimit := 2000
 
 	if len(transactions) < processingLimit {
 		processingLimit = len(transactions)
@@ -122,30 +128,30 @@ func main() {
 	startTime := time.Now()
 	var anomalies []AnomalyResult
 
-    // Baseline tracking for warmup window
-    var warmupTxs []Transaction
-    warmupTxs = make([]Transaction, 0, warmupCount)
-    procVals := make([]int, 0, warmupCount)
-    amountVals := make([]float64, 0, warmupCount)
-    endpointFreq := make(map[string]int)
-    originFreq := make(map[string]int)
+	// Baseline tracking for warmup window
+	var warmupTxs []Transaction
+	warmupTxs = make([]Transaction, 0, warmupCount)
+	procVals := make([]int, 0, warmupCount)
+	amountVals := make([]float64, 0, warmupCount)
+	endpointFreq := make(map[string]int)
+	originFreq := make(map[string]int)
 
-    // Phase 1: Warmup - ingest without detection and collect baseline stats
-    fmt.Printf("🔥 Phase 1: Building baseline (first %d transactions)...\n", warmupCount)
-    for i := 0; i < warmupCount && i < processingLimit; i++ {
-        tx := transactions[i]
-        // Track for baseline
-        warmupTxs = append(warmupTxs, tx)
-        procVals = append(procVals, tx.ProcessingMs)
-        amountVals = append(amountVals, tx.AmountUSD)
-        endpointFreq[tx.APIEndpoint]++
-        originFreq[tx.OriginCountry]++
-        txJSON, _ := json.Marshal(tx)
-        // Important: add newline to delimit events for proper permutation testing
-        payload := string(txJSON) + "\n"
-        dataStr := C.CString(payload)
-        result := C.cbad_add_transaction(detector, dataStr, C.size_t(len(payload)))
-        C.free(unsafe.Pointer(dataStr))
+	// Phase 1: Warmup - ingest without detection and collect baseline stats
+	fmt.Printf("🔥 Phase 1: Building baseline (first %d transactions)...\n", warmupCount)
+	for i := 0; i < warmupCount && i < processingLimit; i++ {
+		tx := transactions[i]
+		// Track for baseline
+		warmupTxs = append(warmupTxs, tx)
+		procVals = append(procVals, tx.ProcessingMs)
+		amountVals = append(amountVals, tx.AmountUSD)
+		endpointFreq[tx.APIEndpoint]++
+		originFreq[tx.OriginCountry]++
+		txJSON, _ := json.Marshal(tx)
+		// Important: add newline to delimit events for proper permutation testing
+		payload := string(txJSON) + "\n"
+		dataStr := C.CString(payload)
+		result := C.cbad_add_transaction(detector, dataStr, C.size_t(len(payload)))
+		C.free(unsafe.Pointer(dataStr))
 
 		if result == 0 {
 			log.Printf("Warning: Failed to add transaction %d", i)
@@ -156,180 +162,188 @@ func main() {
 		}
 	}
 
-    ready := C.cbad_detector_ready(detector)
-    if ready == 0 {
-        log.Fatal("❌ Detector not ready after warmup")
-    }
-    // Compute baseline stats
-    baseline := computeBaselineStats(procVals, amountVals, endpointFreq, originFreq)
-    fmt.Printf("✅ Baseline ready! (processing_ms median=%.0fms, p95=%.0fms; amount median=$%.2f)\n\n", baseline.ProcMedian, baseline.ProcP95, baseline.AmountMedian)
+	ready := C.cbad_detector_ready(detector)
+	if ready == 0 {
+		log.Fatal("❌ Detector not ready after warmup")
+	}
+	// Compute baseline stats
+	baseline := computeBaselineStats(procVals, amountVals, endpointFreq, originFreq)
+	fmt.Printf("✅ Baseline ready! (processing_ms median=%.0fms, p95=%.0fms; amount median=$%.2f)\n\n", baseline.ProcMedian, baseline.ProcP95, baseline.AmountMedian)
 
 	// Phase 2: Detection - ingest AND detect anomalies
-    fmt.Printf("🚨 Phase 2: Anomaly detection (transactions %d-%d)...\n", warmupCount, processingLimit)
-    for i := warmupCount; i < processingLimit; i++ {
-        tx := transactions[i]
-        
-        // Always ingest
-        txJSON, _ := json.Marshal(tx)
-        payload := string(txJSON) + "\n"
-        dataStr := C.CString(payload)
-        ingestResult := C.cbad_add_transaction(detector, dataStr, C.size_t(len(payload)))
-        
-        if ingestResult == 0 {
-            log.Printf("Warning: Failed to ingest transaction %d", i)
-        }
+	fmt.Printf("🚨 Phase 2: Anomaly detection (transactions %d-%d)...\n", warmupCount, processingLimit)
+	for i := warmupCount; i < processingLimit; i++ {
+		tx := transactions[i]
 
-        // Detect every Nth transaction
-        if i%detectionInterval == 0 {
-            metrics := C.cbad_detect(detector)
-            C.free(unsafe.Pointer(dataStr))
+		// Always ingest
+		txJSON, _ := json.Marshal(tx)
+		payload := string(txJSON) + "\n"
+		dataStr := C.CString(payload)
+		ingestResult := C.cbad_add_transaction(detector, dataStr, C.size_t(len(payload)))
 
-            if metrics.is_anomaly != 0 {
-                // Get explanation
-                explanation := C.GoString(metrics.explanation)
-                if metrics.explanation != nil {
-                    // Free the Rust-allocated string properly
-                    defer C.cbad_free_string((*C.char)(metrics.explanation))
-                }
+		if ingestResult == 0 {
+			log.Printf("Warning: Failed to ingest transaction %d", i)
+		}
 
-                // Convert C struct to Go struct
-                goMetrics := CBADEnhancedMetrics{
-                    NCD:                        float64(metrics.ncd),
-                    PValue:                     float64(metrics.p_value),
-                    BaselineCompressionRatio:   float64(metrics.baseline_compression_ratio),
-                    WindowCompressionRatio:     float64(metrics.window_compression_ratio),
-                    BaselineEntropy:            float64(metrics.baseline_entropy),
-                    WindowEntropy:              float64(metrics.window_entropy),
-                    IsAnomaly:                  int(metrics.is_anomaly),
-                    ConfidenceLevel:            float64(metrics.confidence_level),
-                    IsStatisticallySignificant: int(metrics.is_statistically_significant),
-                    CompressionRatioChange:     float64(metrics.compression_ratio_change),
-                    EntropyChange:              float64(metrics.entropy_change),
-                    Explanation:                explanation,
-                }
+		// Detect every Nth transaction
+		if i%detectionInterval == 0 {
+			metrics := C.cbad_detect(detector)
+			C.free(unsafe.Pointer(dataStr))
 
-                // Build human-friendly reasons
-                var why []string
-                if goMetrics.NCD >= 0.8 {
-                    why = append(why, fmt.Sprintf("High dissimilarity vs baseline (NCD=%.3f)", goMetrics.NCD))
-                } else if goMetrics.NCD >= 0.5 {
-                    why = append(why, fmt.Sprintf("Moderate dissimilarity vs baseline (NCD=%.3f)", goMetrics.NCD))
-                }
-                if goMetrics.PValue <= 0.05 {
-                    why = append(why, fmt.Sprintf("Statistically significant (p=%.4f)", goMetrics.PValue))
-                }
-                if goMetrics.BaselineCompressionRatio > 0 && goMetrics.WindowCompressionRatio > 0 {
-                    why = append(why, fmt.Sprintf("Compression efficiency dropped from %.2fx → %.2fx (Δ %.0f%%)", goMetrics.BaselineCompressionRatio, goMetrics.WindowCompressionRatio, goMetrics.CompressionRatioChange*100))
-                } else if goMetrics.CompressionRatioChange != 0 {
-                    why = append(why, fmt.Sprintf("Compression efficiency changed by %.0f%%", goMetrics.CompressionRatioChange*100))
-                }
-                if goMetrics.EntropyChange > 0.05 {
-                    why = append(why, fmt.Sprintf("Randomness increased (entropy Δ +%.0f%%)", goMetrics.EntropyChange*100))
-                } else if goMetrics.EntropyChange < -0.05 {
-                    why = append(why, fmt.Sprintf("Randomness decreased (entropy Δ %.0f%%)", goMetrics.EntropyChange*100))
-                }
+			if metrics.is_anomaly != 0 {
+				// Get explanation
+				explanation := C.GoString(metrics.explanation)
+				if metrics.explanation != nil {
+					// Free the Rust-allocated string properly
+					defer C.cbad_free_string((*C.char)(metrics.explanation))
+				}
 
-                // Baseline-aware bullets
-                // processing_ms vs baseline median and z-score
-                var zStr string
-                if baseline.ProcStd > 0 {
-                    z := (float64(tx.ProcessingMs) - baseline.ProcMean) / baseline.ProcStd
-                    zStr = fmt.Sprintf("(z=%+.1f)", z)
-                } else {
-                    zStr = "(z=N/A)"
-                }
-                why = append(why, fmt.Sprintf("processing_ms %dms vs baseline median %.0fms %s", tx.ProcessingMs, baseline.ProcMedian, zStr))
+				// Convert C struct to Go struct
+				goMetrics := CBADEnhancedMetrics{
+					NCD:                        float64(metrics.ncd),
+					PValue:                     float64(metrics.p_value),
+					BaselineCompressionRatio:   float64(metrics.baseline_compression_ratio),
+					WindowCompressionRatio:     float64(metrics.window_compression_ratio),
+					BaselineEntropy:            float64(metrics.baseline_entropy),
+					WindowEntropy:              float64(metrics.window_entropy),
+					IsAnomaly:                  int(metrics.is_anomaly),
+					ConfidenceLevel:            float64(metrics.confidence_level),
+					IsStatisticallySignificant: int(metrics.is_statistically_significant),
+					CompressionRatioChange:     float64(metrics.compression_ratio_change),
+					EntropyChange:              float64(metrics.entropy_change),
+					Explanation:                explanation,
+					RecommendedNCDThreshold:    float64(metrics.recommended_ncd_threshold),
+					RecommendedWindowSize:      int(metrics.recommended_window_size),
+					DataStabilityScore:         float64(metrics.data_stability_score),
+				}
 
-                // amount vs baseline median and z-score, with ratio
-                if baseline.AmountMedian > 0 {
-                    ratio := tx.AmountUSD / baseline.AmountMedian
-                    var az string
-                    if baseline.AmountStd > 0 {
-                        az = fmt.Sprintf("(z=%+.1f)", (tx.AmountUSD - baseline.AmountMean)/baseline.AmountStd)
-                    } else {
-                        az = "(z=N/A)"
-                    }
-                    why = append(why, fmt.Sprintf("amount $%.2f vs baseline median $%.2f (×%.1f) %s", tx.AmountUSD, baseline.AmountMedian, ratio, az))
-                }
+				// Build human-friendly reasons
+				var why []string
+				if goMetrics.NCD >= 0.8 {
+					why = append(why, fmt.Sprintf("High dissimilarity vs baseline (NCD=%.3f)", goMetrics.NCD))
+				} else if goMetrics.NCD >= 0.5 {
+					why = append(why, fmt.Sprintf("Moderate dissimilarity vs baseline (NCD=%.3f)", goMetrics.NCD))
+				}
+				if goMetrics.PValue <= 0.05 {
+					why = append(why, fmt.Sprintf("Statistically significant (p=%.4f)", goMetrics.PValue))
+				}
+				if goMetrics.BaselineCompressionRatio > 0 && goMetrics.WindowCompressionRatio > 0 {
+					why = append(why, fmt.Sprintf("Compression efficiency dropped from %.2fx → %.2fx (Δ %.0f%%)", goMetrics.BaselineCompressionRatio, goMetrics.WindowCompressionRatio, goMetrics.CompressionRatioChange*100))
+				} else if goMetrics.CompressionRatioChange != 0 {
+					why = append(why, fmt.Sprintf("Compression efficiency changed by %.0f%%", goMetrics.CompressionRatioChange*100))
+				}
+				if goMetrics.EntropyChange > 0.05 {
+					why = append(why, fmt.Sprintf("Randomness increased (entropy Δ +%.0f%%)", goMetrics.EntropyChange*100))
+				} else if goMetrics.EntropyChange < -0.05 {
+					why = append(why, fmt.Sprintf("Randomness decreased (entropy Δ %.0f%%)", goMetrics.EntropyChange*100))
+				}
 
-                // Endpoint frequency insight
-                epCount := baseline.EndpointFreq[tx.APIEndpoint]
-                epPct := pctFloat(epCount, baseline.Count)
-                if epPct >= 50.0 {
-                    why = append(why, fmt.Sprintf("Endpoint %s is common (%.1f%% of baseline)", tx.APIEndpoint, epPct))
-                } else if epPct >= 10.0 {
-                    why = append(why, fmt.Sprintf("Endpoint %s appears occasionally (%.1f%% of baseline)", tx.APIEndpoint, epPct))
-                } else {
-                    why = append(why, fmt.Sprintf("Endpoint %s is rare (%.1f%% of baseline)", tx.APIEndpoint, epPct))
-                }
+				// Baseline-aware bullets
+				// processing_ms vs baseline median and z-score
+				var zStr string
+				if baseline.ProcStd > 0 {
+					z := (float64(tx.ProcessingMs) - baseline.ProcMean) / baseline.ProcStd
+					zStr = fmt.Sprintf("(z=%+.1f)", z)
+				} else {
+					zStr = "(z=N/A)"
+				}
+				why = append(why, fmt.Sprintf("processing_ms %dms vs baseline median %.0fms %s", tx.ProcessingMs, baseline.ProcMedian, zStr))
 
-                // Origin frequency insight
-                ocCount := baseline.OriginFreq[tx.OriginCountry]
-                ocPct := pctFloat(ocCount, baseline.Count)
-                if ocCount == 0 {
-                    why = append(why, fmt.Sprintf("Origin %s not seen in baseline (0/%.0f)", tx.OriginCountry, float64(baseline.Count)))
-                } else if ocPct < 5.0 {
-                    why = append(why, fmt.Sprintf("Origin %s is rare (%.1f%% of baseline)", tx.OriginCountry, ocPct))
-                }
+				// amount vs baseline median and z-score, with ratio
+				if baseline.AmountMedian > 0 {
+					ratio := tx.AmountUSD / baseline.AmountMedian
+					var az string
+					if baseline.AmountStd > 0 {
+						az = fmt.Sprintf("(z=%+.1f)", (tx.AmountUSD-baseline.AmountMean)/baseline.AmountStd)
+					} else {
+						az = "(z=N/A)"
+					}
+					why = append(why, fmt.Sprintf("amount $%.2f vs baseline median $%.2f (×%.1f) %s", tx.AmountUSD, baseline.AmountMedian, ratio, az))
+				}
 
-                // Build baseline comparison panel data
-                cmp := BaselineCompare{
-                    ProcValue:                 tx.ProcessingMs,
-                    ProcMedian:                baseline.ProcMedian,
-                    ZScore:                    0,
-                    HasZScore:                 baseline.ProcStd > 0,
-                    AmountValue:               tx.AmountUSD,
-                    AmountMedian:              baseline.AmountMedian,
-                    AmountRatio:               func() float64 { if baseline.AmountMedian>0 { return tx.AmountUSD / baseline.AmountMedian }; return 0 }(),
-                    AmountHasZ:                baseline.AmountStd > 0,
-                    Endpoint:                  tx.APIEndpoint,
-                    EndpointCount:             epCount,
-                    EndpointPct:               epPct,
-                    Origin:                    tx.OriginCountry,
-                    OriginCount:               baseline.OriginFreq[tx.OriginCountry],
-                    OriginPct:                 pctFloat(baseline.OriginFreq[tx.OriginCountry], baseline.Count),
-                    BaselineCompressionRatio:  goMetrics.BaselineCompressionRatio,
-                    WindowCompressionRatio:    goMetrics.WindowCompressionRatio,
-                    CompressionDeltaPct:       goMetrics.CompressionRatioChange * 100.0,
-                }
-                if cmp.HasZScore {
-                    cmp.ZScore = (float64(tx.ProcessingMs) - baseline.ProcMean) / baseline.ProcStd
-                }
-                if cmp.AmountHasZ {
-                    cmp.AmountZScore = (tx.AmountUSD - baseline.AmountMean) / baseline.AmountStd
-                }
+				// Endpoint frequency insight
+				epCount := baseline.EndpointFreq[tx.APIEndpoint]
+				epPct := pctFloat(epCount, baseline.Count)
+				if epPct >= 50.0 {
+					why = append(why, fmt.Sprintf("Endpoint %s is common (%.1f%% of baseline)", tx.APIEndpoint, epPct))
+				} else if epPct >= 10.0 {
+					why = append(why, fmt.Sprintf("Endpoint %s appears occasionally (%.1f%% of baseline)", tx.APIEndpoint, epPct))
+				} else {
+					why = append(why, fmt.Sprintf("Endpoint %s is rare (%.1f%% of baseline)", tx.APIEndpoint, epPct))
+				}
 
-                // Find similar normal examples from warmup
-                examples := nearestNormalExamples(tx, warmupTxs, 3)
+				// Origin frequency insight
+				ocCount := baseline.OriginFreq[tx.OriginCountry]
+				ocPct := pctFloat(ocCount, baseline.Count)
+				if ocCount == 0 {
+					why = append(why, fmt.Sprintf("Origin %s not seen in baseline (0/%.0f)", tx.OriginCountry, float64(baseline.Count)))
+				} else if ocPct < 5.0 {
+					why = append(why, fmt.Sprintf("Origin %s is rare (%.1f%% of baseline)", tx.OriginCountry, ocPct))
+				}
 
-                anomalies = append(anomalies, AnomalyResult{
-                    Transaction: tx,
-                    Metrics:     goMetrics,
-                    Explanation: explanation,
-                    Why:         why,
-                    Compare:     cmp,
-                    Examples:    examples,
-                })
-            }
+				// Build baseline comparison panel data
+				cmp := BaselineCompare{
+					ProcValue:    tx.ProcessingMs,
+					ProcMedian:   baseline.ProcMedian,
+					ZScore:       0,
+					HasZScore:    baseline.ProcStd > 0,
+					AmountValue:  tx.AmountUSD,
+					AmountMedian: baseline.AmountMedian,
+					AmountRatio: func() float64 {
+						if baseline.AmountMedian > 0 {
+							return tx.AmountUSD / baseline.AmountMedian
+						}
+						return 0
+					}(),
+					AmountHasZ:               baseline.AmountStd > 0,
+					Endpoint:                 tx.APIEndpoint,
+					EndpointCount:            epCount,
+					EndpointPct:              epPct,
+					Origin:                   tx.OriginCountry,
+					OriginCount:              baseline.OriginFreq[tx.OriginCountry],
+					OriginPct:                pctFloat(baseline.OriginFreq[tx.OriginCountry], baseline.Count),
+					BaselineCompressionRatio: goMetrics.BaselineCompressionRatio,
+					WindowCompressionRatio:   goMetrics.WindowCompressionRatio,
+					CompressionDeltaPct:      goMetrics.CompressionRatioChange * 100.0,
+				}
+				if cmp.HasZScore {
+					cmp.ZScore = (float64(tx.ProcessingMs) - baseline.ProcMean) / baseline.ProcStd
+				}
+				if cmp.AmountHasZ {
+					cmp.AmountZScore = (tx.AmountUSD - baseline.AmountMean) / baseline.AmountStd
+				}
 
-            if i%500 == 0 {
-                fmt.Printf("   Processed %d transactions...\n", i)
-            }
-        } else {
-            C.free(unsafe.Pointer(dataStr))
-        }
-    }
+				// Find similar normal examples from warmup
+				examples := nearestNormalExamples(tx, warmupTxs, 3)
+
+				anomalies = append(anomalies, AnomalyResult{
+					Transaction: tx,
+					Metrics:     goMetrics,
+					Explanation: explanation,
+					Why:         why,
+					Compare:     cmp,
+					Examples:    examples,
+				})
+			}
+
+			if i%500 == 0 {
+				fmt.Printf("   Processed %d transactions...\n", i)
+			}
+		} else {
+			C.free(unsafe.Pointer(dataStr))
+		}
+	}
 
 	duration := time.Since(startTime)
 	fmt.Printf("\n🎉 Processing complete!\n")
 	fmt.Printf("📊 Found %d anomalies out of %d transactions\n", len(anomalies), processingLimit)
 	fmt.Printf("⚡ Processing time: %v\n\n", duration)
 
-    // Generate HTML report
-    outputPath := "demo-output.html"
-    if err := generateHTMLReport(anomalies, transactions, time.Since(startTime), baselineSummaryFrom(baseline), outputPath); err != nil {
-        log.Fatalf("❌ Failed to generate HTML report: %v", err)
-    }
+	// Generate HTML report
+	outputPath := "demo-output.html"
+	if err := generateHTMLReport(anomalies, transactions, time.Since(startTime), baselineSummaryFrom(baseline), outputPath); err != nil {
+		log.Fatalf("❌ Failed to generate HTML report: %v", err)
+	}
 
 	absPath, _ := filepath.Abs(outputPath)
 	fmt.Printf("✅ Demo output written to: %s\n", absPath)
@@ -339,208 +353,250 @@ func main() {
 
 // Baseline types and helpers
 type BaselineStats struct {
-    Count      int
-    ProcMin    int
-    ProcMax    int
-    ProcMean   float64
-    ProcMedian float64
-    ProcStd    float64
-    ProcP95    float64
-    AmountMin    float64
-    AmountMax    float64
-    AmountMean   float64
-    AmountMedian float64
-    AmountStd    float64
-    AmountP95    float64
-    EndpointFreq map[string]int
-    OriginFreq   map[string]int
+	Count        int
+	ProcMin      int
+	ProcMax      int
+	ProcMean     float64
+	ProcMedian   float64
+	ProcStd      float64
+	ProcP95      float64
+	AmountMin    float64
+	AmountMax    float64
+	AmountMean   float64
+	AmountMedian float64
+	AmountStd    float64
+	AmountP95    float64
+	EndpointFreq map[string]int
+	OriginFreq   map[string]int
 }
 
 type FreqItem struct {
-    Key   string
-    Count int
-    Pct   float64
+	Key   string
+	Count int
+	Pct   float64
 }
 
 type BaselineSummary struct {
-    Count        int
-    ProcMin      int
-    ProcMedian   float64
-    ProcP95      float64
-    AmountMin    float64
-    AmountMedian float64
-    AmountP95    float64
-    TopEndpoints []FreqItem
-    TopOrigins   []FreqItem
+	Count        int
+	ProcMin      int
+	ProcMedian   float64
+	ProcP95      float64
+	AmountMin    float64
+	AmountMedian float64
+	AmountP95    float64
+	TopEndpoints []FreqItem
+	TopOrigins   []FreqItem
 }
 
 type BaselineCompare struct {
-    ProcValue  int
-    ProcMedian float64
-    ZScore     float64
-    HasZScore  bool
-    AmountValue  float64
-    AmountMedian float64
-    AmountRatio  float64
-    AmountZScore float64
-    AmountHasZ   bool
-    Endpoint   string
-    EndpointCount int
-    EndpointPct float64
-    Origin     string
-    OriginCount int
-    OriginPct  float64
-    BaselineCompressionRatio float64
-    WindowCompressionRatio   float64
-    CompressionDeltaPct      float64
+	ProcValue                int
+	ProcMedian               float64
+	ZScore                   float64
+	HasZScore                bool
+	AmountValue              float64
+	AmountMedian             float64
+	AmountRatio              float64
+	AmountZScore             float64
+	AmountHasZ               bool
+	Endpoint                 string
+	EndpointCount            int
+	EndpointPct              float64
+	Origin                   string
+	OriginCount              int
+	OriginPct                float64
+	BaselineCompressionRatio float64
+	WindowCompressionRatio   float64
+	CompressionDeltaPct      float64
 }
 
 func computeBaselineStats(procVals []int, amountVals []float64, ep map[string]int, origin map[string]int) BaselineStats {
-    bs := BaselineStats{Count: len(procVals), EndpointFreq: ep, OriginFreq: origin}
-    if len(procVals) == 0 {
-        return bs
-    }
-    // Min/Max/Mean
-    minV, maxV := procVals[0], procVals[0]
-    var sum int64
-    for _, v := range procVals {
-        if v < minV { minV = v }
-        if v > maxV { maxV = v }
-        sum += int64(v)
-    }
-    bs.ProcMin = minV
-    bs.ProcMax = maxV
-    bs.ProcMean = float64(sum) / float64(len(procVals))
-    // Median/P95 require sort
-    sorted := append([]int(nil), procVals...)
-    sort.Ints(sorted)
-    n := len(sorted)
-    if n%2 == 1 {
-        bs.ProcMedian = float64(sorted[n/2])
-    } else {
-        bs.ProcMedian = (float64(sorted[n/2-1]) + float64(sorted[n/2])) / 2.0
-    }
-    // p95 nearest-rank
-    idx := int(math.Ceil(0.95*float64(n))) - 1
-    if idx < 0 { idx = 0 }
-    if idx >= n { idx = n-1 }
-    bs.ProcP95 = float64(sorted[idx])
-    // Std deviation (population)
-    var varSum float64
-    mu := bs.ProcMean
-    for _, v := range procVals {
-        d := float64(v) - mu
-        varSum += d * d
-    }
-    bs.ProcStd = math.Sqrt(varSum / float64(n))
+	bs := BaselineStats{Count: len(procVals), EndpointFreq: ep, OriginFreq: origin}
+	if len(procVals) == 0 {
+		return bs
+	}
+	// Min/Max/Mean
+	minV, maxV := procVals[0], procVals[0]
+	var sum int64
+	for _, v := range procVals {
+		if v < minV {
+			minV = v
+		}
+		if v > maxV {
+			maxV = v
+		}
+		sum += int64(v)
+	}
+	bs.ProcMin = minV
+	bs.ProcMax = maxV
+	bs.ProcMean = float64(sum) / float64(len(procVals))
+	// Median/P95 require sort
+	sorted := append([]int(nil), procVals...)
+	sort.Ints(sorted)
+	n := len(sorted)
+	if n%2 == 1 {
+		bs.ProcMedian = float64(sorted[n/2])
+	} else {
+		bs.ProcMedian = (float64(sorted[n/2-1]) + float64(sorted[n/2])) / 2.0
+	}
+	// p95 nearest-rank
+	idx := int(math.Ceil(0.95*float64(n))) - 1
+	if idx < 0 {
+		idx = 0
+	}
+	if idx >= n {
+		idx = n - 1
+	}
+	bs.ProcP95 = float64(sorted[idx])
+	// Std deviation (population)
+	var varSum float64
+	mu := bs.ProcMean
+	for _, v := range procVals {
+		d := float64(v) - mu
+		varSum += d * d
+	}
+	bs.ProcStd = math.Sqrt(varSum / float64(n))
 
-    // Amount stats
-    if len(amountVals) > 0 {
-        amin, amax := amountVals[0], amountVals[0]
-        var asum float64
-        for _, a := range amountVals {
-            if a < amin { amin = a }
-            if a > amax { amax = a }
-            asum += a
-        }
-        bs.AmountMin = amin
-        bs.AmountMax = amax
-        bs.AmountMean = asum / float64(len(amountVals))
-        as := append([]float64(nil), amountVals...)
-        sort.Float64s(as)
-        m := len(as)
-        if m%2 == 1 {
-            bs.AmountMedian = as[m/2]
-        } else {
-            bs.AmountMedian = (as[m/2-1] + as[m/2]) / 2.0
-        }
-        aidx := int(math.Ceil(0.95*float64(m))) - 1
-        if aidx < 0 { aidx = 0 }
-        if aidx >= m { aidx = m-1 }
-        bs.AmountP95 = as[aidx]
-        var avarSum float64
-        amu := bs.AmountMean
-        for _, a := range amountVals {
-            d := a - amu
-            avarSum += d * d
-        }
-        bs.AmountStd = math.Sqrt(avarSum / float64(m))
-    }
-    return bs
+	// Amount stats
+	if len(amountVals) > 0 {
+		amin, amax := amountVals[0], amountVals[0]
+		var asum float64
+		for _, a := range amountVals {
+			if a < amin {
+				amin = a
+			}
+			if a > amax {
+				amax = a
+			}
+			asum += a
+		}
+		bs.AmountMin = amin
+		bs.AmountMax = amax
+		bs.AmountMean = asum / float64(len(amountVals))
+		as := append([]float64(nil), amountVals...)
+		sort.Float64s(as)
+		m := len(as)
+		if m%2 == 1 {
+			bs.AmountMedian = as[m/2]
+		} else {
+			bs.AmountMedian = (as[m/2-1] + as[m/2]) / 2.0
+		}
+		aidx := int(math.Ceil(0.95*float64(m))) - 1
+		if aidx < 0 {
+			aidx = 0
+		}
+		if aidx >= m {
+			aidx = m - 1
+		}
+		bs.AmountP95 = as[aidx]
+		var avarSum float64
+		amu := bs.AmountMean
+		for _, a := range amountVals {
+			d := a - amu
+			avarSum += d * d
+		}
+		bs.AmountStd = math.Sqrt(avarSum / float64(m))
+	}
+	return bs
 }
 
 func pctFloat(count int, total int) float64 {
-    if total <= 0 { return 0 }
-    return (float64(count) / float64(total)) * 100.0
+	if total <= 0 {
+		return 0
+	}
+	return (float64(count) / float64(total)) * 100.0
 }
 
 func topN(freq map[string]int, total, n int) []FreqItem {
-    items := make([]FreqItem, 0, len(freq))
-    for k, c := range freq {
-        items = append(items, FreqItem{Key: k, Count: c, Pct: pctFloat(c, total)})
-    }
-    sort.Slice(items, func(i, j int) bool {
-        if items[i].Count == items[j].Count { return items[i].Key < items[j].Key }
-        return items[i].Count > items[j].Count
-    })
-    if len(items) > n { items = items[:n] }
-    return items
+	items := make([]FreqItem, 0, len(freq))
+	for k, c := range freq {
+		items = append(items, FreqItem{Key: k, Count: c, Pct: pctFloat(c, total)})
+	}
+	sort.Slice(items, func(i, j int) bool {
+		if items[i].Count == items[j].Count {
+			return items[i].Key < items[j].Key
+		}
+		return items[i].Count > items[j].Count
+	})
+	if len(items) > n {
+		items = items[:n]
+	}
+	return items
 }
 
 func nearestNormalExamples(anom Transaction, warmup []Transaction, k int) []Transaction {
-    type cand struct { tx Transaction; diff int }
-    addNearest := func(candidates []Transaction) []Transaction {
-        list := make([]cand, 0, len(candidates))
-        for _, t := range candidates {
-            d := t.ProcessingMs - anom.ProcessingMs
-            if d < 0 { d = -d }
-            list = append(list, cand{tx: t, diff: d})
-        }
-        sort.Slice(list, func(i, j int) bool { return list[i].diff < list[j].diff })
-        out := make([]Transaction, 0, minInt(k, len(list)))
-        for i := 0; i < len(list) && len(out) < k; i++ {
-            out = append(out, list[i].tx)
-        }
-        return out
-    }
-    // Priority 1: same endpoint + same origin
-    both := make([]Transaction, 0)
-    for _, t := range warmup {
-        if t.APIEndpoint == anom.APIEndpoint && t.OriginCountry == anom.OriginCountry {
-            both = append(both, t)
-        }
-    }
-    if len(both) >= 1 { return addNearest(both) }
-    // Priority 2: same endpoint
-    ep := make([]Transaction, 0)
-    for _, t := range warmup {
-        if t.APIEndpoint == anom.APIEndpoint { ep = append(ep, t) }
-    }
-    if len(ep) >= 1 { return addNearest(ep) }
-    // Priority 3: same origin
-    oc := make([]Transaction, 0)
-    for _, t := range warmup {
-        if t.OriginCountry == anom.OriginCountry { oc = append(oc, t) }
-    }
-    if len(oc) >= 1 { return addNearest(oc) }
-    // Fallback: any warmup
-    return addNearest(warmup)
+	type cand struct {
+		tx   Transaction
+		diff int
+	}
+	addNearest := func(candidates []Transaction) []Transaction {
+		list := make([]cand, 0, len(candidates))
+		for _, t := range candidates {
+			d := t.ProcessingMs - anom.ProcessingMs
+			if d < 0 {
+				d = -d
+			}
+			list = append(list, cand{tx: t, diff: d})
+		}
+		sort.Slice(list, func(i, j int) bool { return list[i].diff < list[j].diff })
+		out := make([]Transaction, 0, minInt(k, len(list)))
+		for i := 0; i < len(list) && len(out) < k; i++ {
+			out = append(out, list[i].tx)
+		}
+		return out
+	}
+	// Priority 1: same endpoint + same origin
+	both := make([]Transaction, 0)
+	for _, t := range warmup {
+		if t.APIEndpoint == anom.APIEndpoint && t.OriginCountry == anom.OriginCountry {
+			both = append(both, t)
+		}
+	}
+	if len(both) >= 1 {
+		return addNearest(both)
+	}
+	// Priority 2: same endpoint
+	ep := make([]Transaction, 0)
+	for _, t := range warmup {
+		if t.APIEndpoint == anom.APIEndpoint {
+			ep = append(ep, t)
+		}
+	}
+	if len(ep) >= 1 {
+		return addNearest(ep)
+	}
+	// Priority 3: same origin
+	oc := make([]Transaction, 0)
+	for _, t := range warmup {
+		if t.OriginCountry == anom.OriginCountry {
+			oc = append(oc, t)
+		}
+	}
+	if len(oc) >= 1 {
+		return addNearest(oc)
+	}
+	// Fallback: any warmup
+	return addNearest(warmup)
 }
 
-func minInt(a, b int) int { if a < b { return a } ; return b }
+func minInt(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
 
 func baselineSummaryFrom(bs BaselineStats) BaselineSummary {
-    return BaselineSummary{
-        Count: bs.Count,
-        ProcMin: bs.ProcMin,
-        ProcMedian: bs.ProcMedian,
-        ProcP95: bs.ProcP95,
-        AmountMin: bs.AmountMin,
-        AmountMedian: bs.AmountMedian,
-        AmountP95: bs.AmountP95,
-        TopEndpoints: topN(bs.EndpointFreq, bs.Count, 5),
-        TopOrigins: topN(bs.OriginFreq, bs.Count, 5),
-    }
+	return BaselineSummary{
+		Count:        bs.Count,
+		ProcMin:      bs.ProcMin,
+		ProcMedian:   bs.ProcMedian,
+		ProcP95:      bs.ProcP95,
+		AmountMin:    bs.AmountMin,
+		AmountMedian: bs.AmountMedian,
+		AmountP95:    bs.AmountP95,
+		TopEndpoints: topN(bs.EndpointFreq, bs.Count, 5),
+		TopOrigins:   topN(bs.OriginFreq, bs.Count, 5),
+	}
 }
 
 func generateHTMLReport(anomalies []AnomalyResult, allTransactions []Transaction, duration time.Duration, baseline BaselineSummary, outputPath string) error {
@@ -927,31 +983,31 @@ func generateHTMLReport(anomalies []AnomalyResult, allTransactions []Transaction
 </body>
 </html>`
 
-    // Parse template with helpers
-    funcMap := template.FuncMap{
-        "pct": func(v float64) float64 { return v * 100.0 },
-    }
-    t, err := template.New("report").Funcs(funcMap).Parse(tmpl)
-    if err != nil {
-        return fmt.Errorf("template parse error: %v", err)
-    }
+	// Parse template with helpers
+	funcMap := template.FuncMap{
+		"pct": func(v float64) float64 { return v * 100.0 },
+	}
+	t, err := template.New("report").Funcs(funcMap).Parse(tmpl)
+	if err != nil {
+		return fmt.Errorf("template parse error: %v", err)
+	}
 
-    // Prepare data
-    data := struct {
-        TotalTransactions int
-        AnomalyCount      int
-        DetectionRate     float64
-        ProcessingTime    string
-        Baseline          BaselineSummary
-        Anomalies         []AnomalyResult
-    }{
-        TotalTransactions: len(allTransactions),
-        AnomalyCount:      len(anomalies),
-        DetectionRate:     float64(len(anomalies)) / float64(len(allTransactions)) * 100,
-        ProcessingTime:    duration.String(),
-        Baseline:          baseline,
-        Anomalies:         anomalies,
-    }
+	// Prepare data
+	data := struct {
+		TotalTransactions int
+		AnomalyCount      int
+		DetectionRate     float64
+		ProcessingTime    string
+		Baseline          BaselineSummary
+		Anomalies         []AnomalyResult
+	}{
+		TotalTransactions: len(allTransactions),
+		AnomalyCount:      len(anomalies),
+		DetectionRate:     float64(len(anomalies)) / float64(len(allTransactions)) * 100,
+		ProcessingTime:    duration.String(),
+		Baseline:          baseline,
+		Anomalies:         anomalies,
+	}
 
 	// Write to file
 	f, err := os.Create(outputPath)

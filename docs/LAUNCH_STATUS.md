@@ -22,6 +22,11 @@
   - Mock AI provider deployed (commit: 32c691a)
   - Cloud Run service healthy
   - All core endpoints verified working
+- **[2025-12-07] Adaptive Sliding Scales (commit: 0c72c43):**
+  - Detection profiles: sensitive, balanced, strict, custom
+  - Auto-tuning: threshold adjustment based on user feedback
+  - Adaptive windowing: automatic window sizing per stream
+  - Feedback endpoint: mark false positives to improve detection
 
 ### Production URLs
 - **API**: https://driftlock-api-o6kjgrsowq-uc.a.run.app
@@ -95,6 +100,14 @@
 - [x] Complete OpenAPI 3.0 spec
 - [x] AI agent integration guide
 - [x] Use case documentation
+
+### Phase 6: Adaptive Detection (COMPLETE)
+
+- [x] Detection profiles (sensitive/balanced/strict/custom)
+- [x] Auto-tuning algorithm with feedback loop
+- [x] Adaptive windowing based on stream characteristics
+- [x] Feedback endpoint for false positive marking
+- [x] Tuning history and statistics endpoints
 
 ---
 

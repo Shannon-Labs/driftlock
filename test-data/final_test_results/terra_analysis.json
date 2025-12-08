@@ -1,0 +1,44 @@
+{
+  "success": true,
+  "total_events": 100,
+  "anomaly_count": 61,
+  "processing_time": "6.343996747s",
+  "compression_algo": "zstd",
+  "sample_anomalies": [
+    {
+      "index": 39,
+      "price": 76.29,
+      "ncd": 0.5596330275229358,
+      "confidence": 0.4197247706422018,
+      "statistically_significant": false
+    },
+    {
+      "index": 40,
+      "price": 76.44,
+      "ncd": 0.5596330275229358,
+      "confidence": 0.4197247706422018,
+      "statistically_significant": false
+    },
+    {
+      "index": 41,
+      "price": 76.86,
+      "ncd": 0.55,
+      "confidence": 0.41250000000000003,
+      "statistically_significant": false
+    },
+    {
+      "index": 42,
+      "price": 76.5,
+      "ncd": 0.55,
+      "confidence": 0.41250000000000003,
+      "statistically_significant": false
+    },
+    {
+      "index": 43,
+      "price": 76.51,
+      "ncd": 0.5610859728506787,
+      "confidence": 0.42081447963800905,
+      "statistically_significant": false
+    }
+  ]
+}

@@ -21,6 +21,10 @@ func (m *MockAIClient) Provider() string {
 	return "mock"
 }
 
+func (m *MockAIClient) Model() string {
+	return "mock-model"
+}
+
 // NewMockAIClient creates a new mock AI client for testing
 func NewMockAIClient() (AIClient, error) {
 	return &MockAIClient{}, nil

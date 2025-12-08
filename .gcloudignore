@@ -1,28 +1,50 @@
+# Git and version control
 .git
 .gitignore
-node_modules
+
+# Build artifacts
 target
 dist
+bin/
+openzl/cachedObjs/
+
+# Stray Go binaries (root cmd/ only, not collector-processor/cmd/)
+/cmd/
+collector-processor/driftlock-*
+collector-processor/bin/
+
+# Dependencies
+node_modules
+.venv/
+
+# Large directories NOT needed for backend Docker build
 landing-page
 playground
 test-data
-screenshots
-*.mp4
-*.gif
-*.zip
-docs/
-functions/
-infrastructure/
-.venv/
-.firebase/
-.genkit/
-.cursor/
-.factory/
-.cache/
-logs/
-.archive/
-bin/
 extensions/
 sdks/
 lib/
 scripts/
+
+# Documentation and media
+docs/
+screenshots
+*.mp4
+*.gif
+*.zip
+
+# Cloud/infra configs
+functions/
+infrastructure/
+.firebase/
+.genkit/
+
+# IDE and tool caches
+.cursor/
+.factory/
+.cache/
+.archive/
+logs/
+*.log
+*.tmp
+.DS_Store

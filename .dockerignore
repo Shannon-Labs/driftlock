@@ -1,7 +1,53 @@
+# Git and version control
 .git
+
+# Build artifacts
 bin/
 cbad-core/target/
+openzl/target/
+openzl/cachedObjs/
+target/
+dist/
+
+# Stray Go binaries (rebuilt in container)
+# Note: /cmd/ excludes root cmd/ only, not collector-processor/cmd/
+/cmd/
+collector-processor/driftlock-*
+collector-processor/bin/
+
+# Dependencies (rebuilt in container)
 node_modules/
+.venv/
+
+# Large directories NOT needed for backend Docker build
+extensions/
+test-data/
+landing-page/
+playground/
+sdks/
+lib/
+
+# Documentation and non-runtime files
+docs/
+screenshots/
+*.mp4
+*.gif
+*.zip
+
+# Cloud/infra configs
+infrastructure/
+functions/
+.firebase/
+.genkit/
+
+# IDE and tool caches
+.cursor/
+.factory/
+.cache/
+.archive/
+logs/
+
+# Misc
 *.log
 *.tmp
 driftlock-demo

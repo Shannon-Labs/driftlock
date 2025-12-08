@@ -91,9 +91,20 @@ goose -dir api/migrations postgres "$DATABASE_URL" status  # Check status
 |----------|---------|
 | `GET /healthz` | Liveness check |
 | `GET /readyz` | Readiness check |
-| `POST /v1/events` | Ingest events |
-| `GET /v1/anomalies` | Retrieve anomalies |
+| `POST /v1/detect` | Submit events for detection |
 | `POST /v1/demo/detect` | Anonymous demo (no auth) |
+| `GET /v1/anomalies` | Retrieve anomalies |
+| `POST /v1/anomalies/{id}/feedback` | Mark false positive/confirm |
+| `GET /v1/streams/{id}/profile` | Get detection profile |
+| `PATCH /v1/streams/{id}/profile` | Update profile settings |
+| `GET /v1/streams/{id}/tuning` | Get tuning history |
+| `GET /v1/profiles` | List detection profiles |
+
+### Adaptive Features
+
+- **Detection Profiles:** sensitive, balanced, strict, custom
+- **Auto-Tuning:** Automatic threshold adjustment based on feedback
+- **Adaptive Windowing:** Automatic window sizing based on stream characteristics
 
 Full spec: `docs/architecture/api/openapi.yaml`
 
@@ -161,4 +172,4 @@ Full matrix: `docs/AI_ROUTING.md`
 ---
 
 **Status:** ~98% launch ready
-**Last updated:** 2025-12-05
+**Last updated:** 2025-12-07

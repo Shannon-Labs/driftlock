@@ -39,6 +39,9 @@ typedef struct {
     double compression_ratio_change;
     double entropy_change;
     const char* explanation; // Owned by Rust, must be freed
+    double recommended_ncd_threshold;
+    size_t recommended_window_size;
+    double data_stability_score;
 } CBADEnhancedMetrics;
 
 // Opaque handle for AnomalyDetector instances
@@ -237,6 +240,9 @@ func (d *Detector) DetectAnomaly() (bool, *EnhancedMetrics, error) {
 			IsStatisticallySignificant: cMetrics.is_statistically_significant != 0,
 			CompressionRatioChange:     float64(cMetrics.compression_ratio_change),
 			EntropyChange:              float64(cMetrics.entropy_change),
+			RecommendedNCDThreshold:    float64(cMetrics.recommended_ncd_threshold),
+			RecommendedWindowSize:      int(cMetrics.recommended_window_size),
+			DataStabilityScore:         float64(cMetrics.data_stability_score),
 		}
 
 		// Get the explanation string (must be freed)
@@ -261,6 +267,9 @@ func (d *Detector) DetectAnomaly() (bool, *EnhancedMetrics, error) {
 			IsStatisticallySignificant: cMetrics.is_statistically_significant != 0,
 			CompressionRatioChange:     float64(cMetrics.compression_ratio_change),
 			EntropyChange:              float64(cMetrics.entropy_change),
+			RecommendedNCDThreshold:    float64(cMetrics.recommended_ncd_threshold),
+			RecommendedWindowSize:      int(cMetrics.recommended_window_size),
+			DataStabilityScore:         float64(cMetrics.data_stability_score),
 		}
 
 		// Get the explanation string (must be freed)

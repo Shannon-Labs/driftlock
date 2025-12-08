@@ -22,12 +22,18 @@ type feedbackRequest struct {
 	Reason       string `json:"reason,omitempty"`
 }
 
+type feedbackStore interface {
+	getAnomalyByID(ctx context.Context, tenantID, anomalyID uuid.UUID) (*AnomalyRecord, error)
+	recordFeedback(ctx context.Context, feedback FeedbackRecord) error
+	applyAutoTune(ctx context.Context, streamID uuid.UUID) error
+}
+
 type feedbackResponse struct {
 	Success bool   `json:"success"`
 	Message string `json:"message"`
 }
 
-func anomalyFeedbackHandler(store *store) http.HandlerFunc {
+func anomalyFeedbackHandler(store feedbackStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			writeError(w, r, http.StatusMethodNotAllowed, fmt.Errorf("method not allowed"))
@@ -128,6 +134,12 @@ type profileRequest struct {
 	AdaptiveWindowEnabled *bool  `json:"adaptive_window_enabled,omitempty"`
 }
 
+type profileStore interface {
+	getStreamTuningSettings(ctx context.Context, streamID uuid.UUID) (*StreamTuningSettings, error)
+	verifyStreamOwnership(ctx context.Context, tenantID, streamID uuid.UUID) bool
+	updateStreamProfile(ctx context.Context, streamID uuid.UUID, profile string, autoTune, adaptiveWindow *bool) error
+}
+
 type profileResponse struct {
 	Profile               string                    `json:"profile"`
 	AutoTuneEnabled       bool                      `json:"auto_tune_enabled"`
@@ -136,7 +148,7 @@ type profileResponse struct {
 	ProfileDescriptions   map[string]ProfileSummary `json:"profile_descriptions,omitempty"`
 }
 
-func streamProfileHandler(store *store) http.HandlerFunc {
+func streamProfileHandler(store profileStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Parse stream ID from path
 		// Path format: /v1/streams/{id}/profile
@@ -236,7 +248,14 @@ type tuningResponse struct {
 	FeedbackStats   *FeedbackStats       `json:"feedback_stats,omitempty"`
 }
 
-func streamTuningHandler(store *store) http.HandlerFunc {
+type tuningStore interface {
+	getStreamTuningSettings(ctx context.Context, streamID uuid.UUID) (*StreamTuningSettings, error)
+	verifyStreamOwnership(ctx context.Context, tenantID, streamID uuid.UUID) bool
+	getTuneHistory(ctx context.Context, streamID uuid.UUID, limit int) ([]TuneHistoryRecord, error)
+	getFeedbackStats(ctx context.Context, streamID uuid.UUID, since time.Time) (*FeedbackStats, error)
+}
+
+func streamTuningHandler(store tuningStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			writeError(w, r, http.StatusMethodNotAllowed, fmt.Errorf("method not allowed"))

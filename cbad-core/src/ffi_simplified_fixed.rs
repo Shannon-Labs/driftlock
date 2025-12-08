@@ -26,6 +26,9 @@ pub struct CBADEnhancedMetrics {
     pub compression_ratio_change: f64,
     pub entropy_change: f64,
     pub explanation: *const c_char,
+    pub recommended_ncd_threshold: f64,
+    pub recommended_window_size: usize,
+    pub data_stability_score: f64,
 }
 
 /// Create a simple anomaly detector with default configuration
@@ -120,6 +123,9 @@ pub unsafe extern "C" fn cbad_detect(
             compression_ratio_change: 0.0,
             entropy_change: 0.0,
             explanation: ptr::null(),
+            recommended_ncd_threshold: 0.0,
+            recommended_window_size: 0,
+            data_stability_score: 0.0,
         };
     }
 
@@ -140,6 +146,9 @@ pub unsafe extern "C" fn cbad_detect(
             compression_ratio_change: 0.0,
             entropy_change: 0.0,
             explanation: ptr::null(),
+            recommended_ncd_threshold: 0.0,
+            recommended_window_size: 0,
+            data_stability_score: 0.0,
         };
     }
 
@@ -176,6 +185,9 @@ pub unsafe extern "C" fn cbad_detect(
                 compression_ratio_change: result.metrics.compression_ratio_change,
                 entropy_change: result.metrics.entropy_change,
                 explanation: explanation_ptr,
+            recommended_ncd_threshold: result.metrics.recommended_ncd_threshold,
+            recommended_window_size: result.metrics.recommended_window_size,
+            data_stability_score: result.metrics.data_stability_score,
             }
         }
         Ok(None) => CBADEnhancedMetrics {
@@ -191,6 +203,9 @@ pub unsafe extern "C" fn cbad_detect(
             compression_ratio_change: 0.0,
             entropy_change: 0.0,
             explanation: ptr::null(),
+        recommended_ncd_threshold: 0.0,
+        recommended_window_size: 0,
+        data_stability_score: 0.0,
         },
         Err(_) => CBADEnhancedMetrics {
             ncd: 0.0,
@@ -205,6 +220,9 @@ pub unsafe extern "C" fn cbad_detect(
             compression_ratio_change: 0.0,
             entropy_change: 0.0,
             explanation: ptr::null(),
+        recommended_ncd_threshold: 0.0,
+        recommended_window_size: 0,
+        data_stability_score: 0.0,
         },
     }
 }

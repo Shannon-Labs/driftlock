@@ -120,6 +120,23 @@ pub fn compute_ncd(
     Ok(metrics.ncd)
 }
 
+/// Compute NCD directly from compressed sizes to avoid duplicate compression work.
+pub fn compute_ncd_from_sizes(
+    baseline_compressed: usize,
+    window_compressed: usize,
+    combined_compressed: usize,
+) -> f64 {
+    let min_compressed = baseline_compressed.min(window_compressed) as f64;
+    let max_compressed = baseline_compressed.max(window_compressed) as f64;
+
+    if max_compressed == 0.0 {
+        return 0.0;
+    }
+
+    let ncd = ((combined_compressed as f64) - min_compressed) / max_compressed;
+    ncd.clamp(0.0, 1.0)
+}
+
 /// Compute NCD with detailed metrics for comprehensive analysis
 pub fn compute_ncd_detailed(
     baseline: &[u8],
@@ -302,6 +319,18 @@ mod tests {
 
         // Should be detected as anomaly with reasonable threshold
         assert!(metrics.is_anomaly(0.4), "Should be detected as anomaly");
+    }
+
+    #[test]
+    fn test_compute_ncd_from_sizes() {
+        // Baseline/window compressed sizes and combined size
+        let baseline = 100usize;
+        let window = 120usize;
+        let combined = 190usize;
+
+        let ncd = compute_ncd_from_sizes(baseline, window, combined);
+        // Expected: (190 - 100) / 120 = 0.75
+        assert!((ncd - 0.75).abs() < 0.001, "unexpected ncd {}", ncd);
     }
 
     #[test]

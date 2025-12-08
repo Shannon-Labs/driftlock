@@ -35,6 +35,11 @@ func (c *ClaudeClient) Provider() string {
 	return "anthropic"
 }
 
+// Model returns the default model name
+func (c *ClaudeClient) Model() string {
+	return "claude-haiku-4-5-20251001" // Default Claude model
+}
+
 // AnalyzeAnomaly analyzes an anomaly using Claude
 func (c *ClaudeClient) AnalyzeAnomaly(ctx context.Context, model string, prompt string) (string, int64, int64, error) {
 	message, err := c.client.Messages.New(ctx, anthropic.MessageNewParams{

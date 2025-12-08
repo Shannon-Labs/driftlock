@@ -38,6 +38,11 @@ pub struct AnomalyMetrics {
 
     /// Human-readable explanation
     pub explanation: String, // Generated glass-box explanation
+
+    /// Recommendations derived from observed metrics
+    pub recommended_ncd_threshold: f64,
+    pub recommended_window_size: usize,
+    pub data_stability_score: f64, // 0.0 (unstable/noisy) to 1.0 (stable/consistent)
 }
 
 impl AnomalyMetrics {
@@ -56,6 +61,9 @@ impl AnomalyMetrics {
             permutation_count: 0,
             confidence_level: 0.0,
             explanation: String::new(),
+            recommended_ncd_threshold: 0.0,
+            recommended_window_size: 0,
+            data_stability_score: 0.0,
         }
     }
 
@@ -138,6 +146,51 @@ impl AnomalyMetrics {
 
         self.explanation = explanation;
     }
+
+    /// Compute tuning recommendations based on observed stability and current configuration.
+    pub fn apply_recommendations(
+        &mut self,
+        current_ncd_threshold: f64,
+        current_window_size: usize,
+        baseline_size: usize,
+    ) {
+        // Estimate stability from entropy/compression variability and confidence.
+        let entropy_instability = self.entropy_change.abs().min(1.0);
+        let compression_instability = self.compression_ratio_change.abs().min(1.0);
+        let confidence_instability = (1.0 - self.confidence_level).abs().min(1.0);
+
+        let stability = (1.0
+            - (0.4 * entropy_instability
+                + 0.4 * compression_instability
+                + 0.2 * confidence_instability))
+            .clamp(0.0, 1.0);
+        self.data_stability_score = stability;
+
+        // Recommend NCD threshold: raise slightly on noisy streams, lower on stable ones.
+        let base_ncd = if current_ncd_threshold > 0.0 {
+            current_ncd_threshold
+        } else {
+            0.3
+        };
+        self.recommended_ncd_threshold =
+            (base_ncd + (0.5 - stability) * 0.2).clamp(0.1, 0.8);
+
+        // Recommend window size: larger for unstable/high-entropy streams, smaller for very stable ones.
+        let base_window = if current_window_size > 0 {
+            current_window_size
+        } else {
+            50
+        };
+        let baseline_cap = if baseline_size > 0 {
+            baseline_size as f64 * 0.75
+        } else {
+            (base_window as f64) * 3.0
+        };
+        let window_scale = 1.0 + (1.0 - stability) * 0.5 + entropy_instability * 0.25;
+        let proposed =
+            (base_window as f64 * window_scale).clamp(10.0, baseline_cap.max(10.0));
+        self.recommended_window_size = proposed.round() as usize;
+    }
 }
 
 impl Default for AnomalyMetrics {
@@ -203,7 +256,7 @@ pub fn compute_metrics(
 ) -> Result<AnomalyMetrics> {
     let mut metrics = AnomalyMetrics::new();
 
-    // Compute compression ratios
+    // Compute compression ratios (reuse compressed sizes for NCD to avoid double work)
     let baseline_compressed = adapter.compress(baseline)?;
     let window_compressed = adapter.compress(window)?;
 
@@ -219,8 +272,16 @@ pub fn compute_metrics(
     metrics.entropy_change =
         (metrics.window_entropy - metrics.baseline_entropy) / metrics.baseline_entropy.max(0.001); // Avoid division by zero
 
-    // Compute NCD
-    metrics.ncd = ncd::compute_ncd(baseline, window, adapter)?;
+    // Compute NCD using already compressed sizes to avoid recompressing baseline/window
+    let mut combined = Vec::with_capacity(baseline.len() + window.len());
+    combined.extend_from_slice(baseline);
+    combined.extend_from_slice(window);
+    let combined_compressed = adapter.compress(&combined)?;
+    metrics.ncd = ncd::compute_ncd_from_sizes(
+        baseline_compressed.len(),
+        window_compressed.len(),
+        combined_compressed.len(),
+    );
 
     // Perform permutation testing for statistical significance
     let perm_result = {

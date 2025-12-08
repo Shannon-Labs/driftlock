@@ -175,8 +175,8 @@ func billingPortalHandler(store *store) http.HandlerFunc {
 			return
 		}
 
-		// Redirect or return URL
-		http.Redirect(w, r, ps.URL, http.StatusSeeOther)
+		// Return URL as JSON (frontend will redirect with auth)
+		writeJSON(w, r, http.StatusOK, map[string]string{"url": ps.URL})
 	}
 }
 

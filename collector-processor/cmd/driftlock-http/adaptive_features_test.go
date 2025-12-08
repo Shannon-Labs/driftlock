@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"math"
 	"testing"
+	"time"
 )
 
 func TestComputeAutoTuneAdjustment_HighFalsePositiveRate(t *testing.T) {
@@ -12,7 +14,6 @@ func TestComputeAutoTuneAdjustment_HighFalsePositiveRate(t *testing.T) {
 		Confirmed:         5,
 		FalsePositiveRate: 0.30,
 		AvgFPNCD:          0.29,
-		AvgFPPValue:       0.08,
 	}
 
 	currentNCD := 0.30
@@ -73,8 +74,8 @@ func TestComputeAutoTuneAdjustment_LowDetectionRate(t *testing.T) {
 	// the system should increase sensitivity by lowering the NCD threshold
 	stats := FeedbackStats{
 		TotalFeedback:     30,
-		FalsePositives:    0,   // 0% FP rate - well below 2.5% threshold (half of 5% target)
-		Confirmed:         10,  // Has confirmed anomalies, proving real anomalies exist
+		FalsePositives:    0,  // 0% FP rate - well below 2.5% threshold (half of 5% target)
+		Confirmed:         10, // Has confirmed anomalies, proving real anomalies exist
 		FalsePositiveRate: 0.0,
 	}
 
@@ -154,4 +155,42 @@ func TestApplyProfileDefaultsAndCustom(t *testing.T) {
 			t.Fatalf("custom profile window mismatch: %d", plan.WindowSize)
 		}
 	})
+}
+
+func TestShouldThrottleAutoTune(t *testing.T) {
+	now := time.Now()
+	cfg := defaultAutoTuneConfig
+
+	if shouldThrottleAutoTune(nil, cfg, now) {
+		t.Fatalf("nil last tune should not throttle")
+	}
+
+	lastRecent := now.Add(-cfg.CooldownPeriod / 2)
+	if !shouldThrottleAutoTune(&lastRecent, cfg, now) {
+		t.Fatalf("recent tune should throttle")
+	}
+
+	lastOld := now.Add(-cfg.CooldownPeriod * 2)
+	if shouldThrottleAutoTune(&lastOld, cfg, now) {
+		t.Fatalf("old tune should not throttle")
+	}
+}
+
+func TestDeriveStreamCharacteristics(t *testing.T) {
+	events := []json.RawMessage{
+		json.RawMessage(`{"msg":"a","size":1}`),
+		json.RawMessage(`{"msg":"b","size":2}`),
+		json.RawMessage(`{"msg":"c","size":3}`),
+	}
+
+	chars := deriveStreamCharacteristics(events)
+	if chars.AvgEventSizeBytes == 0 {
+		t.Fatalf("expected AvgEventSizeBytes to be computed")
+	}
+	if chars.PatternDiversity < 0 {
+		t.Fatalf("expected PatternDiversity to be non-negative")
+	}
+	if chars.AvgBaselineEntropy <= 0 {
+		t.Fatalf("expected entropy to be > 0")
+	}
 }

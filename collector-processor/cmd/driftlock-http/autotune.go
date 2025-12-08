@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"math"
 	"time"
 
@@ -26,17 +27,23 @@ var defaultAutoTuneConfig = AutoTuneConfig{
 	CooldownPeriod:       1 * time.Hour,
 }
 
+// shouldThrottleAutoTune enforces a cooldown between auto-tune evaluations.
+func shouldThrottleAutoTune(lastTune *time.Time, cfg AutoTuneConfig, now time.Time) bool {
+	if lastTune == nil {
+		return false
+	}
+	return now.Sub(*lastTune) < cfg.CooldownPeriod
+}
+
 // FeedbackStats summarizes user feedback for a stream
 type FeedbackStats struct {
-	TotalFeedback      int
-	FalsePositives     int
-	Confirmed          int
-	Dismissed          int
-	FalsePositiveRate  float64
-	AvgFPNCD           float64 // Average NCD of false positives
-	AvgFPPValue        float64 // Average p-value of false positives
-	AvgConfirmedNCD    float64 // Average NCD of confirmed anomalies
-	AvgConfirmedPValue float64
+	TotalFeedback     int
+	FalsePositives    int
+	Confirmed         int
+	Dismissed         int
+	FalsePositiveRate float64
+	AvgFPNCD          float64 // Average NCD of false positives
+	AvgConfirmedNCD   float64 // Average NCD of confirmed anomalies
 }
 
 // computeAutoTuneAdjustment calculates threshold adjustments based on feedback
@@ -106,17 +113,17 @@ func computeAutoTuneAdjustment(stats FeedbackStats, currentNCD, currentPValue fl
 
 // FeedbackRecord represents a single feedback entry for database operations
 type FeedbackRecord struct {
-	ID                   uuid.UUID
-	AnomalyID            uuid.UUID
-	StreamID             uuid.UUID
-	TenantID             uuid.UUID
-	FeedbackType         string
-	NCDAtDetection       float64
-	PValueAtDetection    float64
+	ID                    uuid.UUID
+	AnomalyID             uuid.UUID
+	StreamID              uuid.UUID
+	TenantID              uuid.UUID
+	FeedbackType          string
+	NCDAtDetection        float64
+	PValueAtDetection     float64
 	ConfidenceAtDetection float64
-	FeedbackReason       *string
-	CreatedAt            time.Time
-	CreatedBy            string
+	FeedbackReason        *string
+	CreatedAt             time.Time
+	CreatedBy             string
 }
 
 // TuneHistoryRecord represents a threshold adjustment for audit trail
@@ -156,14 +163,12 @@ func (s *store) getFeedbackStats(ctx context.Context, streamID uuid.UUID, since 
 			COUNT(*) FILTER (WHERE feedback_type = 'confirmed') as confirmed,
 			COUNT(*) FILTER (WHERE feedback_type = 'dismissed') as dismissed,
 			COALESCE(AVG(ncd_at_detection) FILTER (WHERE feedback_type = 'false_positive'), 0) as avg_fp_ncd,
-			COALESCE(AVG(pvalue_at_detection) FILTER (WHERE feedback_type = 'false_positive'), 0) as avg_fp_pvalue,
-			COALESCE(AVG(ncd_at_detection) FILTER (WHERE feedback_type = 'confirmed'), 0) as avg_confirmed_ncd,
-			COALESCE(AVG(pvalue_at_detection) FILTER (WHERE feedback_type = 'confirmed'), 0) as avg_confirmed_pvalue
+			COALESCE(AVG(ncd_at_detection) FILTER (WHERE feedback_type = 'confirmed'), 0) as avg_confirmed_ncd
 		FROM anomaly_feedback
 		WHERE stream_id = $1 AND created_at >= $2`,
 		streamID, since).Scan(
 		&stats.TotalFeedback, &stats.FalsePositives, &stats.Confirmed, &stats.Dismissed,
-		&stats.AvgFPNCD, &stats.AvgFPPValue, &stats.AvgConfirmedNCD, &stats.AvgConfirmedPValue)
+		&stats.AvgFPNCD, &stats.AvgConfirmedNCD)
 
 	if err != nil {
 		return nil, err
@@ -242,6 +247,25 @@ func (s *store) getStreamTuningSettings(ctx context.Context, streamID uuid.UUID)
 	return settings, nil
 }
 
+// getLastTuneTime returns the most recent tune history timestamp, if any.
+func (s *store) getLastTuneTime(ctx context.Context, streamID uuid.UUID) (*time.Time, error) {
+	var ts time.Time
+	err := s.pool.QueryRow(ctx, `
+		SELECT created_at
+		FROM threshold_tune_history
+		WHERE stream_id = $1
+		ORDER BY created_at DESC
+		LIMIT 1`,
+		streamID).Scan(&ts)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &ts, nil
+}
+
 // applyAutoTune runs the auto-tune algorithm for a stream and applies adjustments
 func (s *store) applyAutoTune(ctx context.Context, streamID uuid.UUID) error {
 	// Get current settings
@@ -252,6 +276,15 @@ func (s *store) applyAutoTune(ctx context.Context, streamID uuid.UUID) error {
 
 	if !settings.AutoTuneEnabled {
 		return nil
+	}
+
+	// Respect cooldown to avoid thrashing from frequent feedback submissions
+	if lastTune, err := s.getLastTuneTime(ctx, streamID); err == nil {
+		if shouldThrottleAutoTune(lastTune, defaultAutoTuneConfig, time.Now()) {
+			return nil
+		}
+	} else {
+		return err
 	}
 
 	// Get feedback from last 30 days
@@ -334,6 +367,73 @@ func (s *store) recordTuneHistoryTx(ctx context.Context, tx pgx.Tx, history Tune
 		VALUES ($1, $2, $3, $4, $5, $6)`,
 		history.StreamID, history.TuneType, history.OldValue, history.NewValue, history.Reason, history.Confidence)
 	return err
+}
+
+// applyRustRecommendation applies Rust's data-driven threshold recommendation
+// This runs after each detection, not triggered by user feedback
+func (s *store) applyRustRecommendation(ctx context.Context, streamID uuid.UUID, recommendedNCD float64, stabilityScore float64) error {
+	if recommendedNCD <= 0 {
+		return nil // Invalid recommendation
+	}
+
+	// Get current settings
+	settings, err := s.getStreamTuningSettings(ctx, streamID)
+	if err != nil {
+		return err
+	}
+
+	if !settings.AutoTuneEnabled {
+		return nil
+	}
+
+	// Respect cooldown - same as feedback-based tuning
+	if lastTune, err := s.getLastTuneTime(ctx, streamID); err == nil {
+		if shouldThrottleAutoTune(lastTune, defaultAutoTuneConfig, time.Now()) {
+			return nil
+		}
+	} else {
+		return err
+	}
+
+	// Get current threshold (tuned or profile default)
+	currentNCD := settings.NCDThreshold
+
+	// Only adjust if recommendation differs by >2%
+	diff := math.Abs(recommendedNCD - currentNCD)
+	if diff < 0.02 {
+		return nil
+	}
+
+	// Clamp to reasonable bounds
+	newNCD := math.Max(0.1, math.Min(0.8, recommendedNCD))
+
+	// Apply and record
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	_, err = tx.Exec(ctx, `
+		UPDATE streams SET tuned_ncd_threshold = $1, detection_profile = 'custom' WHERE id = $2`,
+		newNCD, streamID)
+	if err != nil {
+		return err
+	}
+
+	err = s.recordTuneHistoryTx(ctx, tx, TuneHistoryRecord{
+		StreamID:   streamID,
+		TuneType:   "ncd",
+		OldValue:   &currentNCD,
+		NewValue:   newNCD,
+		Reason:     "rust_recommendation",
+		Confidence: stabilityScore, // Use stability score as confidence
+	})
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit(ctx)
 }
 
 // getTuneHistory retrieves recent tune history for a stream

@@ -31,4 +31,7 @@ type EnhancedMetrics struct {
 	CompressionRatioChange     float64
 	EntropyChange              float64
 	Explanation                string
+	RecommendedNCDThreshold    float64
+	RecommendedWindowSize      int
+	DataStabilityScore         float64
 }

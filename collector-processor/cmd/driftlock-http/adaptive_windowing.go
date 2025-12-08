@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"math"
 	"time"
 
@@ -12,7 +14,6 @@ import (
 type StreamCharacteristics struct {
 	AvgEventsPerHour   float64
 	AvgEventSizeBytes  int
-	EventSizeVariance  float64
 	AvgBaselineEntropy float64
 	PatternDiversity   float64 // 0-1 scale, higher = more varied
 }
@@ -95,13 +96,54 @@ func computeAdaptiveWindowSizes(chars StreamCharacteristics, cfg AdaptiveWindowC
 	return baseline, window
 }
 
+// deriveStreamCharacteristics computes lightweight statistics from a request payload.
+// It intentionally samples a small subset to avoid heavy CPU work on large batches.
+func deriveStreamCharacteristics(events []json.RawMessage) StreamCharacteristics {
+	if len(events) == 0 {
+		return StreamCharacteristics{}
+	}
+
+	limit := min(len(events), 200)
+	samples := make([][]byte, 0, limit)
+	var totalSize float64
+
+	combined := bytes.Buffer{}
+	for i := 0; i < limit; i++ {
+		ev := bytes.TrimSpace([]byte(events[i]))
+		samples = append(samples, ev)
+		size := float64(len(ev))
+		totalSize += size
+		if combined.Len() < 512*1024 { // cap entropy sample to 512KB
+			combined.Write(ev)
+		}
+	}
+
+	count := float64(len(samples))
+	avgSize := 0.0
+	if count > 0 {
+		avgSize = totalSize / count
+	}
+
+	patternDiversity := computePatternDiversity(samples)
+	entropy := computeApproximateEntropy(combined.Bytes())
+
+	// Approximate events/hour using batch size; conservative to avoid oversizing
+	approxEventsPerHour := float64(len(events)) * 6 // assume ~10 minute batches
+
+	return StreamCharacteristics{
+		AvgEventsPerHour:   approxEventsPerHour,
+		AvgEventSizeBytes:  int(avgSize),
+		AvgBaselineEntropy: entropy,
+		PatternDiversity:   patternDiversity,
+	}
+}
+
 // StreamStatistics represents computed statistics stored in database
 type StreamStatistics struct {
 	ID                      uuid.UUID
 	StreamID                uuid.UUID
 	AvgEventsPerHour        float64
 	AvgEventSizeBytes       int
-	EventSizeVariance       float64
 	AvgBaselineEntropy      float64
 	AvgNCDSelf              float64
 	PatternDiversityScore   float64
@@ -143,7 +185,7 @@ func (s *store) getStreamStatistics(ctx context.Context, streamID uuid.UUID) (*S
 
 	err := s.pool.QueryRow(ctx, `
         SELECT id, stream_id, avg_events_per_hour, avg_event_size_bytes,
-               COALESCE(event_size_variance, 0), COALESCE(avg_baseline_entropy, 0),
+               COALESCE(avg_baseline_entropy, 0),
                COALESCE(avg_ncd_self, 0), COALESCE(pattern_diversity_score, 0),
                recommended_baseline_size, recommended_window_size,
                sample_count, last_computed_at
@@ -151,8 +193,7 @@ func (s *store) getStreamStatistics(ctx context.Context, streamID uuid.UUID) (*S
         WHERE stream_id = $1`,
 		streamID).Scan(
 		&stats.ID, &stats.StreamID, &stats.AvgEventsPerHour, &stats.AvgEventSizeBytes,
-		&stats.EventSizeVariance, &stats.AvgBaselineEntropy,
-		&stats.AvgNCDSelf, &stats.PatternDiversityScore,
+		&stats.AvgBaselineEntropy, &stats.AvgNCDSelf, &stats.PatternDiversityScore,
 		&stats.RecommendedBaselineSize, &stats.RecommendedWindowSize,
 		&stats.SampleCount, &stats.LastComputedAt)
 

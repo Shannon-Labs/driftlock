@@ -1,0 +1,10 @@
+todo:
+  - title: Complete docs buildout for /docs site
+    items:
+      - Audit sidebar targets vs existing markdown; list missing or placeholder pages
+      - Add missing Error Codes page referenced in sidebar and API docs
+      - Add Node.js examples page to align with sidebar and quick links
+      - Populate pricing/plan guide and link from landing page
+      - Fill GraphQL and guides/tutorials placeholders with minimal viable content
+      - Sync docs to landing-page/public/docs (scripts/sync-docs.sh) if needed
+      - Run lint/markdown checks or spot-fix lint warnings (e.g., headings)

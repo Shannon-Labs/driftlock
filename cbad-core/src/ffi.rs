@@ -144,6 +144,9 @@ pub struct CBADEnhancedMetrics {
     pub compression_ratio_change: f64,
     pub entropy_change: f64,
     pub explanation: *const c_char, // Owned by Rust, must be freed
+    pub recommended_ncd_threshold: f64,
+    pub recommended_window_size: usize,
+    pub data_stability_score: f64,
 }
 
 /// Returns 1 when CBAD was compiled with OpenZL support, 0 otherwise
@@ -413,6 +416,9 @@ pub unsafe extern "C" fn cbad_detector_detect_anomaly(
                 };
                 metrics.compression_ratio_change = result.metrics.compression_ratio_change;
                 metrics.entropy_change = result.metrics.entropy_change;
+                metrics.recommended_ncd_threshold = result.metrics.recommended_ncd_threshold;
+                metrics.recommended_window_size = result.metrics.recommended_window_size;
+                metrics.data_stability_score = result.metrics.data_stability_score;
 
                 // Create explanation string (caller must free this)
                 // Use nested fallbacks to avoid panic from unwrap

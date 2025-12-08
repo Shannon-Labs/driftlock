@@ -118,3 +118,37 @@ curl "https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1/anomalies?page_token=eyJ.
   }
 }
 ```
+
+# POST /v1/anomalies/{id}/feedback
+
+Record feedback for a specific anomaly to improve auto-tuning.
+
+## Endpoint
+
+```
+POST https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1/anomalies/{id}/feedback
+```
+
+## Authentication
+
+Requires Firebase bearer token or API key associated with the anomaly’s tenant.
+
+## Request Body
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `feedback_type` | string | Yes | One of `false_positive`, `confirmed`, `dismissed` |
+| `reason` | string | No | Optional context on why you marked it |
+
+Example:
+
+```bash
+curl -X POST "https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1/anomalies/123/feedback" \
+  -H "Authorization: Bearer <TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{"feedback_type":"confirmed","reason":"Clear production incident"}'
+```
+
+## Response
+
+`200 OK` with `{ "success": true, "message": "Feedback recorded" }`

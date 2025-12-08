@@ -21,6 +21,9 @@ package main
 //     double compression_ratio_change;
 //     double entropy_change;
 //     const char* explanation;
+//     double recommended_ncd_threshold;
+//     size_t recommended_window_size;
+//     double data_stability_score;
 // } CBADEnhancedMetrics;
 //
 // extern void* cbad_detector_create_simple();
@@ -41,13 +44,13 @@ import (
 )
 
 type Transaction struct {
-	Timestamp    string  `json:"timestamp"`
-	TransactionID string `json:"transaction_id"`
-	AmountUSD    float64 `json:"amount_usd"`
-	ProcessingMs int     `json:"processing_ms"`
-	OriginCountry string `json:"origin_country"`
-	APIEndpoint  string  `json:"api_endpoint"`
-	Status       string  `json:"status"`
+	Timestamp     string  `json:"timestamp"`
+	TransactionID string  `json:"transaction_id"`
+	AmountUSD     float64 `json:"amount_usd"`
+	ProcessingMs  int     `json:"processing_ms"`
+	OriginCountry string  `json:"origin_country"`
+	APIEndpoint   string  `json:"api_endpoint"`
+	Status        string  `json:"status"`
 }
 
 type AnomalyResult struct {
@@ -57,18 +60,21 @@ type AnomalyResult struct {
 }
 
 type CBADEnhancedMetrics struct {
-	NCD                         float64 `json:"ncd"`
-	PValue                      float64 `json:"p_value"`
-	BaselineCompressionRatio    float64 `json:"baseline_compression_ratio"`
-	WindowCompressionRatio      float64 `json:"window_compression_ratio"`
-	BaselineEntropy             float64 `json:"baseline_entropy"`
-	WindowEntropy               float64 `json:"window_entropy"`
-	IsAnomaly                   int     `json:"is_anomaly"`
-	ConfidenceLevel             float64 `json:"confidence_level"`
-	IsStatisticallySignificant  int     `json:"is_statistically_significant"`
-	CompressionRatioChange      float64 `json:"compression_ratio_change"`
-	EntropyChange               float64 `json:"entropy_change"`
-	Explanation                 string  `json:"explanation"`
+	NCD                        float64 `json:"ncd"`
+	PValue                     float64 `json:"p_value"`
+	BaselineCompressionRatio   float64 `json:"baseline_compression_ratio"`
+	WindowCompressionRatio     float64 `json:"window_compression_ratio"`
+	BaselineEntropy            float64 `json:"baseline_entropy"`
+	WindowEntropy              float64 `json:"window_entropy"`
+	IsAnomaly                  int     `json:"is_anomaly"`
+	ConfidenceLevel            float64 `json:"confidence_level"`
+	IsStatisticallySignificant int     `json:"is_statistically_significant"`
+	CompressionRatioChange     float64 `json:"compression_ratio_change"`
+	EntropyChange              float64 `json:"entropy_change"`
+	Explanation                string  `json:"explanation"`
+	RecommendedNCDThreshold    float64 `json:"recommended_ncd_threshold"`
+	RecommendedWindowSize      int     `json:"recommended_window_size"`
+	DataStabilityScore         float64 `json:"data_stability_score"`
 }
 
 func main() {
@@ -77,7 +83,7 @@ func main() {
 	}
 
 	jsonPath := os.Args[1]
-	
+
 	// Read JSON file
 	data, err := os.ReadFile(jsonPath)
 	if err != nil {
@@ -102,26 +108,26 @@ func main() {
 	// Process transactions and detect anomalies
 	var anomalies []AnomalyResult
 	startTime := time.Now()
-	
+
 	// Process first 1000 transactions for demo (speeds things up)
 	processingLimit := 1000
 	if len(transactions) < processingLimit {
 		processingLimit = len(transactions)
 	}
-	
+
 	fmt.Printf("Processing %d transactions for demo...\n\n", processingLimit)
-	
+
 	for i := 0; i < processingLimit; i++ {
 		tx := transactions[i]
-		
+
 		// Convert transaction to string for analysis
 		txJSON, _ := json.Marshal(tx)
 		dataStr := C.CString(string(txJSON))
-		
+
 		// Process with CBAD
 		metrics := C.cbad_detector_process(detector, dataStr, C.size_t(len(txJSON)))
 		C.free(unsafe.Pointer(dataStr))
-		
+
 		if metrics.is_anomaly != 0 {
 			// Get explanation
 			explanation := C.GoString(metrics.explanation)
@@ -131,18 +137,21 @@ func main() {
 
 			// Convert C struct to Go struct
 			goMetrics := CBADEnhancedMetrics{
-				NCD:                         float64(metrics.ncd),
-				PValue:                      float64(metrics.p_value),
-				BaselineCompressionRatio:    float64(metrics.baseline_compression_ratio),
-				WindowCompressionRatio:      float64(metrics.window_compression_ratio),
-				BaselineEntropy:             float64(metrics.baseline_entropy),
-				WindowEntropy:               float64(metrics.window_entropy),
-				IsAnomaly:                   int(metrics.is_anomaly),
-				ConfidenceLevel:             float64(metrics.confidence_level),
-				IsStatisticallySignificant:  int(metrics.is_statistically_significant),
-				CompressionRatioChange:      float64(metrics.compression_ratio_change),
-				EntropyChange:               float64(metrics.entropy_change),
-				Explanation:                 explanation,
+				NCD:                        float64(metrics.ncd),
+				PValue:                     float64(metrics.p_value),
+				BaselineCompressionRatio:   float64(metrics.baseline_compression_ratio),
+				WindowCompressionRatio:     float64(metrics.window_compression_ratio),
+				BaselineEntropy:            float64(metrics.baseline_entropy),
+				WindowEntropy:              float64(metrics.window_entropy),
+				IsAnomaly:                  int(metrics.is_anomaly),
+				ConfidenceLevel:            float64(metrics.confidence_level),
+				IsStatisticallySignificant: int(metrics.is_statistically_significant),
+				CompressionRatioChange:     float64(metrics.compression_ratio_change),
+				EntropyChange:              float64(metrics.entropy_change),
+				Explanation:                explanation,
+				RecommendedNCDThreshold:    float64(metrics.recommended_ncd_threshold),
+				RecommendedWindowSize:      int(metrics.recommended_window_size),
+				DataStabilityScore:         float64(metrics.data_stability_score),
 			}
 
 			anomalies = append(anomalies, AnomalyResult{
