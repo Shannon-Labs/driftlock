@@ -25,9 +25,10 @@ API keys are rate limited based on your plan:
 
 | Plan | Requests/Minute |
 |------|----------------|
-| Pilot (Free) | 60 |
-| Radar ($20/mo) | 300 |
-| Lock ($200/mo) | 1,000+ |
+| Free | 60 |
+| Standard ($15/mo) | 300 |
+| Pro ($100/mo) | 600 |
+| Enterprise ($299/mo) | 1,000+ |
 
 ### Rate Limit Headers
 

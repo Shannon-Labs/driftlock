@@ -47,9 +47,10 @@ The last event (CPU spike + memory spike) will be flagged as anomalous.
 
 | Plan | Price | Events/month | Best for |
 |------|-------|--------------|----------|
-| **Pilot** | Free | 10,000 | Testing and prototyping |
-| **Radar** | $20/mo | 500,000 | Production monitoring |
-| **Lock** | $200/mo | 5,000,000 | Enterprise with compliance |
+| **Free** | $0/mo | 10,000 | Experimentation |
+| **Standard** | $15/mo | 500,000 | Startups & active monitoring |
+| **Pro** | $100/mo | 5,000,000 | High-volume production |
+| **Enterprise** | $299/mo | 25,000,000 | Large-scale compliance |
 
 [Sign up free →](https://driftlock.net/#signup)
 

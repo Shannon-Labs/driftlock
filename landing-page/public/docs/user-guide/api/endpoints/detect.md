@@ -251,12 +251,12 @@ curl -X POST https://api.driftlock.net/v1/detect \
 
 ## Limits
 
-| Limit | Pilot (Free) | Radar ($20/mo) | Lock ($200/mo) |
-|-------|--------------|----------------|----------------|
-| Events per request | 256 | 256 | 256 |
-| Request size | 10 MB | 10 MB | 50 MB |
-| Requests per minute | 60 | 300 | 1000+ |
-| Events per month | 10,000 | 500,000 | 5,000,000 |
+| Limit | Free | Standard ($15/mo) | Pro ($100/mo) | Enterprise ($299/mo) |
+|-------|------|-------------------|---------------|----------------------|
+| Events per request | 256 | 256 | 256 | 256 |
+| Request size | 10 MB | 10 MB | 25 MB | 50 MB |
+| Requests per minute | 60 | 300 | 600 | 1000+ |
+| Events per month | 10,000 | 500,000 | 5,000,000 | 25,000,000 |
 
 ## Best Practices
 

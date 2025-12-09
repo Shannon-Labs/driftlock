@@ -167,9 +167,10 @@ API keys are subject to rate limits based on your plan:
 
 | Plan | Rate Limit |
 |------|------------|
-| Developer (Free) | 60 req/min |
-| Starter ($25/mo) | 300 req/min |
-| Pro (Custom) | 1,000+ req/min |
+| Free | 60 req/min |
+| Standard ($15/mo) | 300 req/min |
+| Pro ($100/mo) | 600 req/min |
+| Enterprise ($299/mo) | 1,000+ req/min |
 
 ### Rate Limit Headers
 
