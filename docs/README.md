@@ -1,6 +1,6 @@
 # Driftlock Documentation
 
-Compression-based anomaly detection for your logs, metrics, traces, and LLM I/O.
+Compression-based anomaly detection for logs, metrics, traces, and LLM I/O.
 
 ## Quick Links
 
@@ -8,26 +8,27 @@ Compression-based anomaly detection for your logs, metrics, traces, and LLM I/O.
 | --- | --- |
 | Try it now (no signup) | [Demo endpoint](./user-guide/api/endpoints/demo.md) |
 | Get started in 5 minutes | [Quickstart Guide](./user-guide/getting-started/quickstart.md) |
-| See API endpoints | [API Reference](./user-guide/api/rest-api.md) |
-| Handle errors | [Error Codes](./user-guide/api/errors.md) |
+| See API endpoints | [REST API Reference](./user-guide/api/rest-api.md) |
 | Understand how it works | [Core Concepts](./user-guide/getting-started/concepts.md) |
-| See pricing | [Pricing](./user-guide/guides/pricing-tiers.md) |
+| Run a tutorial | [Tutorials & Examples](./user-guide/tutorials/README.md) |
+| Handle errors | [Error Codes](./user-guide/api/errors.md) |
+| Operate in production | [Operations & Runbooks](./user-guide/guides/operations.md) |
+| Check compliance | [DORA](./compliance/COMPLIANCE_DORA.md) |
 
 ## What is Driftlock?
 
-Driftlock detects anomalies by analyzing how well your data compresses. When new data compresses poorly against a learned baseline, it’s likely anomalous.
+Driftlock detects anomalies by analyzing how well your data compresses. When new data compresses poorly against a learned baseline, it's likely anomalous.
 
-### Key features
-
-- Works immediately on any JSON data (no model training)
-- Deterministic and explainable results with plain-English reasons
-- Low false positives via statistical significance testing (p-values)
+**Key features**
+- No model training required—works immediately on any JSON payload
+- Deterministic, explainable results with plain-language reasons
+- Low false positives via p-value significance testing
 - Compliance-ready evidence bundles (DORA, NIS2, AI Act)
 
 ## Try It Now (no signup)
 
 ```bash
-curl -X POST https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1/demo/detect \
+curl -X POST https://api.driftlock.net/v1/demo/detect \
   -H "Content-Type: application/json" \
   -d '{
     "events": [
@@ -41,21 +42,23 @@ curl -X POST https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1/demo/detect \
 
 The last event (CPU spike + memory spike) will be flagged as anomalous.
 
-## Documentation Sections
+## Documentation Map
 
 - **Getting Started:** [Quickstart](./user-guide/getting-started/quickstart.md), [Core Concepts](./user-guide/getting-started/concepts.md), [Authentication](./user-guide/getting-started/authentication.md)
-- **API Reference:** [POST /v1/detect](./user-guide/api/endpoints/detect.md), [POST /v1/demo/detect](./user-guide/api/endpoints/demo.md), [GET /v1/anomalies](./user-guide/api/endpoints/anomalies.md), [Error Codes](./user-guide/api/errors.md)
-- **Examples:** [cURL](./user-guide/api/examples/curl-examples.md), [Python](./user-guide/api/examples/python-examples.md), [Node.js](./user-guide/api/examples/node-examples.md)
+- **API Reference:** [REST API](./user-guide/api/rest-api.md), [POST /v1/detect](./user-guide/api/endpoints/detect.md), [POST /v1/demo/detect](./user-guide/api/endpoints/demo.md), [GET /v1/anomalies](./user-guide/api/endpoints/anomalies.md), [Error Codes](./user-guide/api/errors.md)
+- **Tutorials & Examples:** [Log monitoring](./user-guide/tutorials/log-monitoring.md), [Metrics spike detection](./user-guide/tutorials/metrics-spike-detection.md), [LLM output drift](./user-guide/tutorials/llm-output-drift.md), [Webhook/alerting](./user-guide/tutorials/webhook-alerting.md), [cURL examples](./user-guide/api/examples/curl-examples.md), [Python examples](./user-guide/api/examples/python-examples.md)
+- **Operations & SRE:** [Operations & Runbooks](./user-guide/guides/operations.md), [Deployment runbooks](./deployment/RUNBOOKS.md), [Cloud Run setup](./deployment/cloud-run-setup.md)
 - **Compliance:** [DORA](./compliance/COMPLIANCE_DORA.md), [NIS2](./compliance/COMPLIANCE_NIS2.md), [AI Act](./compliance/COMPLIANCE_RUNTIME_AI.md)
-- **How it works:** [Algorithms](./architecture/ALGORITHMS.md), [Architecture](./architecture/API.md)
+- **Architecture:** [Algorithms](./architecture/ALGORITHMS.md), [API architecture](./architecture/API.md)
 
 ## Pricing (snapshot)
 
 | Plan | Price | Events/month | Best for |
 | --- | --- | --- | --- |
-| Pilot | Free | 10,000 | Testing & prototyping |
-| Radar | $20/mo | 500,000 | Production monitoring |
-| Lock | $200/mo | 5,000,000 | Enterprise with compliance |
+| Free | $0/mo | 10,000 | Experimentation |
+| Standard | $15/mo | 500,000 | Startups & active monitoring |
+| Pro | $100/mo | 5,000,000 | High-volume production |
+| Enterprise | $299/mo | 25,000,000 | Large-scale compliance |
 
 ## Support
 

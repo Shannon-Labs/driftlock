@@ -1,164 +1,63 @@
 # Auto-Tuning
 
-Auto-tuning automatically adjusts detection thresholds based on your feedback. When you mark anomalies as false positives or confirm them, Driftlock learns and refines its sensitivity for your stream.
+Auto-tuning adjusts detection thresholds using your feedback to reduce false positives while keeping recall high.
 
-## How It Works
+## How it works
 
 ```
-Detect Anomaly → Review in Dashboard → Submit Feedback → Auto-Adjust Thresholds
+Detect anomaly → You review → Submit feedback → Thresholds adjust (if enabled)
 ```
 
-1. **Detection**: An anomaly is detected and flagged
-2. **Review**: You examine the anomaly and determine if it's real
-3. **Feedback**: You mark it as `false_positive`, `confirmed`, or `dismissed`
-4. **Learning**: The algorithm analyzes feedback patterns
-5. **Adjustment**: Thresholds are adjusted to reduce future false positives
+- Feedback types: `false_positive`, `confirmed`, `dismissed`.
+- Requires sufficient feedback (20+ samples) before adjusting.
+- Adjustments are bounded and cooled down to avoid thrashing.
 
-## Enabling Auto-Tune
-
-Auto-tune is **enabled by default** for new streams. If you need to toggle it:
+## Enable/disable
 
 ```bash
-curl -X PATCH https://driftlock.net/api/v1/streams/{stream_id}/profile \
-  -H "X-Api-Key: dlk_..." \
+curl -X PATCH "https://api.driftlock.net/v1/streams/{stream_id}/profile" \
   -H "Content-Type: application/json" \
+  -H "X-Api-Key: $DRIFTLOCK_API_KEY" \
   -d '{"auto_tune_enabled": true}'
 ```
 
-## Submitting Feedback
+When auto-tune updates thresholds, the stream moves to the `custom` profile.
 
-### Mark as False Positive
-
-When an anomaly isn't actually anomalous:
+## Submit feedback
 
 ```bash
-curl -X POST https://driftlock.net/api/v1/anomalies/{anomaly_id}/feedback \
-  -H "X-Api-Key: dlk_..." \
+# False positive
+curl -X POST "https://api.driftlock.net/v1/anomalies/{id}/feedback" \
   -H "Content-Type: application/json" \
+  -H "X-Api-Key: $DRIFTLOCK_API_KEY" \
   -d '{"feedback_type": "false_positive"}'
-```
 
-### Confirm Anomaly
-
-When an anomaly is correctly detected:
-
-```bash
-curl -X POST https://driftlock.net/api/v1/anomalies/{anomaly_id}/feedback \
-  -H "X-Api-Key: dlk_..." \
+# Confirmed
+curl -X POST "https://api.driftlock.net/v1/anomalies/{id}/feedback" \
   -H "Content-Type: application/json" \
-  -d '{"feedback_type": "confirmed"}'
-```
+  -H "X-Api-Key: $DRIFTLOCK_API_KEY" \
+  -d '{"feedback_type": "confirmed", "reason": "Production incident"}'
 
-### Dismiss (Neutral)
-
-When an anomaly is technically correct but not actionable:
-
-```bash
-curl -X POST https://driftlock.net/api/v1/anomalies/{anomaly_id}/feedback \
-  -H "X-Api-Key: dlk_..." \
+# Dismissed (neutral)
+curl -X POST "https://api.driftlock.net/v1/anomalies/{id}/feedback" \
   -H "Content-Type: application/json" \
+  -H "X-Api-Key: $DRIFTLOCK_API_KEY" \
   -d '{"feedback_type": "dismissed"}'
 ```
 
-## Algorithm Details
-
-The algorithm learns from your feedback to reduce false positives while maintaining detection quality. Key points:
-
-- Requires **20+ feedback samples** before adjusting
-- Targets a **5% false positive rate**
-- Has a **1-hour cooldown** between adjustments
-
-<details>
-<summary><strong>Show technical details</strong> (advanced)</summary>
-
-### Target False Positive Rate
-
-Auto-tune targets a **5% false positive rate**. This means:
-- If your FP rate is above 15%: thresholds increase (less sensitive)
-- If your FP rate is below 2.5% with confirmed anomalies: thresholds may decrease (more sensitive)
-
-### Minimum Feedback Requirement
-
-The algorithm requires **20+ feedback samples** before making adjustments. This prevents premature tuning based on limited data.
-
-### Cooldown Period
-
-After an adjustment, there's a **1-hour cooldown** before the next adjustment. This prevents thrashing from rapid feedback submissions.
-
-### Adjustment Bounds
-
-- **Learning rate**: 15% of the calculated delta
-- **Max single adjustment**: 25% of current threshold
-- **NCD bounds**: 0.10 to 0.80
-- **P-value bounds**: 0.001 to 0.20
-
-</details>
-
-## Viewing Tuning History
-
-Check what adjustments have been made:
+## View tuning history
 
 ```bash
-curl https://driftlock.net/api/v1/streams/{stream_id}/tuning \
-  -H "X-Api-Key: dlk_..."
+curl "https://api.driftlock.net/v1/streams/{stream_id}/tuning" \
+  -H "X-Api-Key: $DRIFTLOCK_API_KEY"
 ```
 
-Response:
+Returns feedback stats and the last adjustments applied.
 
-```json
-{
-  "stream_id": "abc123",
-  "feedback_stats": {
-    "total_feedback": 45,
-    "false_positives": 8,
-    "confirmed": 32,
-    "dismissed": 5,
-    "false_positive_rate": 0.178
-  },
-  "tune_history": [
-    {
-      "tune_type": "ncd",
-      "old_value": 0.30,
-      "new_value": 0.35,
-      "reason": "high_false_positive_rate",
-      "confidence": 0.822,
-      "created_at": "2025-12-07T15:30:00Z"
-    }
-  ]
-}
-```
+## Guidelines
 
-### Tune Reasons
+- Provide consistent, honest feedback; avoid marking everything as confirmed or FP.
+- Expect changes after meaningful samples (20+). There is a cooldown between adjustments.
+- Switch back to a preset profile anytime to reset thresholds.
 
-| Reason | Description |
-|--------|-------------|
-| `high_false_positive_rate` | FP rate >15%, increased thresholds |
-| `low_detection_rate` | FP rate <2.5% with confirmed anomalies, decreased thresholds |
-| `fp_ncd_boundary` | False positives cluster near threshold, adjusted boundary |
-| `insufficient_feedback` | Not enough samples to tune |
-
-## Profile Switching
-
-When auto-tune adjusts thresholds, your stream automatically switches to the `custom` profile. This preserves your tuned values separate from the preset profiles.
-
-You can switch back to a preset profile at any time, which will reset to the profile's defaults:
-
-```bash
-curl -X PATCH https://driftlock.net/api/v1/streams/{stream_id}/profile \
-  -H "X-Api-Key: dlk_..." \
-  -H "Content-Type: application/json" \
-  -d '{"profile": "balanced"}'
-```
-
-## Best Practices
-
-1. **Be consistent**: Provide feedback regularly for accurate tuning
-2. **Be honest**: Mark true false positives, don't dismiss everything
-3. **Give it time**: Wait for 20+ feedback samples before expecting changes
-4. **Monitor history**: Check tuning history to understand adjustments
-5. **Reset if needed**: Switch to a preset profile to reset tuning
-
-## Next Steps
-
-- [Detection Profiles Guide](./detection-profiles.md) - Understanding profile presets
-- [Feedback Loop Tutorial](../tutorials/feedback-loop.md) - Hands-on feedback workflow
+**Related:** [Detection Profiles](./detection-profiles.md), [Feedback Loop tutorial](../tutorials/feedback-loop.md)

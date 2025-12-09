@@ -1,191 +1,83 @@
 # Core Concepts
 
-Understanding how Driftlock detects anomalies will help you get the most out of the platform. This guide explains the key concepts and algorithms.
+Understand how Driftlock detects anomalies using compression-based anomaly detection (CBAD).
 
-## What is Anomaly Detection?
+## How Driftlock works (high level)
 
-Anomaly detection identifies unusual patterns in data that don't conform to expected behavior. Driftlock uses **compression-based anomaly detection (CBAD)**, which doesn't require training data or pre-defined patterns.
+1) **Baseline** — First ~400 normal events are compressed to form what “normal” looks like.
+2) **Window** — New events arrive in a sliding window (default 50, hop 10).
+3) **Compression test** — We compare how well `baseline + window` compresses vs. baseline alone.
+4) **Metrics** — We compute Normalized Compression Distance (NCD), entropy deltas, and compression ratios.
+5) **Significance** — Permutation testing produces a p-value; we flag when NCD is high **and** p-value is below the threshold.
+6) **Profiles/auto-tune** — Sensitivity presets or feedback-driven tuning adjust thresholds automatically.
 
-## How Driftlock Works
+## Baseline
 
-### 1. Compression-Based Detection
+- Built from your earliest normal events (default: 400).
+- Should represent steady-state traffic; noisy or abnormal data here will reduce accuracy.
+- Baselines are deterministic—same input + config yields the same baseline every time.
 
-At the core of Driftlock is a simple but powerful idea: **normal data compresses well, anomalous data doesn't**.
+## Windows
 
-When you send events to Driftlock:
-1. We build a **baseline** from your initial events (typically first ~400 events)
-2. New events are compared to this baseline using compression algorithms
-3. Events that don't compress well relative to the baseline are flagged as anomalies
+- Sliding window of recent events (default size 50, hop 10).
+- Compared against the baseline; each hop yields a detection decision.
+- Adaptive windowing can resize automatically when enabled (see [Adaptive Windowing](../guides/adaptive-windowing.md)).
 
-### 2. Normalized Compression Distance (NCD)
+## Metrics we compute
 
-**NCD** measures how different a new event is from your baseline data.
+- **NCD (Normalized Compression Distance):** Distance between baseline and window (0–1). Higher means more novel.
+- **p-value:** Probability the observed NCD is due to chance (lower is stronger evidence).
+- **confidence:** `1 - p_value` (how sure we are an anomaly is real).
+- **compression ratio / entropy change:** Additional explainability signals.
 
-```
-NCD = (compressed(baseline + event) - min(compressed(baseline), compressed(event)))
-      / max(compressed(baseline), compressed(event))
-```
+### Default thresholds (balanced profile)
 
-- **NCD ≈ 0**: Event is very similar to baseline (normal)
-- **NCD ≈ 1**: Event is very different from baseline (anomalous)
-- **Threshold**: By default, NCD > 0.3 is considered anomalous
+- `ncd_threshold`: **0.30**
+- `p_value_threshold`: **0.05**
+- `baseline_size`: **400**
+- `window_size`: **50**
+- `compressor`: **zstd** (use `lz4` for maximum speed)
 
-### 3. Statistical Validation
+See [Detection Profiles](../guides/detection-profiles.md) for `sensitive`, `balanced`, and `strict` presets.
 
-To avoid false positives, Driftlock uses **permutation testing**:
+## Sensitivity profiles
 
-1. We randomly shuffle your baseline data 1,000 times
-2. Calculate NCD for each permutation
-3. Compute a **p-value**: what's the probability of seeing this NCD by chance?
+- **sensitive:** Lower NCD threshold, higher p-value threshold (catches more, more noise).
+- **balanced (default):** Good trade-off for most workloads.
+- **strict:** Higher NCD, lower p-value (fewer false positives, might miss subtle drift).
+- **custom:** Set per-stream overrides or values learned from auto-tuning.
 
-**p-value < 0.05** means the anomaly is statistically significant (less than 5% chance it's random).
+Switching profiles changes thresholds immediately; anomalies become more or less likely based on your tolerance for noise.
 
-### 4. Confidence Score
+## Auto-tuning & feedback
 
-Combines NCD and p-value into a single metric:
-
-```
-confidence = 1 - p_value
-```
-
-- **0.95+**: Very confident this is an anomaly
-- **0.90-0.95**: Likely an anomaly
-- **< 0.90**: Low confidence, might be noise
-
-## Key Terminology
-
-### Baseline
-The "normal" dataset that Driftlock learns from. By default:
-- First **400 events** form the baseline
-- Must be representative of normal behavior
-- Updated periodically as new normal data arrives
-
-### Window
-A sliding set of recent events being analyzed:
-- Default size: **50 events**
-- Compared against the baseline
-- Slides forward by **hop size** (default: 10 events)
-
-### Stream
-A logical grouping of related events:
-- Each stream has its own baseline and configuration
-- Examples: "production-logs", "payment-metrics", "iot-sensors"
-- Isolates different data sources from each other
-
-### Tenant
-Your organization or account:
-- All your streams, API keys, and usage belong to your tenant
-- Multi-tenant isolation ensures your data stays private
-
-### Compression Algorithms
-Driftlock supports multiple compressors:
-- **zstd** (default): Fast, good compression ratio
-- **lz4**: Extremely fast, lower compression ratio
-- **gzip**: Widely compatible, moderate speed
-- **openzl** (optional): Advanced, best for structured data
-
-Different compressors work better for different data types. You can override per-stream or per-detect call.
-
-## How Driftlock is Different
-
-### vs. Machine Learning Models
-- ❌ ML: Requires training data
-- ✅ Driftlock: Works immediately with no training
-
-- ❌ ML: Black box, hard to explain
-- ✅ Driftlock: Deterministic, explainable results
-
-- ❌ ML: Needs labeled anomalies
-- ✅ Driftlock: Unsupervised, no labels needed
-
-### vs. Rule-Based Systems
-- ❌ Rules: Need to define thresholds manually
-- ✅ Driftlock: Automatically learns what's normal
-
-- ❌ Rules: Miss novel anomalies
-- ✅ Driftlock: Catches any deviation from baseline
-
-- ❌ Rules: Hard to maintain as data evolves
-- ✅ Driftlock: Adapts to changing baselines
-
-## Determinism & Reproducibility
-
-Driftlock's detection is **deterministic**:
-- Same events + same configuration = same results every time
-- Uses seeded random number generation
-- Critical for compliance and debugging
-
-Seed is derived from: `tenant_id + stream_id + config.seed`
-
-This means you can re-run detection on historical data and get identical results.
+- Submitting feedback (`false_positive`, `confirmed`) can steer thresholds when enabled.
+- Feedback influences the `custom` profile for that stream.
+- Use it after an initial period to lock in the right sensitivity. See [Auto-Tuning](../guides/auto-tuning.md).
 
 ## Explainability
 
-When an anomaly is detected, Driftlock provides:
+Each anomaly includes:
+- NCD, p-value, confidence, compression/entropy deltas.
+- The original event and a short “why” message.
+- When available: baseline/window evidence snapshots for audits.
 
-1. **Metrics**: NCD, p-value, confidence, compression ratios
-2. **Evidence**: Baseline vs. window snapshots
-3. **Explanation**: Plain English description (optional via Gemini integration)
+## Determinism & compliance
 
-Example explanation:
-> "Latency spike detected: event compressed poorly relative to baseline. Entropy increased by 13%, indicating novel pattern. P-value 0.004 confirms statistical significance."
+- Runs are deterministic for the same input/config (seeded), enabling reproducible evidence.
+- P-values provide statistical backing for alerts—important for audits (DORA/NIS2/AI Act).
 
-## Tuning Parameters
+## Best practices
 
-For most users, the default settings work well. Use the **Detection Settings** panel in the dashboard to adjust sensitivity (Low/Medium/High).
+- Keep baseline clean: avoid known incidents or load tests during baseline formation.
+- Separate streams: don’t mix unrelated data sources (e.g., logs vs metrics) in one stream.
+- Batch efficiently: 50–200 events per call keeps throughput high and minimizes rate limits.
+- Use idempotency keys when replaying data.
+- Start with **balanced**, then tune via profiles or `config_override` only when needed.
 
-<details>
-<summary><strong>Show advanced parameter configuration</strong></summary>
+## Learn more
 
-You can adjust detection sensitivity per stream via API:
-
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `baseline_size` | 400 | Events in baseline |
-| `window_size` | 50 | Events in sliding window |
-| `ncd_threshold` | 0.3 | Minimum NCD to flag anomaly |
-| `p_value_threshold` | 0.05 | Maximum p-value for significance |
-| `compressor` | "zstd" | Compression algorithm |
-
-**More sensitive** (catch more anomalies, more false positives):
-- Lower `ncd_threshold` (e.g., 0.2)
-- Higher `p_value_threshold` (e.g., 0.10)
-
-**Less sensitive** (fewer false positives, might miss subtle anomalies):
-- Higher `ncd_threshold` (e.g., 0.4)
-- Lower `p_value_threshold` (e.g., 0.01)
-
-</details>
-
-## Best Practices
-
-### Baseline Quality
-- Ensure baseline contains only **normal events**
-- Minimum 200-400 events for statistical reliability
-- If baseline is contaminated with anomalies, detection degrades
-
-### Stream Separation
-- Create separate streams for different event types
-- Don't mix logs and metrics in the same stream
-- Use stream-specific configurations for optimal detection
-
-### Event Structure
-- More structured data compresses better
-- JSON is ideal (consistent schema)
-- Include timestamps for temporal analysis
-
-### Performance
-- Batch events where possible (up to 256 events per request)
-- Use async ingestion (`/v1/streams/{id}/events`) for high-throughput
-- Monitor rate limits (`X-RateLimit-*` headers)
-
-## Learn More
-
-- **[API Reference](../api/rest-api.md)**: Full endpoint documentation
-- **[Algorithms Deep Dive](../reference/algorithms.md)**: Mathematical details
-- **[Tutorials](../tutorials/)**: Step-by-step guides
-- **[Research Paper](https://arxiv.org/pdf/cs/0111054.pdf)**: NCD theory
-
----
-
-**Next**: [Set up authentication and manage API keys →](./authentication.md)
+- [Detection Profiles](../guides/detection-profiles.md)
+- [Auto-Tuning](../guides/auto-tuning.md)
+- [Adaptive Windowing](../guides/adaptive-windowing.md)
+- [API Reference](../api/rest-api.md)

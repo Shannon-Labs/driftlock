@@ -1,122 +1,104 @@
-# Quickstart Guide
+# Quickstart Guide (5 minutes)
 
-Get started with Driftlock in 5 minutes. This guide will walk you through signing up, getting your API key, and running your first anomaly detection.
+Run your first Driftlock detection in minutes. This guide covers signup, API key setup, and first requests with cURL and Python.
 
-## Step 1: Create Your Account
+## 1) Get an API key
 
-1. Visit [https://driftlock.web.app](https://driftlock.web.app)
-2. Click **"Sign Up"** in the navigation
-3. Sign up with your email or Google account (Firebase Auth)
-4. Verify your email if required
+- Sign up at [https://driftlock.net/#signup](https://driftlock.net/#signup) (Free plan: 10k events/month).
+- Open **Dashboard → API Keys → Create key** and copy it. Treat it like a secret.
+- No signup? Use the public demo endpoint: [POST /v1/demo/detect](../api/endpoints/demo.md) (rate-limited, no persistence).
 
-**Developer Plan**: You'll start on the free Developer plan with 10,000 events/month.
-
-## Step 2: Get Your API Key
-
-1. After logging in, go to your [Dashboard](https://driftlock.web.app/dashboard)
-2. Navigate to **"API Keys"** section
-3. Click **"Create API Key"**
-4. Give it a name (e.g., "My First Key")
-5. Copy your API key - you'll need this for authentication
-
-> ⚠️ **Important**: Store your API key securely. It won't be shown again after you close the dialog.
-
-## Step 3: Run Your First Detection
-
-Let's detect anomalies in a simple dataset. Copy this cURL command and replace `YOUR_API_KEY`:
+## 2) Set your environment
 
 ```bash
-curl -X POST https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1/detect \
+export DRIFTLOCK_API_URL="https://api.driftlock.net/v1"
+export DRIFTLOCK_API_KEY="YOUR_API_KEY"
+```
+
+## 3) Send your first detection (cURL)
+
+```bash
+curl -X POST "$DRIFTLOCK_API_URL/detect" \
   -H "Content-Type: application/json" \
-  -H "X-Api-Key: YOUR_API_KEY" \
+  -H "X-Api-Key: $DRIFTLOCK_API_KEY" \
   -d '{
     "stream_id": "default",
     "events": [
-      {"timestamp": "2025-01-01T10:00:00Z", "type": "metric", "body": {"latency": 120}},
-      {"timestamp": "2025-01-01T10:01:00Z", "type": "metric", "body": {"latency": 125}},
-      {"timestamp": "2025-01-01T10:02:00Z", "type": "metric", "body": {"latency": 118}},
-      {"timestamp": "2025-01-01T10:03:00Z", "type": "metric", "body": {"latency": 950}}
+      {"timestamp": "2025-01-01T10:00:00Z", "type": "metric", "body": {"latency_ms": 120}},
+      {"timestamp": "2025-01-01T10:01:00Z", "type": "metric", "body": {"latency_ms": 125}},
+      {"timestamp": "2025-01-01T10:02:00Z", "type": "metric", "body": {"latency_ms": 118}},
+      {"timestamp": "2025-01-01T10:03:00Z", "type": "metric", "body": {"latency_ms": 950}}  /* Anomaly */
     ]
   }'
 ```
 
-### Expected Response
-
-You'll receive a JSON response with detected anomalies:
+**Expected response (truncated):**
 
 ```json
 {
   "success": true,
-  "batch_id": "batch_abc123",
-  "stream_id": "...",
-  "total_events": 4,
   "anomaly_count": 1,
-  "processing_time": "125ms",
-  "compression_algo": "zstd",
   "anomalies": [
     {
-      "id": "anom_xyz789",
       "index": 3,
-      "metrics": {
-        "ncd": 0.72,
-        "compression_ratio": 1.41,
-        "entropy_change": 0.13,
-        "p_value": 0.004,
-        "confidence": 0.96
-      },
-      "event": {"latency": 950},
-      "why": "Significant latency spike detected",
-      "detected": true
+      "metrics": {"ncd": 0.72, "p_value": 0.004, "confidence": 0.996},
+      "why": "Significant latency spike detected"
     }
   ],
-  "request_id": "req_123"
+  "request_id": "req_abc123"
 }
 ```
 
-## Step 4: Understanding the Results
+## 4) Python example
 
-Key metrics in the response:
+```python
+import os
+import requests
 
-- **`ncd`** (Normalized Compression Distance): How different this event is from the baseline (0-1, higher = more anomalous)
-- **`p_value`**: Statistical significance (< 0.05 is typically significant)
-- **`confidence`**: How confident we are this is an anomaly (0-1, higher = more confident)
-- **`why`**: Plain English explanation of the anomaly
+api_url = os.getenv("DRIFTLOCK_API_URL", "https://api.driftlock.net/v1")
+api_key = os.environ["DRIFTLOCK_API_KEY"]
 
-## Step 5: View in Dashboard
+payload = {
+    "stream_id": "default",
+    "events": [
+        {"timestamp": "2025-01-01T10:00:00Z", "type": "metric", "body": {"latency_ms": 120}},
+        {"timestamp": "2025-01-01T10:01:00Z", "type": "metric", "body": {"latency_ms": 125}},
+        {"timestamp": "2025-01-01T10:02:00Z", "type": "metric", "body": {"latency_ms": 118}},
+        {"timestamp": "2025-01-01T10:03:00Z", "type": "metric", "body": {"latency_ms": 950}},
+    ],
+}
 
-1. Go back to your [Dashboard](https://driftlock.web.app/dashboard)
-2. Click **"Anomalies"** in the sidebar
-3. You'll see all detected anomalies with their metrics
-4. Click on an anomaly to see detailed evidence and explanations
+resp = requests.post(
+    f"{api_url}/detect",
+    headers={"X-Api-Key": api_key, "Content-Type": "application/json"},
+    json=payload,
+    timeout=15,
+)
+resp.raise_for_status()
+data = resp.json()
 
-## What's Next?
+print(f"Found {data['anomaly_count']} anomalies")
+for anom in data.get("anomalies", []):
+    print(f"Index {anom['index']}: {anom['why']}")
+```
 
-Now that you've run your first detection, you can:
+## 5) View anomalies and iterate
 
-- **[Understand Core Concepts](./concepts.md)** - Learn about NCD, baselines, and how the detection works
-- **[Explore the REST API](../api/rest-api.md)** - Full API reference with all endpoints
-- **[Set Up Authentication](./authentication.md)** - Manage API keys and Firebase auth
-- **[Try GraphQL](../graphql/overview.md)** - Use Firebase Data Connect for richer queries
-- **[View Code Examples](../api/examples/python-examples.md)** - Python, Node.js, and other language examples
+- Query history: `curl "$DRIFTLOCK_API_URL/anomalies" -H "X-Api-Key: $DRIFTLOCK_API_KEY"`
+- Tweak sensitivity: use `config_override` on `/v1/detect` or set a profile (see [Detection Profiles](../guides/detection-profiles.md)).
+- Send feedback: mark false positives/confirmed via `/v1/anomalies/{id}/feedback` when available.
 
-## Common Issues
+## Troubleshooting
 
-### "unauthorized" error
-- Check that your API key is correct
-- Verify you're including the `X-Api-Key` header
-- Ensure your API key hasn't been revoked
+| Symptom | Fix |
+| --- | --- |
+| `unauthorized` | Check `X-Api-Key` header, ensure key is active, no extra spaces. |
+| `rate_limit_exceeded` | Respect `retry_after_seconds`, batch events (up to 256), or upgrade plan. |
+| Slow response | Keep batches ≤256 events and payloads <10 MB; prefer `zstd` (default). |
 
-### "rate_limit_exceeded" error
-- Developer plan is limited to 60 requests/minute
-- Implement exponential backoff
-- Consider upgrading to Starter plan ($25/mo) for higher limits
+## Next steps
 
-### Need Help?
-
-- **Documentation**: [Full API Reference](../api/rest-api.md)
-- **Support**: support@driftlock.io
-- **Community**: [GitHub Discussions](https://github.com/Shannon-Labs/driftlock/discussions)
-
----
-
-**Ready to build?** Check out our [tutorials](../tutorials/) for step-by-step guides on specific use cases like financial monitoring, log analysis, and IoT telemetry.
+- **Concepts:** [Baselines, windows, NCD, p-values](./concepts.md)
+- **API reference:** [REST API overview](../api/rest-api.md)
+- **Examples:** [cURL](../api/examples/curl-examples.md), [Python](../api/examples/python-examples.md)
+- **Demo without signup:** [POST /v1/demo/detect](../api/endpoints/demo.md)

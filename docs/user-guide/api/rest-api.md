@@ -4,8 +4,8 @@ Complete reference for Driftlock's REST API. All endpoints are versioned under `
 
 ## Base URL
 
-```
-Production: https://driftlock-api-o6kjgrsowq-uc.a.run.app
+```text
+https://api.driftlock.net/v1
 ```
 
 ## Authentication
@@ -14,7 +14,7 @@ All API requests (except `/healthz`) require an API key in the `X-Api-Key` heade
 
 ```bash
 curl -H "X-Api-Key: YOUR_API_KEY" \
-  https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1/anomalies
+  https://api.driftlock.net/v1/anomalies
 ```
 
 See [Authentication Guide](../getting-started/authentication.md) for details on creating and managing API keys.
@@ -25,20 +25,23 @@ API keys are rate limited based on your plan:
 
 | Plan | Requests/Minute |
 |------|----------------|
-| Developer | 60 |
-| Starter | 300 |
-| Pro | 1,000+ |
+| Free | 60 |
+| Standard ($15/mo) | 300 |
+| Pro ($100/mo) | 600 |
+| Enterprise ($299/mo) | 1,000+ |
 
 ### Rate Limit Headers
 
 Every response includes:
-```
+
+```text
 X-RateLimit-Limit: 60
 X-RateLimit-Remaining: 45
 X-RateLimit-Reset: 1672531200
 ```
 
 When rate limited, you'll receive HTTP 429:
+
 ```json
 {
   "error": {
@@ -52,13 +55,15 @@ When rate limited, you'll receive HTTP 429:
 ## Common Headers
 
 All requests should include:
-```
+
+```text
 Content-Type: application/json
 X-Api-Key: YOUR_API_KEY
 ```
 
 All responses include:
-```
+
+```text
 Content-Type: application/json
 X-Request-ID: req_abc123
 ```
@@ -145,8 +150,9 @@ List endpoints use cursor-based pagination:
 ```
 
 To get the next page:
+
 ```bash
-curl "https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1/anomalies?page_token=eyJj..."  \
+curl "https://api.driftlock.net/v1/anomalies?page_token=eyJj..." \
   -H "X-Api-Key: YOUR_API_KEY"
 ```
 
@@ -187,8 +193,9 @@ Breaking changes will be introduced in v2, v3, etc. with advance notice.
 ## Quick Examples
 
 ### Detect Anomalies
+
 ```bash
-curl -X POST https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1/detect \
+curl -X POST https://api.driftlock.net/v1/detect \
   -H "X-Api-Key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -200,14 +207,16 @@ curl -X POST https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1/detect \
 ```
 
 ### List Anomalies
+
 ```bash
-curl https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1/anomalies \
+curl https://api.driftlock.net/v1/anomalies \
   -H "X-Api-Key: YOUR_API_KEY"
 ```
 
 ### Get Anomaly Details
+
 ```bash
-curl https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1/anomalies/anom_abc123 \
+curl https://api.driftlock.net/v1/anomalies/anom_abc123 \
   -H "X-Api-Key: YOUR_API_KEY"
 ```
 
@@ -220,4 +229,4 @@ curl https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1/anomalies/anom_abc123 \
 
 ---
 
-**Need help?** Check out our [tutorials](../tutorials/) or contact support@driftlock.io
+**Need help?** Check out our [tutorials](../tutorials/) or contact [support@driftlock.io](mailto:support@driftlock.io)
