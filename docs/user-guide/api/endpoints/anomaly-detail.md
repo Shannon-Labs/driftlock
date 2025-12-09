@@ -1,29 +1,24 @@
 # GET /v1/anomalies/{id}
 
-Retrieve detailed information about a specific anomaly, including full event data, baseline comparison, and evidence.
+Retrieve detailed information about a specific anomaly, including metrics, evidence, and the original event.
 
 ## Endpoint
 
 ```
-GET https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1/anomalies/{id}
+GET https://api.driftlock.net/v1/anomalies/{id}
 ```
 
 ## Authentication
 
-Requires API key with `stream` or `admin` role:
-```
-X-Api-Key: YOUR_API_KEY
-```
+`X-Api-Key` header with `stream` or `admin` role.
 
 ## Parameters
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `id` | string | Yes | The unique ID of the anomaly (e.g., `anom_xyz789`) |
+| `id` | string | Yes | The anomaly ID (e.g., `anom_xyz789`) |
 
 ## Response
-
-### Success (HTTP 200)
 
 ```json
 {
@@ -48,8 +43,7 @@ X-Api-Key: YOUR_API_KEY
   },
   "explanation": {
     "summary": "Significant latency spike detected",
-    "details": "Event compressed poorly relative to baseline (NCD 0.72). Entropy increased by 13%.",
-    "similar_events": []
+    "details": "Event compressed poorly relative to baseline (NCD 0.72). Entropy increased by 13%."
   },
   "evidence": {
     "baseline_sample": [...],
@@ -59,44 +53,14 @@ X-Api-Key: YOUR_API_KEY
 }
 ```
 
-### Response Fields
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | string | Unique anomaly ID |
-| `stream_id` | string | ID of the stream this anomaly belongs to |
-| `metrics` | object | Detailed detection metrics |
-| `event` | object | The full anomalous event data |
-| `explanation` | object | Human-readable explanation and details |
-| `evidence` | object | Samples of baseline and window data for comparison |
-| `status` | string | Current status (`new`, `viewed`, `archived`) |
-
 ## Examples
 
-### Get Anomaly Details
 ```bash
-curl "https://driftlock-api-o6kjgrsowq-uc.a.run.app/v1/anomalies/anom_xyz789" \
-  -H "X-Api-Key: YOUR_API_KEY"
+curl "https://api.driftlock.net/v1/anomalies/anom_xyz789" \
+  -H "X-Api-Key: $DRIFTLOCK_API_KEY"
 ```
 
-## Error Responses
+## Error responses
 
-### 404 Not Found
-```json
-{
-  "error": {
-    "code": "not_found",
-    "message": "Anomaly not found"
-  }
-}
-```
-
-### 403 Forbidden
-```json
-{
-  "error": {
-    "code": "forbidden",
-    "message": "You do not have permission to view this anomaly"
-  }
-}
-```
+- **404 not_found** — anomaly does not exist or belongs to another stream
+- **403 forbidden** — key lacks permission for this anomaly

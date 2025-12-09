@@ -20,7 +20,14 @@
             </svg>
             Dashboard
           </router-link>
-          <!-- Add more links here later: Anomalies, Settings, etc. -->
+          <router-link to="/dashboard/analyze" class="group flex items-center px-3 py-3 text-sm font-bold uppercase tracking-widest border-2 border-black bg-white text-black hover:bg-black hover:text-white transition-colors shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <svg class="mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 1.567-3 3.5S10.343 15 12 15s3-1.567 3-3.5S13.657 8 12 8z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 21l2-4h10l2 4" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4h16v4H4z" />
+            </svg>
+            Upload & Analyze
+          </router-link>
         </nav>
       </div>
       <div class="flex-shrink-0 flex bg-white border-t-2 border-black p-4">
@@ -36,6 +43,13 @@
 
     <!-- Main Content -->
     <div class="flex-1 flex flex-col md:pl-64">
+      <!-- Top Bar -->
+      <div class="h-16 border-b-2 border-black bg-gray-50 px-6 flex items-center justify-between">
+        <h1 class="text-lg font-sans font-bold uppercase tracking-wider text-gray-400">Workspace</h1>
+        <a href="/" class="text-sm font-mono text-black border-2 border-black px-3 py-1 hover:bg-black hover:text-white transition-colors">
+          ← Back to Site
+        </a>
+      </div>
       <main class="flex-1 bg-white">
         <slot></slot>
       </main>

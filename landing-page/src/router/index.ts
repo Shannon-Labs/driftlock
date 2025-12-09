@@ -38,6 +38,12 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/dashboard/analyze',
+      name: 'dashboard-analyze',
+      component: () => import('../views/AnalyzeView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
       path: '/docs/:pathMatch(.*)*',
       name: 'docs',
       component: () => import('../views/DocsView.vue')
@@ -65,6 +71,22 @@ router.beforeEach(async (to, from, next) => {
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     next('/login')
   } else {
+    // Update page title based on route
+    const baseTitle = 'Driftlock - Compression-Based Anomaly Detection'
+    const titles: Record<string, string> = {
+      'home': 'Home | Driftlock',
+      'dashboard': 'Dashboard | Driftlock',
+      'dashboard-analyze': 'Upload & Analyze | Driftlock',
+      'login': 'Sign In | Driftlock',
+      'signup': 'Sign Up | Driftlock'
+    }
+    document.title = titles[to.name as string] || baseTitle
+
+    // Special handling for dashboard
+    if (to.path.startsWith('/dashboard')) {
+      document.title = `${document.title} - Workspace`
+    }
+
     next()
   }
 })

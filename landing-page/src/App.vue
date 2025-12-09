@@ -1,7 +1,7 @@
 <template>
   <div id="app" :class="{ 'dark': isDarkMode }">
-    <!-- Navigation -->
-    <nav class="w-full border-b border-black bg-background z-50 relative">
+    <!-- Navigation - Hide when in dashboard -->
+    <nav v-if="!isInDashboard" class="w-full border-b border-black bg-background z-50 relative">
       <div class="container-padding mx-auto">
         <div class="flex items-center justify-between h-20">
           <!-- Logo -->
@@ -63,8 +63,8 @@
       <router-view />
     </main>
 
-    <!-- Footer -->
-    <footer class="border-t border-black bg-background py-12">
+    <!-- Footer - Hide when in dashboard -->
+    <footer v-if="!isInDashboard" class="border-t border-black bg-background py-12">
         <div class="container-padding mx-auto">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
                 <div class="flex flex-col space-y-4">
@@ -107,13 +107,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { Menu } from 'lucide-vue-next'
+import { useRoute } from 'vue-router'
 import { useAuthStore } from './stores/auth'
 
 const authStore = useAuthStore()
+const route = useRoute()
 const isDarkMode = ref(false) // Force light mode for brutalist style initially
 const isMobileMenuOpen = ref(false)
+
+// Check if current route is in dashboard
+const isInDashboard = computed(() => route.path.startsWith('/dashboard'))
 </script>
 
 <style scoped>

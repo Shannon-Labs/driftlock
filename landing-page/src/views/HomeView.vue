@@ -1,19 +1,19 @@
 <template>
     <main class="bg-background text-foreground font-sans selection:bg-black selection:text-white">
         <!-- Hero Section -->
-        <section class="relative w-full overflow-hidden border-b border-black bg-white text-black lg:h-[85vh] min-h-[700px] flex flex-col">
+        <section class="relative w-full overflow-hidden border-b border-black bg-white text-black lg:h-[90vh] min-h-[800px] flex flex-col">
             <!-- Brutalist Grid Background -->
             <div class="absolute inset-0 z-0 opacity-[0.03]"
                  style="background-image: linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px); background-size: 40px 40px;">
             </div>
             
-            <div class="container-padding relative z-10 grid lg:grid-cols-2 gap-12 h-full py-12 lg:py-0">
+            <div class="container-padding relative z-10 grid lg:grid-cols-3 gap-8 h-full py-12 lg:py-0">
                 <!-- Left: Content -->
                 <div class="flex flex-col justify-center">
                     <div class="mb-8">
                         <div class="inline-flex items-center gap-2 border border-black px-3 py-1 mb-6 bg-black text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]">
-                            <span class="w-2 h-2 bg-green-400 animate-pulse rounded-full"></span>
-                            <span class="text-xs font-bold font-mono tracking-widest uppercase">System Online</span>
+                            <span class="w-2 h-2 bg-yellow-400 animate-pulse rounded-full"></span>
+                            <span class="text-xs font-bold font-mono tracking-widest uppercase">Coming Soon</span>
                         </div>
                         
                         <h1 class="text-6xl sm:text-7xl lg:text-8xl font-sans font-bold tracking-tight leading-[0.9] mb-8 uppercase">
@@ -21,8 +21,8 @@
                         </h1>
 
                         <p class="text-xl font-serif leading-relaxed text-gray-800 border-l-4 border-black pl-6 max-w-xl mb-10">
-                            Detect drift, anomalies, and outliers in any stream without training data. 
-                            <strong>O(1) complexity signal processing for modern engineering teams.</strong>
+                            Compression-based anomaly detection for OpenTelemetry streams.
+                            <strong>Detect drift, anomalies, and outliers using entropy-based compression analysis with O(1) complexity and mathematical proofs for every alert.</strong>
                         </p>
 
                         <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
@@ -33,20 +33,170 @@
                     </div>
                 </div>
 
-                <!-- Right: Clean geometric visual -->
-                <div class="hidden lg:flex flex-col justify-center lg:pl-12 h-full">
-                    <div class="relative w-full max-w-md aspect-square">
-                        <!-- Minimalist geometric pattern -->
-                        <div class="absolute inset-0 border-2 border-black"></div>
-                        <div class="absolute inset-4 border border-black"></div>
-                        <div class="absolute inset-8 border border-black/50"></div>
-                        <div class="absolute inset-12 border border-black/30"></div>
-                        <div class="absolute inset-0 flex items-center justify-center">
-                            <div class="text-center">
-                                <div class="text-6xl font-mono font-bold tracking-tighter">O(1)</div>
-                                <div class="text-xs font-mono uppercase tracking-widest mt-2 text-gray-500">Complexity</div>
-                            </div>
+                <!-- Right: Entropy Compression Visualization -->
+                <div class="hidden lg:flex flex-col justify-center lg:col-span-2 h-full">
+                    <div class="relative w-full max-w-2xl scale-75 origin-top lg:origin-center">
+                        <!-- Entropy Compression Visualization -->
+                        <svg viewBox="0 0 400 400" class="w-full h-auto">
+                            <!-- Background frame -->
+                            <rect x="20" y="20" width="360" height="360" fill="none" stroke="black" stroke-width="4"/>
+
+                            <!-- Raw data stream (high entropy) -->
+                            <g id="raw-data">
+                                <text x="40" y="50" font-family="monospace" font-size="12" font-weight="bold" fill="black">RAW STREAM</text>
+                                <!-- Random-looking data points -->
+                                <rect x="40" y="60" width="8" height="8" fill="black"/>
+                                <rect x="52" y="65" width="8" height="8" fill="black"/>
+                                <rect x="64" y="58" width="8" height="8" fill="black"/>
+                                <rect x="76" y="70" width="8" height="8" fill="black"/>
+                                <rect x="88" y="62" width="8" height="8" fill="black"/>
+                                <rect x="100" y="68" width="8" height="8" fill="black"/>
+                                <rect x="112" y="60" width="8" height="8" fill="black"/>
+                                <rect x="124" y="72" width="8" height="8" fill="black"/>
+                                <rect x="136" y="65" width="8" height="8" fill="black"/>
+                                <rect x="148" y="58" width="8" height="8" fill="black"/>
+                                <rect x="160" y="70" width="8" height="8" fill="black"/>
+                                <rect x="172" y="63" width="8" height="8" fill="black"/>
+                                <rect x="184" y="69" width="8" height="8" fill="black"/>
+                                <rect x="196" y="61" width="8" height="8" fill="black"/>
+                                <rect x="208" y="73" width="8" height="8" fill="black"/>
+                                <rect x="220" y="66" width="8" height="8" fill="black"/>
+                                <rect x="232" y="59" width="8" height="8" fill="black"/>
+                                <rect x="244" y="71" width="8" height="8" fill="black"/>
+                                <rect x="256" y="64" width="8" height="8" fill="black"/>
+                                <rect x="268" y="70" width="8" height="8" fill="black"/>
+                                <rect x="280" y="62" width="8" height="8" fill="black"/>
+                                <rect x="292" y="68" width="8" height="8" fill="black"/>
+                                <rect x="304" y="60" width="8" height="8" fill="black"/>
+                                <rect x="316" y="72" width="8" height="8" fill="black"/>
+                                <rect x="328" y="65" width="8" height="8" fill="black"/>
+                                <rect x="340" y="58" width="8" height="8" fill="black"/>
+                                <rect x="352" y="70" width="8" height="8" fill="black"/>
+                            </g>
+
+                            <!-- Compression arrow -->
+                            <g id="compress-arrow">
+                                <path d="M 200 100 L 200 140" stroke="black" stroke-width="4" fill="none"/>
+                                <path d="M 192 132 L 200 140 L 208 132" stroke="black" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                                <text x="210" y="125" font-family="sans-serif" font-size="14" font-weight="bold" fill="black">COMPRESS</text>
+                            </g>
+
+                            <!-- Entropy detection box -->
+                            <g id="entropy-box">
+                                <rect x="80" y="160" width="240" height="80" fill="black" stroke="black" stroke-width="4"/>
+                                <text x="200" y="190" font-family="sans-serif" font-size="16" font-weight="bold" fill="white" text-anchor="middle">ENTROPY ANALYSIS</text>
+                                <!-- Entropy formula visualization -->
+                                <text x="200" y="215" font-family="monospace" font-size="14" fill="white" text-anchor="middle">H = -Σp(x)log₂p(x)</text>
+                                <text x="200" y="230" font-family="monospace" font-size="10" fill="#999" text-anchor="middle">Anomaly = High Entropy Resistance</text>
+                            </g>
+
+                            <!-- Detection arrow -->
+                            <g id="detect-arrow">
+                                <path d="M 200 250 L 200 290" stroke="black" stroke-width="4" fill="none"/>
+                                <path d="M 192 282 L 200 290 L 208 282" stroke="black" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                                <text x="210" y="275" font-family="sans-serif" font-size="14" font-weight="bold" fill="black">DETECT</text>
+                            </g>
+
+                            <!-- Anomaly signal (clean pattern) -->
+                            <g id="anomaly-signal">
+                                <text x="40" y="320" font-family="monospace" font-size="12" font-weight="bold" fill="black">ANOMALY DETECTED</text>
+                                <!-- Clean, structured pattern for anomaly -->
+                                <rect x="40" y="330" width="320" height="40" fill="none" stroke="black" stroke-width="2"/>
+                                <!-- Anomaly pattern - regular with disruption -->
+                                <line x1="50" y1="350" x2="150" y2="350" stroke="black" stroke-width="3"/>
+                                <!-- Disruption (anomaly) -->
+                                <rect x="150" y="340" width="40" height="20" fill="black"/>
+                                <line x1="190" y1="350" x2="290" y2="350" stroke="black" stroke-width="3"/>
+                                <!-- Signal indicators -->
+                                <circle cx="170" cy="350" r="8" fill="white" stroke="black" stroke-width="2"/>
+                                <text x="165" y="355" font-family="monospace" font-size="10" font-weight="bold" fill="black">!</text>
+                            </g>
+
+                            <!-- Compression ratio indicator -->
+                            <g id="ratio-indicator">
+                                <rect x="300" y="40" width="80" height="60" fill="none" stroke="black" stroke-width="2" stroke-dasharray="5,5"/>
+                                <text x="340" y="60" font-family="monospace" font-size="10" font-weight="bold" fill="black" text-anchor="middle">RATIO</text>
+                                <text x="340" y="75" font-family="monospace" font-size="16" font-weight="bold" fill="black" text-anchor="middle">2.7x</text>
+                                <text x="340" y="90" font-family="monospace" font-size="8" fill="#666" text-anchor="middle">Low = Normal</text>
+                                <text x="340" y="100" font-family="monospace" font-size="8" fill="#666" text-anchor="middle">High = Anomaly</text>
+                            </g>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- How It Works -->
+        <section class="section-padding bg-gray-50">
+            <div class="container-padding">
+                <div class="max-w-4xl mx-auto text-center mb-16">
+                    <span class="text-xs font-bold font-mono uppercase tracking-widest mb-4 block text-gray-500">How It Works</span>
+                    <h2 class="text-4xl md:text-5xl font-sans font-bold tracking-tight uppercase mb-8">
+                        Three Steps to<br>Anomaly Detection.
+                    </h2>
+                    <p class="font-serif text-xl text-gray-600 max-w-3xl mx-auto">
+                        Our compression-based approach detects anomalies without training data or ML models.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-0 border-t border-l border-black max-w-5xl mx-auto">
+                    <!-- Step 1 -->
+                    <div class="border-b border-r border-black p-8 hover:bg-white transition-colors group">
+                        <div class="mb-6 group-hover:-translate-y-1 transition-transform">
+                            <!-- Data flow icon -->
+                            <svg class="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M4 12h8m0 0l-3-3m3 3l-3 3m1 6h10a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
                         </div>
+                        <div class="text-4xl font-mono font-bold text-gray-300 mb-4">01</div>
+                        <h3 class="text-xl font-bold font-sans uppercase mb-4">Collect</h3>
+                        <p class="font-serif text-gray-600 leading-relaxed">
+                            Ingest OpenTelemetry data from your existing infrastructure. No changes to your current stack needed.
+                        </p>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="border-b border-r border-black p-8 hover:bg-white transition-colors group">
+                        <div class="mb-6 group-hover:-translate-y-1 transition-transform">
+                            <!-- Compression icon -->
+                            <svg class="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <rect x="3" y="3" width="18" height="7" rx="1"/>
+                                <rect x="3" y="14" width="18" height="7" rx="1"/>
+                                <path d="M8 7v7m8-7v7" stroke-linecap="round"/>
+                                <path d="M11 10h2" stroke-linecap="round"/>
+                                <path d="M11 18h2" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <div class="text-4xl font-mono font-bold text-gray-300 mb-4">02</div>
+                        <h3 class="text-xl font-bold font-sans uppercase mb-4">Compress</h3>
+                        <p class="font-serif text-gray-600 leading-relaxed">
+                            Apply entropy-based compression algorithms to detect anomalies. Unusual patterns resist compression.
+                        </p>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="border-b border-r border-black p-8 hover:bg-white transition-colors group">
+                        <div class="mb-6 group-hover:-translate-y-1 transition-transform">
+                            <!-- Alert icon -->
+                            <svg class="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <div class="text-4xl font-mono font-bold text-gray-300 mb-4">03</div>
+                        <h3 class="text-xl font-bold font-sans uppercase mb-4">Alert</h3>
+                        <p class="font-serif text-gray-600 leading-relaxed">
+                            Receive alerts with mathematical proofs explaining exactly why each anomaly was detected.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Key Differentiator -->
+                <div class="mt-16 text-center">
+                    <div class="inline-block border border-black bg-white px-8 py-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)]">
+                        <p class="font-serif text-lg">
+                            <span class="font-bold font-sans uppercase">No training period.</span>
+                            <span class="text-gray-600"> Start detecting anomalies immediately with minimal baseline data.</span>
+                        </p>
                     </div>
                 </div>
             </div>
