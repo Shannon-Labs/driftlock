@@ -28,6 +28,7 @@ Everything you need to ship Driftlock in production—quickstart, core concepts,
 ## Operations & SRE
 
 - **[Operations & Runbooks](./guides/operations.md)** — deployment modes, health/readiness checks, scaling, backups
+- **[Troubleshooting](./guides/troubleshooting.md)** — "no anomalies", JSON errors, performance, auth issues
 - **[Deployment runbooks](../deployment/RUNBOOKS.md)** — operational playbooks
 - **Cloud Run/Firebase:** [Cloud Run setup](../deployment/cloud-run-setup.md), [Firebase hosting](../deployment/firebase-hosting-setup.md)
 

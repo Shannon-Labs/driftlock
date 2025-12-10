@@ -100,7 +100,20 @@ paths:
       description: |
         Try Driftlock without signing up. Results are NOT persisted.
 
-        **Rate limits**: 10 requests/minute per IP, max 50 events per request.
+        ## Demo Limitations
+        - **Stateless**: No baseline persistence across requests
+        - **Max events**: 200 per request
+        - **Rate limit**: 10 requests/minute per IP
+        - **No calibration tracking**: Each request starts fresh
+
+        ## Data Format
+        - Events **must be valid JSON objects**
+        - Plain text strings must be wrapped: `{"text": "your message"}`
+
+        ## Best Use
+        Demo is ideal for testing the API format and seeing response structure.
+        For actual anomaly detection, sign up for a free account to enable
+        baseline persistence and calibration tracking.
       operationId: demoDetect
       requestBody:
         required: true
@@ -301,11 +314,40 @@ paths:
         Submit a batch of JSON events for anomaly detection using CBAD
         (Compression-Based Anomaly Detection).
 
-        **How it works**: Events are compressed using zstd/lz4/openzl and compared
-        against a baseline window using Normalized Compression Distance (NCD).
-        Statistical significance is determined via permutation testing.
+        ## How It Works
+        Events are compressed using zstd/lz4/gzip and compared against a baseline
+        window using Normalized Compression Distance (NCD). Statistical significance
+        is determined via permutation testing.
 
-        **Max events**: 10,000 per request (configurable via MaxEvents; demo endpoint capped at 50)
+        ## Calibration & Detection Readiness
+        Detection requires sufficient data. Thresholds vary by profile:
+
+        | Profile | Baseline | Window | Detection Ready |
+        |---------|----------|--------|-----------------|
+        | sensitive | 200 | 30 | 230 events |
+        | balanced (default) | 400 | 50 | 450 events |
+        | strict | 800 | 100 | 900 events |
+
+        Additionally:
+        - **Adaptive windowing** auto-adjusts these based on stream characteristics
+        - **Auto-tuning** learns optimal thresholds from feedback
+        - **Per-request overrides** can customize via `config_override`
+
+        Response fields during warm-up:
+        - `status`: "calibrating" (< 50 events) or "ready"
+        - `detection_ready`: true when baseline + window collected
+        - `detection_events_needed`: events remaining until detection active
+        - `calibration`: detailed progress info
+
+        ## Data Format
+        - Events **must be valid JSON objects**
+        - Plain text strings must be wrapped: `{"text": "your message"}`
+        - Arrays of events are supported
+        - Nested objects are flattened for compression analysis
+
+        ## Limits
+        - **Max events per request**: 10,000 (configurable; demo endpoint: 200)
+        - **Max body size**: 10MB
       operationId: detect
       security:
         - ApiKeyAuth: []
@@ -1214,6 +1256,24 @@ components:
         request_id:
           type: string
           description: Request ID for debugging
+        status:
+          type: string
+          enum: [calibrating, ready]
+          description: |
+            Stream calibration status:
+            - `calibrating`: Still collecting baseline events (< min_baseline_size)
+            - `ready`: Baseline collected, detection active
+        detection_ready:
+          type: boolean
+          description: |
+            True when detector has enough data (450+ events by default).
+            Note: `status` can be "ready" while `detection_ready` is false during
+            the warmup period between calibration (50 events) and full detection (450 events).
+        detection_events_needed:
+          type: integer
+          description: Number of additional events needed before detection can work (0 when ready)
+        calibration:
+          $ref: '#/components/schemas/CalibrationInfo'
         anomalies:
           type: array
           items:
@@ -1244,6 +1304,43 @@ components:
                 signup_url:
                   type: string
                   format: uri
+
+    CalibrationInfo:
+      type: object
+      description: |
+        Detailed calibration status for a stream. Shows progress toward both
+        baseline calibration (50 events) and detection readiness (varies by profile:
+        sensitive=230, balanced=450, strict=900, or custom/adaptive values).
+      properties:
+        events_ingested:
+          type: integer
+          format: int64
+          description: Total events ingested into this stream
+        events_needed:
+          type: integer
+          format: int64
+          description: Events remaining for baseline calibration (0 when calibrated)
+        min_baseline_size:
+          type: integer
+          description: Minimum events required for baseline calibration (default 50)
+        progress_percent:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Calibration progress percentage (0-100)
+        detection_ready:
+          type: boolean
+          description: Whether detector has enough data for anomaly detection
+        detection_events_needed:
+          type: integer
+          format: int64
+          description: Events remaining until detection is ready (0 when ready)
+        detection_min_events:
+          type: integer
+          description: Minimum events for detection (profile-dependent, adaptive, or custom)
+        message:
+          type: string
+          description: Human-readable status message
 
     AnomalyOutput:
       type: object
