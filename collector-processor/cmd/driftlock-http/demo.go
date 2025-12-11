@@ -28,18 +28,31 @@ const (
 
 // Demo endpoint rate limiter - 10 requests/min per IP
 type demoRateLimiter struct {
-	mu       sync.Mutex
-	requests map[string][]time.Time
-	limit    int
-	window   time.Duration
+	mu          sync.Mutex
+	requests    map[string][]time.Time
+	limit       int
+	window      time.Duration
+	stopCh      chan struct{}
+	lastCleanup time.Time
 }
 
 func newDemoRateLimiter() *demoRateLimiter {
-	return &demoRateLimiter{
-		requests: make(map[string][]time.Time),
-		limit:    10,
-		window:   time.Minute,
+	return newDemoRateLimiterWithWindow(time.Minute)
+}
+
+func newDemoRateLimiterWithWindow(window time.Duration) *demoRateLimiter {
+	if window <= 0 {
+		window = time.Minute
 	}
+	d := &demoRateLimiter{
+		requests:    make(map[string][]time.Time),
+		limit:       10,
+		window:      window,
+		stopCh:      make(chan struct{}),
+		lastCleanup: time.Now(),
+	}
+	go d.runCleanupLoop()
+	return d
 }
 
 func (d *demoRateLimiter) allow(ip string) bool {
@@ -47,6 +60,7 @@ func (d *demoRateLimiter) allow(ip string) bool {
 	defer d.mu.Unlock()
 
 	now := time.Now()
+	d.maybeCleanupLocked(now)
 	cutoff := now.Add(-d.window)
 
 	// Clean old requests
@@ -71,6 +85,7 @@ func (d *demoRateLimiter) remaining(ip string) int {
 	defer d.mu.Unlock()
 
 	now := time.Now()
+	d.maybeCleanupLocked(now)
 	cutoff := now.Add(-d.window)
 
 	var count int
@@ -92,7 +107,12 @@ func (d *demoRateLimiter) cleanup() {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	cutoff := time.Now().Add(-d.window * 2)
+	d.cleanupLocked()
+}
+
+func (d *demoRateLimiter) cleanupLocked() {
+	cutoff := time.Now().Add(-d.window)
+	removedIPs := 0
 	for ip, times := range d.requests {
 		var recent []time.Time
 		for _, t := range times {
@@ -102,10 +122,40 @@ func (d *demoRateLimiter) cleanup() {
 		}
 		if len(recent) == 0 {
 			delete(d.requests, ip)
+			removedIPs++
 		} else {
 			d.requests[ip] = recent
 		}
 	}
+	d.lastCleanup = time.Now()
+}
+
+func (d *demoRateLimiter) runCleanupLoop() {
+	interval := d.window / 2
+	if interval < 10*time.Millisecond {
+		interval = 10 * time.Millisecond
+	}
+	ticker := time.NewTicker(interval)
+	for {
+		select {
+		case <-ticker.C:
+			d.cleanup()
+		case <-d.stopCh:
+			ticker.Stop()
+			return
+		}
+	}
+}
+
+func (d *demoRateLimiter) maybeCleanupLocked(now time.Time) {
+	// Opportunistic cleanup if the registry gets large or time window elapsed.
+	if len(d.requests) > d.limit*2 || now.Sub(d.lastCleanup) >= d.window {
+		d.cleanupLocked()
+	}
+}
+
+func (d *demoRateLimiter) Close() {
+	close(d.stopCh)
 }
 
 const maxDemoEvents = 200
@@ -168,8 +218,9 @@ func getClientIP(r *http.Request) string {
 	addr := r.RemoteAddr
 	// Strip port if present
 	if idx := strings.LastIndex(addr, ":"); idx != -1 {
-		return addr[:idx]
+		addr = addr[:idx]
 	}
+
 	return addr
 }
 
