@@ -7,34 +7,37 @@
                  style="background-image: linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px); background-size: 40px 40px;">
             </div>
             
-            <div class="container-padding relative z-10 grid lg:grid-cols-3 gap-8 h-full py-12 lg:py-0">
+            <div class="container-padding relative z-10 grid lg:grid-cols-2 gap-8 h-full py-12 lg:py-0">
                 <!-- Left: Content -->
-                <div class="flex flex-col justify-center">
+                <div class="flex flex-col justify-center z-20">
                     <div class="mb-8">
                         <div class="inline-flex items-center gap-2 border border-black px-3 py-1 mb-6 bg-black text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]">
-                            <span class="w-2 h-2 bg-yellow-400 animate-pulse rounded-full"></span>
-                            <span class="text-xs font-bold font-mono tracking-widest uppercase">Coming Soon</span>
+                            <span class="w-2 h-2 bg-green-400 animate-pulse rounded-full"></span>
+                            <span class="text-xs font-bold font-mono tracking-widest uppercase">Early Access</span>
                         </div>
-                        
-                        <h1 class="text-6xl sm:text-7xl lg:text-8xl font-sans font-bold tracking-tight leading-[0.9] mb-8 uppercase">
-                            Mathematical<br>Observability.
+
+                        <h1 class="text-6xl sm:text-7xl lg:text-7xl xl:text-8xl font-sans font-bold tracking-tight leading-none mb-8 uppercase break-words w-full">
+                            DORA-Compliant<br>Transaction Monitoring.
                         </h1>
 
                         <p class="text-xl font-serif leading-relaxed text-gray-800 border-l-4 border-black pl-6 max-w-xl mb-10">
-                            Compression-based anomaly detection for OpenTelemetry streams.
-                            <strong>Detect drift, anomalies, and outliers using entropy-based compression analysis with O(1) complexity and mathematical proofs for every alert.</strong>
+                            Detect financial anomalies with audit-ready explainability.
+                            <strong>EU DORA Article 10 compliance built-in. Every incident includes reproducible metrics regulators can verify.</strong>
                         </p>
 
                         <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
                             <a href="#signup" class="brutalist-button-primary text-lg px-8 py-4">
                                 Join Waitlist
                             </a>
+                            <a href="/docs" class="text-sm font-mono underline underline-offset-4 hover:no-underline">
+                                Read the docs →
+                            </a>
                         </div>
                     </div>
                 </div>
 
                 <!-- Right: Entropy Compression Visualization -->
-                <div class="hidden lg:flex flex-col justify-center lg:col-span-2 h-full">
+                <div class="hidden lg:flex flex-col justify-center lg:col-span-1 h-full z-10">
                     <div class="relative w-full max-w-2xl scale-75 origin-top lg:origin-center">
                         <!-- Entropy Compression Visualization -->
                         <svg viewBox="0 0 400 400" class="w-full h-auto">
@@ -270,39 +273,57 @@
             </div>
         </section>
 
-        <!-- Audience (No fake social proof, just honest targeting) -->
+        <!-- DORA Compliance Section -->
         <section class="py-20 bg-black text-white border-b border-black">
             <div class="container-padding">
                 <div class="grid lg:grid-cols-2 gap-16 items-center">
                     <div>
                         <h2 class="text-4xl font-sans font-bold tracking-tight uppercase mb-6">
-                            Built for Builders.<br>Ready for Auditors.
+                            Built for DORA.<br>Ready for Auditors.
                         </h2>
-                        <p class="font-serif text-xl text-gray-400 max-w-md">
-                            Driftlock bridges the gap between fast-moving engineering teams and strict compliance requirements.
+                        <p class="font-serif text-xl text-gray-400 max-w-md mb-8">
+                            EU DORA (Regulation 2022/2554) requires financial entities to detect, report, and document ICT-related incidents. Driftlock makes compliance automatic.
                         </p>
+                        <div class="space-y-4">
+                            <div class="flex items-center gap-3">
+                                <span class="text-green-400 font-mono">[x]</span>
+                                <span class="text-sm">Article 10: Incident classification & detection</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="text-green-400 font-mono">[x]</span>
+                                <span class="text-sm">Article 17: ICT risk management</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="text-green-400 font-mono">[x]</span>
+                                <span class="text-sm">Article 19: 24h notification deadlines</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="text-green-400 font-mono">[x]</span>
+                                <span class="text-sm">Complete audit trail (Driftlog)</span>
+                            </div>
+                        </div>
                     </div>
-                    
+
                     <div class="grid sm:grid-cols-2 gap-4">
                         <div class="border border-white/20 p-6 hover:border-white transition-colors">
-                            <div class="font-mono text-xs uppercase tracking-widest text-gray-500 mb-2">Use Case 01</div>
-                            <h3 class="font-bold text-lg mb-2">Agent loops</h3>
-                            <p class="text-sm text-gray-400">Detect infinite loops and hallucinated tool calls in AI agents.</p>
+                            <div class="font-mono text-xs uppercase tracking-widest text-gray-500 mb-2">For Compliance Officers</div>
+                            <h3 class="font-bold text-lg mb-2">Incident Register</h3>
+                            <p class="text-sm text-gray-400">DORA-compliant incident management with automated severity classification and notification tracking.</p>
                         </div>
                         <div class="border border-white/20 p-6 hover:border-white transition-colors">
-                            <div class="font-mono text-xs uppercase tracking-widest text-gray-500 mb-2">Use Case 02</div>
-                            <h3 class="font-bold text-lg mb-2">Market Data</h3>
-                            <p class="text-sm text-gray-400">Validate real-time feeds for microstructure anomalies.</p>
+                            <div class="font-mono text-xs uppercase tracking-widest text-gray-500 mb-2">For Risk Teams</div>
+                            <h3 class="font-bold text-lg mb-2">Transaction Monitoring</h3>
+                            <p class="text-sm text-gray-400">Real-time fraud detection for SEPA, SWIFT, and card transactions with mathematical proofs.</p>
                         </div>
                         <div class="border border-white/20 p-6 hover:border-white transition-colors">
-                            <div class="font-mono text-xs uppercase tracking-widest text-gray-500 mb-2">Use Case 03</div>
-                            <h3 class="font-bold text-lg mb-2">IoT Telemetry</h3>
-                            <p class="text-sm text-gray-400">Monitor thousands of sensors with O(1) resource usage.</p>
+                            <div class="font-mono text-xs uppercase tracking-widest text-gray-500 mb-2">For Auditors</div>
+                            <h3 class="font-bold text-lg mb-2">Complete Audit Trail</h3>
+                            <p class="text-sm text-gray-400">The Driftlog records every detection decision with metrics, thresholds, and timestamps.</p>
                         </div>
                         <div class="border border-white/20 p-6 hover:border-white transition-colors">
-                            <div class="font-mono text-xs uppercase tracking-widest text-gray-500 mb-2">Use Case 04</div>
-                            <h3 class="font-bold text-lg mb-2">Security</h3>
-                            <p class="text-sm text-gray-400">Spot data exfiltration patterns cloaked as normal traffic.</p>
+                            <div class="font-mono text-xs uppercase tracking-widest text-gray-500 mb-2">For Engineering</div>
+                            <h3 class="font-bold text-lg mb-2">API-First Integration</h3>
+                            <p class="text-sm text-gray-400">REST API for transaction analysis. Drop-in replacement for existing fraud scoring systems.</p>
                         </div>
                     </div>
                 </div>
@@ -325,66 +346,69 @@
                         <div class="mb-4">
                             <h3 class="font-bold font-sans uppercase text-lg">Free</h3>
                             <div class="text-3xl font-bold font-mono mt-2">$0<span class="text-sm font-normal text-gray-500">/mo</span></div>
-                            <p class="text-sm text-gray-500 mt-2 font-serif">For experimentation.</p>
+                            <p class="text-sm text-gray-500 mt-2 font-serif">For testing & evaluation.</p>
                         </div>
                         <ul class="space-y-3 text-sm font-mono border-t border-gray-100 pt-4 mb-8">
                             <li class="flex gap-2"><span>[x]</span> 10k events/mo</li>
-                            <li class="flex gap-2"><span>[x]</span> CLI & Playground</li>
-                            <li class="flex gap-2"><span>[x]</span> JSON reports</li>
+                            <li class="flex gap-2"><span>[x]</span> 5 streams</li>
+                            <li class="flex gap-2"><span>[x]</span> 14-day Driftlog</li>
                         </ul>
-                        <a href="#signup" class="block w-full border border-black py-2 text-center text-sm font-bold uppercase hover:bg-black hover:text-white transition-colors">Waitlist</a>
+                        <a href="#signup" class="block w-full border border-black py-2 text-center text-sm font-bold uppercase hover:bg-black hover:text-white transition-colors">Get Started</a>
                     </div>
 
-                    <!-- Standard (Highlighted) -->
+                    <!-- Pro (Highlighted) -->
                     <div class="bg-black text-white border border-black p-8 shadow-[12px_12px_0px_0px_rgba(0,0,0,0.2)] relative lg:-mt-4 lg:mb-4 transform scale-105 z-10">
                         <div class="absolute top-0 right-0 bg-white text-black text-[10px] font-bold uppercase px-2 py-1">Most Popular</div>
                         <div class="mb-4">
-                            <h3 class="font-bold font-sans uppercase text-lg text-white">Standard</h3>
-                            <div class="text-3xl font-bold font-mono mt-2">$15<span class="text-sm font-normal text-gray-400">/mo</span></div>
-                            <p class="text-sm text-gray-400 mt-2 font-serif">For startups & active monitoring.</p>
+                            <h3 class="font-bold font-sans uppercase text-lg text-white">Pro</h3>
+                            <div class="text-3xl font-bold font-mono mt-2">$99<span class="text-sm font-normal text-gray-400">/mo</span></div>
+                            <p class="text-sm text-gray-400 mt-2 font-serif">For production compliance.</p>
                         </div>
                         <ul class="space-y-3 text-sm font-mono border-t border-gray-800 pt-4 mb-8">
                             <li class="flex gap-2"><span class="text-green-400">[x]</span> 500k events/mo</li>
-                            <li class="flex gap-2"><span class="text-green-400">[x]</span> Email alerts</li>
-                            <li class="flex gap-2"><span class="text-green-400">[x]</span> 30-day retention</li>
+                            <li class="flex gap-2"><span class="text-green-400">[x]</span> 20 streams</li>
+                            <li class="flex gap-2"><span class="text-green-400">[x]</span> 90-day Driftlog</li>
+                            <li class="flex gap-2"><span class="text-green-400">[x]</span> CSV/PDF exports</li>
                         </ul>
-                        <button @click="handleCheckout('standard')" class="block w-full bg-white text-black py-3 text-center text-sm font-bold uppercase hover:bg-gray-200 transition-colors">
-                            Get Standard
-                        </button>
+                        <a href="#signup" class="block w-full bg-white text-black py-3 text-center text-sm font-bold uppercase hover:bg-gray-200 transition-colors">
+                            Join Waitlist
+                        </a>
                     </div>
 
-                    <!-- Pro -->
+                    <!-- Team -->
                     <div class="bg-white border border-gray-200 p-8 hover:border-black transition-colors">
                         <div class="mb-4">
-                            <h3 class="font-bold font-sans uppercase text-lg">Pro</h3>
-                            <div class="text-3xl font-bold font-mono mt-2">$100<span class="text-sm font-normal text-gray-500">/mo</span></div>
-                            <p class="text-sm text-gray-500 mt-2 font-serif">For high-volume production.</p>
+                            <h3 class="font-bold font-sans uppercase text-lg">Team</h3>
+                            <div class="text-3xl font-bold font-mono mt-2">$199<span class="text-sm font-normal text-gray-500">/mo</span></div>
+                            <p class="text-sm text-gray-500 mt-2 font-serif">For growing teams.</p>
                         </div>
                         <ul class="space-y-3 text-sm font-mono border-t border-gray-100 pt-4 mb-8">
                             <li class="flex gap-2"><span>[x]</span> 5M events/mo</li>
-                            <li class="flex gap-2"><span>[x]</span> DORA/NIS2 Evidence</li>
-                            <li class="flex gap-2"><span>[x]</span> Priority Support</li>
+                            <li class="flex gap-2"><span>[x]</span> 100 streams</li>
+                            <li class="flex gap-2"><span>[x]</span> 1-year Driftlog</li>
+                            <li class="flex gap-2"><span>[x]</span> Priority support</li>
                         </ul>
-                        <button @click="handleCheckout('pro')" class="block w-full border border-black py-2 text-center text-sm font-bold uppercase hover:bg-black hover:text-white transition-colors">
-                            Get Pro
-                        </button>
+                        <a href="#signup" class="block w-full border border-black py-2 text-center text-sm font-bold uppercase hover:bg-black hover:text-white transition-colors">
+                            Join Waitlist
+                        </a>
                     </div>
 
                     <!-- Enterprise -->
                     <div class="bg-white border border-gray-200 p-8 hover:border-black transition-colors">
                         <div class="mb-4">
                             <h3 class="font-bold font-sans uppercase text-lg">Enterprise</h3>
-                            <div class="text-3xl font-bold font-mono mt-2">$299<span class="text-sm font-normal text-gray-500">/mo</span></div>
-                            <p class="text-sm text-gray-500 mt-2 font-serif">Large-scale compliance.</p>
+                            <div class="text-3xl font-bold font-mono mt-2">Custom</div>
+                            <p class="text-sm text-gray-500 mt-2 font-serif">For banks & regulated entities.</p>
                         </div>
                         <ul class="space-y-3 text-sm font-mono border-t border-gray-100 pt-4 mb-8">
-                            <li class="flex gap-2"><span>[x]</span> 25M events/mo</li>
-                            <li class="flex gap-2"><span>[x]</span> 90-day retention</li>
-                            <li class="flex gap-2"><span>[x]</span> SSO (Coming soon)</li>
+                            <li class="flex gap-2"><span>[x]</span> Unlimited events</li>
+                            <li class="flex gap-2"><span>[x]</span> 500+ streams</li>
+                            <li class="flex gap-2"><span>[x]</span> Self-hosting option</li>
+                            <li class="flex gap-2"><span>[x]</span> EU data residency</li>
                         </ul>
-                        <button @click="handleCheckout('enterprise')" class="block w-full border border-black py-2 text-center text-sm font-bold uppercase hover:bg-black hover:text-white transition-colors">
-                            Contact Us
-                        </button>
+                        <a href="mailto:sales@driftlock.net" class="block w-full border border-black py-2 text-center text-sm font-bold uppercase hover:bg-black hover:text-white transition-colors">
+                            Contact Sales
+                        </a>
                     </div>
                 </div>
             </div>
@@ -393,7 +417,7 @@
         <!-- Waitlist / Footer CTA -->
         <section id="signup" class="section-padding bg-white border-b-0">
             <div class="container-padding max-w-2xl mx-auto text-center">
-                <h2 class="text-4xl font-sans font-bold tracking-tight uppercase mb-6">Start Monitoring Today</h2>
+                <h2 class="text-4xl font-sans font-bold tracking-tight uppercase mb-6">Get Early Access</h2>
                 <div class="bg-gray-50 border border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
                     <WaitlistForm />
                 </div>

@@ -18,11 +18,20 @@ Welcome to Driftlock! This guide will help you get up and running with explainab
 git clone https://github.com/Shannon-Labs/driftlock.git
 cd driftlock
 
-# Build the Rust core
-cd cbad-core && cargo build --release && cd ..
+# Build the Rust API
+cargo build -p driftlock-api --release
 
-# Run the API demo (includes Docker + Postgres)
-DRIFTLOCK_DEV_MODE=true ./scripts/run-api-demo.sh
+# Start PostgreSQL (Docker)
+docker run --name driftlock-postgres \
+  -e POSTGRES_DB=driftlock \
+  -e POSTGRES_USER=driftlock \
+  -e POSTGRES_PASSWORD=driftlock \
+  -p 5432:5432 \
+  -d postgres:15
+
+# Run the API server
+DATABASE_URL="postgres://driftlock:driftlock@localhost:5432/driftlock" \
+  ./target/release/driftlock-api
 ```
 
 ## Your First API Call
@@ -31,16 +40,29 @@ Once you have your API key, you can start detecting anomalies:
 
 ```bash
 # Replace YOUR_API_KEY with your actual key
-curl -X POST https://driftlock.net/api/v1/detect \
+curl -X POST https://api.driftlock.net/v1/detect \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "X-Api-Key: YOUR_API_KEY" \
   -d '{
     "stream_id": "default",
     "events": [
-      {"timestamp": "2024-01-01T00:00:00Z", "level": "info", "message": "Normal operation"},
-      {"timestamp": "2024-01-01T00:00:01Z", "level": "info", "message": "Normal operation"},
-      // ... add more events (minimum ~450 for baseline)
-      {"timestamp": "2024-01-01T00:10:00Z", "level": "error", "message": "CRITICAL: Unusual pattern!"}
+      "2024-01-01T00:00:00Z INFO Normal operation",
+      "2024-01-01T00:00:01Z INFO Normal operation",
+      "2024-01-01T00:10:00Z ERROR CRITICAL: Unusual pattern!"
+    ]
+  }'
+```
+
+### Try the Demo (No Auth Required)
+
+```bash
+curl -X POST http://localhost:8080/v1/demo/detect \
+  -H "Content-Type: application/json" \
+  -d '{
+    "events": [
+      "normal log entry 1",
+      "normal log entry 2",
+      "ERROR: unusual event detected"
     ]
   }'
 ```
@@ -49,34 +71,24 @@ curl -X POST https://driftlock.net/api/v1/detect \
 
 ```json
 {
-  "success": true,
-  "batch_id": "550e8400-e29b-41d4-a716-446655440000",
-  "stream_id": "default",
-  "total_events": 451,
-  "anomaly_count": 1,
-  "processing_time": "245.3ms",
-  "compression_algo": "zstd",
   "anomalies": [
     {
-      "id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
-      "index": 450,
-      "metrics": {
-        "ncd": 0.89,
-        "p_value": 0.002,
-        "confidence": 0.95,
-        "compression_ratio": 1.45
-      },
-      "why": "High NCD (0.89 > 0.30) indicates significant deviation from baseline. Statistical significance confirmed (p=0.002 < 0.05).",
-      "detected": true
+      "id": "anom_abc123",
+      "ncd": 0.72,
+      "compression_ratio": 1.41,
+      "entropy_change": 0.13,
+      "p_value": 0.004,
+      "confidence": 0.96,
+      "explanation": "Significant deviation from baseline pattern"
     }
-  ]
+  ],
+  "metrics": {
+    "processed": 100,
+    "baseline": 400,
+    "window": 50,
+    "duration_ms": 42
+  }
 }
-```
-
-To make `zlab` the default compressor without Docker, set an environment variable before running the Go binary directly:
-
-```bash
-DEFAULT_ALGO=zlab go run ./collector-processor/cmd/driftlock-http
 ```
 
 ### Key Metrics Explained
@@ -88,13 +100,15 @@ DEFAULT_ALGO=zlab go run ./collector-processor/cmd/driftlock-http
 
 ## API Endpoints
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/healthz` | GET | Health check |
-| `/v1/detect` | POST | Detect anomalies in events |
-| `/v1/anomalies` | GET | List detected anomalies |
-| `/v1/anomalies/{id}` | GET | Get anomaly details |
-| `/v1/anomalies/export` | POST | Export anomalies |
+| Endpoint | Method | Auth | Description |
+|----------|--------|------|-------------|
+| `/healthz` | GET | None | Liveness check |
+| `/v1/demo/detect` | POST | IP Rate | Demo detection (10 req/hr) |
+| `/v1/detect` | POST | API Key | Authenticated detection |
+| `/v1/anomalies` | GET | API Key | List detected anomalies |
+| `/v1/anomalies/:id` | GET | API Key | Get anomaly details |
+| `/v1/streams` | GET | API Key | List streams |
+| `/v1/profiles` | GET | API Key | List detection profiles |
 
 ## Configuration Options
 
@@ -102,24 +116,29 @@ You can customize detection settings per request:
 
 ```json
 {
-  "stream_id": "default",
-  "events": [...],
+  "stream_id": "my-stream",
+  "events": ["..."],
   "config_override": {
-    "baseline_size": 400,      // Number of events for baseline
-    "window_size": 50,         // Window size for comparison
-    "hop_size": 10,            // Slide window by this amount
-    "ncd_threshold": 0.3,      // NCD threshold for anomaly
-    "p_value_threshold": 0.05, // Statistical significance threshold
-    "compressor": "zstd"       // zlab, zstd, lz4, or gzip
+    "baseline_size": 400,
+    "window_size": 50,
+    "hop_size": 10,
+    "ncd_threshold": 0.3,
+    "p_value_threshold": 0.05,
+    "compressor": "zstd"
   }
 }
 ```
 
-To default the HTTP service to the new `zlab` compressor without Docker, set the environment variable before starting the Go binary directly:
+### Detection Profiles
 
-```bash
-DEFAULT_ALGO=zlab go run ./collector-processor/cmd/driftlock-http
-```
+Choose a pre-configured profile or use custom settings:
+
+| Profile | NCD Threshold | P-Value | Use Case |
+|---------|---------------|---------|----------|
+| `sensitive` | 0.20 | 0.10 | Security-critical, early warning |
+| `balanced` | 0.30 | 0.05 | General purpose (default) |
+| `strict` | 0.45 | 0.01 | Low noise, high confidence |
+| `custom` | User-defined | User-defined | Fine-tuned settings |
 
 ## Best Practices
 
@@ -127,22 +146,23 @@ DEFAULT_ALGO=zlab go run ./collector-processor/cmd/driftlock-http
 
 For accurate detection, provide at least 400 baseline events before the window you want to analyze.
 
-### 2. Use Consistent Event Structure
+### 2. Use Consistent Event Format
 
-Keep your event structure consistent across baseline and test data:
+Keep your event format consistent:
 
 ```json
 {
-  "timestamp": "ISO 8601 format",
-  "level": "info|warn|error",
-  "message": "Description",
-  "custom_field": "value"
+  "events": [
+    "2024-01-01T00:00:00Z INFO User logged in",
+    "2024-01-01T00:00:01Z INFO Page viewed",
+    "2024-01-01T00:00:02Z ERROR Database connection failed"
+  ]
 }
 ```
 
 ### 3. Stream Organization
 
-Organize data by type:
+Organize data by type using different streams:
 - **logs**: Application logs
 - **metrics**: Numerical metrics
 - **traces**: Distributed traces
@@ -154,12 +174,29 @@ Start with defaults and adjust based on your data:
 - Higher `ncd_threshold` = fewer false positives
 - Lower `p_value_threshold` = stricter statistical test
 
-## Free Trial Limits
+## Plan Limits
 
+### Free Tier
 - **Events**: 10,000/month
-- **Duration**: 14 days
-- **Streams**: 1
+- **Streams**: 5
 - **Retention**: 14 days
+
+### Pro ($99/mo)
+- **Events**: 500,000/month
+- **Streams**: 20
+- **Retention**: 90 days
+
+### Team ($199/mo)
+- **Events**: 5,000,000/month
+- **Streams**: 100
+- **Retention**: 1 year
+
+### Enterprise (Custom)
+- **Events**: Unlimited
+- **Streams**: 500+
+- **Retention**: Custom
+- **EU Data Residency**: Available
+- **Self-Hosting**: Available
 
 Need more? [View pricing](https://driftlock.net/#pricing)
 
@@ -169,35 +206,54 @@ Need more? [View pricing](https://driftlock.net/#pricing)
 
 - Ensure you're using the full key including the `dlk_` prefix
 - Check that the key hasn't been revoked
+- Use `X-Api-Key` header (not `Authorization: Bearer`)
 
 ### "events required"
 
 - Provide at least one event in the `events` array
-- Events must be valid JSON objects
+- Events should be strings
 
 ### "no stream configured"
 
-- Use `stream_id: "default"` or the specific stream ID from your account
+- Use `stream_id: "default"` or create a stream first via `POST /v1/streams`
 
 ### Low anomaly detection
 
 - Ensure you have enough baseline events (400+)
 - Check that your baseline represents "normal" behavior
 - Adjust `ncd_threshold` if needed
+- Try the `sensitive` detection profile
+
+### Rate limit exceeded (429)
+
+- Demo endpoint: 10 requests per hour per IP
+- Authenticated endpoints: Based on your plan tier
+
+## Driftlog (Debug Logging)
+
+Enable detailed logging for troubleshooting:
+
+```bash
+# Run with debug logging
+RUST_LOG=debug cargo run -p driftlock-api
+
+# Filter to specific modules
+RUST_LOG=driftlock_api=debug,driftlock_db=info cargo run -p driftlock-api
+```
 
 ## Next Steps
 
-1. **Explore the API**: Check out the [API Documentation](API.md)
-2. **Run the Demo**: Try the [API Demo Walkthrough](API-DEMO-WALKTHROUGH.md)
-3. **Deploy to Production**: Follow the [Deployment Guide](COMPLETE_DEPLOYMENT_PLAN.md)
+1. **Explore the API**: Check out the [API Reference](../../architecture/API.md)
+2. **Configure Detection**: Learn about [Detection Profiles](../guides/detection-profiles.md)
+3. **Deploy to Production**: Follow the [Deployment Guide](../../deployment/DEPLOYMENT.md)
 4. **Join the Community**: Star us on [GitHub](https://github.com/Shannon-Labs/driftlock)
 
 ## Support
 
 - **Email**: hunter@shannonlabs.dev
 - **GitHub Issues**: [Report a bug](https://github.com/Shannon-Labs/driftlock/issues)
-- **Documentation**: [Full docs](https://driftlock.net/docs)
+- **Documentation**: [Full docs](https://docs.driftlock.io)
 
 ---
 
-Built by [Shannon Labs](https://shannonlabs.dev) | [Apache 2.0 License](../LICENSE)
+Built by [Shannon Labs](https://shannonlabs.dev) | [Apache 2.0 License](../../../LICENSE)
