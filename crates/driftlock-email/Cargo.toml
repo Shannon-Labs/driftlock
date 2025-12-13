@@ -1,0 +1,18 @@
+[package]
+name = "driftlock-email"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+# HTTP client for SendGrid
+reqwest.workspace = true
+
+# Serialization
+serde.workspace = true
+serde_json.workspace = true
+
+# Utilities
+thiserror.workspace = true
+tracing.workspace = true
+tokio.workspace = true

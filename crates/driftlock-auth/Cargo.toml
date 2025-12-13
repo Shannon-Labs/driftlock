@@ -1,0 +1,26 @@
+[package]
+name = "driftlock-auth"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+# Auth
+jsonwebtoken.workspace = true
+argon2.workspace = true
+base32.workspace = true
+
+# HTTP client for Firebase key fetch
+reqwest.workspace = true
+
+# Serialization
+serde.workspace = true
+serde_json.workspace = true
+
+# Utilities
+uuid.workspace = true
+chrono.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+tokio.workspace = true
+rand = "0.8"

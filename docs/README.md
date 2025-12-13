@@ -53,12 +53,12 @@ The last event (CPU spike + memory spike) will be flagged as anomalous.
 
 ## Pricing (snapshot)
 
-| Plan | Price | Events/month | Best for |
-| --- | --- | --- | --- |
-| Free | $0/mo | 10,000 | Experimentation |
-| Standard | $15/mo | 500,000 | Startups & active monitoring |
-| Pro | $100/mo | 5,000,000 | High-volume production |
-| Enterprise | $299/mo | 25,000,000 | Large-scale compliance |
+| Plan | Price | Events/month | Streams | Best for |
+| --- | --- | --- | --- | --- |
+| Free | $0/mo | 10,000 | 5 | Experimentation |
+| Pro | $99/mo | 500,000 | 20 | Startups & active monitoring |
+| Team | $199/mo | 5,000,000 | 100 | High-volume production |
+| Enterprise | Custom | Unlimited | 500+ | Large-scale compliance, EU data residency |
 
 ## Support
 

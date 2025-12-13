@@ -9,7 +9,6 @@ Driftlock detects data drift and anomalies in milliseconds using deterministic c
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Status](https://img.shields.io/badge/Status-Production--Ready-green.svg)]()
-[![Go Report Card](https://goreportcard.com/badge/github.com/shannon-labs/driftlock)](https://goreportcard.com/report/github.com/shannon-labs/driftlock)
 
 ---
 
@@ -23,35 +22,37 @@ Driftlock detects data drift and anomalies in milliseconds using deterministic c
 
 ## 🛠️ Quick Start
 
-### Run the Deterministic Demo
-Process synthetic events and see the detection engine in action:
+### Run the Rust API locally
+Bring up the API server with PostgreSQL in a few commands:
 
 ```bash
 # Clone the repository
 git clone https://github.com/Shannon-Labs/driftlock.git
 cd driftlock
 
-# Build and run demo
-make demo
-./driftlock-demo test-data/financial-demo.json
+# Start Postgres (Docker)
+docker run --name driftlock-postgres \
+  -e POSTGRES_DB=driftlock \
+  -e POSTGRES_USER=driftlock \
+  -e POSTGRES_PASSWORD=driftlock \
+  -p 5432:5432 \
+  -d postgres:15
 
-# View results
-open demo-output.html
+# Run the API (requires Rust 1.75+)
+DATABASE_URL="postgres://driftlock:driftlock@localhost:5432/driftlock" \
+  cargo run -p driftlock-api
+
+# Smoke test
+curl http://localhost:8080/healthz
 ```
 
 ### Local Development
 
-1.  **Prerequisites:** Go 1.21+, Rust 1.75+, Node.js 20+, Docker.
-2.  **Start Infrastructure:**
-    ```bash
-    docker compose up -d
-    ```
-3.  **Run API:**
-    ```bash
-    export DRIFTLOCK_DEV_MODE=true
-    ./scripts/run-api-demo.sh
-    ```
-4.  **Run Dashboard:**
+1. **Prerequisites:** Rust 1.75+, Node.js 18+, Docker (optional), PostgreSQL 15+.
+2. **Configure env:** `cp .env.example .env` and set `DATABASE_URL`, `FIREBASE_PROJECT_ID`, Stripe keys (if billing).
+3. **Build:** `cargo build --workspace`
+4. **Run API:** `cargo run -p driftlock-api`
+5. **Run dashboard (optional):**
     ```bash
     cd landing-page
     npm install
@@ -61,24 +62,26 @@ open demo-output.html
 ## 🏗️ Architecture
 
 *   **Core Engine (`cbad-core`):** High-performance Rust library for NCD/entropy detection.
-*   **API (`collector-processor`):** Go HTTP API handling ingestion, multi-tenancy, and billing.
-*   **Dashboard (`landing-page`):** Vue 3 + Tailwind interface for real-time monitoring.
-*   **Infrastructure:** Designed for Google Cloud Run (Serverless) + PostgreSQL + Firebase Auth.
+*   **API (`driftlock-api`):** Rust Axum server for ingestion, billing, onboarding, and management.
+*   **Database Layer (`driftlock-db`):** sqlx-powered repository layer shared across services.
+*   **Dashboard (`landing-page`):** Vue 3 + Tailwind interface for onboarding and analysis.
+*   **Infrastructure:** Runs on Cloud Run / Docker with PostgreSQL and Firebase Auth.
 
 ## 📚 Documentation
 
-*   [API Documentation](docs/architecture/api/openapi.yaml)
-*   [Architecture Overview](docs/architecture/)
-*   [Use Cases](landing-page/public/docs/use-cases/)
+*   [User Guide](docs/user-guide/)
+*   [Architecture & API](docs/architecture/)
+*   [Development](docs/development/)
+*   [Deployment](docs/deployment/)
 
-## 📦 Pricing & Tiers
+## Pricing & Tiers
 
-| Tier | Events/Month | Features |
-|------|--------------|----------|
-| **Pulse** (Free) | 10,000 | Basic detection, 14-day retention |
-| **Radar** ($15/mo) | 500,000 | Email alerts, 30-day retention |
-| **Tensor** ($100/mo) | 5,000,000 | DORA/NIS2 evidence bundles |
-| **Orbit** (Custom) | Unlimited | Dedicated support, SLA |
+| Tier | Price | Events/Month | Streams | Features |
+|------|-------|--------------|---------|----------|
+| **Free** | $0 | 10,000 | 5 | Basic detection, 14-day retention |
+| **Pro** | $99/mo | 500,000 | 20 | Email alerts, 90-day retention |
+| **Team** | $199/mo | 5,000,000 | 100 | DORA/NIS2 evidence bundles, 1-year retention |
+| **Enterprise** | Custom | Unlimited | 500+ | EU data residency, self-hosting, SLA |
 
 ## 🤝 Contributing
 

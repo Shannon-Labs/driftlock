@@ -1,6 +1,6 @@
 <template>
   <div class="mx-auto max-w-lg p-4 sm:p-8">
-    <div class="bg-white rounded-xl shadow-xl border border-gray-100 p-8 sm:p-10">
+    <div class="bg-white border-2 border-black p-8 sm:p-10 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
       
       <!-- Authentication View (Login/Signup) -->
       <div v-if="authState === 'initial'" class="space-y-6">
@@ -16,7 +16,7 @@
           <button
             @click="handleSocialAuth('google')"
             type="button"
-            class="flex w-full items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+            class="flex w-full items-center justify-center gap-2 border-2 border-black bg-white px-3 py-2 text-sm font-bold font-mono uppercase text-black hover:bg-black hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-1"
             :disabled="loading"
           >
             <svg class="h-5 w-5" viewBox="0 0 24 24">
@@ -44,7 +44,7 @@
           <button
             @click="handleSocialAuth('github')"
             type="button"
-            class="flex w-full items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-1"
+            class="flex w-full items-center justify-center gap-2 border-2 border-black bg-white px-3 py-2 text-sm font-bold font-mono uppercase text-black hover:bg-black hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-1"
             :disabled="loading"
           >
             <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
@@ -77,7 +77,7 @@
               type="email"
               placeholder="you@company.com"
               required
-              class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+              class="mt-1 block w-full border-2 border-black px-3 py-2 placeholder-gray-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black font-mono text-sm"
               :disabled="loading"
             />
           </div>
@@ -92,7 +92,7 @@
               required
               minlength="2"
               maxlength="100"
-              class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+              class="mt-1 block w-full border-2 border-black px-3 py-2 placeholder-gray-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black font-mono text-sm"
               :disabled="loading"
             />
           </div>
@@ -107,22 +107,22 @@
               placeholder="••••••••"
               required
               minlength="6"
-              class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+              class="mt-1 block w-full border-2 border-black px-3 py-2 placeholder-gray-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black font-mono text-sm"
               :disabled="loading"
             />
             <div v-if="isLoginMode" class="text-right mt-1">
-                <button type="button" @click="handleForgotPassword" class="text-xs text-blue-600 hover:text-blue-500">Forgot password?</button>
+                <button type="button" @click="handleForgotPassword" class="text-xs font-mono text-black underline underline-offset-2 hover:no-underline">Forgot password?</button>
             </div>
           </div>
 
-          <div v-if="error" class="rounded-md bg-red-50 p-4 text-sm text-red-700 flex items-center gap-2">
+          <div v-if="error" class="border-2 border-red-600 bg-red-50 p-4 text-sm text-red-700 flex items-center gap-2 font-mono">
              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             {{ error }}
           </div>
           
-          <div v-if="successMessage" class="rounded-md bg-green-50 p-4 text-sm text-green-700 flex items-center gap-2">
+          <div v-if="successMessage" class="border-2 border-green-600 bg-green-50 p-4 text-sm text-green-700 flex items-center gap-2 font-mono">
              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -131,7 +131,7 @@
 
           <button
             type="submit"
-            class="flex w-full justify-center rounded-md border border-transparent bg-blue-600 py-3 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-70 disabled:cursor-not-allowed transition-all"
+            class="flex w-full justify-center border-2 border-black bg-black py-3 px-4 text-sm font-bold font-mono uppercase text-white hover:bg-white hover:text-black focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
             :disabled="loading"
           >
             <span v-if="!loading">{{ isLoginMode ? 'Sign In' : 'Start Pilot →' }}</span>
@@ -145,9 +145,9 @@
           </button>
         </form>
 
-        <div class="text-center text-sm">
+        <div class="text-center text-sm font-mono">
             <span class="text-gray-500">{{ isLoginMode ? "Don't have an account?" : "Already have an account?" }}</span>
-            <button @click="toggleMode" class="ml-1 font-medium text-blue-600 hover:text-blue-500">
+            <button @click="toggleMode" class="ml-1 font-bold text-black underline underline-offset-2 hover:no-underline">
                 {{ isLoginMode ? 'Sign up' : 'Sign in' }}
             </button>
         </div>
@@ -156,8 +156,8 @@
       <!-- Pending Verification View -->
       <div v-else-if="authState === 'pending_verification'" class="text-center space-y-6">
         <div class="flex flex-col items-center">
-          <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
-            <svg class="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div class="mx-auto flex h-16 w-16 items-center justify-center border-2 border-black bg-gray-100">
+            <svg class="h-8 w-8 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
           </div>
@@ -191,7 +191,7 @@
 
         <button
           @click="authState = 'initial'"
-          class="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-500"
+          class="inline-flex items-center text-sm font-bold font-mono text-black underline underline-offset-2 hover:no-underline"
         >
           <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -251,12 +251,12 @@
                  <p class="text-xs text-blue-700 mt-1">Choose a plan to remove limits.</p>
              </div>
              <div class="flex gap-2">
-                 <button @click="handleUpgrade('radar')" class="flex-1 inline-flex justify-center items-center rounded-md border border-blue-200 bg-white px-3 py-2 text-xs font-medium text-blue-700 shadow-sm hover:bg-blue-50 focus:outline-none" :disabled="upgrading">
-                    <span v-if="!upgrading">Radar ($15)</span>
+                 <button @click="handleUpgrade('pro')" class="flex-1 inline-flex justify-center items-center rounded-md border border-blue-200 bg-white px-3 py-2 text-xs font-medium text-blue-700 shadow-sm hover:bg-blue-50 focus:outline-none" :disabled="upgrading">
+                    <span v-if="!upgrading">Pro ($99)</span>
                     <span v-else>...</span>
                  </button>
-                 <button @click="handleUpgrade('tensor')" class="flex-1 inline-flex justify-center items-center rounded-md border border-transparent bg-blue-600 px-3 py-2 text-xs font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none" :disabled="upgrading">
-                    <span v-if="!upgrading">Pro ($100)</span>
+                 <button @click="handleUpgrade('team')" class="flex-1 inline-flex justify-center items-center rounded-md border border-transparent bg-blue-600 px-3 py-2 text-xs font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none" :disabled="upgrading">
+                    <span v-if="!upgrading">Team ($199)</span>
                     <span v-else>...</span>
                  </button>
              </div>
@@ -402,16 +402,16 @@ const handleSocialAuth = async (providerName: 'google' | 'github') => {
 const fetchApiKeys = async (user: AuthUser, suppressError = false) => {
     try {
         const idToken = await user.getIdToken()
-        const response = await fetch('/api/v1/me/keys', {
+        const response = await fetch('/api/v1/api-keys', {
             headers: {
                 'Authorization': `Bearer ${idToken}`
             }
         })
         
         if (response.ok) {
-            const data = await response.json()
-            if (data.keys && data.keys.length > 0) {
-                apiKey.value = data.keys[0].key || data.keys[0].token || 'Error retrieving key' 
+            const keys = await response.json()
+            if (Array.isArray(keys) && keys.length > 0) {
+                apiKey.value = keys[0].key || keys[0].token || 'Error retrieving key' 
                 authState.value = 'submitted'
                 loading.value = false
                 return
@@ -431,7 +431,7 @@ const fetchApiKeys = async (user: AuthUser, suppressError = false) => {
 
 // Shared logic to call backend for signup
 const submitOnboarding = async (idToken: string, userEmail: string, companyName: string, source: string, userObj: any) => {
-    const response = await fetch('/api/v1/onboard/signup', {
+    const response = await fetch('/api/v1/auth/signup', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

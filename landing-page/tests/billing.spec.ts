@@ -13,14 +13,13 @@ test.describe('Billing UI Components', () => {
       await page.goto('/', { waitUntil: 'networkidle' })
 
       // Verify pricing tiers are visible
-      await expect(page.getByText('Radar')).toBeVisible()
-      await expect(page.getByText('Tensor')).toBeVisible()
-      await expect(page.getByText('Orbit')).toBeVisible()
+      await expect(page.getByText('Free')).toBeVisible()
+      await expect(page.getByText('Pro')).toBeVisible()
+      await expect(page.getByText('Team')).toBeVisible()
 
       // Verify pricing amounts
-      await expect(page.getByText('$15')).toBeVisible()
-      await expect(page.getByText('$100')).toBeVisible()
-      await expect(page.getByText('$299')).toBeVisible()
+      await expect(page.getByText('$99')).toBeVisible()
+      await expect(page.getByText('$199')).toBeVisible()
     })
 
     test('upgrade buttons link to signup', async ({ page }) => {
