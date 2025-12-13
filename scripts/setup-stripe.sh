@@ -1,219 +1,383 @@
 #!/bin/bash
 
 # Driftlock Stripe Setup Script
-# This script helps set up Stripe products and pricing for Driftlock
+# Creates products and prices for the new tier structure:
+#   Starter ($29), Pro ($99), Team ($249), Scale ($499), Enterprise (optional)
+#
+# Usage:
+#   ./scripts/setup-stripe.sh           # Interactive mode
+#   ./scripts/setup-stripe.sh --auto    # Non-interactive (requires STRIPE_API_KEY env var)
 
 set -e
 
-echo "🚀 Setting up Stripe for Driftlock..."
-echo ""
+# =============================================================================
+# Configuration
+# =============================================================================
 
-# Function to check if stripe CLI is installed
+TIERS=(
+    "starter:Starter:29:250K events/mo, 50 streams, 30-day retention"
+    "pro:Pro:99:1.5M events/mo, 200 streams, 180-day retention"
+    "team:Team:249:10M events/mo, 1,000 streams, 1-year retention"
+    "scale:Scale:499:50M events/mo, 5,000 streams, 2-year retention"
+)
+
+# Optional: Enterprise tier (commented out by default - manual setup recommended)
+# ENTERPRISE_TIER="enterprise:Enterprise:1500:Committed volume, custom limits, dedicated support"
+
+OUTPUT_FILE="/tmp/driftlock-stripe-ids.env"
+
+# =============================================================================
+# Helper Functions
+# =============================================================================
+
 check_stripe_cli() {
     if ! command -v stripe &> /dev/null; then
-        echo "❌ Stripe CLI not found. Please install it first:"
+        echo "❌ Stripe CLI not found. Install it:"
         echo "   macOS: brew install stripe/stripe-cli/stripe"
-        echo "   Linux: curl -s https://packages.stripe.com/api/security/keypairs/stripe-cli-gpg/public | gpg --dearmor | sudo tee /usr/share/keyrings/stripe.gpg"
-        echo "          echo \"deb [signed-by=/usr/share/keyrings/stripe.gpg] https://packages.stripe.com/stripe-cli-debian-local stable main\" | sudo tee -a /etc/apt/sources.list.d/stripe.list"
-        echo "          sudo apt update"
-        echo "          sudo apt install stripe"
-        echo "   Download: https://stripe.com/docs/stripe-cli"
+        echo "   Linux: See https://stripe.com/docs/stripe-cli"
         exit 1
     fi
     echo "✅ Stripe CLI found"
 }
 
-# Function to login to Stripe
-login_stripe() {
-    echo "🔐 Logging into Stripe..."
-    echo "Please enter your Stripe API keys:"
-    echo "You can find these at https://dashboard.stripe.com/apikeys"
-    echo ""
-
-    read -p "Enter your Stripe secret key (sk_test_...): " stripe_key
-
-    if [[ ! $stripe_key == sk_test_* && ! $stripe_key == sk_live_* ]]; then
-        echo "❌ Invalid Stripe key format. Should start with sk_test_ or sk_live_"
+check_jq() {
+    if ! command -v jq &> /dev/null; then
+        echo "❌ jq not found. Install it:"
+        echo "   macOS: brew install jq"
+        echo "   Linux: apt install jq"
         exit 1
     fi
-
-    echo "$stripe_key" > /tmp/stripe-key.txt
-    chmod 600 /tmp/stripe-key.txt
-    export STRIPE_API_KEY="$stripe_key"
-
-    echo "✅ Stripe API key configured"
-    echo ""
 }
 
-# Function to create products and prices
-create_stripe_products() {
-    echo "🛍️  Creating Stripe products and prices..."
-    echo ""
-
-    # Create Pro product
-    echo "Creating 'Pro' product..."
-    product_id=$(stripe products create \
-        --name="Driftlock Pro" \
-        --description="Professional anomaly detection for production workloads" \
-        --type="service" \
-        --metadata="tier=pro,service=driftlock" \
-        --json | jq -r '.id')
-
-    echo "✅ Created product: $product_id"
-
-    # Create price for Pro plan ($99/month)
-    echo "Creating price for Pro plan..."
-    price_id=$(stripe prices create \
-        --product="$product_id" \
-        --currency="usd" \
-        --unit-amount=9900 \
-        --recurring-interval="month" \
-        --metadata="tier=pro,service=driftlock" \
-        --json | jq -r '.id')
-
-    echo "✅ Created price: $price_id ($99/month)"
-    echo ""
-
-    # Save to file for GCP secrets
-    echo "$price_id" > /tmp/stripe-price-id-pro.txt
-
-    echo "📋 Stripe Configuration Summary:"
-    echo "Product ID: $product_id"
-    echo "Price ID (Pro): $price_id"
-    echo "Amount: $99/month"
-    echo ""
-
-    echo "🔐 To add these to GCP Secret Manager, run:"
-    echo "echo -n '$stripe_key' | gcloud secrets create stripe-secret-key --data-file=- --project=driftlock"
-    echo "echo -n '$price_id' | gcloud secrets create stripe-price-id-pro --data-file=- --project=driftlock"
-    echo ""
-}
-
-# Function to create webhooks
-setup_webhooks() {
-    echo "🪝 Setting up Stripe webhooks..."
-    echo ""
-
-    read -p "Enter your deployed API URL (e.g., https://driftlock-api-xxxxx-uc.a.run.app): " api_url
-
-    if [ -z "$api_url" ]; then
-        echo "⚠️  Skipping webhook setup (no API URL provided)"
-        echo "You can set up webhooks later at: https://dashboard.stripe.com/webhooks"
+login_stripe() {
+    if [ -n "$STRIPE_API_KEY" ]; then
+        echo "✅ Using STRIPE_API_KEY from environment"
         return
     fi
 
-    webhook_url="$api_url/stripe/webhook"
-
-    echo "Creating webhook endpoint: $webhook_url"
-    webhook_id=$(stripe webhooks create \
-        --url="$webhook_url" \
-        --enabled-events="customer.subscription.created,customer.subscription.updated,customer.subscription.deleted,invoice.payment_succeeded,invoice.payment_failed" \
-        --json | jq -r '.id')
-
-    echo "✅ Created webhook: $webhook_id"
+    echo "🔐 Stripe API Key Required"
+    echo "Get your key from: https://dashboard.stripe.com/apikeys"
+    echo ""
+    read -sp "Enter your Stripe secret key (sk_test_... or sk_live_...): " stripe_key
     echo ""
 
-    echo "⚠️  IMPORTANT: Webhook signing secret will be displayed in Stripe dashboard"
-    echo "Go to https://dashboard.stripe.com/webhooks to copy the signing secret"
-    echo "Then add it as a GCP secret: stripe-webhook-secret"
-    echo ""
-}
+    if [[ ! $stripe_key == sk_test_* && ! $stripe_key == sk_live_* ]]; then
+        echo "❌ Invalid key format. Should start with sk_test_ or sk_live_"
+        exit 1
+    fi
 
-# Function to create test data
-create_test_data() {
-    echo "🧪 Creating test customer and subscription..."
-    echo ""
+    export STRIPE_API_KEY="$stripe_key"
+    echo "✅ Stripe API key configured"
 
-    # Create test customer
-    customer_id=$(stripe customers create \
-        --name="Test Customer" \
-        --email="test@driftlock.dev" \
-        --metadata="test=true" \
-        --json | jq -r '.id')
-
-    echo "✅ Created test customer: $customer_id"
-
-    # Get the price ID we created earlier
-    if [ -f /tmp/stripe-price-id-pro.txt ]; then
-        price_id=$(cat /tmp/stripe-price-id-pro.txt)
-
-        # Create test subscription
-        subscription_id=$(stripe subscriptions create \
-            --customer="$customer_id" \
-            --items="price=$price_id" \
-            --metadata="test=true" \
-            --json | jq -r '.id')
-
-        echo "✅ Created test subscription: $subscription_id"
-        echo ""
-        echo "🧪 Test data created successfully!"
-    else
-        echo "⚠️  No price ID found, skipping test subscription"
+    # Detect environment
+    if [[ $stripe_key == sk_live_* ]]; then
+        echo "⚠️  LIVE MODE DETECTED - This will create real billable products!"
+        read -p "Continue? (yes/no): " confirm
+        if [ "$confirm" != "yes" ]; then
+            echo "Aborted."
+            exit 1
+        fi
     fi
 }
 
-# Function to provide manual setup instructions
-manual_setup_instructions() {
-    echo "📋 Manual Stripe Setup Instructions"
-    echo "================================="
+# =============================================================================
+# Product/Price Creation
+# =============================================================================
+
+create_product_and_price() {
+    local tier_key=$1
+    local tier_name=$2
+    local price_cents=$3
+    local description=$4
+
     echo ""
-    echo "1. Go to https://dashboard.stripe.com/products"
-    echo "2. Click 'Add product'"
-    echo "3. Configure product:"
-    echo "   - Name: Driftlock Pro"
-    echo "   - Description: Professional anomaly detection for production workloads"
-    echo "   - Pricing: $99/month (or your desired price)"
-    echo "4. Save the product and note the Price ID"
-    echo ""
-    echo "5. Go to https://dashboard.stripe.com/apikeys"
-    echo "6. Copy your secret key (sk_test_... for testing)"
-    echo ""
-    echo "7. Go to https://dashboard.stripe.com/webhooks"
-    echo "8. Add webhook endpoint: [your-api-url]/stripe/webhook"
-    echo "9. Select events:"
-    echo "   - customer.subscription.created"
-    echo "   - customer.subscription.updated"
-    echo "   - customer.subscription.deleted"
-    echo "   - invoice.payment_succeeded"
-    echo "   - invoice.payment_failed"
-    echo ""
-    echo "10. Copy the webhook signing secret"
-    echo ""
-    echo "Then add these to GCP Secret Manager:"
-    echo "- stripe-secret-key"
-    echo "- stripe-price-id-pro"
-    echo "- stripe-webhook-secret"
+    echo "📦 Creating Driftlock $tier_name..."
+
+    # Create product
+    local product_json=$(stripe products create \
+        --name="Driftlock $tier_name" \
+        --description="$description" \
+        --type="service" \
+        --metadata="tier=$tier_key" \
+        --metadata="service=driftlock" \
+        2>&1)
+
+    local product_id=$(echo "$product_json" | jq -r '.id // empty')
+    if [ -z "$product_id" ]; then
+        echo "❌ Failed to create product: $product_json"
+        return 1
+    fi
+    echo "   Product: $product_id"
+
+    # Create monthly price
+    local price_json=$(stripe prices create \
+        --product="$product_id" \
+        --currency="usd" \
+        --unit-amount="${price_cents}00" \
+        --recurring-interval="month" \
+        --metadata="tier=$tier_key" \
+        2>&1)
+
+    local price_id=$(echo "$price_json" | jq -r '.id // empty')
+    if [ -z "$price_id" ]; then
+        echo "❌ Failed to create price: $price_json"
+        return 1
+    fi
+    echo "   Price:   $price_id (\$$price_cents/month)"
+
+    # Save to output file
+    local var_name="STRIPE_PRICE_ID_${tier_key^^}"
+    echo "$var_name=$price_id" >> "$OUTPUT_FILE"
+
+    return 0
 }
 
-# Main execution
-check_stripe_cli
+create_all_products() {
+    echo "🛍️  Creating Stripe Products and Prices"
+    echo "========================================"
 
-echo "Choose setup option:"
-echo "1) Automated setup with Stripe CLI"
-echo "2) Manual setup instructions"
+    # Clear output file
+    > "$OUTPUT_FILE"
+    echo "# Driftlock Stripe Configuration" >> "$OUTPUT_FILE"
+    echo "# Generated: $(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> "$OUTPUT_FILE"
+    echo "" >> "$OUTPUT_FILE"
 
-read -p "Enter your choice (1-2): " choice
+    for tier_data in "${TIERS[@]}"; do
+        IFS=':' read -r key name price desc <<< "$tier_data"
+        create_product_and_price "$key" "$name" "$price" "$desc"
+        if [ $? -ne 0 ]; then
+            echo "❌ Failed to create tier: $name"
+            exit 1
+        fi
+    done
 
-case $choice in
-    1)
-        login_stripe
-        create_stripe_products
-        setup_webhooks
-        create_test_data
-        ;;
-    2)
-        manual_setup_instructions
-        ;;
-    *)
-        echo "❌ Invalid choice"
-        exit 1
-        ;;
-esac
+    echo ""
+    echo "✅ All products created successfully!"
+}
 
-echo ""
-echo "🎉 Stripe setup complete!"
-echo ""
-echo "Next steps:"
-echo "1. Add your Stripe secrets to GCP Secret Manager"
-echo "2. Deploy your API to get webhook URL"
-echo "3. Test the integration with a real payment"
+# =============================================================================
+# EU Data Residency Add-on (Optional)
+# =============================================================================
+
+create_eu_addon() {
+    echo ""
+    read -p "Create EU Data Residency add-on (\$150/mo)? (y/n): " create_eu
+    if [ "$create_eu" != "y" ]; then
+        return
+    fi
+
+    echo "📦 Creating EU Data Residency add-on..."
+
+    local product_json=$(stripe products create \
+        --name="Driftlock EU Data Residency" \
+        --description="Host your Driftlock data in EU region (europe-west1) for GDPR/DORA compliance" \
+        --type="service" \
+        --metadata="addon=eu_residency" \
+        --metadata="service=driftlock" \
+        2>&1)
+
+    local product_id=$(echo "$product_json" | jq -r '.id // empty')
+    if [ -z "$product_id" ]; then
+        echo "❌ Failed to create EU addon product"
+        return 1
+    fi
+
+    local price_json=$(stripe prices create \
+        --product="$product_id" \
+        --currency="usd" \
+        --unit-amount="15000" \
+        --recurring-interval="month" \
+        --metadata="addon=eu_residency" \
+        2>&1)
+
+    local price_id=$(echo "$price_json" | jq -r '.id // empty')
+    echo "   EU Add-on Price: $price_id (\$150/month)"
+    echo "" >> "$OUTPUT_FILE"
+    echo "# Optional add-ons" >> "$OUTPUT_FILE"
+    echo "STRIPE_PRICE_ID_EU_ADDON=$price_id" >> "$OUTPUT_FILE"
+}
+
+# =============================================================================
+# Webhook Setup
+# =============================================================================
+
+setup_webhook() {
+    echo ""
+    echo "🪝 Webhook Configuration"
+    echo "========================"
+    echo ""
+    echo "Your webhook endpoint should be:"
+    echo "  https://driftlock.net/webhooks/stripe"
+    echo ""
+    echo "Required events:"
+    echo "  - checkout.session.completed"
+    echo "  - customer.subscription.updated"
+    echo "  - customer.subscription.deleted"
+    echo "  - invoice.paid"
+    echo "  - invoice.payment_failed"
+    echo ""
+
+    read -p "Create webhook now? (y/n): " create_webhook
+    if [ "$create_webhook" != "y" ]; then
+        echo "⏭️  Skipping webhook creation. Create manually at:"
+        echo "   https://dashboard.stripe.com/webhooks"
+        return
+    fi
+
+    local webhook_url="https://driftlock.net/webhooks/stripe"
+    read -p "Webhook URL [$webhook_url]: " custom_url
+    webhook_url="${custom_url:-$webhook_url}"
+
+    echo "Creating webhook endpoint: $webhook_url"
+    local webhook_json=$(stripe webhook_endpoints create \
+        --url="$webhook_url" \
+        --enabled-events="checkout.session.completed,customer.subscription.updated,customer.subscription.deleted,invoice.paid,invoice.payment_failed" \
+        2>&1)
+
+    local webhook_id=$(echo "$webhook_json" | jq -r '.id // empty')
+    local webhook_secret=$(echo "$webhook_json" | jq -r '.secret // empty')
+
+    if [ -n "$webhook_id" ]; then
+        echo "✅ Webhook created: $webhook_id"
+        if [ -n "$webhook_secret" ]; then
+            echo "" >> "$OUTPUT_FILE"
+            echo "# Webhook" >> "$OUTPUT_FILE"
+            echo "STRIPE_WEBHOOK_SECRET=$webhook_secret" >> "$OUTPUT_FILE"
+            echo "   Secret saved to output file"
+        else
+            echo "⚠️  Copy webhook secret from dashboard: https://dashboard.stripe.com/webhooks"
+        fi
+    else
+        echo "❌ Failed to create webhook: $webhook_json"
+    fi
+}
+
+# =============================================================================
+# Customer Portal Setup
+# =============================================================================
+
+configure_portal() {
+    echo ""
+    echo "🚪 Customer Portal"
+    echo "=================="
+    echo "Configure the customer portal at:"
+    echo "  https://dashboard.stripe.com/settings/billing/portal"
+    echo ""
+    echo "Recommended settings:"
+    echo "  ✓ Allow customers to switch plans (upgrade/downgrade)"
+    echo "  ✓ Allow customers to cancel subscriptions"
+    echo "  ✓ Allow customers to update payment methods"
+    echo "  ✓ Show invoice history"
+    echo ""
+}
+
+# =============================================================================
+# Summary
+# =============================================================================
+
+print_summary() {
+    echo ""
+    echo "=========================================="
+    echo "🎉 Stripe Setup Complete!"
+    echo "=========================================="
+    echo ""
+    echo "Generated configuration saved to: $OUTPUT_FILE"
+    echo ""
+    cat "$OUTPUT_FILE"
+    echo ""
+    echo "=========================================="
+    echo ""
+    echo "📋 Next Steps:"
+    echo ""
+    echo "1. Add these values to your .env or GCP Secret Manager:"
+    echo "   cat $OUTPUT_FILE"
+    echo ""
+    echo "2. For GCP deployment, add secrets:"
+    echo '   while IFS="=" read -r key value; do'
+    echo '     gcloud secrets create "${key,,}" --data-file=- --project=driftlock <<< "$value"'
+    echo '   done < /tmp/driftlock-stripe-ids.env'
+    echo ""
+    echo "3. Configure Customer Portal:"
+    echo "   https://dashboard.stripe.com/settings/billing/portal"
+    echo ""
+    echo "4. Test the integration:"
+    echo "   ./scripts/test-stripe-checkout.sh"
+    echo ""
+}
+
+# =============================================================================
+# Manual Instructions (for reference)
+# =============================================================================
+
+manual_instructions() {
+    echo ""
+    echo "📋 Manual Stripe Setup"
+    echo "======================"
+    echo ""
+    echo "Go to https://dashboard.stripe.com/products and create:"
+    echo ""
+    echo "1. Driftlock Starter - \$29/month"
+    echo "   Description: 250K events/mo, 50 streams, 30-day retention"
+    echo ""
+    echo "2. Driftlock Pro - \$99/month"
+    echo "   Description: 1.5M events/mo, 200 streams, 180-day retention"
+    echo ""
+    echo "3. Driftlock Team - \$249/month"
+    echo "   Description: 10M events/mo, 1,000 streams, 1-year retention"
+    echo ""
+    echo "4. Driftlock Scale - \$499/month"
+    echo "   Description: 50M events/mo, 5,000 streams, 2-year retention"
+    echo ""
+    echo "5. (Optional) EU Data Residency Add-on - \$150/month"
+    echo "   Description: Host data in EU region for GDPR/DORA compliance"
+    echo ""
+    echo "Then go to https://dashboard.stripe.com/webhooks and create:"
+    echo "  URL: https://driftlock.net/webhooks/stripe"
+    echo "  Events: checkout.session.completed, customer.subscription.*,"
+    echo "          invoice.paid, invoice.payment_failed"
+    echo ""
+    echo "Copy the price IDs and webhook secret to your environment."
+}
+
+# =============================================================================
+# Main
+# =============================================================================
+
+main() {
+    echo "🚀 Driftlock Stripe Setup"
+    echo "========================="
+    echo ""
+
+    check_stripe_cli
+    check_jq
+
+    if [ "$1" == "--manual" ]; then
+        manual_instructions
+        exit 0
+    fi
+
+    echo ""
+    echo "This script will create Stripe products for:"
+    echo "  • Starter (\$29/mo) - 250K events"
+    echo "  • Pro (\$99/mo) - 1.5M events"
+    echo "  • Team (\$249/mo) - 10M events"
+    echo "  • Scale (\$499/mo) - 50M events"
+    echo ""
+
+    if [ "$1" != "--auto" ]; then
+        read -p "Continue? (y/n): " proceed
+        if [ "$proceed" != "y" ]; then
+            echo "Aborted."
+            exit 0
+        fi
+    fi
+
+    login_stripe
+    create_all_products
+    create_eu_addon
+    setup_webhook
+    configure_portal
+    print_summary
+}
+
+main "$@"
