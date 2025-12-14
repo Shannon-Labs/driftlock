@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Triage Issue with LLM
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         env:
           # Pass potentially untrusted inputs as environment variables (security best practice)
           ISSUE_TITLE: ${{ github.event.issue.title }}
