@@ -64,10 +64,10 @@ Migrate all services to use `driftlock.net` as the primary domain, replacing `dr
 - [ ] Test API endpoint to verify CORS headers are correct
 
 #### 2.3 Verify CORS Implementation
-- [ ] **File**: `collector-processor/cmd/driftlock-http/main.go`
-  - Verify CORS logic handles multiple origins correctly (lines 347-357, 558-583)
-  - Status: ✅ Code already supports comma-separated origins via `parseAllowedOrigins()`
-  - The `originAllowed()` function checks exact matches (case-insensitive)
+- [ ] **File**: `crates/driftlock-api/src/main.rs`
+  - Verify CORS logic handles multiple origins correctly
+  - Status: ✅ Code already supports comma-separated origins via Tower CORS middleware
+  - The Rust API uses `tower-http` CORS layer with configurable allowed origins
 
 #### 2.4 Test CORS Configuration
 - [ ] Test from `https://driftlock.net/playground` that API calls work

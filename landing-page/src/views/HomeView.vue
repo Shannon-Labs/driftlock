@@ -11,10 +11,10 @@
                 <!-- Left: Content -->
                 <div class="flex flex-col justify-center z-20">
                     <div class="mb-8">
-                        <div class="inline-flex items-center gap-2 border border-black px-3 py-1 mb-6 bg-black text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]">
-                            <span class="w-2 h-2 bg-green-400 animate-pulse rounded-full"></span>
-                            <span class="text-xs font-bold font-mono tracking-widest uppercase">Early Access</span>
-                        </div>
+	                        <div class="inline-flex items-center gap-2 border border-black px-3 py-1 mb-6 bg-black text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]">
+	                            <span class="w-2 h-2 bg-green-400 animate-pulse rounded-full"></span>
+	                            <span class="text-xs font-bold font-mono tracking-widest uppercase">Live Beta</span>
+	                        </div>
 
                         <h1 class="text-6xl sm:text-7xl lg:text-7xl xl:text-8xl font-sans font-bold tracking-tight leading-none mb-8 uppercase break-words w-full">
                             DORA-Compliant<br>Transaction Monitoring.
@@ -25,14 +25,14 @@
                             <strong>EU DORA Article 10 compliance built-in. Every incident includes reproducible metrics regulators can verify.</strong>
                         </p>
 
-                        <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                            <a href="#signup" class="brutalist-button-primary text-lg px-8 py-4">
-                                Join Waitlist
-                            </a>
-                            <a href="/docs" class="text-sm font-mono underline underline-offset-4 hover:no-underline">
-                                Read the docs →
-                            </a>
-                        </div>
+	                        <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+	                            <router-link to="/signup" class="brutalist-button-primary text-lg px-8 py-4">
+	                                Start Free
+	                            </router-link>
+	                            <a href="/docs" class="text-sm font-mono underline underline-offset-4 hover:no-underline">
+	                                Read the docs →
+	                            </a>
+	                        </div>
                     </div>
                 </div>
 
@@ -330,173 +330,162 @@
             </div>
         </section>
 
-        <!-- Pricing Section -->
-        <section id="pricing" class="section-padding bg-gray-50">
-            <div class="container-padding">
-                <div class="max-w-3xl mb-16 text-center mx-auto">
-                    <span class="text-xs font-bold font-mono uppercase tracking-widest mb-2 block text-gray-500">Pricing</span>
-                    <h2 class="text-4xl font-sans font-bold tracking-tight uppercase">
-                        Fair, Predictable Pricing
-                    </h2>
-                </div>
+	        <!-- Pricing Section -->
+	        <section id="pricing" class="section-padding bg-gray-50">
+	            <div class="container-padding">
+	                <div class="max-w-3xl mb-16 text-center mx-auto">
+	                    <span class="text-xs font-bold font-mono uppercase tracking-widest mb-2 block text-gray-500">Pricing</span>
+	                    <h2 class="text-4xl font-sans font-bold tracking-tight uppercase">
+	                        Fair, Predictable Pricing
+	                    </h2>
+	                    <p class="mt-4 text-sm font-serif text-gray-600">
+	                        Flat monthly plans with generous limits. No per-seat fees. Hard caps by default (no surprise bills).
+	                    </p>
+	                </div>
 
-                <div class="grid gap-6 lg:grid-cols-4 items-start">
-                    <!-- Free -->
-                    <div class="bg-white border border-gray-200 p-8 hover:border-black transition-colors">
-                        <div class="mb-4">
-                            <h3 class="font-bold font-sans uppercase text-lg">Free</h3>
-                            <div class="text-3xl font-bold font-mono mt-2">$0<span class="text-sm font-normal text-gray-500">/mo</span></div>
-                            <p class="text-sm text-gray-500 mt-2 font-serif">For testing & evaluation.</p>
-                        </div>
-                        <ul class="space-y-3 text-sm font-mono border-t border-gray-100 pt-4 mb-8">
-                            <li class="flex gap-2"><span>[x]</span> 10k events/mo</li>
-                            <li class="flex gap-2"><span>[x]</span> 5 streams</li>
-                            <li class="flex gap-2"><span>[x]</span> 14-day Driftlog</li>
-                        </ul>
-                        <a href="#signup" class="block w-full border border-black py-2 text-center text-sm font-bold uppercase hover:bg-black hover:text-white transition-colors">Get Started</a>
-                    </div>
+	                <div class="grid gap-6 lg:grid-cols-3 items-start">
+	                    <!-- Free -->
+	                    <div class="bg-white border border-gray-200 p-8 hover:border-black transition-colors">
+	                        <div class="mb-4">
+	                            <h3 class="font-bold font-sans uppercase text-lg">Free</h3>
+	                            <div class="text-3xl font-bold font-mono mt-2">$0<span class="text-sm font-normal text-gray-500">/mo</span></div>
+	                            <p class="text-sm text-gray-500 mt-2 font-serif">For evaluation and small workloads.</p>
+	                        </div>
+	                        <ul class="space-y-3 text-sm font-mono border-t border-gray-100 pt-4 mb-8">
+	                            <li class="flex gap-2"><span>[x]</span> 50k events/mo</li>
+	                            <li class="flex gap-2"><span>[x]</span> 20 streams</li>
+	                            <li class="flex gap-2"><span>[x]</span> 14-day Driftlog</li>
+	                        </ul>
+	                        <router-link to="/signup" class="block w-full border border-black py-2 text-center text-sm font-bold uppercase hover:bg-black hover:text-white transition-colors">Start Free</router-link>
+	                    </div>
 
-                    <!-- Pro (Highlighted) -->
-                    <div class="bg-black text-white border border-black p-8 shadow-[12px_12px_0px_0px_rgba(0,0,0,0.2)] relative lg:-mt-4 lg:mb-4 transform scale-105 z-10">
-                        <div class="absolute top-0 right-0 bg-white text-black text-[10px] font-bold uppercase px-2 py-1">Most Popular</div>
-                        <div class="mb-4">
-                            <h3 class="font-bold font-sans uppercase text-lg text-white">Pro</h3>
-                            <div class="text-3xl font-bold font-mono mt-2">$99<span class="text-sm font-normal text-gray-400">/mo</span></div>
-                            <p class="text-sm text-gray-400 mt-2 font-serif">For production compliance.</p>
-                        </div>
-                        <ul class="space-y-3 text-sm font-mono border-t border-gray-800 pt-4 mb-8">
-                            <li class="flex gap-2"><span class="text-green-400">[x]</span> 500k events/mo</li>
-                            <li class="flex gap-2"><span class="text-green-400">[x]</span> 20 streams</li>
-                            <li class="flex gap-2"><span class="text-green-400">[x]</span> 90-day Driftlog</li>
-                            <li class="flex gap-2"><span class="text-green-400">[x]</span> CSV/PDF exports</li>
-                        </ul>
-                        <a href="#signup" class="block w-full bg-white text-black py-3 text-center text-sm font-bold uppercase hover:bg-gray-200 transition-colors">
-                            Join Waitlist
-                        </a>
-                    </div>
+	                    <!-- Starter -->
+	                    <div class="bg-white border border-gray-200 p-8 hover:border-black transition-colors">
+	                        <div class="mb-4">
+	                            <h3 class="font-bold font-sans uppercase text-lg">Starter</h3>
+	                            <div class="text-3xl font-bold font-mono mt-2">$29<span class="text-sm font-normal text-gray-500">/mo</span></div>
+	                            <p class="text-sm text-gray-500 mt-2 font-serif">For production on a budget.</p>
+	                        </div>
+	                        <ul class="space-y-3 text-sm font-mono border-t border-gray-100 pt-4 mb-8">
+	                            <li class="flex gap-2"><span>[x]</span> 250k events/mo</li>
+	                            <li class="flex gap-2"><span>[x]</span> 50 streams</li>
+	                            <li class="flex gap-2"><span>[x]</span> 30-day Driftlog</li>
+	                        </ul>
+	                        <router-link to="/signup" class="block w-full border border-black py-2 text-center text-sm font-bold uppercase hover:bg-black hover:text-white transition-colors">Start Starter</router-link>
+	                    </div>
 
-                    <!-- Team -->
-                    <div class="bg-white border border-gray-200 p-8 hover:border-black transition-colors">
-                        <div class="mb-4">
-                            <h3 class="font-bold font-sans uppercase text-lg">Team</h3>
-                            <div class="text-3xl font-bold font-mono mt-2">$199<span class="text-sm font-normal text-gray-500">/mo</span></div>
-                            <p class="text-sm text-gray-500 mt-2 font-serif">For growing teams.</p>
-                        </div>
-                        <ul class="space-y-3 text-sm font-mono border-t border-gray-100 pt-4 mb-8">
-                            <li class="flex gap-2"><span>[x]</span> 5M events/mo</li>
-                            <li class="flex gap-2"><span>[x]</span> 100 streams</li>
-                            <li class="flex gap-2"><span>[x]</span> 1-year Driftlog</li>
-                            <li class="flex gap-2"><span>[x]</span> Priority support</li>
-                        </ul>
-                        <a href="#signup" class="block w-full border border-black py-2 text-center text-sm font-bold uppercase hover:bg-black hover:text-white transition-colors">
-                            Join Waitlist
-                        </a>
-                    </div>
+	                    <!-- Pro (Highlighted) -->
+	                    <div class="bg-black text-white border border-black p-8 shadow-[12px_12px_0px_0px_rgba(0,0,0,0.2)] relative lg:-mt-4 lg:mb-4 transform scale-105 z-10">
+	                        <div class="absolute top-0 right-0 bg-white text-black text-[10px] font-bold uppercase px-2 py-1">Most Popular</div>
+	                        <div class="mb-4">
+	                            <h3 class="font-bold font-sans uppercase text-lg text-white">Pro</h3>
+	                            <div class="text-3xl font-bold font-mono mt-2">$99<span class="text-sm font-normal text-gray-400">/mo</span></div>
+	                            <p class="text-sm text-gray-400 mt-2 font-serif">For compliance-driven teams.</p>
+	                        </div>
+	                        <ul class="space-y-3 text-sm font-mono border-t border-gray-800 pt-4 mb-8">
+	                            <li class="flex gap-2"><span class="text-green-400">[x]</span> 1.5M events/mo</li>
+	                            <li class="flex gap-2"><span class="text-green-400">[x]</span> 200 streams</li>
+	                            <li class="flex gap-2"><span class="text-green-400">[x]</span> 180-day Driftlog</li>
+	                            <li class="flex gap-2"><span class="text-green-400">[x]</span> Evidence exports</li>
+	                        </ul>
+	                        <router-link to="/signup" class="block w-full bg-white text-black py-3 text-center text-sm font-bold uppercase hover:bg-gray-200 transition-colors">
+	                            Start Pro
+	                        </router-link>
+	                    </div>
 
-                    <!-- Enterprise -->
-                    <div class="bg-white border border-gray-200 p-8 hover:border-black transition-colors">
-                        <div class="mb-4">
-                            <h3 class="font-bold font-sans uppercase text-lg">Enterprise</h3>
-                            <div class="text-3xl font-bold font-mono mt-2">Custom</div>
-                            <p class="text-sm text-gray-500 mt-2 font-serif">For banks & regulated entities.</p>
-                        </div>
-                        <ul class="space-y-3 text-sm font-mono border-t border-gray-100 pt-4 mb-8">
-                            <li class="flex gap-2"><span>[x]</span> Unlimited events</li>
-                            <li class="flex gap-2"><span>[x]</span> 500+ streams</li>
-                            <li class="flex gap-2"><span>[x]</span> Self-hosting option</li>
-                            <li class="flex gap-2"><span>[x]</span> EU data residency</li>
-                        </ul>
-                        <a href="mailto:sales@driftlock.net" class="block w-full border border-black py-2 text-center text-sm font-bold uppercase hover:bg-black hover:text-white transition-colors">
-                            Contact Sales
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </section>
+	                    <!-- Team -->
+	                    <div class="bg-white border border-gray-200 p-8 hover:border-black transition-colors">
+	                        <div class="mb-4">
+	                            <h3 class="font-bold font-sans uppercase text-lg">Team</h3>
+	                            <div class="text-3xl font-bold font-mono mt-2">$249<span class="text-sm font-normal text-gray-500">/mo</span></div>
+	                            <p class="text-sm text-gray-500 mt-2 font-serif">For growing teams.</p>
+	                        </div>
+	                        <ul class="space-y-3 text-sm font-mono border-t border-gray-100 pt-4 mb-8">
+	                            <li class="flex gap-2"><span>[x]</span> 10M events/mo</li>
+	                            <li class="flex gap-2"><span>[x]</span> 1,000 streams</li>
+	                            <li class="flex gap-2"><span>[x]</span> 1-year Driftlog</li>
+	                            <li class="flex gap-2"><span>[x]</span> Multi-environment keys</li>
+	                        </ul>
+	                        <router-link to="/signup" class="block w-full border border-black py-2 text-center text-sm font-bold uppercase hover:bg-black hover:text-white transition-colors">
+	                            Start Team
+	                        </router-link>
+	                    </div>
 
-        <!-- Waitlist / Footer CTA -->
-        <section id="signup" class="section-padding bg-white border-b-0">
-            <div class="container-padding max-w-2xl mx-auto text-center">
-                <h2 class="text-4xl font-sans font-bold tracking-tight uppercase mb-6">Get Early Access</h2>
-                <div class="bg-gray-50 border border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-                    <WaitlistForm />
-                </div>
-                <p class="mt-8 text-sm font-mono text-gray-400">
-                    Already have access? <a href="/login" class="underline hover:text-black">Sign in →</a>
-                </p>
-            </div>
-        </section>
+	                    <!-- Scale -->
+	                    <div class="bg-white border border-gray-200 p-8 hover:border-black transition-colors">
+	                        <div class="mb-4">
+	                            <h3 class="font-bold font-sans uppercase text-lg">Scale</h3>
+	                            <div class="text-3xl font-bold font-mono mt-2">$499<span class="text-sm font-normal text-gray-500">/mo</span></div>
+	                            <p class="text-sm text-gray-500 mt-2 font-serif">For high-throughput platforms.</p>
+	                        </div>
+	                        <ul class="space-y-3 text-sm font-mono border-t border-gray-100 pt-4 mb-8">
+	                            <li class="flex gap-2"><span>[x]</span> 50M events/mo</li>
+	                            <li class="flex gap-2"><span>[x]</span> 5,000 streams</li>
+	                            <li class="flex gap-2"><span>[x]</span> 2-year Driftlog</li>
+	                            <li class="flex gap-2"><span>[x]</span> Higher throughput limits</li>
+	                        </ul>
+	                        <router-link to="/signup" class="block w-full border border-black py-2 text-center text-sm font-bold uppercase hover:bg-black hover:text-white transition-colors">
+	                            Start Scale
+	                        </router-link>
+	                    </div>
 
-        <!-- Checkout Error Toast -->
-        <Transition
-            enter-active-class="transition duration-300 ease-out"
-            enter-from-class="transform translate-y-5 opacity-0"
-            enter-to-class="transform translate-y-0 opacity-100"
-            leave-active-class="transition duration-200 ease-in"
-            leave-from-class="transform translate-y-0 opacity-100"
-            leave-to-class="transform translate-y-5 opacity-0"
-        >
-            <div v-if="checkoutError"
-                 class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50
-                        bg-red-600 text-white px-6 py-4
-                        border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]
-                        flex items-center gap-3 max-w-md">
-                <span class="font-bold">ERROR:</span>
-                <span class="text-sm font-mono">{{ checkoutError }}</span>
-                <button @click="checkoutError = null" class="ml-2 hover:opacity-75">✕</button>
-            </div>
-        </Transition>
-    </main>
-</template>
+	                    <!-- Enterprise -->
+	                    <div class="bg-white border border-gray-200 p-8 hover:border-black transition-colors">
+	                        <div class="mb-4">
+	                            <h3 class="font-bold font-sans uppercase text-lg">Enterprise</h3>
+	                            <div class="text-3xl font-bold font-mono mt-2">From $1,500<span class="text-sm font-normal text-gray-500">/mo</span></div>
+	                            <p class="text-sm text-gray-500 mt-2 font-serif">For regulated orgs with custom needs.</p>
+	                        </div>
+	                        <ul class="space-y-3 text-sm font-mono border-t border-gray-100 pt-4 mb-8">
+	                            <li class="flex gap-2"><span>[x]</span> Committed volume</li>
+	                            <li class="flex gap-2"><span>[x]</span> DPA + security review support</li>
+	                            <li class="flex gap-2"><span>[x]</span> Priority support</li>
+	                            <li class="flex gap-2"><span>[x]</span> Custom retention</li>
+	                        </ul>
+	                        <a href="mailto:sales@driftlock.net" class="block w-full border border-black py-2 text-center text-sm font-bold uppercase hover:bg-black hover:text-white transition-colors">
+	                            Contact Sales
+	                        </a>
+	                    </div>
+	                </div>
 
-<script setup lang="ts">
-import { ref } from 'vue'
-import WaitlistForm from '../components/cta/WaitlistForm.vue'
-import { useAuthStore } from '../stores/auth'
+	                <div class="mt-10 max-w-3xl mx-auto bg-white border border-black p-6">
+	                    <ul class="space-y-2 text-sm font-mono text-gray-700">
+	                        <li><span class="font-bold">No surprise bills:</span> plans are hard-capped by default (optional top-ups coming).</li>
+	                        <li><span class="font-bold">EU data residency:</span> add-on available for <span class="font-bold">+$150/mo</span>.</li>
+	                    </ul>
+	                </div>
+	            </div>
+	        </section>
 
-const authStore = useAuthStore()
-const checkoutLoading = ref<string | null>(null)
-const checkoutError = ref<string | null>(null)
+	        <!-- Footer CTA -->
+	        <section id="signup" class="section-padding bg-white border-b-0">
+	            <div class="container-padding max-w-2xl mx-auto text-center">
+	                <h2 class="text-4xl font-sans font-bold tracking-tight uppercase mb-6">Start in Minutes</h2>
+	                <div class="bg-gray-50 border border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+	                    <p class="text-sm font-serif text-gray-700 mb-6">
+	                        Create an account, get an API key, and start detecting anomalies with explainable evidence.
+	                    </p>
+	                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+	                        <router-link to="/signup" class="brutalist-button-primary w-full sm:w-auto px-8 py-4">
+	                            Start Free
+	                        </router-link>
+	                        <router-link to="/login" class="brutalist-button w-full sm:w-auto px-8 py-4">
+	                            Sign In
+	                        </router-link>
+	                    </div>
+	                    <p class="mt-4 text-xs font-mono text-gray-500">
+	                        No credit card for Free.
+	                    </p>
+	                </div>
+	            </div>
+	        </section>
+	    </main>
+	</template>
 
-// Handle pricing tier checkout
-const handleCheckout = async (plan: string) => {
-    checkoutError.value = null
+		<script setup lang="ts">
+		</script>
 
-    // If not authenticated, scroll to signup
-    if (!authStore.isAuthenticated) {
-        // For demo purposes, we just scroll to waitlist
-        const el = document.getElementById('signup')
-        el?.scrollIntoView({ behavior: 'smooth' })
-        return
-    }
-
-    // Authenticated: call checkout endpoint
-    checkoutLoading.value = plan
-    try {
-        const token = await authStore.getToken()
-        const res = await fetch('/api/v1/billing/checkout', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ plan })
-        })
-        if (res.ok) {
-            const data = await res.json()
-            if (data.url) window.location.href = data.url
-        } else {
-            checkoutError.value = 'INIT_FAIL: Payment gateway unreachable'
-        }
-    } catch (e) {
-        checkoutError.value = 'NET_ERR: Connection timed out'
-    } finally {
-        checkoutLoading.value = null
-    }
-}
-</script>
-
-<style scoped>
+	<style scoped>
 .section-padding {
     @apply py-16 sm:py-24 border-b border-black;
 }

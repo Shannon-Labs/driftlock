@@ -37,6 +37,8 @@ pub struct WindowConfig {
     pub time_window: Option<Duration>,
     /// Privacy redaction configuration
     pub privacy_config: PrivacyConfig,
+    /// Keep the baseline anchored once ready (prevents it from drifting with the window)
+    pub freeze_baseline: bool,
 }
 
 impl Default for WindowConfig {
@@ -48,6 +50,7 @@ impl Default for WindowConfig {
             max_capacity: 10000,
             time_window: None,
             privacy_config: PrivacyConfig::default(),
+            freeze_baseline: false,
         }
     }
 }
@@ -90,7 +93,7 @@ impl Default for PrivacyConfig {
 }
 
 /// A data event in the sliding window system
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DataEvent {
     /// The actual data payload
     pub data: Vec<u8>,
@@ -122,6 +125,16 @@ impl DataEvent {
             integrity_hash: None,
         }
     }
+}
+
+/// Serializable snapshot of the sliding window to enable persistence.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WindowState {
+    pub events: Vec<DataEvent>,
+    pub baseline_start: usize,
+    pub window_start: usize,
+    pub total_events: u64,
+    pub aligned: bool,
 }
 
 /// The sliding window system
@@ -318,8 +331,10 @@ impl SlidingWindow {
         let next_window = (self.window_start + self.config.hop_size).min(max_position);
         self.window_start = next_window;
 
-        // Baseline immediately precedes the current window to keep recency
-        self.baseline_start = self.window_start.saturating_sub(self.config.baseline_size);
+        // Baseline immediately precedes the current window to keep recency unless frozen
+        if !self.config.freeze_baseline {
+            self.baseline_start = self.window_start.saturating_sub(self.config.baseline_size);
+        }
     }
 
     /// Get the current baseline window for analysis
@@ -418,6 +433,27 @@ impl SlidingWindow {
         self.total_events = 0;
         self.aligned = false;
     }
+
+    /// Snapshot the current window contents and cursors for persistence.
+    pub fn snapshot_state(&self) -> WindowState {
+        WindowState {
+            events: self.events.iter().cloned().collect(),
+            baseline_start: self.baseline_start,
+            window_start: self.window_start,
+            total_events: self.total_events,
+            aligned: self.aligned,
+        }
+    }
+
+    /// Restore a previously captured window state.
+    pub fn restore_state(&mut self, state: WindowState) {
+        self.events = state.events.into();
+        self.baseline_start = state.baseline_start;
+        self.window_start = state.window_start;
+        self.total_events = state.total_events;
+        self.aligned = state.aligned;
+        self.update_readiness();
+    }
 }
 
 /// Thread-safe wrapper for the sliding window system
@@ -496,6 +532,19 @@ impl ThreadSafeSlidingWindow {
     pub fn clear(&self) -> WindowResult<()> {
         let mut window = self.inner.lock().map_err(|e| e.to_string())?;
         window.clear();
+        Ok(())
+    }
+
+    /// Capture a snapshot of the window for persistence.
+    pub fn snapshot_state(&self) -> WindowResult<WindowState> {
+        let window = self.inner.lock().map_err(|e| e.to_string())?;
+        Ok(window.snapshot_state())
+    }
+
+    /// Restore the window from a persisted snapshot.
+    pub fn restore_state(&self, state: WindowState) -> WindowResult<()> {
+        let mut window = self.inner.lock().map_err(|e| e.to_string())?;
+        window.restore_state(state);
         Ok(())
     }
 }

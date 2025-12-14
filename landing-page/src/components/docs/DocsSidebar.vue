@@ -32,6 +32,14 @@ const navigation = [
     ]
   },
   {
+    title: 'SDKs',
+    items: [
+      { title: 'Overview', href: '/docs/sdk/README' },
+      { title: 'Node.js', href: '/docs/sdk/nodejs' },
+      { title: 'Python', href: '/docs/sdk/python' },
+    ]
+  },
+  {
     title: 'Compliance',
     items: [
       { title: 'DORA', href: '/docs/compliance/COMPLIANCE_DORA' },

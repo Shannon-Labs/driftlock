@@ -9,12 +9,38 @@
 //! Licensed under Apache 2.0. Commercial licenses available from Shannon Labs.
 
 pub mod anomaly;
+pub mod api;
+pub mod calibration;
 pub mod compression;
+pub mod error;
 pub mod ffi;
 pub mod ffi_simplified;
+pub mod fusion;
 pub mod metrics;
+#[cfg(feature = "otlp")]
+pub mod otlp;
 pub mod performance;
+pub mod stats;
+pub mod storage;
+pub mod stream_manager;
+pub mod tokenizer;
 pub mod window;
+
+// Re-export key types for easier access
+pub use api::{
+    BackpressureConfig, BaselineStrategy, CbadDetector, CbadDetectorBuilder, CsvConfig,
+    DetectionProfile, DetectionRecord, DetectorMetricsSnapshot, ParquetConfig, ProgressCallback,
+};
+pub use calibration::{CalibrationMethod, CalibrationState, CompositeWeights, ScoreStatistics};
+pub use error::{CbadError, Result as CbadResult};
+pub use fusion::{FusionResult, FusionScorer, FusionStatistics, FusionWeights};
+pub use stats::{entropy_bits_per_byte, SimpleQuantile, Welford};
+pub use storage::{
+    AnomalyFilter, AnomalyId, AnomalyStore, CorrelatedAnomalies, DetectorState, Feedback,
+    InMemoryAnomalyStore, StoredAnomaly,
+};
+pub use stream_manager::StreamManager;
+pub use tokenizer::{Tokenizer, TokenizerConfig, TokenizerStats};
 
 use serde::{Deserialize, Serialize};
 

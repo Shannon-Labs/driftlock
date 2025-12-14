@@ -97,3 +97,21 @@ driftlock
 test-results/
 lib/
 driftlock-cli
+
+# Python virtual environments
+.venv/
+venv/
+
+# Stale HTML build outputs
+*_index.html
+
+# Archived/moved directories (now in driftlock-archives/)
+archive/
+test-data/
+extensions/
+openzl/
+packages/
+.gcloud/
+
+# Large benchmark datasets (download separately)
+benchmark-datasets/

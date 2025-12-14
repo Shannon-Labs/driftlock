@@ -40,7 +40,7 @@ driftlock auth login
 Manage local configuration and entropy models.
 
 ```bash
-driftlock config set-tier radar
+driftlock config set-tier pro
 ```
 
 ## Exit Codes

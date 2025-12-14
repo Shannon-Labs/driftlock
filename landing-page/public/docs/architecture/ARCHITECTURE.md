@@ -1,23 +1,148 @@
-Architecture Overview
+# Architecture Overview
 
-Core Components
-- cbad-core (Rust): Compression-based algorithms with FFI for Go and WASM target.
-- collector-processor (Go): `driftlock_cbad` OpenTelemetry Collector processor for logs/metrics.
-- llm-receivers (Go): OTel Collector receiver(s) for prompts/responses/tool-calls.
-- api-server (Go): Storage and retrieval for anomalies and artifacts (SSE/WebSocket later).
-- exporters (Go): Evidence bundle generation (JSON + PDF) aligned to DORA/NIS2.
-- ui (Next.js): Minimal dashboard to browse streams, anomalies, and artifacts.
-- deploy: Docker Compose and Kubernetes (Helm) with Grafana dashboards.
+## Core Components
 
-Data Flow
-1. Sources emit OTLP to the Collector.
-2. Receivers (including `llm-receivers`) accept streams.
-3. `driftlock_cbad` processor computes CBAD metrics and flags anomalies.
-4. Exporters persist evidence bundles (and forward to `api-server`).
-5. UI queries `api-server` to visualize anomalies and math artifacts.
+- **cbad-core** (Rust): Compression-based anomaly detection algorithms
+- **driftlock-api** (Rust/Axum): REST API server with PostgreSQL, Stripe billing
+- **driftlock-db** (Rust/sqlx): Database models and repository layer
+- **driftlock-auth** (Rust): Firebase JWT and API key authentication
+- **driftlock-billing** (Rust): Stripe integration for subscriptions
+- **landing-page** (Vue 3): Dashboard and landing page
 
-Determinism
-- Use deterministic seeds in permutation testing.
-- Configure windows (baseline/window/hop) and thresholds explicitly.
-- Avoid non-deterministic concurrency paths in the core algorithm.
+## Data Flow
 
+```
+┌─────────────┐     ┌─────────────────┐     ┌─────────────┐
+│   Client    │────▶│  Driftlock API  │────▶│  PostgreSQL │
+│  (HTTP/s)   │     │   (Axum/Rust)   │     │   Database  │
+└─────────────┘     └────────┬────────┘     └─────────────┘
+                             │
+                             ▼
+                    ┌─────────────────┐
+                    │   CBAD Core     │
+                    │   (Detection)   │
+                    └─────────────────┘
+```
+
+1. Clients send events via HTTP POST to `/v1/detect` or `/v1/demo/detect`
+2. API server authenticates request (API key or Firebase JWT)
+3. Events processed through CBAD detection engine
+4. Results stored in PostgreSQL (anomalies, streams, feedback)
+5. Response returned with detection results
+
+## Crate Structure
+
+```
+driftlock/
+├── Cargo.toml              # Workspace root
+├── cbad-core/              # CBAD algorithms
+│   └── src/
+│       ├── lib.rs          # Main entry
+│       ├── anomaly.rs      # Detection logic
+│       ├── window.rs       # Sliding windows
+│       └── metrics/        # Statistical measures
+├── crates/
+│   ├── driftlock-api/      # HTTP server (Axum)
+│   │   └── src/
+│   │       ├── main.rs     # Entry point
+│   │       ├── routes/     # HTTP handlers
+│   │       ├── middleware/ # Auth middleware
+│   │       └── state.rs    # App state
+│   ├── driftlock-db/       # Database layer
+│   │   └── src/
+│   │       ├── models/     # Data models
+│   │       └── repos/      # Repository pattern
+│   ├── driftlock-auth/     # Authentication
+│   │   └── src/
+│   │       ├── firebase.rs # JWT verification
+│   │       └── api_key.rs  # API key auth
+│   ├── driftlock-billing/  # Stripe billing
+│   └── driftlock-email/    # SendGrid emails
+└── landing-page/           # Vue frontend
+```
+
+## Authentication Flow
+
+```
+┌─────────┐     ┌─────────────┐     ┌─────────────┐
+│  User   │────▶│  Firebase   │────▶│  Driftlock  │
+│ (Login) │     │  Auth (JWT) │     │  API        │
+└─────────┘     └─────────────┘     └──────┬──────┘
+                                           │
+                                           ▼
+                                    ┌─────────────┐
+                                    │  API Key    │
+                                    │  Generated  │
+                                    └─────────────┘
+```
+
+1. User authenticates with Firebase (Google, email/password)
+2. Firebase JWT sent to `/v1/auth/signup` or `/v1/auth/me`
+3. Tenant created/retrieved, API key generated
+4. Subsequent API calls use API key in `X-Api-Key` header
+
+## Detection Flow
+
+```
+Events → Tokenization → Compression → NCD Calculation → Anomaly Decision
+                            │
+                            ▼
+                     ┌─────────────┐
+                     │  Baseline   │
+                     │  Reference  │
+                     └─────────────┘
+```
+
+1. **Tokenization**: Events normalized and tokenized
+2. **Compression**: Events compressed using selected algorithm (zstd, lz4, gzip)
+3. **NCD Calculation**: Normalized Compression Distance computed against baseline
+4. **P-Value**: Statistical significance via permutation testing
+5. **Anomaly Decision**: Threshold comparison + confidence scoring
+
+## Stream Management
+
+Each tenant can have multiple streams:
+- Different data types (logs, metrics, traces)
+- Independent baselines and detection profiles
+- Auto-tuning based on feedback
+
+## Detection Profiles
+
+| Profile | NCD Threshold | P-Value | Use Case |
+|---------|---------------|---------|----------|
+| sensitive | 0.20 | 0.10 | High-security, early warning |
+| balanced | 0.30 | 0.05 | General purpose (default) |
+| strict | 0.45 | 0.01 | Low noise, high confidence |
+| custom | User-defined | User-defined | Fine-tuned settings |
+
+## Drift Detection (Anchors)
+
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│  Baseline   │────▶│   Current   │────▶│   Drift?    │
+│   Anchor    │     │   Events    │     │   (NCD)     │
+└─────────────┘     └─────────────┘     └─────────────┘
+```
+
+- Anchors freeze a baseline for long-term drift detection
+- Automatic reset on significant drift (configurable)
+- Historical anchor tracking
+
+## Determinism
+
+- Deterministic seeds for reproducible results
+- Configurable windows (baseline/window/hop)
+- Explicit threshold configuration
+- No non-deterministic concurrency in core algorithm
+
+## Scalability
+
+Current architecture supports:
+- Single-instance deployment (Replit, Cloud Run)
+- PostgreSQL connection pooling
+- In-memory rate limiting
+
+Future enhancements:
+- Redis-backed rate limiting for multi-instance
+- Kafka ingestion for high-volume streams
+- Horizontal scaling with stateless workers

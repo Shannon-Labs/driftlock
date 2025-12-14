@@ -263,10 +263,12 @@ firebase deploy
 
 ### Immediate (Q1 2025)
 **Self-Service SaaS Model:**
-- **Free Trial**: 14 days, 10,000 events, instant API key
-- **Starter Plan**: $99/month for 100K events 
-- **Professional**: $299/month for 1M events + AI analysis
-- **Enterprise**: Custom pricing for >10M events + compliance features
+- **Free (free forever)**: 50,000 events/month, 20 streams, 14-day retention (no credit card)
+- **Starter**: $29/month for 250,000 events
+- **Pro**: $99/month for 1.5M events + evidence exports
+- **Team**: $249/month for 10M events
+- **Scale**: $499/month for 50M events
+- **Enterprise**: from $1,500/month (annual), committed volume + custom terms
 
 ### Growth (Q2-Q3 2025)
 **Enterprise Sales Integration:**

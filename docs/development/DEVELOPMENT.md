@@ -23,52 +23,51 @@ Driftlock is an explainable, deterministic anomaly detection toolkit designed fo
 - **Privacy-First**: On-premises deployment with configurable data redaction
 
 ### Technology Stack
-- **CBAD Engine**: Rust with C FFI, WASM compilation target
-- **API Layer**: Go with PostgreSQL, Redis caching
-- **Frontend**: Next.js with TypeScript, real-time WebSocket integration
-- **Infrastructure**: Kubernetes, Istio service mesh, Prometheus monitoring
+- **CBAD Engine**: Rust (cbad-core crate)
+- **API Layer**: Rust (Axum, Tokio, sqlx) with PostgreSQL
+- **Frontend**: Vue 3 with TypeScript, Tailwind CSS
+- **Auth**: Firebase JWT + API keys (Argon2)
+- **Billing**: Stripe
+- **Metrics**: Prometheus
 
 ## Architecture
 
 ### High-Level Components
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   OTel Collector│    │   Driftlock API │    │  UI Dashboard   │
-│                 │    │                 │    │                 │
-│  - Receives     │───▶│  - Anomaly      │───▶│  - Visualize    │
-│    telemetry    │    │    detection    │    │    anomalies    │
-│  - Routes to    │    │  - Storage      │    │  - Manage       │
-│    CBAD         │    │    interface    │    │    alerts       │
+│   Data Sources  │    │   Driftlock API │    │  UI Dashboard   │
+│                 │    │     (Rust)      │    │     (Vue)       │
+│  - Logs         │───▶│  - Detection    │───▶│  - Visualize    │
+│  - Metrics      │    │  - Streams      │    │    anomalies    │
+│  - Traces       │    │  - Billing      │    │  - Manage       │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
                               │
                               ▼
                        ┌─────────────────┐
                        │   PostgreSQL    │
                        │                 │
-                       │  - Anomaly      │
-                       │    storage      │
-                       │  - Detection    │
-                       │    config       │
+                       │  - Anomalies    │
+                       │  - Streams      │
+                       │  - Tenants      │
                        └─────────────────┘
 ```
 
 ### Data Flow
-1. OTel Collector receives telemetry data (logs, metrics, traces)
-2. Data is routed to CBAD engine for analysis
+1. Data sources send events via HTTP API
+2. Events processed through CBAD detection engine
 3. Compression ratios and statistical measures computed
 4. Anomalies detected based on NCD and p-value thresholds
 5. Anomaly details stored in PostgreSQL
-6. Real-time notifications sent via SSE/webhook
+6. Real-time notifications via webhook
 7. UI dashboard displays anomalies with explanations
 
 ## Development Environment Setup
 
 ### Prerequisites
-- Go 1.22+
-- Rust 1.70+
-- Docker and Docker Compose (or Colima for macOS)
-- PostgreSQL 13+ (or Docker for testing)
+- Rust 1.75+ (install via rustup)
+- PostgreSQL 15+ (or Docker for testing)
 - Node.js 18+ (for UI development)
+- Docker and Docker Compose (optional)
 
 ### Quick Start
 
@@ -78,52 +77,42 @@ git clone https://github.com/Shannon-Labs/driftlock.git
 cd driftlock
 ```
 
-2. **Initialize git submodules:**
-```bash
-# OpenZL is included as a git submodule and has nested dependencies (zstd)
-# This must be run after cloning to get the OpenZL source code
-git submodule update --init --recursive
-```
-
-**Note:** If you're building with OpenZL support, you'll need to build the OpenZL library first:
-```bash
-# Build OpenZL library (optional, only needed if using --features openzl)
-cd openzl
-CFLAGS="-fPIC ${CFLAGS:-}" make lib
-cd ..
-```
-
-3. **Set up environment variables:**
+2. **Set up environment variables:**
 ```bash
 cp .env.example .env
 # Edit .env with your configuration
 ```
 
-3. **Build the CBAD core (Rust):**
+3. **Build the CBAD core:**
 ```bash
-cd cbad-core
-cargo build --release
+cargo build -p cbad-core --release
 ```
 
 4. **Build the API server:**
 ```bash
-cd api-server
-go build -o driftlock-api cmd/driftlock-api/main.go
+cargo build -p driftlock-api --release
 ```
 
-5. **Start dependencies with Docker:**
+5. **Start PostgreSQL with Docker:**
 ```bash
-docker-compose up -d postgres redis
+docker run --name driftlock-postgres \
+  -e POSTGRES_DB=driftlock \
+  -e POSTGRES_USER=driftlock \
+  -e POSTGRES_PASSWORD=driftlock \
+  -p 5432:5432 \
+  -d postgres:15
 ```
 
 6. **Run database migrations:**
 ```bash
-go run cmd/migrate/main.go
+# Migrations run automatically on startup, or manually:
+sqlx migrate run --database-url "$DATABASE_URL"
 ```
 
 7. **Start the API server:**
 ```bash
-./driftlock-api
+DATABASE_URL="postgres://driftlock:driftlock@localhost:5432/driftlock" \
+  cargo run -p driftlock-api --release
 ```
 
 ### Running with Docker Compose
@@ -131,13 +120,13 @@ For a complete local development setup:
 
 ```bash
 # Start all services
-docker-compose -f docker-compose.dev.yml up -d
+docker compose up -d
 
 # View logs
-docker-compose -f docker-compose.dev.yml logs -f
+docker compose logs -f
 
 # Stop services
-docker-compose -f docker-compose.dev.yml down
+docker compose down
 ```
 
 ## Running Tests
@@ -145,79 +134,77 @@ docker-compose -f docker-compose.dev.yml down
 ### API Server Tests
 ```bash
 # Run all tests
-cd api-server
-go test ./...
+cargo test -p driftlock-api
 
-# Run tests with coverage
-go test -coverprofile=coverage.out ./...
-go tool cover -html=coverage.out
+# Run tests with output
+cargo test -p driftlock-api -- --nocapture
 
 # Run specific test
-go test -run TestAnomalyCRUD ./internal/handlers/
+cargo test -p driftlock-api test_health_check
 ```
 
-### Integration Tests
+### CBAD Core Tests
 ```bash
-# Run integration tests (requires PostgreSQL)
-go test -tags=integration ./internal/storage/...
+# Run CBAD core tests
+cargo test -p cbad-core
+
+# Run with release optimizations
+cargo test -p cbad-core --release
 ```
 
-### End-to-End Tests
+### Database Tests
 ```bash
-# Run E2E tests (requires test environment)
-cd tests/e2e
-go test ./...
+# Run database layer tests
+cargo test -p driftlock-db
 ```
 
-### Load Tests
+### All Tests
 ```bash
-# Run load tests using k6
-cd tests/load
-k6 run load_test.js
+# Run entire workspace
+cargo test --workspace
 ```
 
 ## Code Style
 
-### Go Code Style
-- Follow [Effective Go](https://golang.org/doc/effective_go.html) and [Go Code Review Comments](https://github.com/golang/go/wiki/CodeReviewComments)
-- Use `gofumpt` for formatting
-- Use `golangci-lint` for linting
+### Rust Code Style
+- Follow the [Rust API Guidelines](https://rust-lang.github.io/api-guidelines/)
+- Use `rustfmt` for formatting: `cargo fmt`
+- Use `clippy` for linting: `cargo clippy`
 - Write comprehensive tests for all business logic
 
 ### Import Grouping
-```go
-import (
-	// Standard library
-	"context"
-	"fmt"
-	"net/http"
-	
-	// Third-party
-	"github.com/gin-gonic/gin"
-	"github.com/prometheus/client_golang/prometheus"
-	
-	// Internal
-	"github.com/Shannon-Labs/driftlock/api-server/internal/models"
-	"github.com/Shannon-Labs/driftlock/api-server/internal/storage"
-)
+```rust
+// Standard library
+use std::sync::Arc;
+use std::time::Duration;
+
+// External crates
+use axum::{Router, routing::get};
+use sqlx::PgPool;
+use tracing::info;
+
+// Internal crates
+use driftlock_db::models::Tenant;
+use driftlock_auth::ApiAuth;
 ```
 
 ### Error Handling
-- Use the `errors` package for consistent error handling
-- Always wrap errors with context using `fmt.Errorf("context: %w", err)`
-- Return structured API errors using `errors.APIError`
+- Use `thiserror` for custom error types
+- Use `anyhow` for application-level errors
+- Always provide context with errors
+- Return structured API errors
 
 ### Naming Conventions
-- Use descriptive names: `userID` instead of `uid`
+- Use descriptive names: `tenant_id` instead of `tid`
 - Be consistent with terminology throughout the codebase
-- Prefix exported types, functions, and variables with meaningful names
+- Follow Rust naming conventions (snake_case for functions/variables, PascalCase for types)
 
 ## Contribution Workflow
 
 ### Branching Strategy
-- Use feature branches off `develop`
+- Use feature branches off `main`
 - Name branches descriptively: `feature/anomaly-detection-improvements` or `bugfix/api-rate-limiting`
-- Submit pull requests to `develop`
+- Submit pull requests to `main`
 
 ### Pull Request Process
 1. Create an issue describing the feature or bug
@@ -250,99 +237,102 @@ Resolves #123
 
 ```
 driftlock/
-├── api-server/                 # Go API server
-│   ├── cmd/                   # Main applications
-│   ├── internal/              # Private application code
-│   │   ├── api/              # HTTP handlers
-│   │   ├── auth/             # Authentication
-│   │   ├── errors/           # Error handling
-│   │   ├── export/           # Evidence export logic
-│   │   ├── logging/          # Logging utilities
-│   │   ├── metrics/          # Prometheus metrics
-│   │   ├── middleware/       # HTTP middleware
-│   │   ├── models/           # Data models
-│   │   └── storage/          # Database operations
-│   ├── migrations/           # Database migrations
-│   └── go.mod, go.sum        # Go module files
-├── cbad-core/                # Rust CBAD engine
-├── collector-processor/      # OTel collector processor
-├── ui/                       # Frontend application
-├── docs/                     # Documentation
-├── tests/                    # Test files
-├── k8s/                      # Kubernetes manifests
-├── helm/                     # Helm charts
-├── .github/                  # GitHub configuration
-└── Dockerfile*               # Container definitions
+├── Cargo.toml                    # Workspace configuration
+├── Dockerfile                    # API container definition
+├── cbad-core/                    # Rust CBAD engine
+│   ├── src/
+│   │   ├── lib.rs               # Main library entry
+│   │   ├── anomaly.rs           # Anomaly detection
+│   │   ├── window.rs            # Sliding windows
+│   │   └── metrics/             # Statistical metrics
+│   └── Cargo.toml
+├── crates/
+│   ├── driftlock-api/           # Axum HTTP server
+│   │   ├── src/
+│   │   │   ├── main.rs          # Server entry point
+│   │   │   ├── routes/          # HTTP handlers
+│   │   │   ├── middleware/      # Auth, rate limiting
+│   │   │   ├── state.rs         # Application state
+│   │   │   └── errors.rs        # Error types
+│   │   └── Cargo.toml
+│   ├── driftlock-db/            # Database layer
+│   │   ├── src/
+│   │   │   ├── lib.rs           # Module exports
+│   │   │   ├── models/          # Data models
+│   │   │   ├── repos/           # Repository implementations
+│   │   │   └── pool.rs          # Connection pooling
+│   │   └── Cargo.toml
+│   ├── driftlock-auth/          # Authentication
+│   │   ├── src/
+│   │   │   ├── lib.rs
+│   │   │   ├── firebase.rs      # Firebase JWT
+│   │   │   └── api_key.rs       # API key auth
+│   │   └── Cargo.toml
+│   ├── driftlock-billing/       # Stripe integration
+│   └── driftlock-email/         # Email service
+├── landing-page/                 # Vue frontend
+├── docs/                         # Documentation
+├── archive/go-backend/          # Legacy Go (reference only)
+└── .github/                      # GitHub configuration
 ```
 
 ### Key Directories
-- `api-server/internal/api`: Contains the main HTTP router and handler registration
-- `api-server/internal/storage`: Database access layer with PostgreSQL implementation
-- `api-server/internal/auth`: Authentication and authorization logic
-- `api-server/internal/export`: Evidence bundle generation and export functionality
-- `tests/e2e`: End-to-end tests simulating real-world usage
-- `tests/load`: Performance and load testing scripts
-- `k8s/`: Production Kubernetes deployment manifests
-- `helm/driftlock/`: Helm chart for easier deployment
+- `crates/driftlock-api/src/routes/`: HTTP route handlers
+- `crates/driftlock-db/src/repos/`: Database operations
+- `crates/driftlock-auth/src/`: Authentication logic
+- `cbad-core/src/`: CBAD algorithm implementation
 
 ## Performance Considerations
 
 ### API Server
-- Use connection pooling for database access
-- Implement proper request timeouts
-- Cache frequently accessed configuration
-- Use streaming responses for large datasets
+- Uses async Tokio runtime for concurrent requests
+- Connection pooling via sqlx
+- In-memory rate limiting for single-instance deployment
 
 ### Database
 - Create proper indexes for common query patterns
-- Use prepared statements to prevent SQL injection
-- Implement read replicas for read-heavy operations
-- Set up proper connection pooling
+- Use prepared statements (sqlx compile-time checking)
+- Connection pool configured for optimal throughput
 
 ### CBAD Engine
-- Optimize compression algorithms for speed
-- Implement efficient data buffering strategies
-- Use memory-mapped files for large datasets when appropriate
-- Consider SIMD instructions for mathematical operations
+- Optimized compression algorithms
+- Efficient sliding window implementation
+- Memory-efficient data structures
 
 ## Security Best Practices
 
 ### Input Validation
-- Implement strict input validation on all endpoints
-- Use parameterized queries to prevent SQL injection
-- Sanitize and validate all user inputs
-- Implement proper rate limiting
+- All inputs validated via serde + custom validators
+- SQL injection prevented by sqlx parameterized queries
+- Rate limiting on public endpoints
 
 ### Authentication & Authorization
-- Use JWT tokens with proper expiration
-- Implement role-based access control (RBAC)
-- Use HTTPS in production
-- Store secrets securely (not in code)
+- Firebase JWT tokens with proper verification
+- API keys hashed with Argon2
+- Role-based access (admin, stream)
 
 ### Data Protection
-- Implement data redaction for sensitive information
-- Use encryption at rest for sensitive data
-- Limit data retention according to compliance requirements
-- Log access to sensitive data for audit purposes
+- HTTPS required in production
+- Sensitive data encrypted at rest
+- Audit logging for compliance
 
 ## Troubleshooting
 
 ### Common Issues
-- **Database connection failures**: Check connection string and ensure PostgreSQL is running
-- **CBAD build failures**: Verify Rust installation and network access to crates.io
-- **API rate limiting**: Check rate limiter configuration and adjust as needed
-- **Memory issues**: Monitor memory usage and tune GC settings if needed
+- **Database connection failures**: Check `DATABASE_URL` and ensure PostgreSQL is running
+- **Build failures**: Ensure Rust 1.75+ is installed
+- **Rate limiting**: Check rate limiter configuration
 
 ### Debugging Tips
-- Set `LOG_LEVEL=debug` for detailed logging
-- Use pprof for performance profiling: `go tool pprof http://localhost:8080/debug/pprof/profile`
-- Check PostgreSQL logs for query performance issues
+- Set `RUST_LOG=debug` for detailed logging
+- Use `cargo test -- --nocapture` to see test output
+- Check PostgreSQL logs for query issues
 - Monitor metrics via the `/metrics` endpoint
 
 ## Contact and Support
 
-- For questions about the codebase: [team@driftlock.example.com]
-- For security issues: [security@driftlock.example.com]
+- For questions about the codebase: [team@driftlock.io]
+- For security issues: [security@driftlock.io]
 - For general support: Open an issue in the GitHub repository
 
-For more detailed information, see the individual README files in each major component directory.
+For more detailed information, see the individual README files in each crate directory.

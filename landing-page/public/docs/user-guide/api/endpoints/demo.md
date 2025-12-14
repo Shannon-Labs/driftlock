@@ -4,7 +4,7 @@ Try anomaly detection instantly without signing up. This endpoint is rate-limite
 
 ## Endpoint
 
-```
+```http
 POST https://api.driftlock.net/v1/demo/detect
 ```
 
@@ -22,7 +22,8 @@ POST https://api.driftlock.net/v1/demo/detect
 ## Request
 
 ### Headers
-```
+
+```http
 Content-Type: application/json
 ```
 
@@ -113,18 +114,6 @@ Content-Type: application/json
 }
 ```
 
-### Demo Info Object
-
-The response includes a `demo` object with:
-
-| Field | Description |
-|-------|-------------|
-| `message` | Reminder that this is demo mode |
-| `remaining_calls` | How many requests you have left this minute |
-| `limit_per_minute` | Always 10 |
-| `max_events_per_request` | Always 50 |
-| `signup_url` | Link to sign up for full access |
-
 ## Examples
 
 ### Basic Example
@@ -142,18 +131,16 @@ curl -X POST https://api.driftlock.net/v1/demo/detect \
   }'
 ```
 
-### Log Data
+### With LZ4 for High Throughput
 
 ```bash
 curl -X POST https://api.driftlock.net/v1/demo/detect \
   -H "Content-Type: application/json" \
   -d '{
-    "events": [
-      {"type": "log", "body": {"message": "User login successful", "level": "info"}},
-      {"type": "log", "body": {"message": "User login successful", "level": "info"}},
-      {"type": "log", "body": {"message": "User login successful", "level": "info"}},
-      {"type": "log", "body": {"message": "SQL INJECTION ATTEMPT: DROP TABLE users;", "level": "error"}}
-    ]
+    "events": [...],
+    "config_override": {
+      "compressor": "lz4"
+    }
   }'
 ```
 
@@ -182,40 +169,7 @@ for anomaly in data['anomalies']:
     print(f"  - Index {anomaly['index']}: {anomaly['why']}")
 ```
 
-### JavaScript Example
-
-```javascript
-const response = await fetch('https://api.driftlock.net/v1/demo/detect', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    events: [
-      { body: { temperature: 72 } },
-      { body: { temperature: 71 } },
-      { body: { temperature: 73 } },
-      { body: { temperature: 150 } },  // Anomaly
-    ]
-  })
-});
-
-const data = await response.json();
-console.log(`Found ${data.anomaly_count} anomalies`);
-console.log(`Remaining: ${data.demo.remaining_calls}/${data.demo.limit_per_minute}`);
-```
-
 ## Error Responses
-
-### 400 Bad Request - No Events
-
-```json
-{
-  "error": {
-    "code": "invalid_argument",
-    "message": "events required",
-    "request_id": "req_abc123"
-  }
-}
-```
 
 ### 400 Bad Request - Too Many Events
 
@@ -250,17 +204,13 @@ console.log(`Remaining: ${data.demo.remaining_calls}/${data.demo.limit_per_minut
 | Events per request | 50 | 256 |
 | Requests per minute | 10 | 60-1000+ |
 | Anomaly persistence | No | Yes |
-| Anomaly history | No | Yes |
 | Evidence bundles | No | Yes |
 | Stream management | No | Yes |
-| Usage tracking | No | Yes |
 
 ## Ready for More?
 
-The demo endpoint is perfect for testing and prototyping. When you're ready for production:
-
 1. **[Sign up for free](https://driftlock.net/#signup)** - Get 10,000 events/month free
-2. **[Get your API key](./authentication.md)** - From your dashboard
+2. **[Get your API key](../getting-started/authentication.md)** - From your dashboard
 3. **[Use the full API](./detect.md)** - With persistence, history, and compliance features
 
 ---

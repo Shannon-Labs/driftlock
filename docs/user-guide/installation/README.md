@@ -1,6 +1,6 @@
 # Installation Guide
 
-This guide will help you install and set up DriftLock in various environments.
+This guide will help you install and set up Driftlock in various environments.
 
 ## Prerequisites
 
@@ -13,15 +13,14 @@ This guide will help you install and set up DriftLock in various environments.
 
 ### Software Requirements
 
-- **Go**: 1.24 or later
-- **Rust**: 1.70 or later
-- **Node.js**: 18 or later
-- **Docker**: 20.10+ and Docker Compose 2.0+
+- **Rust**: 1.75 or later
+- **Node.js**: 18 or later (for UI development)
+- **Docker**: 24+ and Docker Compose 2.0+ (optional)
 - **Git**: 2.30 or later
 
 ## Quick Start (Docker Compose)
 
-The fastest way to get DriftLock running is with Docker Compose:
+The fastest way to get Driftlock running is with Docker Compose:
 
 ```bash
 # Clone the repository
@@ -30,26 +29,19 @@ cd driftlock
 
 # Copy environment template and configure
 cp .env.example .env
-# Edit .env to set your API key: DEFAULT_API_KEY=your-secret-key
+# Edit .env with your configuration
 
 # Start all services
 docker compose up -d
 
-# Access the dashboard
-open http://localhost:3000
-
-# Log in with your API key
+# Access the API
+curl http://localhost:8080/healthz
 ```
 
 ### Services Started
 
 - **API Server**: http://localhost:8080
-- **Dashboard**: http://localhost:3000
 - **PostgreSQL**: localhost:5432
-- **Redis**: localhost:6379 (optional)
-- **Kafka**: localhost:9092 (optional, for streaming)
-
-**Note**: DriftLock now runs standalone without external dependencies like Supabase. All functionality is available through the REST API and dashboard.
 
 ## Local Development Setup
 
@@ -70,68 +62,35 @@ cp .env.example .env
 nano .env
 ```
 
-Key environment variables to configure:
+Key environment variables:
 
 ```bash
 # Database Configuration
-DB_HOST=localhost
-DB_PORT=5432
-DB_DATABASE=driftlock
-DB_USER=postgres
-DB_PASSWORD=your_secure_password_here
+DATABASE_URL=postgres://driftlock:driftlock@localhost:5432/driftlock
 
 # API Configuration
 PORT=8080
-LOG_LEVEL=info
+RUST_LOG=info
 
-# Authentication (required for dashboard access)
-AUTH_TYPE=apikey
-DEFAULT_API_KEY=your_api_key_here_for_dashboard_access
-DEFAULT_ORG_ID=default
+# Authentication
+FIREBASE_PROJECT_ID=your-firebase-project
 
-# Development API Key (optional)
-DRIFTLOCK_DEV_API_KEY=
+# Billing (if needed)
+STRIPE_SECRET_KEY=sk_...
+STRIPE_WEBHOOK_SECRET=whsec_...
 
-# Optional: Supabase (only needed for advanced compliance features)
-# Leave empty for standalone OSS deployment
-SUPABASE_PROJECT_ID=
-SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
-SUPABASE_BASE_URL=
+# Email (optional)
+SENDGRID_API_KEY=SG...
 ```
 
-**Note**: For OSS deployments, set `DEFAULT_API_KEY` (and optionally override `DRIFTLOCK_DEV_API_KEY`) to access the dashboard.
-
-### 3. Install Dependencies
-
-Use the automated setup:
+### 3. Build the Project
 
 ```bash
-make setup
-```
+# Build the Rust API
+cargo build -p driftlock-api --release
 
-Or install manually:
-
-#### Rust Dependencies
-
-```bash
-cd cbad-core
-cargo build --release
-```
-
-#### Go Dependencies
-
-```bash
-cd api-server
-go mod download
-go build -o driftlock-api ./cmd/api-server
-```
-
-#### Node.js Dependencies
-
-```bash
-cd web-frontend
-npm install
+# Build CBAD core (if modifying algorithms)
+cargo build -p cbad-core --release
 ```
 
 ### 4. Database Setup
@@ -140,196 +99,87 @@ npm install
 
 ```bash
 # Start PostgreSQL
-docker compose up -d postgres
-
-# Run migrations (once database is ready)
-make migrate
+docker run --name driftlock-postgres \
+  -e POSTGRES_DB=driftlock \
+  -e POSTGRES_USER=driftlock \
+  -e POSTGRES_PASSWORD=driftlock \
+  -p 5432:5432 \
+  -d postgres:15
 ```
 
-#### Local PostgreSQL
+#### Migrations
+
+Migrations run automatically on startup, or manually:
 
 ```bash
-# Create database
-createdb driftlock
+# Install sqlx-cli
+cargo install sqlx-cli
 
 # Run migrations
-make migrate
+sqlx migrate run --database-url "$DATABASE_URL"
 ```
 
-The migration tool will:
-- Create the `schema_migrations` tracking table
-- Apply pending migrations in order
-- Rollback migrations if needed (`make migrate-down`)
-
-### 5. Start Services
+### 5. Start the API Server
 
 ```bash
-# Start all services with Docker Compose
-make dev
+# Run the API server
+DATABASE_URL="postgres://driftlock:driftlock@localhost:5432/driftlock" \
+  cargo run -p driftlock-api --release
 
-# Or start individually:
-cd api-server && go run ./cmd/api-server &
-cd web-frontend && npm run dev &
+# Or run the release binary
+./target/release/driftlock-api
 ```
 
-Services will be available at:
-- API Server: http://localhost:8080
-- Dashboard: http://localhost:3000
+Server will be available at:
+- API: http://localhost:8080
 - Health check: http://localhost:8080/healthz
+- Metrics: http://localhost:8080/metrics
 
-## OpenTelemetry Collector Setup
-
-### 1. Download Collector
-
-```bash
-# Download OpenTelemetry Collector Contrib
-curl -sSL https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.88.0/otelcol-contrib_0.88.0_linux_amd64.tar.gz | tar xz
-```
-
-### 2. Configuration
-
-Create `otel-collector-config.yaml`:
-
-```yaml
-receivers:
-  otlp:
-    protocols:
-      grpc:
-        endpoint: 0.0.0.0:4317
-      http:
-        endpoint: 0.0.0.0:4318
-
-processors:
-  driftlock/anomaly:
-    endpoint: http://localhost:8080
-    thresholds:
-      compression_ratio: 0.7
-      ncd_threshold: 0.3
-    explanation:
-      enabled: true
-      detail_level: "detailed"
-
-  batch:
-
-exporters:
-  otlp:
-    endpoint: http://localhost:8080
-    tls:
-      insecure: true
-
-service:
-  pipelines:
-    logs:
-      receivers: [otlp]
-      processors: [driftlock/anomaly, batch]
-      exporters: [otlp]
-
-    metrics:
-      receivers: [otlp]
-      processors: [batch]
-      exporters: [otlp]
-
-    traces:
-      receivers: [otlp]
-      processors: [batch]
-      exporters: [otlp]
-```
-
-### 3. Start Collector
+### 6. Start Frontend (Optional)
 
 ```bash
-./otelcol-contrib --config=otel-collector-config.yaml
+cd landing-page
+npm install
+npm run dev
 ```
 
-## Kubernetes Deployment
+Dashboard available at http://localhost:3000
 
-### 1. Create Namespace
+## Production Deployment
+
+### Replit (Recommended for Quick Start)
+
+1. Import repository into Replit
+2. Set environment secrets
+3. Build: `cargo build -p driftlock-api --release`
+4. Run: `./target/release/driftlock-api`
+
+### Docker Deployment
 
 ```bash
-kubectl create namespace driftlock
+# Build the image
+docker build -t driftlock-api -f Dockerfile .
+
+# Run the container
+docker run -d --name driftlock-api \
+  -p 8080:8080 \
+  -e DATABASE_URL="postgres://..." \
+  -e STRIPE_SECRET_KEY="sk_..." \
+  driftlock-api
 ```
 
-### 2. Deploy Components
+### Google Cloud Run
 
 ```bash
-# Deploy database
-kubectl apply -f k8s/postgres.yaml
+# Build and push
+gcloud builds submit --tag gcr.io/PROJECT_ID/driftlock-api
 
-# Deploy API server
-kubectl apply -f k8s/api-server.yaml
-
-# Deploy dashboard
-kubectl apply -f k8s/dashboard.yaml
-
-# Deploy OpenTelemetry Collector
-kubectl apply -f k8s/otel-collector.yaml
-```
-
-### 3. Verify Deployment
-
-```bash
-kubectl get pods -n driftlock
-kubectl port-forward -n driftlock svc/driftlock-api 8080:8080
-kubectl port-forward -n driftlock svc/driftlock-dashboard 3000:3000
-```
-
-## Helm Installation
-
-### 1. Add Repository
-
-```bash
-helm repo add shannon-labs https://charts.shannonlabs.ai
-helm repo update
-```
-
-### 2. Install Chart
-
-```bash
-helm install driftlock shannon-labs/driftlock \
-  --namespace driftlock \
-  --create-namespace \
-  --set apiServer.replicas=2 \
-  --set dashboard.replicas=1
-```
-
-### 3. Custom Values
-
-Create `values.yaml`:
-
-```yaml
-apiServer:
-  replicas: 3
-  resources:
-    requests:
-      memory: "256Mi"
-      cpu: "250m"
-    limits:
-      memory: "512Mi"
-      cpu: "500m"
-
-dashboard:
-  replicas: 2
-  resources:
-    requests:
-      memory: "128Mi"
-      cpu: "100m"
-    limits:
-      memory: "256Mi"
-      cpu: "200m"
-
-postgresql:
-  enabled: true
-  auth:
-    password: "your-secure-password"
-```
-
-Install with custom values:
-
-```bash
-helm install driftlock Shannon-Labs/driftlock \
-  --namespace driftlock \
-  --create-namespace \
-  -f values.yaml
+# Deploy
+gcloud run deploy driftlock-api \
+  --image gcr.io/PROJECT_ID/driftlock-api \
+  --platform managed \
+  --region us-central1 \
+  --allow-unauthenticated
 ```
 
 ## Configuration Options
@@ -339,19 +189,19 @@ helm install driftlock Shannon-Labs/driftlock \
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `PORT` | 8080 | Server port |
-| `DB_HOST` | localhost | Database host |
-| `DB_PORT` | 5432 | Database port |
-| `LOG_LEVEL` | info | Log level (debug, info, warn, error) |
-| `CBAD_NCD_THRESHOLD` | 0.3 | NCD threshold for anomaly detection |
-| `CBAD_P_VALUE_THRESHOLD` | 0.05 | P-value threshold |
+| `DATABASE_URL` | - | PostgreSQL connection string |
+| `RUST_LOG` | info | Log level (debug, info, warn, error) |
+| `FIREBASE_PROJECT_ID` | - | Firebase project for auth |
+| `STRIPE_SECRET_KEY` | - | Stripe API key |
+| `STRIPE_WEBHOOK_SECRET` | - | Stripe webhook signing secret |
 
-### CBAD Algorithm Configuration
+### Detection Configuration
 
 | Parameter | Default | Range | Description |
 |-----------|---------|-------|-------------|
-| `compression_ratio_threshold` | 0.7 | 0.0-1.0 | Compression ratio threshold |
-| `ncd_threshold` | 0.3 | 0.0-1.0 | Normalized compression distance |
-| `baseline_size` | 100 | 50-1000 | Baseline window size |
+| `ncd_threshold` | 0.3 | 0.0-1.0 | Normalized compression distance threshold |
+| `p_value_threshold` | 0.05 | 0.0-1.0 | Statistical significance threshold |
+| `baseline_size` | 400 | 50-1000 | Baseline window size |
 | `window_size` | 50 | 10-500 | Analysis window size |
 | `hop_size` | 10 | 1-100 | Window hop size |
 
@@ -363,94 +213,74 @@ helm install driftlock Shannon-Labs/driftlock \
 # API Server Health
 curl http://localhost:8080/healthz
 
-# Dashboard Access
-curl http://localhost:3000
-
-# Database Connection
+# Readiness
 curl http://localhost:8080/readyz
+
+# Prometheus Metrics
+curl http://localhost:8080/metrics
 ```
 
-### Test Anomaly Detection
+### Test Detection
 
 ```bash
-# Send test data
-curl -X POST http://localhost:8080/v1/events \
+# Test demo endpoint (no auth required)
+curl -X POST http://localhost:8080/v1/demo/detect \
   -H "Content-Type: application/json" \
   -d '{
-    "event_type": "log",
-    "data": {
-      "message": "This is a test log entry",
-      "level": "INFO"
-    }
+    "events": [
+      "normal log entry 1",
+      "normal log entry 2",
+      "ERROR: unusual event detected"
+    ]
   }'
-
-# Check for anomalies
-curl http://localhost:8080/v1/anomalies
 ```
 
 ## Troubleshooting
 
 ### Common Issues
 
-#### Port Conflicts
+#### Build Errors
 
 ```bash
-# Check what's using ports
-lsof -i :8080
-lsof -i :3000
+# Clean and rebuild
+cargo clean
+cargo build -p driftlock-api --release
 
-# Kill processes if needed
-kill -9 <PID>
+# Check Rust version
+rustc --version  # Should be 1.75+
 ```
 
 #### Database Connection Issues
 
 ```bash
-# Check PostgreSQL status
-docker compose ps postgres
-
-# View logs
-docker compose logs postgres
-
 # Test connection
-psql -h localhost -U postgres -d driftlock
+psql "$DATABASE_URL" -c "SELECT 1"
+
+# Check PostgreSQL is running
+docker ps | grep postgres
 ```
 
-#### Build Errors
+#### Port Conflicts
 
 ```bash
-# Clean and rebuild
-make clean
-make build
+# Check what's using port 8080
+lsof -i :8080
 
-# Update dependencies
-cd api-server && go mod tidy
-cd web-frontend && npm install
-cd cbad-core && cargo update
-```
-
-#### Permission Issues
-
-```bash
-# Fix Docker permissions
-sudo chown -R $USER:$USER .
-
-# Fix Go module permissions
-chmod +x api-server/driftlock-api
+# Kill process if needed
+kill -9 <PID>
 ```
 
 ### Getting Help
 
 - **Documentation**: [docs/](../docs/)
 - **Issues**: [GitHub Issues](https://github.com/Shannon-Labs/driftlock/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/Shannon-Labs/driftlock/discussions)
-- **Security**: security@shannonlabs.ai
+- **Support**: support@driftlock.io
 
 ## Next Steps
 
 After installation:
 
-1. [Configure OpenTelemetry Collector](../docs/otel-collector.md)
-2. [Review API Documentation](../docs/api-reference.md)
-3. [Check Examples](../examples/)
-4. [Set up Compliance Integration](../docs/compliance.md)
+1. [Getting Started Guide](../getting-started/GETTING_STARTED.md)
+2. [API Reference](../../architecture/API.md)
+3. [Detection Profiles](../guides/detection-profiles.md)
+4. [Deployment Guide](../../deployment/DEPLOYMENT.md)

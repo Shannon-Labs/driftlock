@@ -11,22 +11,54 @@ name = "cbad_core"
 crate-type = ["cdylib", "rlib", "staticlib"]
 
 [features]
-default = []            # No external adapters by default; zstd/lz4/gzip only
+default = ["tracing"]   # Ship with tracing hooks enabled
 openzl = []             # Optional: OpenZL adapter (not enabled by default)
 debug = []              # Enable debug output
+tracing = ["dep:tracing"]
+runtime-tokio = ["dep:tokio", "dep:async-stream"]
+runtime-async-std = ["dep:async-std", "dep:async-stream"]
+otlp = [
+    "dep:opentelemetry",
+    "dep:opentelemetry-otlp",
+    "dep:tonic",
+    "runtime-tokio"
+]
+parquet = ["dep:parquet", "dep:arrow"]
 
 [dependencies]
 rand = "0.8"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 regex = "1"
+lazy_static = "1.4"
 fastrand = "2"
 zstd = "0.13"
 lz4 = "1.24"
 flate2 = "1.0"
 log = "0.4.28"
 env_logger = "0.11.8"
+csv = "1.3"
+thiserror = "1.0"
+tracing = { version = "0.1", optional = true, features = ["std"] }
+tokio = { version = "1.40", optional = true, features = ["rt-multi-thread", "macros", "io-util"] }
+async-stream = { version = "0.3", optional = true }
+async-trait = "0.1"
+futures = { version = "0.3", default-features = false, features = ["std", "executor"] }
+async-std = { version = "1.12", optional = true, features = ["attributes"] }
+opentelemetry = { version = "0.22", optional = true, features = ["logs", "metrics", "trace"] }
+opentelemetry-otlp = { version = "0.15", optional = true, features = ["grpc-tonic", "tls"] }
+tonic = { version = "0.11", optional = true, features = ["transport"] }
+parquet = { version = "54", optional = true }
+arrow = { version = "54", optional = true }
 # Note: Using std::os::raw for C FFI types instead of libc to avoid network dependency
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+serde_yaml = "0.9"
 
 [build-dependencies]
 cc = "1.0"  # For linking C/C++ libraries
+
+[[bench]]
+name = "detection_bench"
+harness = false

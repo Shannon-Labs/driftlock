@@ -223,7 +223,7 @@ POST /tenants
   "id": "tenant_123456",
   "name": "Acme Corporation",
   "domain": "acme.driftlock.com",
-  "status": "trial",
+  "status": "free",
   "plan": "pro",
   "industry": "finance",
   "company_size": "medium",

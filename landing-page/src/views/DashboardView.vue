@@ -286,21 +286,21 @@
         </div>
 
         <!-- Free Tier Upgrade Prompt (Gray) -->
-        <div v-else-if="billing?.status === 'free'"
-             class="mb-8 border-2 border-black bg-gray-100 p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-          <div class="flex items-center justify-between">
-            <div>
-              <span class="text-sm font-bold uppercase tracking-widest text-gray-600">PILOT (FREE)</span>
-              <p class="text-sm font-mono text-gray-600 mt-1">
-                Upgrade to unlock 500k+ events/month and advanced features.
-              </p>
-            </div>
-            <button @click="handleUpgrade('radar')"
-                    class="border-2 border-black bg-black px-4 py-2 text-sm font-bold uppercase text-white hover:bg-white hover:text-black transition-colors">
-              Upgrade to Radar
-            </button>
-          </div>
-        </div>
+	        <div v-else-if="billing?.status === 'free'"
+	             class="mb-8 border-2 border-black bg-gray-100 p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+	          <div class="flex items-center justify-between">
+	            <div>
+	              <span class="text-sm font-bold uppercase tracking-widest text-gray-600">FREE</span>
+	              <p class="text-sm font-mono text-gray-600 mt-1">
+	                Upgrade to unlock higher limits and longer retention.
+	              </p>
+	            </div>
+	            <button @click="handleUpgrade('starter')"
+	                    class="border-2 border-black bg-black px-4 py-2 text-sm font-bold uppercase text-white hover:bg-white hover:text-black transition-colors">
+	              Upgrade to Starter
+	            </button>
+	          </div>
+	        </div>
 
         <!-- Bento Grid Layout -->
         <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
@@ -391,14 +391,14 @@
             </div>
           </div>
 
-          <!-- AI Usage Widget - show for paid plans (not free/pulse) -->
-          <AIUsageWidget
-            v-if="billing?.plan && billing.plan !== 'pulse'"
-            :plan="billing?.plan"
-            class="lg:col-span-1"
-            @upgrade="handleUpgrade"
-            @config-changed="onAIConfigChanged"
-          />
+	          <!-- AI Usage Widget - show for paid plans -->
+	          <AIUsageWidget
+	            v-if="billing?.plan && !['free','pulse','trial','starter','basic'].includes(billing.plan)"
+	            :plan="billing?.plan"
+	            class="lg:col-span-1"
+	            @upgrade="handleUpgrade"
+	            @config-changed="onAIConfigChanged"
+	          />
 
           <!-- API Keys Card -->
           <div class="bg-white border-2 border-black lg:col-span-3 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
@@ -713,8 +713,8 @@ const route = useRoute()
 const keys = ref<APIKey[]>([])
 const usage = ref({
   current_period_usage: 0,
-  plan_limit: 10000,
-  plan: 'developer'
+  plan_limit: 50000,
+  plan: 'free'
 })
 
 // Detailed usage data
@@ -845,7 +845,7 @@ const fetchBillingStatus = async () => {
 // Upgrade handler for free tier users
 const handleUpgrade = async (plan?: string) => {
   // Default to next tier if no plan specified
-  const targetPlan = plan || getNextTier(billing.value?.plan || 'pulse')
+  const targetPlan = plan || getNextTier(billing.value?.plan || 'free')
   upgradeError.value = null
   try {
     const token = await authStore.getToken()
@@ -870,9 +870,19 @@ const handleUpgrade = async (plan?: string) => {
 
 // Get next tier for upgrade suggestions
 const getNextTier = (currentPlan: string): string => {
-  const tiers = ['pulse', 'radar', 'tensor', 'orbit']
-  const currentIndex = tiers.indexOf(currentPlan)
-  if (currentIndex < 0 || currentIndex >= tiers.length - 1) return 'tensor'
+  const normalized = currentPlan.toLowerCase()
+  const canonical =
+    ['pulse', 'trial', 'pilot'].includes(normalized) ? 'free'
+    : ['basic'].includes(normalized) ? 'starter'
+    : ['radar', 'signal'].includes(normalized) ? 'pro'
+    : ['tensor', 'growth', 'lock'].includes(normalized) ? 'team'
+    : ['orbit', 'horizon'].includes(normalized) ? 'enterprise'
+    : normalized
+
+  const tiers = ['free', 'starter', 'pro', 'team', 'scale']
+  const currentIndex = tiers.indexOf(canonical)
+  if (currentIndex < 0) return 'starter'
+  if (currentIndex >= tiers.length - 1) return 'scale'
   return tiers[currentIndex + 1]
 }
 
@@ -886,12 +896,12 @@ const fetchKeys = async () => {
   try {
     const token = await authStore.getToken()
     if (!token) return
-    const res = await fetch('/api/v1/me/keys', {
+    const res = await fetch('/api/v1/api-keys', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
     if (res.ok) {
       const data = await res.json()
-      keys.value = data.keys || []
+      keys.value = Array.isArray(data) ? data : (data.keys || [])
     }
   } catch (e) {
     if (import.meta.env.DEV) {
@@ -905,7 +915,7 @@ const createKey = async () => {
   createKeyLoading.value = true
   try {
     const token = await authStore.getToken()
-    const res = await fetch('/api/v1/me/keys/create', {
+    const res = await fetch('/api/v1/api-keys', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -920,7 +930,7 @@ const createKey = async () => {
       const data = await res.json()
       // Close create modal, show success modal with the key
       showCreateKeyModal.value = false
-      newApiKey.value = data.api_key
+      newApiKey.value = data.key || data.api_key
       showNewKeyModal.value = true
       keyCopied.value = false
       // Reset form
@@ -986,13 +996,11 @@ const revokeKey = async () => {
   revokeKeyLoading.value = true
   try {
     const token = await authStore.getToken()
-    const res = await fetch('/api/v1/me/keys/revoke', {
-      method: 'POST',
+    const res = await fetch(`/api/v1/api-keys/${keyToRevoke.value.id}`, {
+      method: 'DELETE',
       headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ key_id: keyToRevoke.value.id })
+        'Authorization': `Bearer ${token}`
+      }
     })
     if (res.ok) {
       showRevokeModal.value = false
@@ -1168,16 +1176,16 @@ onMounted(async () => {
     await fetchBillingStatus()
 
     // Fetch Keys
-    const resKeys = await fetch('/api/v1/me/keys', {
+    const resKeys = await fetch('/api/v1/api-keys', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
     if (resKeys.ok) {
       const data = await resKeys.json()
-      keys.value = data.keys || []
+      keys.value = Array.isArray(data) ? data : (data.keys || [])
     }
 
     // Fetch Usage
-    const resUsage = await fetch('/api/v1/me/usage', {
+    const resUsage = await fetch('/api/v1/account/usage', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
     if (resUsage.ok) {

@@ -1,27 +1,28 @@
 # Driftlock Deployment Guide
 
-## Quick Start with Docker Compose
+## Quick Start with Docker
 
-The fastest way to get started is with the unified `docker-compose.yml`:
+The fastest way to get started:
 
 ```bash
-# Start HTTP API server
-docker compose up -d driftlock-http
+# Build the Rust API image
+docker build -t driftlock-api -f Dockerfile .
+
+# Run with Docker
+docker run --rm -p 8080:8080 \
+  -e DATABASE_URL="postgres://..." \
+  -e STRIPE_SECRET_KEY="sk_..." \
+  driftlock-api
 
 # Verify it's running
 curl http://localhost:8080/healthz
-
-# Start with Kafka collector (optional)
-docker compose --profile kafka up -d
 ```
-
-See [QUICKSTARTS.md](../QUICKSTARTS.md) for more examples.
 
 ## Prerequisites
 
-- Go 1.22 or later
-- PostgreSQL 15 or later (optional, for full API features)
-- Docker 24+ (recommended for containerized deployment)
+- Rust 1.75+ (for building)
+- PostgreSQL 15+
+- Docker 24+ (for containerized deployment)
 - Node.js 18+ (for UI/playground)
 
 ## Local Development
@@ -37,29 +38,25 @@ docker run --name driftlock-postgres \
   -p 5432:5432 \
   -d postgres:15
 
-# Run migrations
+# Set database URL
 export DATABASE_URL="postgres://driftlock:driftlock@localhost:5432/driftlock?sslmode=disable"
-cd api-server/migrations
-migrate -path . -database "$DATABASE_URL" up
 ```
 
-### 2. API Server
+### 2. Build and Run API Server
 
 ```bash
-# Build
-cd api-server
-go build -o bin/driftlock-api ./cmd/driftlock-api
+# Build release binary
+cargo build -p driftlock-api --release
 
-# Run
-export DATABASE_URL="postgres://driftlock:driftlock@localhost:5432/driftlock?sslmode=disable"
-export PORT=8080
-./bin/driftlock-api
+# Run server
+DATABASE_URL="postgres://driftlock:driftlock@localhost:5432/driftlock" \
+  ./target/release/driftlock-api
 ```
 
 ### 3. UI Development
 
 ```bash
-cd ui
+cd landing-page
 npm install
 npm run dev
 ```
@@ -74,53 +71,65 @@ Access UI at: http://localhost:3000
 |----------|-------------|---------|
 | `PORT` | HTTP server port | 8080 |
 | `DATABASE_URL` | PostgreSQL connection string | required |
-| `LOG_LEVEL` | Log level (debug, info, warn, error) | info |
-| `LOG_FORMAT` | Log format (json, text) | json |
-| `RATE_LIMIT_RPS` | Rate limit requests per second | 100 |
-| `RATE_LIMIT_BURST` | Rate limit burst size | 200 |
-| `OTEL_EXPORTER_OTLP_ENDPOINT` | OpenTelemetry collector endpoint | - |
+| `RUST_LOG` | Log level (debug, info, warn, error) | info |
+| `STRIPE_SECRET_KEY` | Stripe API key | required |
+| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret | required |
+| `FIREBASE_PROJECT_ID` | Firebase project ID | required |
+| `SENDGRID_API_KEY` | SendGrid API key | optional |
+| `DETECTOR_CLEANUP_INTERVAL_SECONDS` | Detector cleanup interval | 300 |
+| `DETECTOR_TTL_SECONDS` | Detector time-to-live | 3600 |
 
 ### UI
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `NEXT_PUBLIC_API_URL` | API server URL | http://localhost:8080 |
-| `NODE_ENV` | Environment (development, production) | development |
+| `VITE_API_URL` | API server URL | http://localhost:8080 |
 
 ## Production Deployment
 
-### Docker Compose (Unified Setup)
+### Replit Deployment
 
-The unified `docker-compose.yml` includes both APIs:
+Recommended for quick deployment:
+
+1. Create a new Replit from GitHub
+2. Set environment secrets in Replit dashboard:
+   - `DATABASE_URL`
+   - `STRIPE_SECRET_KEY`
+   - `STRIPE_WEBHOOK_SECRET`
+   - `FIREBASE_PROJECT_ID`
+3. Build command: `cargo build -p driftlock-api --release`
+4. Run command: `./target/release/driftlock-api`
+
+### Docker Deployment
 
 ```bash
-# Start HTTP API server (default)
-docker compose up -d driftlock-http
+# Build image
+docker build -t driftlock-api:latest -f Dockerfile .
 
-# Start with Kafka collector (optional)
-docker compose --profile kafka up -d
-
-# View logs
-docker compose logs -f driftlock-http
-
-# Stop services
-docker compose down
+# Run container
+docker run -d --name driftlock-api \
+  -p 8080:8080 \
+  -e DATABASE_URL="postgres://..." \
+  -e STRIPE_SECRET_KEY="sk_..." \
+  -e STRIPE_WEBHOOK_SECRET="whsec_..." \
+  -e FIREBASE_PROJECT_ID="driftlock" \
+  driftlock-api:latest
 ```
 
-### Individual Docker Builds
+### Google Cloud Run
 
 ```bash
-# Build HTTP API server image
-docker build -t driftlock-http:latest -f collector-processor/cmd/driftlock-http/Dockerfile .
+# Build and push image
+gcloud builds submit --tag gcr.io/PROJECT_ID/driftlock-api
 
-# Build Kafka collector image
-docker build -t driftlock-collector:latest -f collector-processor/cmd/driftlock-collector/Dockerfile .
-
-# Run HTTP API
-docker run --rm -p 8080:8080 \
-  -e PORT=8080 \
-  -e CORS_ALLOW_ORIGINS=https://play.driftlock.net \
-  driftlock-http:latest
+# Deploy to Cloud Run
+gcloud run deploy driftlock-api \
+  --image gcr.io/PROJECT_ID/driftlock-api \
+  --platform managed \
+  --region us-central1 \
+  --allow-unauthenticated \
+  --set-env-vars "DATABASE_URL=postgres://..." \
+  --set-secrets "STRIPE_SECRET_KEY=stripe-key:latest"
 ```
 
 ### Kubernetes with Helm
@@ -133,20 +142,38 @@ helm install driftlock ./helm/driftlock \
   --set api.replicas=3
 ```
 
+## Database Migrations
+
+Migrations are embedded in the binary and run automatically on startup via sqlx.
+
+For manual migration management:
+
+```bash
+# Install sqlx-cli
+cargo install sqlx-cli
+
+# Run migrations
+sqlx migrate run --database-url "$DATABASE_URL"
+
+# Check migration status
+sqlx migrate info --database-url "$DATABASE_URL"
+```
+
 ## Monitoring
 
 ### Prometheus Metrics
 
 API server exposes metrics at `/metrics`:
 
-- `http_requests_total` - Total HTTP requests
-- `http_request_duration_seconds` - Request duration histogram
-- `anomalies_detected_total` - Total anomalies detected
-- `anomalies_by_stream_type` - Anomalies by stream type
+- `driftlock_http_requests_total` - Total HTTP requests
+- `driftlock_events_processed_total` - Events processed
+- `driftlock_anomalies_detected_total` - Anomalies detected
+- `driftlock_detectors_active` - Active detector count
 
-### Grafana Dashboard
+### Health Checks
 
-Import the dashboard from `monitoring/grafana/dashboard.json`
+- `GET /healthz` - Liveness probe (returns 200 if server is running)
+- `GET /readyz` - Readiness probe (checks database connection)
 
 ## Troubleshooting
 
@@ -156,20 +183,31 @@ Import the dashboard from `monitoring/grafana/dashboard.json`
 # Test connection
 psql "$DATABASE_URL"
 
-# Check migrations
-migrate -path api-server/migrations -database "$DATABASE_URL" version
+# Check PostgreSQL logs
+docker logs driftlock-postgres
+```
+
+### Build Issues
+
+```bash
+# Clean build
+cargo clean
+cargo build -p driftlock-api --release
+
+# Check Rust version
+rustc --version  # Should be 1.75+
 ```
 
 ### High Memory Usage
 
 - Check connection pool settings
-- Monitor goroutine leaks
-- Review SSE client connections
+- Monitor active detector count via `/metrics`
+- Review detector TTL settings
 
 ### Slow Queries
 
 - Check PostgreSQL indexes
-- Enable query logging: `SET log_min_duration_statement = 1000;`
+- Enable query logging
 - Use EXPLAIN ANALYZE for slow queries
 
 ## Security Checklist
@@ -178,8 +216,8 @@ migrate -path api-server/migrations -database "$DATABASE_URL" version
 - [ ] Enable TLS for database connections
 - [ ] Use HTTPS in production
 - [ ] Rotate API keys regularly
-- [ ] Enable rate limiting
-- [ ] Set up firewall rules
+- [ ] Set up Stripe webhook signature verification
+- [ ] Configure CORS appropriately
 - [ ] Regular security audits
 - [ ] Keep dependencies updated
 
@@ -207,22 +245,18 @@ psql "$DATABASE_URL" < backup.sql
 ### Database
 
 ```sql
--- Increase connection pool
-ALTER SYSTEM SET max_connections = 200;
+-- Check connection count
+SELECT count(*) FROM pg_stat_activity;
 
--- Tune work_mem for queries
-ALTER SYSTEM SET work_mem = '16MB';
-
--- Enable query plan caching
-ALTER SYSTEM SET shared_preload_libraries = 'pg_stat_statements';
+-- Analyze slow queries
+SET log_min_duration_statement = 1000;
 ```
 
 ### API Server
 
-- Increase `GOMAXPROCS` for high-traffic deployments
-- Use connection pooling (default: 100 max, 10 idle)
-- Enable HTTP/2
-- Use CDN for static assets
+- Connection pool default: 10 connections
+- Increase for high-traffic deployments
+- Monitor via Prometheus metrics
 
 ## Support
 

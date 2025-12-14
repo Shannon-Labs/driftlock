@@ -1,69 +1,71 @@
 # CBAD (Compression-Based Anomaly Detection) System
 
-This document describes how the CBAD system works in Driftlock, including baseline management, detection flow, and AI integration.
+This document describes how the CBAD system works in Driftlock, including baseline management, detection flow, and configuration.
 
 ## Architecture Overview
 
 ```text
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│   HTTP Client   │────▶│  driftlock-http │────▶│   cbad-core     │
-│  (curl, SDK)    │     │   (Go server)   │     │  (Rust FFI)     │
+│   HTTP Client   │────▶│  driftlock-api  │────▶│   cbad-core     │
+│  (curl, SDK)    │     │  (Rust/Axum)    │     │   (Rust lib)    │
 └─────────────────┘     └────────┬────────┘     └─────────────────┘
-                                 │
-                    ┌────────────┼────────────┐
-                    ▼            ▼            ▼
-              ┌──────────┐ ┌──────────┐ ┌──────────┐
-              │ Postgres │ │  Redis   │ │  Ollama  │
-              │ (state)  │ │(baseline)│ │   (AI)   │
-              └──────────┘ └──────────┘ └──────────┘
+                                │
+                   ┌────────────┴────────────┐
+                   ▼                         ▼
+             ┌──────────┐              ┌──────────┐
+             │ Postgres │              │  Stripe  │
+             │ (state)  │              │(billing) │
+             └──────────┘              └──────────┘
 ```
 
 ## Core Components
 
 ### 1. CBAD Rust Library (`cbad-core/`)
 
-The core anomaly detection algorithm is implemented in Rust and exposed via FFI:
+The core anomaly detection algorithm is implemented entirely in Rust:
 
-- **Location**: `cbad-core/target/release/libcbad_core.a`
-- **Go bindings**: `collector-processor/driftlockcbad/`
-- **Build tags**: `cgo && !driftlock_no_cbad`
+- **Location**: `cbad-core/src/`
+- **API integration**: Direct Rust crate dependency in `driftlock-api`
+- **Key modules**:
+  - `anomaly.rs` - Anomaly detection logic
+  - `window.rs` - Sliding window management
+  - `metrics/` - NCD, p-value, entropy calculations
 
 Key functions:
-- `cbad_detector_create()` - Create a new detector instance
-- `cbad_detector_add_data()` - Add events to the detector
-- `cbad_detector_detect_anomaly()` - Run anomaly detection
-- `cbad_compute_metrics()` - Compute NCD and p-value metrics
+- `Detector::new()` - Create a new detector instance
+- `Detector::add_events()` - Add events to the detector
+- `Detector::detect()` - Run anomaly detection
+- `compute_ncd()` - Compute Normalized Compression Distance
+- `compute_p_value()` - Compute statistical significance
 
-### 2. HTTP Server (`collector-processor/cmd/driftlock-http/`)
+### 2. HTTP Server (`crates/driftlock-api/`)
 
-The main API server that exposes CBAD functionality:
+The main API server that exposes CBAD functionality via Axum:
 
 - **Production endpoint**: `POST /v1/detect` (requires API key)
 - **Demo endpoint**: `POST /v1/demo/detect` (rate-limited, no auth)
 
-### 3. Baseline Persistence (Redis)
+### 3. Baseline Persistence (PostgreSQL)
 
-Baselines are persisted to Redis to maintain detection state across API requests:
+Stream anchors provide persistent baseline management:
 
-- **Key format**: `cbad:baseline:{stream_id}`
-- **TTL**: 24 hours (configurable via `BASELINE_TTL_HOURS`)
-- **Format**: Newline-delimited JSON events
+- **Table**: `stream_anchors`
+- **Features**: Anchor-based drift detection, historical tracking
+- **Management**: `/v1/streams/:id/anchor` endpoints
 
 ## Detection Flow
 
 ### Demo Endpoint (`/v1/demo/detect`)
 
 ```text
-1. Receive events (max 50)
+1. Receive events (validated)
 2. Create fresh Detector with demo settings:
    - baseline_size: 40
    - window_size: 10
    - hop_size: 5
 3. Add all events to detector
 4. Run detection after baseline is filled
-5. If anomalies detected AND AI enabled:
-   - Generate AI explanation via Ollama
-6. Return response with metrics + AI analysis
+5. Return response with metrics and anomaly details
 ```
 
 ### Production Endpoint (`/v1/detect`)
@@ -71,14 +73,12 @@ Baselines are persisted to Redis to maintain detection state across API requests
 ```text
 1. Authenticate via API key
 2. Resolve stream (from stream_id or default)
-3. Check calibration status
-4. Load persisted baseline from Redis (if available)
+3. Load stream configuration and detection profile
+4. Load persisted anchor/baseline (if available)
 5. Create Detector with stream settings
-6. Prime detector with persisted baseline
-7. Add new events and run detection
-8. Persist updated baseline to Redis (async)
-9. Generate AI explanations (async)
-10. Return response
+6. Add new events and run detection
+7. Persist anomalies to database
+8. Return response
 ```
 
 ## Configuration
@@ -88,15 +88,10 @@ Baselines are persisted to Redis to maintain detection state across API requests
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `DATABASE_URL` | required | PostgreSQL connection string |
-| `BASELINE_REDIS_ADDR` | "" | Redis address for baseline persistence |
-| `BASELINE_TTL_HOURS` | 24 | Baseline TTL in Redis |
-| `AI_PROVIDER` | "" | AI provider: "ollama", "anthropic", "openai" |
-| `OLLAMA_BASE_URL` | http://localhost:11434 | Ollama API endpoint |
-| `OLLAMA_MODEL` | mistral | Default Ollama model |
-| `DEFAULT_BASELINE` | 400 | Default baseline size |
-| `DEFAULT_WINDOW` | 50 | Default window size |
-| `PVALUE_THRESHOLD` | 0.05 | P-value threshold for anomaly detection |
-| `NCD_THRESHOLD` | 0.3 | NCD threshold for anomaly detection |
+| `PORT` | 8080 | HTTP server port |
+| `RUST_LOG` | info | Log level (debug, info, warn, error) |
+| `DETECTOR_TTL_SECONDS` | 3600 | In-memory detector cache TTL |
+| `DETECTOR_CLEANUP_INTERVAL_SECONDS` | 300 | Detector cleanup interval |
 
 ### Detection Parameters
 
@@ -105,7 +100,17 @@ Baselines are persisted to Redis to maintain detection state across API requests
 | `baseline_size` | 40 | 400 | Number of events in baseline corpus |
 | `window_size` | 10 | 50 | Number of events in sliding window |
 | `hop_size` | 5 | 10 | Events to advance window by |
-| `permutation_count` | 1000 | 1000 | Permutations for p-value calculation |
+| `ncd_threshold` | 0.3 | 0.3 | NCD threshold for anomaly detection |
+| `p_value_threshold` | 0.05 | 0.05 | P-value threshold for significance |
+
+### Detection Profiles
+
+| Profile | NCD Threshold | P-Value | Use Case |
+|---------|---------------|---------|----------|
+| `sensitive` | 0.20 | 0.10 | Security-critical, early warning |
+| `balanced` | 0.30 | 0.05 | General purpose (default) |
+| `strict` | 0.45 | 0.01 | Low noise, high confidence |
+| `custom` | User-defined | User-defined | Fine-tuned settings |
 
 ## Metrics Explained
 
@@ -128,36 +133,47 @@ How much the compression efficiency changed:
 - **Negative**: Window is less compressible (more random/anomalous)
 - **Positive**: Window is more compressible (more structured)
 
+### Entropy Change
+
+Change in information content:
+- **Positive**: Increased randomness/complexity
+- **Negative**: Decreased randomness/complexity
+
 ## Running the System
 
 ### Local Development
 
 ```bash
-# Terminal 1: Start dependencies
-docker compose -f deploy/docker-compose.yml up -d driftlock-postgres driftlock-redis
+# Build the Rust API
+cargo build -p driftlock-api --release
 
-# Terminal 2: Start Ollama (for AI)
-ollama serve
+# Start PostgreSQL
+docker run --name driftlock-postgres \
+  -e POSTGRES_DB=driftlock \
+  -e POSTGRES_USER=driftlock \
+  -e POSTGRES_PASSWORD=driftlock \
+  -p 5432:5432 \
+  -d postgres:15
 
-# Terminal 3: Start the API server
-cd collector-processor
-DATABASE_URL="postgresql://driftlock:driftlock@localhost:7543/driftlock?sslmode=disable" \
-BASELINE_REDIS_ADDR="localhost:6379" \
-AI_PROVIDER="ollama" \
-OLLAMA_MODEL="ministral-3:3b" \
-DRIFTLOCK_DEV_MODE="true" \
-CGO_ENABLED=1 go run ./cmd/driftlock-http
+# Run the API server
+DATABASE_URL="postgres://driftlock:driftlock@localhost:5432/driftlock" \
+  ./target/release/driftlock-api
 
-# Terminal 4: Test the demo endpoint
+# Test the demo endpoint
 curl -X POST http://localhost:8080/v1/demo/detect \
   -H "Content-Type: application/json" \
-  -d '{"events": [...]}'
+  -d '{
+    "events": [
+      "normal log entry 1",
+      "normal log entry 2",
+      "ERROR: unusual event detected"
+    ]
+  }'
 ```
 
 ### Docker Compose
 
 ```bash
-cd deploy
 docker compose up -d
 ```
 
@@ -165,44 +181,27 @@ docker compose up -d
 
 ```json
 {
-  "success": true,
-  "total_events": 50,
-  "anomaly_count": 1,
-  "processing_time": "178ms",
-  "compression_algo": "zstd",
   "anomalies": [
     {
-      "id": "uuid",
-      "index": 49,
-      "metrics": {
-        "NCD": 0.499,
-        "PValue": 0.51,
-        "BaselineCompressionRatio": 6.6,
-        "WindowCompressionRatio": 2.9,
-        "ConfidenceLevel": 0.49,
-        "CompressionRatioChange": -0.56
-      },
-      "event": {"level": "ERROR", "msg": "..."},
-      "why": "CBAD Analysis: NCD=0.499..."
+      "id": "anom_abc123",
+      "ncd": 0.72,
+      "compression_ratio": 1.41,
+      "entropy_change": 0.13,
+      "p_value": 0.004,
+      "confidence": 0.96,
+      "explanation": "Significant deviation from baseline pattern"
     }
   ],
-  "ai_analysis": {
-    "provider": "ollama",
-    "model": "ministral-3:3b",
-    "explanation": "This anomaly indicates...",
-    "latency": "10.5s"
+  "metrics": {
+    "processed": 100,
+    "baseline": 400,
+    "window": 50,
+    "duration_ms": 42
   }
 }
 ```
 
 ## Troubleshooting
-
-### "cbad: Rust core not available"
-
-The stub implementation is being used. Ensure:
-1. CGO is enabled: `CGO_ENABLED=1`
-2. The Rust library is built: `cd cbad-core && cargo build --release`
-3. No `driftlock_no_cbad` build tag
 
 ### "not enough data for analysis"
 
@@ -210,14 +209,41 @@ The detector needs `baseline_size + window_size` events before detection works:
 - Demo: 40 + 10 = 50 events minimum
 - Production: 400 + 50 = 450 events minimum
 
-### "baseline redis unavailable"
-
-Redis is optional. Without it, baselines are not persisted across requests.
-Set `BASELINE_REDIS_ADDR` to enable persistence.
-
-### AI analysis unavailable
+### Low anomaly detection rate
 
 Check:
-1. `AI_PROVIDER` is set (e.g., "ollama")
-2. Ollama is running: `curl http://localhost:11434/api/tags`
-3. Model is available: `ollama pull ministral-3:3b`
+1. Baseline events represent "normal" behavior
+2. Detection profile matches your use case
+3. NCD threshold may need adjustment
+4. Try the `sensitive` profile for more detections
+
+### High false positive rate
+
+Consider:
+1. Increase `ncd_threshold` to reduce sensitivity
+2. Decrease `p_value_threshold` for stricter significance
+3. Use the `strict` profile
+4. Provide more baseline data
+
+### Driftlog (Debug Logging)
+
+Enable detailed logging:
+
+```bash
+# Run with debug logging
+RUST_LOG=debug cargo run -p driftlock-api
+
+# Filter to specific modules
+RUST_LOG=driftlock_api::routes::detection=debug cargo run -p driftlock-api
+
+# Trace CBAD operations
+RUST_LOG=cbad_core=trace cargo run -p driftlock-api
+```
+
+## CBAD Algorithm Details
+
+For detailed information about the compression-based anomaly detection algorithm, see:
+
+- [ALGORITHMS.md](architecture/ALGORITHMS.md) - Mathematical foundations
+- `cbad-core/README.md` - Implementation details
+- `cbad-core/src/anomaly.rs` - Detection logic

@@ -94,10 +94,12 @@ Tasks:
 2. Check migration status:
    goose -dir api/migrations postgres "$DATABASE_URL" status
 
-3. Verify Stripe price IDs are configured:
-   - price_1SZjnpL4rhSbUSqALhIjpoR3 (Pro)
-   - price_1SZjnpL4rhSbUSqACAYqNupa (Basic)
-   - price_1SZjnqL4rhSbUSqAr65IPfB1 (Enterprise)
+3. Verify Stripe price IDs are configured (env vars):
+   - STRIPE_PRICE_ID_STARTER
+   - STRIPE_PRICE_ID_PRO
+   - STRIPE_PRICE_ID_TEAM
+   - STRIPE_PRICE_ID_SCALE
+   - (optional) STRIPE_PRICE_ID_ENTERPRISE
 
 4. Check tenant table has proper indexes
 

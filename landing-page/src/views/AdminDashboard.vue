@@ -228,8 +228,8 @@ const usageData = ref<UsageData | null>(null)
 const usageLoading = ref(false)
 
 const verifiedCount = computed(() => tenants.value.filter(t => t.status === 'verified').length)
-const trialCount = computed(() => tenants.value.filter(t => t.plan === 'trial').length)
-const paidCount = computed(() => tenants.value.filter(t => ['starter', 'growth', 'enterprise'].includes(t.plan)).length)
+const trialCount = computed(() => tenants.value.filter(t => t.status === 'trialing').length)
+const paidCount = computed(() => tenants.value.filter(t => ['starter', 'pro', 'team', 'scale', 'enterprise'].includes(t.plan)).length)
 
 const filteredTenants = computed(() => {
     return tenants.value.filter(t => {
@@ -305,9 +305,11 @@ const formatDate = (dateStr: string) => {
 
 const planBadgeClass = (plan: string) => {
     switch (plan) {
-        case 'trial': return 'bg-white text-black'
+        case 'free': return 'bg-white text-black'
         case 'starter': return 'bg-gray-200 text-black'
-        case 'growth': return 'bg-gray-800 text-white'
+        case 'pro': return 'bg-gray-800 text-white'
+        case 'team': return 'bg-black text-white'
+        case 'scale': return 'bg-black text-white'
         case 'enterprise': return 'bg-black text-white'
         default: return 'bg-white text-black'
     }

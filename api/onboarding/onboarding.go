@@ -1,7 +1,8 @@
 package main
 
-// Implementation guide for /v1/onboard/signup endpoint
-// Add this to collector-processor/cmd/driftlock-http/main.go or create new file
+// Legacy onboarding implementation (Go).
+// Superseded by the Rust handler in crates/driftlock-api/src/routes/onboarding.rs.
+// Kept for historical reference only.
 
 /*
 import (

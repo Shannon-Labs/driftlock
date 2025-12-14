@@ -1,25 +1,23 @@
 # Driftlock Build and Deployment Guide
 
-This document describes how to build the deterministic CBAD core and link it into the Go collector. The steps below assume the required toolchain is installed.
+This document describes how to build the Driftlock Rust API and CBAD core.
 
 ## Prerequisites
 
-### Go Development
-- Go 1.24 or newer
-- Standard Go toolchain with cgo support
-
-### Rust Development  
-- Rust 1.70+ with stable toolchain
-- Cargo with staticlib support
+### Rust Development
+- Rust 1.75+ with stable toolchain
+- Cargo with workspace support
 
 ### System Dependencies
-- Linux: `build-essential`, `pkg-config`
+- Linux: `build-essential`, `pkg-config`, `libssl-dev`
 - macOS: Xcode command line tools
-- Windows: Visual Studio Build Tools or MinGW-w64
+- Windows: Visual Studio Build Tools
+
+### Database
+- PostgreSQL 15+ (or Docker)
 
 ### Node.js Development
-- Node.js 18+ with npm or pnpm
-- For dashboard development
+- Node.js 18+ with npm (for dashboard development)
 
 ## Quick Start
 
@@ -30,67 +28,83 @@ This document describes how to build the deterministic CBAD core and link it int
 git clone https://github.com/Shannon-Labs/driftlock.git
 cd driftlock
 
-# Initialize git submodules (OpenZL and nested dependencies)
-git submodule update --init --recursive
+# Build the API server
+cargo build -p driftlock-api --release
 
-# Build API server (basic version without CBAD integration)
-make run
+# Start PostgreSQL
+docker run --name driftlock-postgres \
+  -e POSTGRES_DB=driftlock \
+  -e POSTGRES_USER=driftlock \
+  -e POSTGRES_PASSWORD=driftlock \
+  -p 5432:5432 \
+  -d postgres:15
+
+# Run the API server
+DATABASE_URL="postgres://driftlock:driftlock@localhost:5432/driftlock" \
+  ./target/release/driftlock-api
 
 # Test endpoints
 curl http://localhost:8080/healthz
-curl http://localhost:8080/v1/version
-```
-
-### Full Build with CBAD Integration
-
-```bash
-# Ensure git submodules are initialized (OpenZL and nested dependencies)
-git submodule update --init --recursive
-
-# Build all components
-make build
-
-# Or build individual components:
-make cbad-core-lib    # Build Rust CBAD core
-make collector        # Build OTel collector processor
-make api              # Build API server
-
-# Run tests
-make test
 ```
 
 ## Build Targets
 
-### Core Components
+### Cargo Workspace
 
-- `make api` - Build the API server binary to `bin/driftlock-api`
-- `make collector` - Build the OTel collector processor
-- `make cbad-core-lib` - Build the Rust CBAD static library
-- `make tools` - Build synthetic data generator and benchmarks
+The project uses a Cargo workspace with multiple crates:
+
+```bash
+# Build all crates
+cargo build --workspace
+
+# Build specific crates
+cargo build -p driftlock-api --release    # API server
+cargo build -p cbad-core --release        # CBAD algorithms
+cargo build -p driftlock-db               # Database layer
+cargo build -p driftlock-auth             # Authentication
+cargo build -p driftlock-billing          # Stripe billing
+cargo build -p driftlock-email            # Email sending
+```
 
 ### Development Workflow
 
-- `make run` - Start API server locally (port 8080)
-- `make test` - Run all Go tests
-- `make clean` - Clean build artifacts
-- `make ci-check` - Run full CI validation locally
-- `make migrate` - Run database migrations
-- `make dev` - Start full development environment with Docker Compose
-
-## Rust CBAD Core
-
-### Building the Static Library
-
-The Rust crate produces a `staticlib` artifact (`libcbad_core.a`) for Go integration:
-
 ```bash
-make cbad-core-lib
+# Run API server (development)
+cargo run -p driftlock-api
+
+# Run with release optimizations
+cargo run -p driftlock-api --release
+
+# Run all tests
+cargo test --workspace
+
+# Run specific tests
+cargo test -p driftlock-api
+cargo test -p cbad-core --release
+
+# Format code
+cargo fmt --all
+
+# Lint code
+cargo clippy --all-targets -- -D warnings
 ```
 
-The library is emitted at `cbad-core/target/release/libcbad_core.a`. 
-Set `CBAD_CORE_PROFILE=dev` for debug builds.
+## CBAD Core
 
-### Rust Development
+### Building the Algorithm Library
+
+```bash
+# Build CBAD core
+cargo build -p cbad-core --release
+
+# Run CBAD tests
+cargo test -p cbad-core --release
+
+# Run benchmarks
+cargo bench -p cbad-core
+```
+
+### CBAD Development
 
 ```bash
 cd cbad-core
@@ -104,59 +118,76 @@ cargo test
 
 # Benchmark
 cargo bench
+
+# Run examples
+cargo run --example crypto_stream
 ```
 
-## Go Collector Integration
+## Database Operations
 
-The Go collector requires the static library and CGO enabled:
+### Migrations
+
+Migrations run automatically on API server startup via sqlx.
+
+For manual migration management:
 
 ```bash
-make collector
+# Install sqlx-cli
+cargo install sqlx-cli
+
+# Run migrations
+sqlx migrate run --database-url "$DATABASE_URL"
+
+# Check migration status
+sqlx migrate info --database-url "$DATABASE_URL"
+
+# Revert last migration
+sqlx migrate revert --database-url "$DATABASE_URL"
 ```
-
-This command:
-- Ensures `libcbad_core.a` exists (building it first if necessary)
-- Invokes `go build` with CGO enabled so the Rust FFI is linked by default
-- Links against the Rust static library via cgo
-
-> Need to disable the Rust dependency temporarily? Use `go build -tags driftlock_no_cbad` to force the stub implementation while keeping the regular build path unchanged.
 
 ## Testing
 
 ### Unit Tests
+
 ```bash
-# Go tests
-go test ./...
+# All tests
+cargo test --workspace
 
-# Rust tests  
-cargo test
+# Specific crate
+cargo test -p driftlock-api
+cargo test -p cbad-core --release
 
-# Full test suite
-make test
+# With output
+cargo test --workspace -- --nocapture
+
+# Single test
+cargo test -p driftlock-api test_health_check
 ```
 
 ### Integration Testing
+
 ```bash
 # Start local stack
-docker compose -f deploy/docker-compose.yml up
+docker compose up -d
 
-# Run synthetic data generator
-go run ./tools/synthetic
+# Run API tests
+cargo test -p driftlock-api
 
 # Check API endpoints
-curl http://localhost:8080/v1/events
+curl http://localhost:8080/healthz
+curl http://localhost:8080/v1/demo/detect \
+  -H "Content-Type: application/json" \
+  -d '{"events": ["test event"]}'
 ```
 
 ### Benchmarking
+
 ```bash
-# Rust benchmarks
-cargo bench
+# CBAD benchmarks
+cargo bench -p cbad-core
 
-# Go benchmarks
-go test -bench=. ./...
-
-# Performance validation
-make benchmark
+# Custom benchmark
+cargo run --example test_datasets --release
 ```
 
 ## Docker Deployment
@@ -165,36 +196,58 @@ make benchmark
 
 ```bash
 # Build API server image
-docker build -t driftlock:api .
+docker build -t driftlock-api:latest -f Dockerfile .
 
-# Build collector image (when ready)
-docker build -f deploy/Dockerfile.collector -t driftlock:collector .
+# Build with specific tag
+docker build -t driftlock-api:v1.0.0 -f Dockerfile .
 ```
 
-### Running with Compose
+### Running with Docker
 
 ```bash
-# Basic stack
-docker compose -f deploy/docker-compose.yml up
+# Run API server
+docker run -d --name driftlock-api \
+  -p 8080:8080 \
+  -e DATABASE_URL="postgres://..." \
+  -e STRIPE_SECRET_KEY="sk_..." \
+  -e STRIPE_WEBHOOK_SECRET="whsec_..." \
+  -e FIREBASE_PROJECT_ID="driftlock" \
+  driftlock-api:latest
+```
 
-# With observability
-docker compose -f deploy/docker-compose.yml \
-  -f deploy/docker-compose.observability.yml up
+### Docker Compose
+
+```bash
+# Start full stack
+docker compose up -d
+
+# View logs
+docker compose logs -f driftlock-api
+
+# Stop
+docker compose down
 ```
 
 ## Environment Configuration
 
 ### Required Environment Variables
 
-- `PORT` - API server port (default: 8080)
-- `OTEL_EXPORTER_OTLP_ENDPOINT` - OTEL endpoint for telemetry export
-- `OTEL_SERVICE_NAME` - Service name for tracing (default: driftlock-api)
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `PORT` | API server port | 8080 |
+| `DATABASE_URL` | PostgreSQL connection string | required |
+| `STRIPE_SECRET_KEY` | Stripe API key | required |
+| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret | required |
+| `FIREBASE_PROJECT_ID` | Firebase project for auth | required |
 
 ### Optional Configuration
 
-- `OTEL_ENV` - Environment name (default: dev)
-- `DRIFTLOCK_VERSION` - Version string override
-- `CBAD_CORE_PROFILE` - Rust build profile (release/dev)
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `RUST_LOG` | Log level (debug, info, warn, error) | info |
+| `SENDGRID_API_KEY` | SendGrid API key | optional |
+| `DETECTOR_CLEANUP_INTERVAL_SECONDS` | Detector cleanup interval | 300 |
+| `DETECTOR_TTL_SECONDS` | Detector time-to-live | 3600 |
 
 ### Development Setup
 
@@ -205,11 +258,9 @@ cp .env.example .env
 # Edit configuration
 $EDITOR .env
 
-# Source environment
+# Run with environment
 source .env
-
-# Run with configuration
-make run
+cargo run -p driftlock-api
 ```
 
 ## CI/CD Pipeline
@@ -218,112 +269,119 @@ make run
 
 ```bash
 # Run full CI checks
-make ci-check
+cargo fmt --all --check && \
+cargo clippy --all-targets -- -D warnings && \
+cargo build --release && \
+cargo test --workspace
 ```
-
-This validates:
-- Code formatting (Go and Rust)
-- Linting and static analysis
-- Unit test coverage
-- Build artifact generation
-- Integration test readiness
 
 ### GitHub Actions
 
 The repository includes workflows for:
 - Continuous integration on pull requests
-- Security scanning and dependency updates
-- Performance regression testing
-- Automated releases and tagging
+- Code formatting and linting checks
+- Build verification
+- Test execution
+- Automated releases
 
 ## Troubleshooting
 
 ### Common Build Issues
 
-1. **CGO Linking Errors**
-   ```bash
-   # Ensure Rust library is built
-   make cbad-core-lib
-   
-   # Check library exists
-   ls -la cbad-core/target/release/libcbad_core.a
-   
-   # Rebuild with verbose output
-   CGO_LDFLAGS="-v" make collector
-   ```
-
-2. **Rust Compilation Errors**
+1. **Rust Compilation Errors**
    ```bash
    # Update Rust toolchain
    rustup update stable
-   
+
    # Clean and rebuild
-   cargo clean && make cbad-core-lib
+   cargo clean
+   cargo build -p driftlock-api --release
+   ```
+
+2. **Database Connection Errors**
+   ```bash
+   # Test connection
+   psql "$DATABASE_URL" -c "SELECT 1"
+
+   # Check PostgreSQL is running
+   docker ps | grep postgres
    ```
 
 3. **Docker Build Issues**
    ```bash
-   # Use multi-stage build caching
-   docker build --target builder -t driftlock:builder .
-   docker build --from driftlock:builder -t driftlock:api .
+   # Clean Docker build cache
+   docker builder prune
+
+   # Rebuild without cache
+   docker build --no-cache -t driftlock-api .
    ```
+
+### Driftlog (Debug Logging)
+
+```bash
+# Run with debug logging
+RUST_LOG=debug cargo run -p driftlock-api
+
+# Filter to specific modules
+RUST_LOG=driftlock_api=debug,driftlock_db=info cargo run -p driftlock-api
+
+# Trace all SQL queries
+RUST_LOG=sqlx=trace cargo run -p driftlock-api
+```
 
 ### Performance Issues
 
 1. **Memory Usage**
-   - Verify CBAD window sizing configuration
-   - Monitor Go heap and Rust allocations
-   - Check for memory leaks in FFI boundary
+   - Monitor via `/metrics` endpoint
+   - Check active detector count
+   - Review detector TTL settings
 
 2. **Throughput Issues**
    - Profile compression algorithm selection
-   - Validate streaming buffer management
-   - Monitor GC pressure and allocation patterns
-
-### Development Tips
-
-- Use `make run` for rapid iteration on API changes
-- Rust changes require `make cbad-core-lib` before Go builds
-- Set `RUST_LOG=debug` for detailed Rust logging
-- Use `go run ./...` (CGO enabled) for FFI integration, or `go run -tags driftlock_no_cbad` to force the stub
+   - Use `--release` builds for production
+   - Check database connection pool settings
 
 ## Production Deployment
 
 ### Prerequisites
 
-- Kubernetes cluster (1.20+) or Docker Swarm
-- Persistent storage for evidence bundles
-- Observability stack (Prometheus, Grafana, Jaeger)
-- TLS certificates for secure communication
+- Cloud provider account (GCP, AWS, Replit)
+- PostgreSQL database (managed recommended)
+- Domain and TLS certificates
 
 ### Deployment Options
 
-1. **Kubernetes with Helm**
+1. **Replit (Recommended for Quick Start)**
    ```bash
-   helm install driftlock ./deploy/helm/driftlock
+   # Build
+   cargo build -p driftlock-api --release
+
+   # Run
+   ./target/release/driftlock-api
    ```
 
-2. **Docker Compose (Simple)**
+2. **Google Cloud Run**
    ```bash
-   docker compose -f deploy/docker-compose.prod.yml up -d
+   # Build and push
+   gcloud builds submit --tag gcr.io/PROJECT_ID/driftlock-api
+
+   # Deploy
+   gcloud run deploy driftlock-api \
+     --image gcr.io/PROJECT_ID/driftlock-api \
+     --platform managed \
+     --region us-central1
    ```
 
-3. **Manual Binary Deployment**
+3. **Docker Compose (Simple)**
    ```bash
-   # Build release binaries
-   make release
-   
-   # Deploy to target environment
-   scp bin/driftlock-api target-host:/opt/driftlock/
-   systemctl start driftlock-api
+   docker compose -f docker-compose.prod.yml up -d
    ```
 
 ### Health Checking
 
 Production deployments should monitor:
-- `/healthz` - Basic liveness check
-- `/readyz` - Readiness with dependency validation
-- `/metrics` - Prometheus metrics endpoint
-- CBAD performance metrics and anomaly detection rates
+- `GET /healthz` - Basic liveness check
+- `GET /readyz` - Readiness with dependency validation
+- `GET /metrics` - Prometheus metrics endpoint
 
-For detailed production deployment guidance, see the deployment documentation in `deploy/README.md`.
+For detailed production deployment guidance, see [DEPLOYMENT.md](../deployment/DEPLOYMENT.md).

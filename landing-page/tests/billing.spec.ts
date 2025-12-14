@@ -14,12 +14,16 @@ test.describe('Billing UI Components', () => {
 
       // Verify pricing tiers are visible
       await expect(page.getByText('Free')).toBeVisible()
+      await expect(page.getByText('Starter')).toBeVisible()
       await expect(page.getByText('Pro')).toBeVisible()
       await expect(page.getByText('Team')).toBeVisible()
+      await expect(page.getByText('Scale')).toBeVisible()
 
       // Verify pricing amounts
+      await expect(page.getByText('$29')).toBeVisible()
       await expect(page.getByText('$99')).toBeVisible()
-      await expect(page.getByText('$199')).toBeVisible()
+      await expect(page.getByText('$249')).toBeVisible()
+      await expect(page.getByText('$499')).toBeVisible()
     })
 
     test('upgrade buttons link to signup', async ({ page }) => {
@@ -72,7 +76,7 @@ test.describe('Billing UI Components', () => {
           contentType: 'application/json',
           body: JSON.stringify({
             status: 'trialing',
-            plan: 'radar',
+            plan: 'pro',
             trial_ends_at: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(),
             trial_days_remaining: 10,
           }),
@@ -105,7 +109,7 @@ test.describe('Billing UI Components', () => {
           contentType: 'application/json',
           body: JSON.stringify({
             status: 'trialing',
-            plan: 'radar',
+            plan: 'pro',
             trial_ends_at: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
             trial_days_remaining: 2,
           }),
@@ -136,7 +140,7 @@ test.describe('Billing UI Components', () => {
           contentType: 'application/json',
           body: JSON.stringify({
             status: 'grace_period',
-            plan: 'radar',
+            plan: 'pro',
             grace_period_ends_at: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
           }),
         })
@@ -166,7 +170,7 @@ test.describe('Billing UI Components', () => {
           contentType: 'application/json',
           body: JSON.stringify({
             status: 'free',
-            plan: 'pulse',
+            plan: 'free',
           }),
         })
       })
@@ -182,7 +186,7 @@ test.describe('Billing UI Components', () => {
       await page.goto('/dashboard', { waitUntil: 'networkidle' })
 
       // Check for free tier upgrade prompt
-      const upgradeButton = page.getByRole('button', { name: /Upgrade to Radar/i })
+      const upgradeButton = page.getByRole('button', { name: /Upgrade to Starter/i })
       if (await upgradeButton.isVisible({ timeout: 5000 }).catch(() => false)) {
         await expect(upgradeButton).toBeVisible()
       }
@@ -195,7 +199,7 @@ test.describe('Billing UI Components', () => {
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify({ status: 'free', plan: 'pulse' }),
+          body: JSON.stringify({ status: 'free', plan: 'free' }),
         })
       })
 
@@ -218,7 +222,7 @@ test.describe('Billing UI Components', () => {
 
       await page.goto('/dashboard', { waitUntil: 'networkidle' })
 
-      const upgradeButton = page.getByRole('button', { name: /Upgrade to Radar/i })
+      const upgradeButton = page.getByRole('button', { name: /Upgrade to Starter/i })
       if (await upgradeButton.isVisible({ timeout: 5000 }).catch(() => false)) {
         // Click should trigger checkout API call
         await upgradeButton.click()
@@ -236,7 +240,7 @@ test.describe('Billing UI Components', () => {
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify({ status: 'active', plan: 'radar' }),
+          body: JSON.stringify({ status: 'active', plan: 'pro' }),
         })
       })
 

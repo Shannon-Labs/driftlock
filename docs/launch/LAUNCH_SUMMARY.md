@@ -24,7 +24,7 @@
 - Database migrations for onboarding & billing
 - Comprehensive deployment test suite ([test-deployment.sh](../scripts/test-deployment.sh))
 - Launch checklist & runbook ([LAUNCH_CHECKLIST.md](./LAUNCH_CHECKLIST.md))
-- Implementation guide for onboarding endpoint
+- Rust onboarding endpoint live (`crates/driftlock-api/src/routes/onboarding.rs`)
 
 ---
 
@@ -32,87 +32,26 @@
 
 ### 🔴 Critical (Must Have)
 
-#### 1. Implement Onboarding Endpoint (4-6 hours)
-**File:** `collector-processor/cmd/driftlock-http/onboarding.go`
+#### 1. Wire frontend signup to Rust onboarding (2-3 hours)
+- [ ] After Firebase signup/login, call `POST /v1/auth/signup` with `Authorization: Bearer <firebase_id_token>` and body `{"company_name": "Acme Corp"}`.
+- [ ] Persist returned API key + tenant info in the dashboard store and show an API key copy/download UI.
+- [ ] Route new users to the dashboard with default stream info surfaced.
+- [ ] Handle duplicate tenant (409) and missing email (400) error states.
 
-```go
-// TODO: Copy implementation from api/onboarding/onboarding.go
-// and integrate into main.go buildHTTPHandler function
-```
-
-**Tasks:**
-- [ ] Create `onboarding.go` with `/v1/onboard/signup` handler
-- [ ] Add IP-based rate limiting (5/hour per IP)
-- [ ] Implement email validation and duplicate checking
-- [ ] Integrate into main router (`mux.HandleFunc`)
-- [ ] Test with curl
-
-**Testing:**
+**Test:**
 ```bash
-curl -X POST https://driftlock.net/api/v1/onboard/signup \
+FIREBASE_ID_TOKEN="..." \
+curl -X POST https://driftlock.net/api/v1/auth/signup \
+  -H "Authorization: Bearer $FIREBASE_ID_TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"email":"test@example.com","company_name":"TestCorp","plan":"trial"}'
+  -d '{"company_name":"TestCorp"}'
 ```
 
-#### 2. Manual Email Verification (1 hour)
-For MVP launch, skip automated emails. Instead:
-- [ ] Create Supabase SQL query to list unverified tenants
-- [ ] Manual process: Check once daily, send personal email
-- [ ] Enable tenant when they reply
+#### 2. Email verification (manual or SendGrid) (1 hour)
+- [ ] Configure `SENDGRID_API_KEY` to enable automated welcome emails via `driftlock-email` (already wired in the onboarding handler).
+- [ ] If SendGrid is unavailable, run a daily manual query for tenants without `verified_at` and email + enable them.
 
-**SQL Query:**
-```sql
-SELECT id, name, email, created_at 
-FROM tenants 
-WHERE verified_at IS NULL 
-AND created_at > NOW() - INTERVAL '1 day';
-```
-
-#### 3. Landing Page Signup Form (2-3 hours)
-**File:** `landing-page/src/components/cta/SignupForm.vue`
-
-```vue
-<template>
-  <form @submit.prevent="handleSignup">
-    <input v-model="email" type="email" placeholder="Work email" required>
-    <input v-model="company" placeholder="Company name" required>
-    <button type="submit">Start Free Trial</button>
-  </form>
-</template>
-
-<script setup>
-import { ref } from 'vue'
-
-const email = ref('')
-const company = ref('')
-
-const handleSignup = async () => {
-  const response = await fetch('/api/v1/onboard/signup', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      email: email.value,
-      company_name: company.value,
-      plan: 'trial'
-    })
-  })
-  
-  if (response.ok) {
-    // Show success message with API key
-    const data = await response.json()
-    alert(`API Key: ${data.api_key}`)
-  }
-}
-</script>
-```
-
-**Tasks:**
-- [ ] Create SignupForm component
-- [ ] Add to landing page hero section
-- [ ] Style with Tailwind
-- [ ] Test form submission
-
-#### 4. Run Deployment Tests (30 minutes)
+#### 3. Run deployment tests (30 minutes)
 
 ```bash
 # Set required environment variables
@@ -144,20 +83,12 @@ export DEMO_API_KEY="dlk_..."  # Create test tenant first
 - Enterprise: Custom
 
 #### 6. Usage Tracking (3-4 hours)
-**File:** `collector-processor/cmd/driftlock-http/usage.go`
+**File:** `crates/driftlock-api/src/routes/usage.rs` (+ `driftlock-db` repos)
 
-```go
-// Track metrics in detectHandler
-go trackUsage(ctx, tc.Tenant.ID, streamID, len(req.Events), len(anomalies))
-```
-
-**Database:** Already created migration for `usage_metrics` table
-
-**Monitoring:**
-- Track events processed per tenant/stream
-- Track API requests per tenant
-- Track anomalies detected
-- Daily cron job to check overages
+- [ ] Persist request/event counts per tenant to `usage_metrics` (add repo + migration if missing).
+- [ ] Surface daily breakdown + API request counts in `/v1/me/usage/details`.
+- [ ] Populate AI usage once model routing is enabled (currently stubbed).
+- [ ] Add cron/worker to roll up usage for billing.
 
 #### 7. Admin Dashboard (4-5 hours)
 **File:** `landing-page/src/views/admin/Dashboard.vue`
@@ -180,7 +111,7 @@ go trackUsage(ctx, tc.Tenant.ID, streamID, len(req.Events), len(anomalies))
 - [ ] Signup for SendGrid free tier
 - [ ] Create verification email template
 - [ ] Implement verification token generation
-- [ ] Add webhook endpoint for `/v1/onboard/verify`
+- [ ] Add verification webhook endpoint (e.g., `/v1/auth/verify`)
 
 **Benefit:** Reduces manual work, better UX
 
@@ -231,9 +162,9 @@ const session = await stripe.billingPortal.sessions.create({
 ### Week 1: MVP Beta Launch
 **Goal:** Get first 5 customers
 
-**Day 1:** Implement onboarding endpoint
-**Day 2:** Add signup form to landing page
-**Day 3:** Manual email verification process
+**Day 1:** Wire frontend to `/v1/auth/signup` and surface API key
+**Day 2:** Configure SendGrid or document manual verification loop
+**Day 3:** Run deployment tests + billing sanity checks
 **Day 4:** Deploy and test end-to-end
 **Day 5:** Launch to friends & Hacker News
 **Day 6-7:** Support first users, fix urgent bugs
@@ -309,10 +240,9 @@ const session = await stripe.billingPortal.sessions.create({
 ### Choose Your Path:
 
 #### **Path A: Quick MVP Launch (Recommended)**
-1. **TODAY:** Run deployment tests (`./scripts/test-deployment.sh`)
-2. **TOMORROW:** Implement onboarding endpoint (4-6 hours)
-3. **DAY 3:** Add signup form (2-3 hours)
-4. **DAY 4:** Deploy and soft launch
+1. **TODAY:** Wire `/v1/auth/signup` in the landing page, surface API key in UI.
+2. **TOMORROW:** Configure SendGrid (or manual verification) + run `./scripts/test-deployment.sh`.
+3. **DAY 3:** Deploy API + frontend, run signup smoke test, soft launch.
 
 **Time to first customer:** 3-4 days
 
@@ -346,8 +276,9 @@ curl https://driftlock.net/api/v1/healthz | jq
 - [ ] All tests passing
 - [ ] API deployed and healthy
 - [ ] Frontend deployed
-- [ ] Supabase database accessible
-- [ ] Manual verification process ready
+- [ ] PostgreSQL reachable with correct secrets
+- [ ] Firebase credentials loaded (for onboarding)
+- [ ] Manual or SendGrid verification process ready
 - [ ] Support email monitored
 - [ ] Analytics tracking enabled
 - [ ] Rollback plan documented

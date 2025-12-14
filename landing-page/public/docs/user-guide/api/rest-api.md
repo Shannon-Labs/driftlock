@@ -4,8 +4,8 @@ Complete reference for Driftlock's REST API. All endpoints are versioned under `
 
 ## Base URL
 
-```
-Production: https://api.driftlock.net
+```text
+https://api.driftlock.net/v1
 ```
 
 ## Authentication
@@ -33,13 +33,15 @@ API keys are rate limited based on your plan:
 ### Rate Limit Headers
 
 Every response includes:
-```
+
+```text
 X-RateLimit-Limit: 60
 X-RateLimit-Remaining: 45
 X-RateLimit-Reset: 1672531200
 ```
 
 When rate limited, you'll receive HTTP 429:
+
 ```json
 {
   "error": {
@@ -53,13 +55,15 @@ When rate limited, you'll receive HTTP 429:
 ## Common Headers
 
 All requests should include:
-```
+
+```text
 Content-Type: application/json
 X-Api-Key: YOUR_API_KEY
 ```
 
 All responses include:
-```
+
+```text
 Content-Type: application/json
 X-Request-ID: req_abc123
 ```
@@ -91,7 +95,7 @@ All errors follow a consistent format:
 | `rate_limit_exceeded` | 429 | Rate limit exceeded |
 | `internal` | 500 | Server error |
 
-See [complete error reference](../reference/error-codes.md) for all error codes.
+See [complete error reference](errors.md) for all error codes.
 
 ## Endpoints
 
@@ -146,8 +150,9 @@ List endpoints use cursor-based pagination:
 ```
 
 To get the next page:
+
 ```bash
-curl "https://api.driftlock.net/v1/anomalies?page_token=eyJj..."  \
+curl "https://api.driftlock.net/v1/anomalies?page_token=eyJj..." \
   -H "X-Api-Key: YOUR_API_KEY"
 ```
 
@@ -180,14 +185,14 @@ Breaking changes will be introduced in v2, v3, etc. with advance notice.
 
 ## SDK & Libraries
 
-- **JavaScript/TypeScript**: [SDK Guide](../sdks/javascript.md)
-- **Firebase Data Connect**: [GraphQL SDK](../graphql/overview.md)
-- **Python**: [Python examples](./examples/python-examples.md)
-- **cURL**: [cURL examples](./examples/curl-examples.md)
+- **Node.js/TypeScript**: [Node.js SDK](/docs/sdk/nodejs.md)
+- **Python**: [Python SDK](/docs/sdk/python.md)
+- **REST API Examples**: [cURL examples](./examples/curl-examples.md)
 
 ## Quick Examples
 
 ### Detect Anomalies
+
 ```bash
 curl -X POST https://api.driftlock.net/v1/detect \
   -H "X-Api-Key: YOUR_API_KEY" \
@@ -201,12 +206,14 @@ curl -X POST https://api.driftlock.net/v1/detect \
 ```
 
 ### List Anomalies
+
 ```bash
 curl https://api.driftlock.net/v1/anomalies \
   -H "X-Api-Key: YOUR_API_KEY"
 ```
 
 ### Get Anomaly Details
+
 ```bash
 curl https://api.driftlock.net/v1/anomalies/anom_abc123 \
   -H "X-Api-Key: YOUR_API_KEY"
@@ -217,8 +224,8 @@ curl https://api.driftlock.net/v1/anomalies/anom_abc123 \
 - **[POST /v1/detect](./endpoints/detect.md)** - Detailed detection endpoint documentation
 - **[GET /v1/anomalies](./endpoints/anomalies.md)** - Query and filter anomalies
 - **[Code Examples](./examples/curl-examples.md)** - Complete working examples
-- **[Error Codes](../reference/error-codes.md)** - Complete error reference
+- **[Error Codes](errors.md)** - Complete error reference
 
 ---
 
-**Need help?** Check out our [tutorials](../tutorials/) or contact support@driftlock.io
+**Need help?** Check out our [tutorials](../tutorials/) or contact [support@driftlock.io](mailto:support@driftlock.io)

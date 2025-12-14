@@ -242,7 +242,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  plan: 'radar'
+  plan: 'pro'
 })
 
 const emit = defineEmits<{
@@ -308,7 +308,7 @@ const showUpgradePrompt = computed(() => {
 })
 
 const canEditMaxCost = computed(() => {
-  return props.plan === 'orbit'
+  return ['scale', 'enterprise', 'orbit'].includes(props.plan || '')
 })
 
 const marginCost = computed(() => usage.value.costUsed * 0.15)

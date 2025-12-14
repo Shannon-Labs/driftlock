@@ -1,113 +1,308 @@
 # Driftlock Quickstarts
 
-These quickstarts help you try Driftlock across all surfaces: CLI, REST API, and Kafka (compose).
+These quickstarts help you try Driftlock across all surfaces: REST API, Docker, and hosted API.
+
+## SDK Quickstarts
+
+The fastest way to get started is using an official SDK.
+
+### Node.js SDK Quickstart
+
+```bash
+# Install the SDK
+npm install @driftlock/node
+
+# Create a file (detect.ts)
+```
+
+```typescript
+import { DriftlockClient } from '@driftlock/node';
+
+const client = new DriftlockClient({
+  apiKey: process.env.DRIFTLOCK_API_KEY || 'demo' // Use demo for testing
+});
+
+async function main() {
+  const result = await client.detect([
+    { level: 'info', message: 'User logged in successfully' },
+    { level: 'info', message: 'Query executed in 45ms' },
+    { level: 'error', message: 'CRITICAL: System failure detected' }
+  ], { streamId: 'my-app-logs' });
+
+  console.log(`Processed ${result.total_events} events`);
+  console.log(`Found ${result.anomaly_count} anomalies`);
+
+  result.anomalies.forEach(anomaly => {
+    console.log(`\nAnomaly: ${anomaly.why}`);
+    console.log(`Confidence: ${(anomaly.metrics.confidence_level * 100).toFixed(2)}%`);
+  });
+}
+
+main().catch(console.error);
+```
+
+```bash
+# Run with TypeScript
+npx ts-node detect.ts
+```
+
+For full documentation, see [Node.js SDK](../../sdk/nodejs.md).
+
+### Python SDK Quickstart
+
+```bash
+# Install the SDK
+pip install driftlock
+```
+
+```python
+import asyncio
+from driftlock import DriftlockClient
+
+async def main():
+    client = DriftlockClient(api_key='demo')  # Use 'demo' for testing
+
+    result = await client.detect([
+        {'level': 'info', 'message': 'User logged in successfully'},
+        {'level': 'info', 'message': 'Query executed in 45ms'},
+        {'level': 'error', 'message': 'CRITICAL: System failure detected'}
+    ], stream_id='my-app-logs')
+
+    print(f"Processed {result.total_events} events")
+    print(f"Found {result.anomaly_count} anomalies")
+
+    for anomaly in result.anomalies:
+        print(f"\nAnomaly: {anomaly.why}")
+        print(f"Confidence: {anomaly.metrics.confidence_level * 100:.2f}%")
+
+asyncio.run(main())
+```
+
+```bash
+# Run the script
+python detect.py
+```
+
+For full documentation, see [Python SDK](../../sdk/python.md).
+
+### REST API Quickstart
+
+```bash
+# Try the demo endpoint (no auth required)
+curl -X POST https://driftlock.net/api/v1/demo/detect \
+  -H "Content-Type: application/json" \
+  -d '{
+    "events": [
+      {"message": "Normal log entry 1"},
+      {"message": "Normal log entry 2"},
+      {"message": "ERROR: Unusual pattern detected!"}
+    ]
+  }'
+```
+
+For full API documentation, see [REST API Reference](../api/rest-api.md).
+
+---
 
 ## Prerequisites
-- Docker 24+
-- Make, Go 1.24+ (optional for local builds)
-- Rust 1.70+ (for building CBAD core)
 
-**Important:** If cloning the repository, initialize git submodules first:
+- **Rust** 1.75+ (for building)
+- **Docker** 24+ and Docker Compose 2.0+ (for containerized deployment)
+- **Node.js** 18+ (for UI development)
+- **PostgreSQL** 15+ (or use Docker)
+
+## 1) Local Development (Rust)
+
+Build and run the Rust API server locally:
+
 ```bash
+# Clone the repository
 git clone https://github.com/Shannon-Labs/driftlock.git
 cd driftlock
-git submodule update --init --recursive  # Required for OpenZL support
+
+# Build the API
+cargo build -p driftlock-api --release
+
+# Start PostgreSQL
+docker run --name driftlock-postgres \
+  -e POSTGRES_DB=driftlock \
+  -e POSTGRES_USER=driftlock \
+  -e POSTGRES_PASSWORD=driftlock \
+  -p 5432:5432 \
+  -d postgres:15
+
+# Run the API server
+DATABASE_URL="postgres://driftlock:driftlock@localhost:5432/driftlock" \
+  ./target/release/driftlock-api
+
+# Health check
+curl -s http://localhost:8080/healthz
 ```
 
-## 1) CLI
+## 2) Docker Deployment
 
-Run on NDJSON or JSON array files using the streaming detector.
+Build and run with Docker:
 
 ```bash
-# Ensure submodules are initialized (if not already done)
-git submodule update --init --recursive
+# Build the image
+docker build -t driftlock-api:latest -f Dockerfile .
 
-# Build binary inside the module
-cd collector-processor
-go build -o ../bin/driftlock-cli ./cmd/driftlock-cli
-cd ..
+# Run with Docker
+docker run --rm -p 8080:8080 \
+  -e DATABASE_URL="postgres://..." \
+  -e STRIPE_SECRET_KEY="sk_..." \
+  driftlock-api:latest
 
-# NDJSON
-./bin/driftlock-cli --input test-data/normal-transactions.jsonl --format ndjson --output -
-
-# JSON array (auto-detected)
-./bin/driftlock-cli --input test-data/test-demo.json --output results.json
+# Health check
+curl -s http://localhost:8080/healthz
 ```
 
-Flags:
-- --baseline: number of events to build the baseline (default 400)
-- --window: events per detection window (default 1)
-- --hop: hop size between windows (default 1)
-- --algo: zstd|lz4|gzip|openzl (default zstd)
-
-## 2) REST API (Docker Compose - Recommended)
-
-The unified `docker-compose.yml` includes both the HTTP API and optional Kafka collector:
+### Docker Compose (Full Stack)
 
 ```bash
-# Start HTTP API server (default)
-docker compose up -d driftlock-http
+# Start all services
+docker compose up -d
 
 # Health check
 curl -s http://localhost:8080/healthz
 
-# NDJSON detection
-curl -s -X POST "http://localhost:8080/v1/detect?format=ndjson" \
+# Test demo endpoint
+curl -X POST http://localhost:8080/v1/demo/detect \
   -H "Content-Type: application/json" \
-  --data-binary @test-data/mixed-transactions.jsonl | jq .
+  -d '{"events": ["normal log 1", "normal log 2", "ERROR: anomaly"]}'
 ```
 
-### Standalone Docker Build
+## 3) REST API Examples
+
+### Demo Detection (No Auth Required)
 
 ```bash
-# Build image (without OpenZL)
-docker build -t driftlock-http:latest -f collector-processor/cmd/driftlock-http/Dockerfile .
-
-# Run
-docker run --rm -p 8080:8080 -e CORS_ALLOW_ORIGINS=http://localhost:5174 driftlock-http:latest
+curl -X POST http://localhost:8080/v1/demo/detect \
+  -H "Content-Type: application/json" \
+  -d '{
+    "events": [
+      "2025-01-01T10:00:00Z INFO Normal operation",
+      "2025-01-01T10:00:01Z INFO Normal operation",
+      "2025-01-01T10:00:02Z ERROR CRITICAL: Unusual pattern!"
+    ]
+  }'
 ```
 
-Optional OpenZL:
-```bash
-docker build -t driftlock-http:openzl \
-  --build-arg USE_OPENZL=true \
-  -f collector-processor/cmd/driftlock-http/Dockerfile .
-```
-
-## 3) Kafka Collector (docker compose)
-
-The unified `docker-compose.yml` supports Kafka with profiles:
+### Authenticated Detection
 
 ```bash
-# Start HTTP API + Kafka + Collector together
-docker compose --profile kafka up -d
-
-# Or use the dedicated Kafka compose file
-docker compose -f docker-compose.kafka.yml up -d
-
-# Produce sample events
-docker run --rm -it --network host edenhill/kafkacat:1.7.1 \
-  -b localhost:9092 -t driftlock-events -P test-data/mixed-transactions.jsonl
+curl -X POST http://localhost:8080/v1/detect \
+  -H "Content-Type: application/json" \
+  -H "X-Api-Key: YOUR_API_KEY" \
+  -d '{
+    "stream_id": "my-logs",
+    "events": ["event 1", "event 2", "anomalous event"]
+  }'
 ```
 
-Notes:
-- Use `--profile kafka` to enable Kafka services in the unified compose file
-- The collector processes OpenTelemetry streams via Kafka
-- The build includes the CBAD Rust core so you can extend the collector quickly
+### Detection with Config Override
+
+```bash
+curl -X POST http://localhost:8080/v1/detect \
+  -H "Content-Type: application/json" \
+  -H "X-Api-Key: YOUR_API_KEY" \
+  -d '{
+    "stream_id": "my-logs",
+    "events": ["..."],
+    "config_override": {
+      "ncd_threshold": 0.25,
+      "p_value_threshold": 0.05,
+      "compressor": "zstd"
+    }
+  }'
+```
 
 ## 4) Hosted API
 
-Follow the Render or Cloud Run deployment guide:
-- docs/deployment/hosted-api.md
+### Replit Deployment (Recommended)
 
-## 5) Web Playground
+1. Import repository into Replit
+2. Set environment secrets:
+   - `DATABASE_URL`
+   - `STRIPE_SECRET_KEY`
+   - `STRIPE_WEBHOOK_SECRET`
+   - `FIREBASE_PROJECT_ID`
+3. Build: `cargo build -p driftlock-api --release`
+4. Run: `./target/release/driftlock-api`
+
+### Google Cloud Run
 
 ```bash
-cd playground
-npm install
-cp .env.example .env   # set VITE_API_BASE_URL to your API, e.g. http://localhost:8080
-npm run dev            # opens http://localhost:5174
+# Build and push
+gcloud builds submit --tag gcr.io/PROJECT_ID/driftlock-api
+
+# Deploy
+gcloud run deploy driftlock-api \
+  --image gcr.io/PROJECT_ID/driftlock-api \
+  --platform managed \
+  --region us-central1 \
+  --allow-unauthenticated \
+  --set-env-vars "DATABASE_URL=postgres://..."
 ```
 
+See [Deployment Guide](../../deployment/DEPLOYMENT.md) for complete instructions.
 
+## 5) Web Dashboard
 
+```bash
+cd landing-page
+npm install
+npm run dev  # opens http://localhost:3000
+```
+
+Set `VITE_API_URL` to point to your API server.
+
+## 6) Run Tests
+
+```bash
+# Run all tests
+cargo test --workspace
+
+# Run API tests only
+cargo test -p driftlock-api
+
+# Run with output
+cargo test -p driftlock-api -- --nocapture
+
+# Run CBAD algorithm tests
+cargo test -p cbad-core --release
+```
+
+## Configuration Options
+
+### Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `PORT` | Server port | 8080 |
+| `DATABASE_URL` | PostgreSQL connection string | required |
+| `RUST_LOG` | Log level (debug, info, warn, error) | info |
+| `STRIPE_SECRET_KEY` | Stripe API key | required |
+| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret | required |
+| `FIREBASE_PROJECT_ID` | Firebase project ID | required |
+
+### Detection Parameters
+
+| Parameter | Default | Range | Description |
+|-----------|---------|-------|-------------|
+| `ncd_threshold` | 0.3 | 0.0-1.0 | NCD threshold for anomaly |
+| `p_value_threshold` | 0.05 | 0.0-1.0 | Statistical significance |
+| `baseline_size` | 400 | 50-1000 | Baseline window size |
+| `window_size` | 50 | 10-500 | Analysis window size |
+| `compressor` | zstd | zstd/lz4/gzip | Compression algorithm |
+
+## Next Steps
+
+- [Getting Started Guide](./GETTING_STARTED.md)
+- [API Reference](../../architecture/API.md)
+- [Detection Profiles](../guides/detection-profiles.md)
+- [Testing Guide](../../development/TESTING.md)
+
+---
+
+**Need help?** Contact [hunter@shannonlabs.dev](mailto:hunter@shannonlabs.dev)

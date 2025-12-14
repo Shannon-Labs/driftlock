@@ -203,6 +203,7 @@ pub unsafe extern "C" fn cbad_detector_create(config_ptr: *const CBADConfig) -> 
             max_capacity: config.max_capacity,
             time_window: None,
             privacy_config: Default::default(),
+            freeze_baseline: false,
         };
 
         // Create anomaly configuration (new fields derive sensible defaults)
@@ -211,12 +212,21 @@ pub unsafe extern "C" fn cbad_detector_create(config_ptr: *const CBADConfig) -> 
             compression_algorithm: algo,
             p_value_threshold: config.p_value_threshold,
             ncd_threshold: config.ncd_threshold,
+            conditional_novelty_threshold: 1.10,
             compression_ratio_drop_threshold: config.compression_ratio_drop_threshold,
             entropy_change_threshold: config.entropy_change_threshold,
             composite_threshold: config.composite_threshold,
+            composite_weights: crate::calibration::CompositeWeights::default(),
+            adaptive_composite_threshold: false,
+            adaptive_target_fpr: 0.01,
+            adaptive_warmup_windows: 200,
+            adaptive_history_cap: 2000,
             permutation_count: config.permutation_count,
             seed: config.seed,
             require_statistical_significance: config.require_statistical_significance != 0,
+            tokenizer_config: None, // Tokenizer disabled via C FFI by default
+            calibration_method: None,
+            calibration_min_samples: 100,
         };
 
         // Create detector wrapped with safety sentinel

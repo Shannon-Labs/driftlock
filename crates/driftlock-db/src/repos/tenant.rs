@@ -30,6 +30,50 @@ pub async fn get_tenant_by_id(pool: &PgPool, id: Uuid) -> Result<Option<Tenant>,
     Ok(tenant)
 }
 
+pub async fn create_public_tenant(
+    pool: &PgPool,
+    email: &str,
+    company_name: &str,
+    plan: &str,
+    status: &str,
+    trial_ends_at: Option<chrono::DateTime<chrono::Utc>>,
+) -> Result<Tenant, DbError> {
+    let slug = generate_slug(company_name);
+
+    let tenant = sqlx::query_as::<_, Tenant>(
+        r#"
+        INSERT INTO tenants (
+            name,
+            slug,
+            email,
+            firebase_uid,
+            plan,
+            status,
+            default_compressor,
+            rate_limit_rps,
+            payment_failure_count,
+            trial_ends_at
+        )
+        VALUES ($1, $2, $3, NULL, $4, $5, 'zstd', 60, 0, $6)
+        RETURNING id, name, slug, status, plan, default_compressor, rate_limit_rps,
+                  email, firebase_uid, stripe_customer_id, stripe_subscription_id,
+                  stripe_status, current_period_end, grace_period_ends_at, payment_failure_count,
+                  trial_ends_at, verification_token, verified_at, verification_token_expires_at,
+                  created_at, updated_at
+        "#,
+    )
+    .bind(company_name)
+    .bind(&slug)
+    .bind(email)
+    .bind(plan)
+    .bind(status)
+    .bind(trial_ends_at)
+    .fetch_one(pool)
+    .await?;
+
+    Ok(tenant)
+}
+
 /// Get tenant by Firebase UID
 pub async fn get_tenant_by_firebase_uid(
     pool: &PgPool,
@@ -64,6 +108,7 @@ pub async fn get_tenant_by_email(pool: &PgPool, email: &str) -> Result<Option<Te
                created_at, updated_at
         FROM tenants
         WHERE email = $1
+        LIMIT 1
         "#,
     )
     .bind(email)
@@ -163,7 +208,7 @@ pub async fn verify_tenant(pool: &PgPool, tenant_id: Uuid) -> Result<(), DbError
     Ok(())
 }
 
-/// Create a new tenant with trial
+/// Create a new tenant on the Free plan
 pub async fn create_tenant(
     pool: &PgPool,
     firebase_uid: &str,
@@ -184,10 +229,9 @@ pub async fn create_tenant(
             status,
             default_compressor,
             rate_limit_rps,
-            trial_ends_at,
             payment_failure_count
         )
-        VALUES ($1, $2, $3, $4, 'free', 'trialing', 'zstd', 60, NOW() + INTERVAL '14 days', 0)
+        VALUES ($1, $2, $3, $4, 'free', 'free', 'zstd', 60, 0)
         RETURNING id, name, slug, status, plan, default_compressor, rate_limit_rps,
                   email, firebase_uid, stripe_customer_id, stripe_subscription_id,
                   stripe_status, current_period_end, grace_period_ends_at, payment_failure_count,
@@ -210,23 +254,29 @@ pub async fn update_subscription(
     pool: &PgPool,
     id: Uuid,
     stripe_customer_id: &str,
+    stripe_subscription_id: Option<&str>,
     plan: &str,
     status: &str,
+    stripe_status: Option<&str>,
 ) -> Result<(), DbError> {
     sqlx::query(
         r#"
         UPDATE tenants
         SET stripe_customer_id = $2,
-            plan = $3,
-            stripe_status = $4,
+            stripe_subscription_id = COALESCE($3, stripe_subscription_id),
+            plan = $4,
+            status = $5,
+            stripe_status = $6,
             updated_at = NOW()
         WHERE id = $1
         "#,
     )
     .bind(id)
     .bind(stripe_customer_id)
+    .bind(stripe_subscription_id)
     .bind(plan)
     .bind(status)
+    .bind(stripe_status)
     .execute(pool)
     .await?;
 

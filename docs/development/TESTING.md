@@ -1,341 +1,356 @@
-# Production Testing Guide
+# Driftlock Testing Guide
 
-This guide covers comprehensive testing procedures for the Driftlock production deployment.
+Comprehensive testing procedures for the Driftlock Rust API.
 
 ## Quick Start
 
-Run all tests with the provided scripts:
-
 ```bash
-# Test Docker builds
-./scripts/test-docker-build.sh
+# Run all tests
+cargo test --workspace
 
-# Test service startup
-./scripts/test-services.sh
+# Run API tests only
+cargo test -p driftlock-api
 
-# Test API endpoints
-./scripts/test-api.sh
+# Run with output
+cargo test -p driftlock-api -- --nocapture
 
-# Full integration test
-./scripts/test-integration.sh
-
-# Test Kafka integration (optional)
-./scripts/test-kafka.sh
-
-# One-command demo setup
-./scripts/demo.sh
+# Run specific test
+cargo test -p driftlock-api test_health_check
 ```
 
-## Test Scripts
+## Test Structure
 
-### 1. Docker Build Testing (`test-docker-build.sh`)
-
-Tests that all Docker images build successfully:
-
-- `driftlock-http` (with and without OpenZL)
-- `driftlock-collector` (with and without OpenZL)
-- Verifies image sizes are reasonable (< 500MB)
-- Checks for build errors
-
-**Usage:**
-```bash
-./scripts/test-docker-build.sh
+```
+driftlock/
+├── cbad-core/
+│   └── src/           # Unit tests in source files
+├── crates/
+│   ├── driftlock-api/
+│   │   └── src/       # API integration tests
+│   ├── driftlock-db/
+│   │   └── src/       # Database layer tests
+│   └── driftlock-auth/
+│       └── src/       # Auth tests
+└── tests/             # E2E tests (if any)
 ```
 
-**Expected Output:**
-- All builds complete successfully
-- Image sizes reported
-- Build logs saved to `/tmp/docker-build-*.log`
+## Unit Tests
 
-### 2. Service Testing (`test-services.sh`)
+### CBAD Core Tests
 
-Tests Docker Compose service startup and health:
-
-- Starts `driftlock-http` service
-- Tests `/healthz` endpoint
-- Verifies health response structure
-- Tests `/metrics` endpoint
-- Tests graceful shutdown
-
-**Usage:**
 ```bash
-./scripts/test-services.sh
+# Run CBAD algorithm tests
+cargo test -p cbad-core
+
+# Run with release optimizations (faster)
+cargo test -p cbad-core --release
+
+# Run specific module
+cargo test -p cbad-core anomaly
 ```
 
-**Prerequisites:**
-- Docker daemon running
-- Port 8080 available
+### Database Layer Tests
 
-### 3. API Testing (`test-api.sh`)
-
-Tests all API endpoints with various inputs:
-
-- Health endpoint (`/healthz`)
-- Metrics endpoint (`/metrics`)
-- Detection endpoint (`/v1/detect`)
-- Error handling
-- Security headers verification
-
-**Usage:**
 ```bash
-# With default API URL (http://localhost:8080)
-./scripts/test-api.sh
-
-# With custom API URL
-API_URL=https://api.driftlock.net ./scripts/test-api.sh
+# Run database tests (requires DATABASE_URL)
+DATABASE_URL="postgres://..." cargo test -p driftlock-db
 ```
 
-**Test Cases:**
-- NDJSON format detection
-- JSON array format detection
-- Auto-detection (no format parameter)
-- Query parameters (baseline, window, hop, algo)
-- Invalid JSON handling
-- Empty body handling
-- Security headers presence
+### Auth Tests
 
-### 4. Integration Testing (`test-integration.sh`)
-
-Full integration test with real test data:
-
-- Tests with `normal-transactions.jsonl` (< 5 anomalies expected)
-- Tests with `anomalous-transactions.jsonl` (> 80 anomalies expected)
-- Tests with `mixed-transactions.jsonl` (45-55 anomalies expected)
-- Verifies Prometheus metrics increment
-- Validates response structure
-
-**Usage:**
 ```bash
-./scripts/test-integration.sh
+# Run auth tests
+cargo test -p driftlock-auth
 ```
 
-**Prerequisites:**
-- API server running
-- Test data files in `test-data/` directory
+## Integration Tests
 
-### 5. Kafka Testing (`test-kafka.sh`)
+### API Server Tests
 
-Tests Kafka integration (optional):
-
-- Verifies Kafka broker connectivity
-- Verifies Zookeeper connectivity
-- Checks collector service status
-- Validates Kafka publisher initialization
-
-**Usage:**
 ```bash
-./scripts/test-kafka.sh
+# Full API test suite
+cargo test -p driftlock-api
+
+# Health endpoint tests
+cargo test -p driftlock-api health
+
+# Detection tests
+cargo test -p driftlock-api detection
 ```
 
-**Prerequisites:**
-- Kafka services started (`docker compose --profile kafka up -d`)
-- Collector configured with Kafka enabled
+## Manual Testing
 
-### 6. Demo Script (`demo.sh`)
-
-One-command demo setup:
-
-- Starts all required services
-- Verifies service health
-- Runs sample detection
-- Provides next steps
-
-**Usage:**
-```bash
-./scripts/demo.sh
-```
-
-## Manual Testing Procedures
-
-### Health Check Testing
+### Health Checks
 
 ```bash
-# Basic health check
+# Start the server
+cargo run -p driftlock-api --release
+
+# Test liveness
 curl http://localhost:8080/healthz
 
-# Verify response structure
-curl -s http://localhost:8080/healthz | jq '.'
-```
+# Test readiness
+curl http://localhost:8080/readyz
 
-Expected response:
-```json
+# Expected response
 {
-  "success": true,
-  "request_id": "...",
-  "library_status": "healthy",
-  "version": "1.0.0",
-  "available_algos": ["zlab", "zstd", "lz4", "gzip"]
+  "status": "ok",
+  "version": "1.0.0"
 }
 ```
 
-### Prometheus Metrics Testing
+### Demo Detection (No Auth)
 
 ```bash
-# Get metrics
+curl -X POST http://localhost:8080/v1/demo/detect \
+  -H "Content-Type: application/json" \
+  -d '{
+    "events": [
+      "normal log entry 1",
+      "normal log entry 2",
+      "ERROR: unexpected failure in module X"
+    ]
+  }'
+```
+
+### Authenticated Detection
+
+```bash
+curl -X POST http://localhost:8080/v1/detect \
+  -H "Content-Type: application/json" \
+  -H "X-Api-Key: your-api-key" \
+  -d '{
+    "stream_id": "my-stream",
+    "events": ["event1", "event2", "event3"]
+  }'
+```
+
+### Prometheus Metrics
+
+```bash
 curl http://localhost:8080/metrics
 
-# Verify specific metrics
+# Check specific metrics
 curl -s http://localhost:8080/metrics | grep driftlock_http_requests_total
-curl -s http://localhost:8080/metrics | grep driftlock_http_request_duration_seconds
+curl -s http://localhost:8080/metrics | grep driftlock_anomalies_detected_total
 ```
 
-### Anomaly Detection Testing
+## Load Testing
 
-```bash
-# Test with NDJSON
-curl -X POST "http://localhost:8080/v1/detect?format=ndjson" \
-  -H "Content-Type: application/json" \
-  --data-binary @test-data/mixed-transactions.jsonl | jq '.'
-
-# Test with JSON array
-curl -X POST "http://localhost:8080/v1/detect?format=json" \
-  -H "Content-Type: application/json" \
-  --data-binary @test-data/test-demo.json | jq '.'
-```
-
-### Security Headers Testing
-
-```bash
-# Check headers
-curl -I http://localhost:8080/healthz
-
-# Verify specific headers
-curl -I http://localhost:8080/healthz | grep -i "x-frame-options"
-curl -I http://localhost:8080/healthz | grep -i "x-xss-protection"
-curl -I http://localhost:8080/healthz | grep -i "content-security-policy"
-```
-
-### Error Handling Testing
-
-```bash
-# Invalid JSON
-curl -X POST http://localhost:8080/v1/detect \
-  -H "Content-Type: application/json" \
-  --data "invalid json"
-
-# Empty body
-curl -X POST http://localhost:8080/v1/detect \
-  -H "Content-Type: application/json"
-```
-
-## Performance Testing
-
-### Basic Performance
+### Basic Performance Test
 
 ```bash
 # Time a request
-time curl -X POST "http://localhost:8080/v1/detect?format=ndjson" \
+time curl -X POST http://localhost:8080/v1/demo/detect \
   -H "Content-Type: application/json" \
-  --data-binary @test-data/mixed-transactions.jsonl
+  -d '{"events": ["test event 1", "test event 2"]}'
+
+# Expected: < 100ms for small payloads
 ```
 
-### Load Testing
+### Concurrent Requests
 
 ```bash
-# Concurrent requests
+# 10 concurrent requests
 for i in {1..10}; do
-  curl -X POST "http://localhost:8080/v1/detect?format=ndjson" \
+  curl -X POST http://localhost:8080/v1/demo/detect \
     -H "Content-Type: application/json" \
-    --data-binary @test-data/mixed-transactions.jsonl &
+    -d '{"events": ["event'$i'"]}' &
 done
 wait
+```
+
+### K6 Load Test (Optional)
+
+```javascript
+// load-test.js
+import http from 'k6/http';
+import { check } from 'k6';
+
+export let options = {
+  vus: 10,
+  duration: '30s',
+};
+
+export default function() {
+  let res = http.post('http://localhost:8080/v1/demo/detect',
+    JSON.stringify({ events: ['test event'] }),
+    { headers: { 'Content-Type': 'application/json' } }
+  );
+  check(res, { 'status is 200': (r) => r.status === 200 });
+}
+```
+
+```bash
+k6 run load-test.js
+```
+
+## Error Handling Tests
+
+### Invalid JSON
+
+```bash
+curl -X POST http://localhost:8080/v1/detect \
+  -H "Content-Type: application/json" \
+  -d "invalid json"
+
+# Expected: 400 Bad Request
+```
+
+### Missing Auth
+
+```bash
+curl -X POST http://localhost:8080/v1/detect \
+  -H "Content-Type: application/json" \
+  -d '{"events": ["test"]}'
+
+# Expected: 401 Unauthorized
+```
+
+### Rate Limiting
+
+```bash
+# Demo endpoint: 10 req/hour per IP
+for i in {1..15}; do
+  curl -s -o /dev/null -w "%{http_code}\n" \
+    -X POST http://localhost:8080/v1/demo/detect \
+    -H "Content-Type: application/json" \
+    -d '{"events": ["test"]}'
+done
+
+# Expected: First 10 return 200, then 429 Too Many Requests
+```
+
+## Database Testing
+
+### Migration Testing
+
+```bash
+# Run migrations
+sqlx migrate run --database-url "$DATABASE_URL"
+
+# Check migration status
+sqlx migrate info --database-url "$DATABASE_URL"
+
+# Revert last migration (if needed)
+sqlx migrate revert --database-url "$DATABASE_URL"
+```
+
+### Query Testing
+
+```bash
+# Test database connection
+psql "$DATABASE_URL" -c "SELECT 1"
+
+# Check tables
+psql "$DATABASE_URL" -c "\dt"
+```
+
+## CI/CD Testing
+
+### GitHub Actions
+
+The CI workflow runs:
+1. `cargo fmt --check` - Code formatting
+2. `cargo clippy` - Linting
+3. `cargo build --release` - Build verification
+4. `cargo test` - All tests
+
+### Local CI Simulation
+
+```bash
+# Run full CI check locally
+cargo fmt --check && \
+cargo clippy -- -D warnings && \
+cargo build --release && \
+cargo test
+```
+
+## Test Data
+
+### Sample Events
+
+```json
+{
+  "events": [
+    "2025-01-15T10:00:00Z INFO User logged in",
+    "2025-01-15T10:00:01Z INFO Page viewed",
+    "2025-01-15T10:00:02Z ERROR Database connection failed",
+    "2025-01-15T10:00:03Z WARN High memory usage detected"
+  ]
+}
+```
+
+### Anomalous Events
+
+```json
+{
+  "events": [
+    "CRITICAL: System breach detected",
+    "ERROR: Unauthorized access attempt from 192.168.1.100",
+    "ALERT: Multiple failed login attempts"
+  ]
+}
 ```
 
 ## Success Criteria
 
 ### Critical (Must Pass)
-- ✅ All Docker images build successfully
-- ✅ HTTP API server starts and responds to health checks
-- ✅ `/v1/detect` endpoint works with test data
-- ✅ Anomaly detection produces correct results
-- ✅ Prometheus metrics are exposed and working
-- ✅ Security headers are present
+- [x] All unit tests pass
+- [x] API server starts and responds to health checks
+- [x] `/v1/demo/detect` endpoint works
+- [x] Authentication works (API key + Firebase)
+- [x] Database operations work
 
 ### Important (Should Pass)
-- ✅ Kafka integration works (if enabled)
-- ✅ Structured logging works correctly
-- ✅ Error handling is robust
-- ✅ Performance is acceptable (< 5s for 1000 events)
+- [x] Rate limiting enforced
+- [x] Error responses follow format
+- [x] Prometheus metrics exposed
+- [x] Performance < 100ms p99 for small payloads
 
 ### Optional (Nice to Have)
-- ✅ Load testing passes
-- ✅ All edge cases handled
+- [ ] Load testing passes
+- [ ] 100% code coverage
+- [ ] All edge cases handled
 
 ## Troubleshooting
 
-### Docker Build Failures
+### Tests Failing
 
 ```bash
-# Check build logs
-cat /tmp/docker-build-*.log
+# Run with verbose output
+cargo test -- --nocapture
 
-# Clean up and rebuild
-docker compose down
-docker system prune -f
-docker compose build --no-cache
+# Run single test with backtrace
+RUST_BACKTRACE=1 cargo test test_name -- --nocapture
 ```
 
-### Service Not Starting
+### Database Connection Issues
 
 ```bash
-# Check logs
-docker compose logs driftlock-http
+# Check DATABASE_URL is set
+echo $DATABASE_URL
 
-# Check service status
-docker compose ps
-
-# Restart service
-docker compose restart driftlock-http
+# Test connection
+psql "$DATABASE_URL" -c "SELECT 1"
 ```
 
-### API Not Responding
+### Build Issues
 
 ```bash
-# Check if service is running
-docker compose ps driftlock-http
-
-# Check health endpoint
-curl -v http://localhost:8080/healthz
-
-# Check port availability
-lsof -i :8080
+# Clean and rebuild
+cargo clean
+cargo build --release
 ```
 
-### Kafka Connection Issues
+## Driftlog
+
+For detailed debugging, check the driftlog output:
 
 ```bash
-# Check Kafka logs
-docker compose logs kafka
+# Run with debug logging
+RUST_LOG=debug cargo run -p driftlock-api
 
-# Test Kafka connectivity
-docker compose exec kafka kafka-broker-api-versions --bootstrap-server localhost:9092
-
-# Check collector logs
-docker compose logs driftlock-collector
+# Filter to specific modules
+RUST_LOG=driftlock_api=debug,driftlock_db=info cargo run -p driftlock-api
 ```
-
-## Continuous Integration
-
-These test scripts can be integrated into CI/CD pipelines:
-
-```yaml
-# Example GitHub Actions workflow
-- name: Test Docker Builds
-  run: ./scripts/test-docker-build.sh
-
-- name: Test Services
-  run: ./scripts/test-services.sh
-
-- name: Test API
-  run: ./scripts/test-api.sh
-```
-
-## Next Steps
-
-After passing all tests:
-
-1. Review test results
-2. Fix any failures
-3. Run demo script: `./scripts/demo.sh`
-4. Follow [DEMO_GUIDE.md](./DEMO_GUIDE.md) for presentation
-

@@ -47,6 +47,7 @@ pub unsafe extern "C" fn cbad_detector_create_simple() -> CBADDetectorHandle {
         max_capacity: 1000,
         time_window: None,
         privacy_config: PrivacyConfig::default(),
+        freeze_baseline: false,
     };
 
     let config = AnomalyConfig {
@@ -54,12 +55,21 @@ pub unsafe extern "C" fn cbad_detector_create_simple() -> CBADDetectorHandle {
         compression_algorithm: CompressionAlgorithm::Zstd,
         p_value_threshold: 0.2,
         ncd_threshold: 0.15,
+        conditional_novelty_threshold: 1.10,
         compression_ratio_drop_threshold: 0.15,
         entropy_change_threshold: 0.2,
         composite_threshold: 0.6,
+        composite_weights: crate::calibration::CompositeWeights::default(),
+        adaptive_composite_threshold: false,
+        adaptive_target_fpr: 0.01,
+        adaptive_warmup_windows: 200,
+        adaptive_history_cap: 2000,
         permutation_count: 1000,
         seed: 42,
         require_statistical_significance: true,
+        tokenizer_config: None, // Tokenizer disabled via simplified FFI
+        calibration_method: None,
+        calibration_min_samples: 100,
     };
 
     match AnomalyDetector::new(config) {

@@ -1,6 +1,6 @@
-# Contributing to Shannon Labs DriftLock
+# Contributing to Shannon Labs Driftlock
 
-Thank you for your interest in contributing to DriftLock! This document provides guidelines and information about contributing to this project.
+Thank you for your interest in contributing to Driftlock! This document provides guidelines and information about contributing to this project.
 
 ## Code of Conduct
 
@@ -10,11 +10,11 @@ This project follows the [Code of Conduct](CODE_OF_CONDUCT.md). Please read and 
 
 ### Prerequisites
 
-- Go 1.22+ (for the API server)
-- Rust 1.75+ (for the anomaly detection core)
-- Node.js 18+ (for the dashboard)
-- Docker and Docker Compose
-- Git
+- **Rust** 1.75+ (for the API server and CBAD core)
+- **Node.js** 18+ (for the dashboard)
+- **Docker** and Docker Compose
+- **PostgreSQL** 15+ (or use Docker)
+- **Git**
 
 ### Development Setup
 
@@ -24,18 +24,16 @@ This project follows the [Code of Conduct](CODE_OF_CONDUCT.md). Please read and 
    cd driftlock
    ```
 
-2. **Install dependencies**
+2. **Build the project**
    ```bash
-   # Rust dependencies
-   cd cbad-core
-   cargo build
+   # Build API server
+   cargo build -p driftlock-api --release
 
-   # Go dependencies
-   cd ../api-server
-   go mod download
+   # Build CBAD core
+   cargo build -p cbad-core --release
 
-   # Node.js dependencies
-   cd ../web-frontend
+   # Node.js dependencies (for dashboard)
+   cd landing-page
    npm install
    ```
 
@@ -45,9 +43,20 @@ This project follows the [Code of Conduct](CODE_OF_CONDUCT.md). Please read and 
    # Edit .env with your configuration
    ```
 
-4. **Run the development environment**
+4. **Start PostgreSQL**
    ```bash
-   docker compose up -d
+   docker run --name driftlock-postgres \
+     -e POSTGRES_DB=driftlock \
+     -e POSTGRES_USER=driftlock \
+     -e POSTGRES_PASSWORD=driftlock \
+     -p 5432:5432 \
+     -d postgres:15
+   ```
+
+5. **Run the development environment**
+   ```bash
+   DATABASE_URL="postgres://driftlock:driftlock@localhost:5432/driftlock" \
+     cargo run -p driftlock-api
    ```
 
 ## How to Contribute
@@ -73,22 +82,34 @@ This project follows the [Code of Conduct](CODE_OF_CONDUCT.md). Please read and 
 
 3. **Test your changes**
    ```bash
-   # Run Rust tests
-   cd cbad-core && cargo test
+   # Run all tests
+   cargo test --workspace
 
-   # Run Go tests
-   cd ../api-server && go test ./...
+   # Run API tests
+   cargo test -p driftlock-api
 
-   # Run Node.js tests
-   cd ../web-frontend && npm run build
+   # Run CBAD tests
+   cargo test -p cbad-core --release
+
+   # Run frontend build
+   cd landing-page && npm run build
    ```
 
-4. **Commit your changes**
+4. **Format and lint**
+   ```bash
+   # Format Rust code
+   cargo fmt --all
+
+   # Lint Rust code
+   cargo clippy --all-targets -- -D warnings
+   ```
+
+5. **Commit your changes**
    ```bash
    git commit -m "feat: add your feature description"
    ```
 
-5. **Push and create a pull request**
+6. **Push and create a pull request**
    ```bash
    git push origin feature/your-feature-name
    ```
@@ -96,16 +117,13 @@ This project follows the [Code of Conduct](CODE_OF_CONDUCT.md). Please read and 
 ### Code Style Guidelines
 
 #### Rust
-- Use `rustfmt` for formatting
-- Use `clippy` for linting
+- Use `cargo fmt` for formatting
+- Use `cargo clippy` for linting
 - Follow Rust naming conventions
+- Write clear, documented code
+- Use `tracing` for logging (we call it "driftlog")
 
-#### Go
-- Use `gofmt` for formatting
-- Follow Go conventions and idioms
-- Write clear, commented code
-
-#### TypeScript/React
+#### TypeScript/Vue
 - Use ESLint and Prettier
 - Follow the existing component structure
 - Use TypeScript for all new code
@@ -122,7 +140,6 @@ This project follows the [Code of Conduct](CODE_OF_CONDUCT.md). Please read and 
 ### Branch Structure
 
 - `main`: Stable, production-ready code
-- `develop`: Integration branch for features
 - `feature/*`: Feature branches
 - `bugfix/*`: Bug fix branches
 - `release/*`: Release preparation branches
@@ -139,13 +156,22 @@ This project follows the [Code of Conduct](CODE_OF_CONDUCT.md). Please read and 
 ### Running Tests
 
 ```bash
-# Run all tests
-make test
+# Run all workspace tests
+cargo test --workspace
 
-# Run specific component tests
-cd cbad-core && cargo test
-cd api-server && go test ./...
-cd web-frontend && npm run build
+# Run specific crate tests
+cargo test -p driftlock-api
+cargo test -p cbad-core --release
+cargo test -p driftlock-db
+
+# Run with output
+cargo test --workspace -- --nocapture
+
+# Run single test
+cargo test test_health_check
+
+# Run frontend build verification
+cd landing-page && npm run build
 ```
 
 ### Test Coverage
@@ -154,12 +180,29 @@ cd web-frontend && npm run build
 - Add integration tests for complex workflows
 - Include performance benchmarks for critical paths
 
+## Project Structure
+
+```
+driftlock/
+├── Cargo.toml              # Workspace root
+├── cbad-core/              # CBAD detection algorithms
+│   └── src/
+├── crates/
+│   ├── driftlock-api/      # Axum HTTP server
+│   ├── driftlock-db/       # Database layer (sqlx)
+│   ├── driftlock-auth/     # Firebase + API key auth
+│   ├── driftlock-billing/  # Stripe integration
+│   └── driftlock-email/    # SendGrid emails
+├── landing-page/           # Vue 3 dashboard
+└── docs/                   # Documentation
+```
+
 ## Getting Help
 
 - Check [documentation](docs/)
 - Search [existing issues](https://github.com/Shannon-Labs/driftlock/issues)
 - Start a [discussion](https://github.com/Shannon-Labs/driftlock/discussions)
-- Contact maintainers at [hunter@shannonlabs.dev]
+- Contact maintainers at [hunter@shannonlabs.dev](mailto:hunter@shannonlabs.dev)
 
 ## Security
 

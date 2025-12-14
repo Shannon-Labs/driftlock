@@ -13,10 +13,6 @@ const router = createRouter({
       component: HomeView
     },
     {
-      path: '/playground',
-      redirect: { path: '/', hash: '#playground' }
-    },
-    {
       path: '/login',
       name: 'login',
       component: LoginView

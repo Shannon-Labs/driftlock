@@ -6,7 +6,9 @@
 //! All metrics are computed deterministically and provide mathematical
 //! evidence for anomaly detection that can be audited and reproduced.
 
+use crate::calibration::CompositeWeights;
 use crate::compression::{CompressionAdapter, CompressionError};
+use crate::tokenizer::Tokenizer;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
@@ -21,6 +23,12 @@ pub struct AnomalyMetrics {
     pub ncd: f64, // Normalized Compression Distance (0.0-1.0)
     pub p_value: f64,     // Statistical significance (0.0-1.0)
     pub is_anomaly: bool, // Final determination
+
+    #[serde(default)]
+    pub composite_score: f64,
+
+    #[serde(default)]
+    pub conditional_novelty: f64,
 
     /// Compression-based evidence
     pub baseline_compression_ratio: f64, // How well baseline compresses
@@ -52,6 +60,9 @@ impl AnomalyMetrics {
             ncd: 0.0,
             p_value: 1.0,
             is_anomaly: false,
+
+            composite_score: 0.0,
+            conditional_novelty: 0.0,
             baseline_compression_ratio: 1.0,
             window_compression_ratio: 1.0,
             compression_ratio_change: 0.0,
@@ -122,6 +133,16 @@ impl AnomalyMetrics {
         }
         explanation.push_str(")\n");
 
+        explanation.push_str(&format!(
+            "\nCOMPOSITE SCORE: {:.3} (ncd/p-value/compression fusion)\n",
+            self.composite_score
+        ));
+
+        explanation.push_str(&format!(
+            "\nCONDITIONAL NOVELTY: {:.3} ((C(b+w)-C(b))/C(w)) lower=more expected)\n",
+            self.conditional_novelty
+        ));
+
         // Add interpretation
         if self.is_anomaly {
             explanation.push_str("\nINTERPRETATION: ");
@@ -172,8 +193,7 @@ impl AnomalyMetrics {
         } else {
             0.3
         };
-        self.recommended_ncd_threshold =
-            (base_ncd + (0.5 - stability) * 0.2).clamp(0.1, 0.8);
+        self.recommended_ncd_threshold = (base_ncd + (0.5 - stability) * 0.2).clamp(0.1, 0.8);
 
         // Recommend window size: larger for unstable/high-entropy streams, smaller for very stable ones.
         let base_window = if current_window_size > 0 {
@@ -187,8 +207,7 @@ impl AnomalyMetrics {
             (base_window as f64) * 3.0
         };
         let window_scale = 1.0 + (1.0 - stability) * 0.5 + entropy_instability * 0.25;
-        let proposed =
-            (base_window as f64 * window_scale).clamp(10.0, baseline_cap.max(10.0));
+        let proposed = (base_window as f64 * window_scale).clamp(10.0, baseline_cap.max(10.0));
         self.recommended_window_size = proposed.round() as usize;
     }
 }
@@ -247,6 +266,10 @@ pub mod ncd;
 ///
 /// Computes all anomaly detection metrics for baseline and window data.
 /// This is the primary entry point for the CBAD algorithm.
+///
+/// If a tokenizer is provided, high-entropy fields (UUIDs, hashes, JWTs, Base64)
+/// will be replaced with fixed tokens before compression. This improves detection
+/// accuracy across different data types by normalizing random-looking noise.
 pub fn compute_metrics(
     baseline: &[u8],
     window: &[u8],
@@ -254,28 +277,58 @@ pub fn compute_metrics(
     permutation_count: usize,
     seed: u64,
 ) -> Result<AnomalyMetrics> {
+    compute_metrics_with_tokenizer(baseline, window, adapter, permutation_count, seed, None)
+}
+
+/// Metrics computation with optional tokenization preprocessing
+///
+/// This variant allows passing a tokenizer to normalize high-entropy fields
+/// before compression analysis. Use this for type-agnostic anomaly detection
+/// across different data formats.
+pub fn compute_metrics_with_tokenizer(
+    baseline: &[u8],
+    window: &[u8],
+    adapter: &dyn CompressionAdapter,
+    permutation_count: usize,
+    seed: u64,
+    tokenizer: Option<&Tokenizer>,
+) -> Result<AnomalyMetrics> {
     let mut metrics = AnomalyMetrics::new();
 
-    // Compute compression ratios (reuse compressed sizes for NCD to avoid double work)
-    let baseline_compressed = adapter.compress(baseline)?;
-    let window_compressed = adapter.compress(window)?;
+    // Apply tokenization if enabled (normalizes UUIDs, hashes, JWTs, Base64)
+    let (baseline_data, window_data): (std::borrow::Cow<[u8]>, std::borrow::Cow<[u8]>) =
+        match tokenizer {
+            Some(t) => (
+                std::borrow::Cow::Owned(t.tokenize(baseline)),
+                std::borrow::Cow::Owned(t.tokenize(window)),
+            ),
+            None => (
+                std::borrow::Cow::Borrowed(baseline),
+                std::borrow::Cow::Borrowed(window),
+            ),
+        };
 
-    metrics.baseline_compression_ratio = baseline.len() as f64 / baseline_compressed.len() as f64;
-    metrics.window_compression_ratio = window.len() as f64 / window_compressed.len() as f64;
+    // Compute compression ratios (reuse compressed sizes for NCD to avoid double work)
+    let baseline_compressed = adapter.compress(&baseline_data)?;
+    let window_compressed = adapter.compress(&window_data)?;
+
+    metrics.baseline_compression_ratio =
+        baseline_data.len() as f64 / baseline_compressed.len() as f64;
+    metrics.window_compression_ratio = window_data.len() as f64 / window_compressed.len() as f64;
     metrics.compression_ratio_change = (metrics.window_compression_ratio
         - metrics.baseline_compression_ratio)
         / metrics.baseline_compression_ratio;
 
-    // Compute entropy
-    metrics.baseline_entropy = entropy::compute_entropy(baseline);
-    metrics.window_entropy = entropy::compute_entropy(window);
+    // Compute entropy (on tokenized data if applicable)
+    metrics.baseline_entropy = entropy::compute_entropy(&baseline_data);
+    metrics.window_entropy = entropy::compute_entropy(&window_data);
     metrics.entropy_change =
         (metrics.window_entropy - metrics.baseline_entropy) / metrics.baseline_entropy.max(0.001); // Avoid division by zero
 
     // Compute NCD using already compressed sizes to avoid recompressing baseline/window
-    let mut combined = Vec::with_capacity(baseline.len() + window.len());
-    combined.extend_from_slice(baseline);
-    combined.extend_from_slice(window);
+    let mut combined = Vec::with_capacity(baseline_data.len() + window_data.len());
+    combined.extend_from_slice(&baseline_data);
+    combined.extend_from_slice(&window_data);
     let combined_compressed = adapter.compress(&combined)?;
     metrics.ncd = ncd::compute_ncd_from_sizes(
         baseline_compressed.len(),
@@ -283,10 +336,19 @@ pub fn compute_metrics(
         combined_compressed.len(),
     );
 
-    // Perform permutation testing for statistical significance
+    let delta_conditional = combined_compressed
+        .len()
+        .saturating_sub(baseline_compressed.len()) as f64;
+    metrics.conditional_novelty = if window_compressed.is_empty() {
+        0.0
+    } else {
+        (delta_conditional / (window_compressed.len() as f64)).max(0.0)
+    };
+
+    // Perform permutation testing for statistical significance (on tokenized data)
     let perm_result = {
         let mut tester = permutation::PermutationTester::new(seed, permutation_count);
-        tester.test_ncd_significance(baseline, window, adapter)?
+        tester.test_ncd_significance(&baseline_data, &window_data, adapter)?
     };
 
     metrics.p_value = perm_result.p_value;
@@ -312,6 +374,12 @@ pub fn compute_metrics(
     }
     metrics.permutation_count = permutation_count;
 
+    let compression_signal = (-metrics.compression_ratio_change).max(0.0);
+    // Use default weights (validated on PaySim: AUPRC=1.0)
+    let default_weights = CompositeWeights::default();
+    metrics.composite_score =
+        default_weights.compute_score(metrics.ncd, metrics.p_value, compression_signal);
+
     // Apply a conservative default anomaly heuristic for callers that don't supply config.
     let default_p = 0.05;
     let default_ncd = 0.3;
@@ -325,6 +393,125 @@ pub fn compute_metrics(
     metrics.generate_explanation();
 
     Ok(metrics)
+}
+
+/// Metrics computation with configurable composite weights
+///
+/// This variant allows passing custom weights for the composite score calculation,
+/// enabling profile-specific or calibrated scoring.
+pub fn compute_metrics_with_weights(
+    baseline: &[u8],
+    window: &[u8],
+    adapter: &dyn CompressionAdapter,
+    permutation_count: usize,
+    seed: u64,
+    tokenizer: Option<&Tokenizer>,
+    weights: &CompositeWeights,
+) -> Result<AnomalyMetrics> {
+    let mut metrics = AnomalyMetrics::new();
+
+    // Apply tokenization if enabled (normalizes UUIDs, hashes, JWTs, Base64)
+    let (baseline_data, window_data): (std::borrow::Cow<[u8]>, std::borrow::Cow<[u8]>) =
+        match tokenizer {
+            Some(t) => (
+                std::borrow::Cow::Owned(t.tokenize(baseline)),
+                std::borrow::Cow::Owned(t.tokenize(window)),
+            ),
+            None => (
+                std::borrow::Cow::Borrowed(baseline),
+                std::borrow::Cow::Borrowed(window),
+            ),
+        };
+
+    // Compute compression ratios (reuse compressed sizes for NCD to avoid double work)
+    let baseline_compressed = adapter.compress(&baseline_data)?;
+    let window_compressed = adapter.compress(&window_data)?;
+
+    metrics.baseline_compression_ratio =
+        baseline_data.len() as f64 / baseline_compressed.len() as f64;
+    metrics.window_compression_ratio = window_data.len() as f64 / window_compressed.len() as f64;
+    metrics.compression_ratio_change = (metrics.window_compression_ratio
+        - metrics.baseline_compression_ratio)
+        / metrics.baseline_compression_ratio;
+
+    // Compute entropy (on tokenized data if applicable)
+    metrics.baseline_entropy = entropy::compute_entropy(&baseline_data);
+    metrics.window_entropy = entropy::compute_entropy(&window_data);
+    metrics.entropy_change =
+        (metrics.window_entropy - metrics.baseline_entropy) / metrics.baseline_entropy.max(0.001);
+
+    // Compute NCD using already compressed sizes to avoid recompressing baseline/window
+    let mut combined = Vec::with_capacity(baseline_data.len() + window_data.len());
+    combined.extend_from_slice(&baseline_data);
+    combined.extend_from_slice(&window_data);
+    let combined_compressed = adapter.compress(&combined)?;
+    metrics.ncd = ncd::compute_ncd_from_sizes(
+        baseline_compressed.len(),
+        window_compressed.len(),
+        combined_compressed.len(),
+    );
+
+    let delta_conditional = combined_compressed
+        .len()
+        .saturating_sub(baseline_compressed.len()) as f64;
+    metrics.conditional_novelty = if window_compressed.is_empty() {
+        0.0
+    } else {
+        (delta_conditional / (window_compressed.len() as f64)).max(0.0)
+    };
+
+    // Perform permutation testing for statistical significance (on tokenized data)
+    let perm_result = {
+        let mut tester = permutation::PermutationTester::new(seed, permutation_count);
+        tester.test_ncd_significance(&baseline_data, &window_data, adapter)?
+    };
+
+    metrics.p_value = perm_result.p_value;
+    // Calculate confidence level that considers both NCD and p-value
+    let p_value_confidence = 1.0 - perm_result.p_value;
+    let ncd_confidence = metrics.ncd.min(1.0);
+
+    if perm_result.p_value < 0.05 {
+        metrics.confidence_level = p_value_confidence;
+    } else if metrics.ncd > 0.5 {
+        metrics.confidence_level = (ncd_confidence * 0.75).min(0.85);
+    } else {
+        metrics.confidence_level =
+            (p_value_confidence * 0.6 + ncd_confidence * 0.4).clamp(0.0, 1.0);
+    }
+    metrics.permutation_count = permutation_count;
+
+    // Compute composite score using provided weights
+    let compression_signal = (-metrics.compression_ratio_change).max(0.0);
+    metrics.composite_score = weights.compute_score(metrics.ncd, metrics.p_value, compression_signal);
+
+    // Apply a conservative default anomaly heuristic
+    let default_p = 0.05;
+    let default_ncd = 0.3;
+    let default_drop = 0.15;
+    let default_entropy = 0.2;
+    metrics.is_anomaly = (metrics.ncd >= default_ncd && metrics.p_value <= default_p)
+        || (metrics.compression_ratio_change <= -default_drop && metrics.ncd >= 0.2)
+        || metrics.entropy_change >= default_entropy;
+
+    // Generate human-readable explanation
+    metrics.generate_explanation();
+
+    Ok(metrics)
+}
+
+/// Compute only the composite score for a given set of raw metrics.
+///
+/// Useful for batch scoring during calibration when you already have
+/// the individual metric values.
+pub fn compute_composite_score(
+    ncd: f64,
+    p_value: f64,
+    compression_ratio_change: f64,
+    weights: &CompositeWeights,
+) -> f64 {
+    let compression_signal = (-compression_ratio_change).max(0.0);
+    weights.compute_score(ncd, p_value, compression_signal)
 }
 
 /// Permutation testing module (to be implemented)

@@ -132,7 +132,7 @@ onMounted(async () => {
   }
 
   try {
-    const response = await fetch(`/api/v1/onboard/verify?token=${encodeURIComponent(token)}`)
+    const response = await fetch(`/api/v1/auth/verify?token=${encodeURIComponent(token)}`)
 
     // Check content type to avoid parsing HTML as JSON
     const contentType = response.headers.get("content-type")

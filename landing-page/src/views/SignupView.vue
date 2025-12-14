@@ -23,6 +23,22 @@
       <div class="bg-white py-8 px-4 border-2 border-black sm:px-10 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
         <form class="space-y-6" @submit.prevent="handleSignup">
           <div>
+            <label for="companyName" class="block text-sm font-bold uppercase tracking-wide text-black">Company name</label>
+            <div class="mt-1">
+              <input
+                id="companyName"
+                v-model="companyName"
+                name="companyName"
+                type="text"
+                autocomplete="organization"
+                required
+                class="block w-full appearance-none border-2 border-black px-3 py-3 placeholder-gray-500 shadow-none focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 sm:text-sm font-mono"
+                placeholder="Acme Inc."
+              />
+            </div>
+          </div>
+
+          <div>
             <label for="email" class="block text-sm font-bold uppercase tracking-wide text-black">Email address</label>
             <div class="mt-1">
               <input
@@ -137,16 +153,41 @@ import { useAuthStore } from '../stores/auth'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const companyName = ref('')
 const email = ref('')
 const password = ref('')
 const confirmPassword = ref('')
 const localError = ref<string | null>(null)
+
+const ensureTenant = async () => {
+  const token = await authStore.getToken()
+  if (!token) throw new Error('Missing authentication token')
+
+  const res = await fetch('/api/v1/auth/signup', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({ company_name: companyName.value }),
+  })
+
+  if (res.status === 409) return // tenant already exists
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data?.error || 'Failed to create tenant')
+  }
+}
 
 const handleSignup = async () => {
   localError.value = null
   authStore.clearError()
 
   if (!email.value || !password.value || !confirmPassword.value) return
+  if (!companyName.value.trim()) {
+    localError.value = 'Company name is required.'
+    return
+  }
 
   if (password.value !== confirmPassword.value) {
     localError.value = 'Passwords do not match.'
@@ -160,6 +201,7 @@ const handleSignup = async () => {
 
   try {
     await authStore.signUpWithEmail(email.value, password.value)
+    await ensureTenant()
     router.push('/dashboard')
   } catch (e) {
     // Error handled in store/UI
@@ -167,8 +209,15 @@ const handleSignup = async () => {
 }
 
 const handleGoogleSignIn = async () => {
+  localError.value = null
+  authStore.clearError()
+  if (!companyName.value.trim()) {
+    localError.value = 'Company name is required.'
+    return
+  }
   try {
     await authStore.signInWithGoogle()
+    await ensureTenant()
     router.push('/dashboard')
   } catch (e) {
     // Error handled in store/UI (except popup closed)

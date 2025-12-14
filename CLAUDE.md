@@ -5,17 +5,17 @@ Project context for Claude Code. For detailed information, see the linked docs.
 ## Quick Reference
 
 ```bash
-# Start backend
-cd collector-processor && go run ./cmd/driftlock-http
+# Start backend (Rust)
+cargo run -p driftlock-api --release
 
 # Start frontend
 cd landing-page && npm run dev
 
 # Run tests
-go test ./... -v
+cargo test -p driftlock-api
 
-# Format code
-make fmt
+# Build release
+cargo build -p driftlock-api --release
 ```
 
 **Agent routing:** See `docs/AI_ROUTING.md`
@@ -32,26 +32,31 @@ make fmt
 
 | Layer | Technology |
 |-------|------------|
-| Backend | Go 1.22+, PostgreSQL, Kafka, Redis |
-| CBAD Core | Rust (compression algorithms via FFI) |
+| Backend | Rust (Axum, Tokio, sqlx), PostgreSQL |
+| CBAD Core | Rust (cbad-core crate) |
 | Frontend | Vue 3, TypeScript, Tailwind, Chart.js |
 | Billing | Stripe |
 | Auth | Firebase JWT + API keys |
-| Hosting | GCP Cloud Run, Firebase Hosting |
+| Hosting | Replit / GCP Cloud Run, Firebase Hosting |
 
 ### Core Components
 
 1. **cbad-core** (Rust) - Compression-based anomaly detection algorithms
-2. **collector-processor** (Go) - OpenTelemetry Collector processor
-3. **api-server** (Go) - REST API with PostgreSQL, Kafka, Stripe
-4. **landing-page** (Vue) - Dashboard and landing page
+2. **driftlock-api** (Rust) - REST API with Axum, PostgreSQL, Stripe
+3. **driftlock-db** (Rust) - Database models and repositories
+4. **driftlock-auth** (Rust) - Firebase JWT and API key authentication
+5. **landing-page** (Vue) - Dashboard and landing page
 
 ### Data Flow
 
 ```
-OTLP Sources → Collector → CBAD Processor → API Server → UI
-                                    ↓
-                            PostgreSQL / Kafka
+HTTP REST ─────────┐
+                   │
+Kafka Topic ───────┼──▶ API Server ──▶ CBAD Core ──▶ Detection ──▶ UI
+(--features kafka) │        │
+                   │        ▼
+OTLP gRPC ─────────┘   PostgreSQL
+(--features otlp)
 ```
 
 ---
@@ -61,26 +66,42 @@ OTLP Sources → Collector → CBAD Processor → API Server → UI
 ### Development
 
 ```bash
-make run          # Start API server
-make test         # Run all tests
-make build        # Build all components
-make fmt          # Format code
-make lint         # Run linters
+cargo run -p driftlock-api              # Start API server (debug)
+cargo run -p driftlock-api --release    # Start API server (optimized)
+cargo test                              # Run all tests
+cargo build --release                   # Build all components
+cargo fmt                               # Format code
+cargo clippy                            # Run linter
 ```
+
+### Optional Features
+
+```bash
+# With Kafka consumer
+cargo build -p driftlock-api --features kafka --release
+
+# With OTLP gRPC server (OpenTelemetry)
+cargo build -p driftlock-api --features otlp --release
+
+# All features
+cargo build -p driftlock-api --features kafka,otlp,webhooks --release
+```
+
+See: `docs/deployment/KAFKA_INTEGRATION.md`, `docs/deployment/OTLP_INGESTION.md`
 
 ### Docker
 
 ```bash
 docker compose up -d                     # Start local stack
-make docker                              # Build image
-gcloud builds submit --tag gcr.io/driftlock/driftlock-http  # Deploy
+docker build -t driftlock-api -f Dockerfile .  # Build image
 ```
 
 ### Database
 
 ```bash
-goose -dir api/migrations postgres "$DATABASE_URL" up      # Run migrations
-goose -dir api/migrations postgres "$DATABASE_URL" status  # Check status
+# Migrations are run automatically by sqlx on startup
+# Or run migrations via sqlx-cli:
+sqlx migrate run --database-url "$DATABASE_URL"
 ```
 
 ---
@@ -125,10 +146,14 @@ FIREBASE_PROJECT_ID=driftlock
 ## Directory Structure
 
 ```
-collector-processor/cmd/driftlock-http/  # Main API server
+crates/driftlock-api/src/                # Rust API server (Axum)
+crates/driftlock-db/src/                 # Database models & repos (sqlx)
+crates/driftlock-auth/src/               # Authentication (Firebase + API keys)
+crates/driftlock-billing/src/            # Stripe billing integration
+crates/driftlock-email/src/              # Email service (SendGrid)
+cbad-core/src/                           # CBAD Rust algorithms
 landing-page/src/                        # Vue frontend
-api/migrations/                          # Database migrations
-cbad-core/                               # Rust algorithms
+archive/go-backend/                      # Legacy Go backend (reference only)
 docs/                                    # Documentation
 .claude/agents/                          # Claude Code agents
 ```
@@ -139,7 +164,7 @@ docs/                                    # Documentation
 
 | Task | Agent |
 |------|-------|
-| Go backend | `dl-backend` |
+| Rust backend | `dl-backend` |
 | Vue frontend | `dl-frontend` |
 | Database | `dl-db` |
 | Testing | `dl-testing` |
@@ -171,5 +196,5 @@ Full matrix: `docs/AI_ROUTING.md`
 
 ---
 
-**Status:** ~98% launch ready
-**Last updated:** 2025-12-07
+**Status:** 100% Rust API ready for Replit deployment
+**Last updated:** 2025-12-11

@@ -3,6 +3,7 @@
 Compare `sensitive`, `balanced`, and `strict` profiles to pick the right sensitivity.
 
 ## Prerequisites
+
 - API key
 - A stream with data (or use the sample events below)
 

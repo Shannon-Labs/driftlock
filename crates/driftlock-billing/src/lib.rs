@@ -122,33 +122,39 @@ pub const MAX_BATCH_SIZE: usize = 10_000;
 pub const DEMO_RATE_LIMIT_PER_HOUR: u32 = 10;
 
 // =============================================================================
-// Plan Definitions - Free/Pro/Team/Enterprise
+// Plan Definitions - Free/Starter/Pro/Team/Scale/Enterprise
 // =============================================================================
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Plan {
-    Free,       // Free tier - 10k events/mo, 5 streams, 14 days retention
-    Pro,        // $99/mo - 500k events, 20 streams, 90 days retention
-    Team,       // $199/mo - 5M events, 100 streams, 365 days retention
-    Enterprise, // Custom - committed volume + overages, 500+ streams
+    Free,       // Free tier - 50k events/mo, 20 streams, 14 days retention
+    Starter,    // $29/mo - 250k events, 50 streams, 30 days retention
+    Pro,        // $99/mo - 1.5M events, 200 streams, 180 days retention
+    Team,       // $249/mo - 10M events, 1,000 streams, 365 days retention
+    Scale,      // $499/mo - 50M events, 5,000 streams, 730 days retention
+    Enterprise, // Custom - committed volume, custom limits/retention
 }
 
 impl Plan {
     pub fn event_limit(&self) -> u64 {
         match self {
-            Plan::Free => 10_000,
-            Plan::Pro => 500_000,
-            Plan::Team => 5_000_000,
+            Plan::Free => 50_000,
+            Plan::Starter => 250_000,
+            Plan::Pro => 1_500_000,
+            Plan::Team => 10_000_000,
+            Plan::Scale => 50_000_000,
             Plan::Enterprise => u64::MAX,
         }
     }
 
     pub fn stream_limit(&self) -> u64 {
         match self {
-            Plan::Free => 5,
-            Plan::Pro => 20,
-            Plan::Team => 100,
-            Plan::Enterprise => 500,
+            Plan::Free => 20,
+            Plan::Starter => 50,
+            Plan::Pro => 200,
+            Plan::Team => 1_000,
+            Plan::Scale => 5_000,
+            Plan::Enterprise => u64::MAX,
         }
     }
 
@@ -156,9 +162,11 @@ impl Plan {
     pub fn retention_days(&self) -> u32 {
         match self {
             Plan::Free => 14,
-            Plan::Pro => 90,
+            Plan::Starter => 30,
+            Plan::Pro => 180,
             Plan::Team => 365,
-            Plan::Enterprise => 730, // 2 years default, negotiable
+            Plan::Scale => 730,
+            Plan::Enterprise => 730, // Default, negotiable
         }
     }
 
@@ -166,9 +174,11 @@ impl Plan {
     pub fn rate_limit_rpm(&self) -> u32 {
         match self {
             Plan::Free => 60,       // 1/sec
+            Plan::Starter => 120,   // 2/sec
             Plan::Pro => 300,       // 5/sec
             Plan::Team => 600,      // 10/sec
-            Plan::Enterprise => 3000, // 50/sec
+            Plan::Scale => 3000,    // 50/sec
+            Plan::Enterprise => 6000, // 100/sec (negotiable)
         }
     }
 
@@ -179,11 +189,14 @@ impl Plan {
     }
 
     pub fn from_price_id(price_id: &str) -> Option<Self> {
-        // Map Stripe price IDs to plans (supports legacy + new IDs)
+        // Map Stripe price IDs to plans (placeholder IDs + legacy aliases).
+        // Production should prefer env-driven mappings in the API layer.
         match price_id {
             // New canonical price IDs
+            "price_starter" | "price_1Starter" => Some(Plan::Starter),
             "price_pro" | "price_1Pro" => Some(Plan::Pro),
             "price_team" | "price_1Team" => Some(Plan::Team),
+            "price_scale" | "price_1Scale" => Some(Plan::Scale),
             "price_enterprise" | "price_1Enterprise" => Some(Plan::Enterprise),
             // Legacy price IDs (backwards compatibility)
             "price_radar" | "price_1Radar" => Some(Plan::Pro),
@@ -198,12 +211,15 @@ impl Plan {
         match name.to_lowercase().as_str() {
             // Canonical names
             "free" => Some(Plan::Free),
+            "starter" => Some(Plan::Starter),
             "pro" => Some(Plan::Pro),
             "team" => Some(Plan::Team),
+            "scale" => Some(Plan::Scale),
             "enterprise" => Some(Plan::Enterprise),
             // Legacy aliases
             "trial" | "pilot" | "pulse" => Some(Plan::Free),
-            "radar" | "signal" | "starter" => Some(Plan::Pro),
+            "basic" => Some(Plan::Starter),
+            "radar" | "signal" => Some(Plan::Pro),
             "tensor" | "growth" | "lock" => Some(Plan::Team),
             "orbit" | "horizon" => Some(Plan::Enterprise),
             _ => None,
@@ -213,8 +229,10 @@ impl Plan {
     pub fn name(&self) -> &'static str {
         match self {
             Plan::Free => "free",
+            Plan::Starter => "starter",
             Plan::Pro => "pro",
             Plan::Team => "team",
+            Plan::Scale => "scale",
             Plan::Enterprise => "enterprise",
         }
     }
@@ -222,8 +240,10 @@ impl Plan {
     pub fn display_name(&self) -> &'static str {
         match self {
             Plan::Free => "Free",
+            Plan::Starter => "Starter",
             Plan::Pro => "Pro",
             Plan::Team => "Team",
+            Plan::Scale => "Scale",
             Plan::Enterprise => "Enterprise",
         }
     }
@@ -231,8 +251,10 @@ impl Plan {
     pub fn monthly_price_cents(&self) -> u64 {
         match self {
             Plan::Free => 0,
+            Plan::Starter => 2900,   // $29
             Plan::Pro => 9900,       // $99
-            Plan::Team => 19900,     // $199
+            Plan::Team => 24900,     // $249
+            Plan::Scale => 49900,    // $499
             Plan::Enterprise => 0,   // Custom pricing
         }
     }

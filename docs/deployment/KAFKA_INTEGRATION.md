@@ -1,298 +1,210 @@
 # Kafka Integration with DriftLock
 
-This document explains how Kafka is integrated with the DriftLock project for streaming OTLP events and anomaly detection results.
+This document explains how to use Kafka ingestion with the DriftLock Rust API for streaming anomaly detection.
 
-## Architecture Overview
+## Overview
 
-DriftLock uses Apache Kafka as a streaming backbone for:
+DriftLock's Rust API includes an optional Kafka consumer that enables high-throughput streaming ingestion. When enabled, the API consumes messages from a Kafka topic and processes them through the CBAD anomaly detection engine.
 
-1. **OTLP Events Ingestion**: OpenTelemetry logs and metrics are published to the `otlp-events` topic
-2. **Anomaly Events Distribution**: Detected anomalies are published to the `anomaly-events` topic
-3. **Distributed Processing**: Multiple collector instances can process events in parallel
+## Architecture
 
-## Components
-
-### 1. Kafka Publisher
-
-The `collector-processor/driftlockcbad/kafka/publisher.go` component handles publishing OTLP events to Kafka:
-
-- Serializes log and metric data as JSON
-- Adds metadata headers for event routing
-- Supports batch publishing for performance
-- Configurable TLS support for secure connections
-
-### 2. Collector Processor Integration
-
-The `driftlock_cbad` processor can be configured to publish events to Kafka:
-
-```yaml
-processors:
-  driftlock_cbad:
-    window_size: 1024
-    hop_size: 256
-    threshold: 0.9
-    determinism: true
-    kafka:
-      enabled: true
-      brokers: ["localhost:9092"]
-      client_id: "driftlock-collector"
-      events_topic: "otlp-events"
-      tls_enabled: false
-      batch_size: 100
-      batch_timeout_ms: 5
+```
+┌─────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│   Kafka     │────▶│  Driftlock API  │────▶│   PostgreSQL    │
+│   Topic     │     │  (Rust/Axum)    │     │   Database      │
+└─────────────┘     └────────┬────────┘     └─────────────────┘
+                             │
+                             ▼
+                    ┌─────────────────┐
+                    │   CBAD Core     │
+                    │   (Detection)   │
+                    └─────────────────┘
 ```
 
-### 3. Kafka Topics
+## Building with Kafka Support
 
-Two primary topics are used:
-
-- `otlp-events`: For incoming OpenTelemetry data
-  - Partitions: 3 (default)
-  - Replication factor: 1 (default)
-  
-- `anomaly-events`: For anomaly detection results
-  - Partitions: 3 (default)
-  - Replication factor: 1 (default)
-
-## Setup Options
-
-### Option 1: Native Installation with Colima (Recommended for Development)
-
-Use native Homebrew installation with Colima for better performance on macOS:
+The Kafka consumer is feature-gated. Build with the `kafka` feature enabled:
 
 ```bash
-# Install Kafka and Zookeeper
-./scripts/kafka-native-setup.sh install
+# Build with Kafka support
+cargo build -p driftlock-api --features kafka --release
 
-# Start Kafka
-./scripts/kafka-native-setup.sh start
-```
-
-### Option 2: Docker Installation with Colima
-
-Use Docker Compose with Colima for a self-contained environment:
-
-```bash
-# Start complete stack with Kafka
-./scripts/start-stack.sh start
+# Or run directly
+cargo run -p driftlock-api --features kafka --release
 ```
 
 ## Configuration
 
-### Collector Configuration
+Configure Kafka via environment variables:
 
-Update `deploy/collector-config/config.yaml` to enable Kafka publishing:
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `KAFKA_ENABLED` | Enable Kafka consumer | `false` |
+| `KAFKA_BROKERS` | Comma-separated broker list | `localhost:9092` |
+| `KAFKA_TOPIC` | Topic to consume from | `driftlock-events` |
+| `KAFKA_GROUP_ID` | Consumer group ID | `driftlock-api` |
+| `KAFKA_STREAM_ID_HEADER` | Header key for stream ID | (optional) |
+| `KAFKA_STREAM_ID_FIELD` | JSON field path for stream ID | (optional) |
+| `KAFKA_MAX_PAYLOAD_BYTES` | Max message size | `1048576` (1MB) |
+| `KAFKA_MAX_IN_FLIGHT` | Concurrent message processing | `100` |
 
-```yaml
-processors:
-  driftlock_cbad:
-    # ... other settings ...
-    kafka:
-      enabled: true
-      brokers: ["localhost:9092"]  # Use "kafka:29092" for Docker
-      client_id: "driftlock-collector"
-      events_topic: "otlp-events"
-      tls_enabled: false
-      batch_size: 100
-      batch_timeout_ms: 5
+### Example Configuration
+
+```bash
+export KAFKA_ENABLED=true
+export KAFKA_BROKERS=kafka:9092
+export KAFKA_TOPIC=otlp-events
+export KAFKA_GROUP_ID=driftlock-consumer
+export KAFKA_STREAM_ID_HEADER=X-Stream-Id
+export KAFKA_MAX_IN_FLIGHT=50
 ```
 
-### Docker Compose Configuration
+## Stream ID Resolution
 
-The `deploy/docker-compose.yml` includes Kafka and Zookeeper services:
+The consumer needs to map each Kafka message to a DriftLock stream. Two methods are supported:
 
-```yaml
-services:
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.4.0
-    # ... configuration ...
+### 1. Header-Based (Recommended)
 
-  kafka:
-    image: confluentinc/cp-kafka:7.4.0
-    depends_on:
-      - zookeeper
-    # ... configuration ...
+Set `KAFKA_STREAM_ID_HEADER` to the header key containing the stream UUID:
+
+```
+Header: X-Stream-Id: 550e8400-e29b-41d4-a716-446655440000
 ```
 
-## Event Format
+### 2. JSON Field-Based
 
-### OTLP Log Event
+Set `KAFKA_STREAM_ID_FIELD` to the JSON path:
 
+```bash
+export KAFKA_STREAM_ID_FIELD=metadata.stream_id
+```
+
+For a message like:
 ```json
 {
-  "type": "log",
-  "data": {
-    "timestamp": "2025-10-26T13:14:22.123456789Z",
-    "severity": "INFO",
-    "body": "Request completed successfully",
-    "severity_number": 9,
-    "flags": 0,
-    "attributes": {
-      "service.name": "api-gateway",
-      "http.method": "GET",
-      "http.status_code": "200"
-    }
+  "metadata": {
+    "stream_id": "550e8400-e29b-41d4-a716-446655440000"
   },
-  "timestamp": "2025-10-26T13:14:22.123Z",
-  "source": "collector-processor"
+  "data": "..."
 }
 ```
 
-### OTLP Metric Event
+## Message Format
+
+Messages should be raw bytes (typically JSON). The entire payload is processed by CBAD:
 
 ```json
 {
-  "type": "metric",
-  "data": {
-    "name": "http_request_duration",
-    "description": "HTTP request duration",
-    "unit": "ms",
-    "type": "histogram",
-    "histogram": [
-      {
-        "timestamp": "2025-10-26T13:14:22.123456789Z",
-        "count": 100,
-        "sum": 5234.5,
-        "min": 12.3,
-        "max": 234.5,
-        "attributes": {
-          "service.name": "api-gateway",
-          "http.method": "GET"
-        }
-      }
-    ]
-  },
-  "timestamp": "2025-10-26T13:14:22.123Z",
-  "source": "collector-processor"
+  "timestamp": "2025-12-11T10:00:00Z",
+  "level": "ERROR",
+  "message": "Connection timeout to database",
+  "service": "api-gateway",
+  "trace_id": "abc123"
 }
 ```
 
-## Management Scripts
+## Backpressure Handling
 
-### Kafka Native Setup Script
+The consumer uses a semaphore-based backpressure mechanism:
 
-`scripts/kafka-native-setup.sh` provides commands for managing a native Kafka installation:
+- `KAFKA_MAX_IN_FLIGHT` controls concurrent message processing
+- Messages are processed asynchronously with offset commits
+- If processing falls behind, new messages wait for permits
+
+## Metrics
+
+When Kafka is enabled, these Prometheus metrics are emitted:
+
+| Metric | Description |
+|--------|-------------|
+| `driftlock_events_processed_total` | Total events processed |
+| `driftlock_anomalies_detected_total` | Total anomalies detected |
+| `driftlock_stream_events_total{stream_id}` | Events per stream |
+| `driftlock_stream_anomalies_total{stream_id}` | Anomalies per stream |
+
+## Local Development
+
+### Using Docker Compose
+
+Start Kafka locally:
 
 ```bash
-./scripts/kafka-native-setup.sh install  # Install Kafka and Zookeeper
-./scripts/kafka-native-setup.sh start    # Start services and create topics
-./scripts/kafka-native-setup.sh stop     # Stop services
-./scripts/kafka-native-setup.sh status   # Check service status
-./scripts/kafka-native-setup.sh topics   # List topics
-./scripts/kafka-native-setup.sh test     # Test connectivity
+# Start Kafka and Zookeeper
+docker compose -f docker-compose.kafka.yml up -d
+
+# Verify Kafka is running
+docker compose -f docker-compose.kafka.yml ps
 ```
 
-### Stack Management Script
-
-`scripts/start-stack.sh` provides commands for managing the complete DriftLock stack:
+### Testing the Consumer
 
 ```bash
-./scripts/start-stack.sh start    # Start the complete stack
-./scripts/start-stack.sh stop     # Stop the complete stack
-./scripts/start-stack.sh restart  # Restart the complete stack
-./scripts/start-stack.sh status   # Check status of all services
-./scripts/start-stack.sh logs     # Show logs from all services
+# Run API with Kafka enabled
+KAFKA_ENABLED=true \
+KAFKA_BROKERS=localhost:9092 \
+KAFKA_TOPIC=test-events \
+KAFKA_STREAM_ID_HEADER=X-Stream-Id \
+cargo run -p driftlock-api --features kafka
+
+# In another terminal, produce test messages
+docker exec -it kafka kafka-console-producer \
+  --broker-list localhost:9092 \
+  --topic test-events \
+  --property "parse.headers=true"
 ```
 
-## Performance Considerations
+## Production Considerations
 
-1. **Batch Size**: Adjust `batch_size` based on throughput requirements
-2. **Batch Timeout**: Tune `batch_timeout_ms` for latency vs. throughput balance
-3. **Partitions**: Increase topic partitions for higher parallelism
-4. **Compression**: Consider enabling compression for large payloads
+### Security
+
+- Enable TLS for broker connections (configure in `rdkafka` settings)
+- Use SASL authentication for secured clusters
+- Restrict topic access via ACLs
+
+### Scaling
+
+- Increase `KAFKA_MAX_IN_FLIGHT` for higher throughput
+- Use multiple partitions for parallel consumption
+- Deploy multiple API instances with the same `KAFKA_GROUP_ID` for horizontal scaling
+
+### Reliability
+
+- Offsets are committed after successful processing
+- Failed messages are logged but don't block consumption
+- Use dead-letter topics for failed message handling (configure separately)
 
 ## Troubleshooting
 
-### Connection Issues with Colima
+### Consumer Not Starting
 
-1. Verify Colima is running:
-   ```bash
-   colima list
-   ```
+Check logs for connection errors:
+```bash
+cargo run -p driftlock-api --features kafka 2>&1 | grep -i kafka
+```
 
-2. Check if Kafka is running:
-   ```bash
-   ./scripts/kafka-native-setup.sh status
-   ```
+Common issues:
+- Brokers unreachable (check `KAFKA_BROKERS`)
+- Topic doesn't exist (auto-create may be disabled)
+- Network/firewall issues
 
-3. Check Kafka logs:
-   ```bash
-   ./scripts/kafka-native-setup.sh logs
-   ```
+### Messages Not Processing
 
-4. Test connectivity:
-   ```bash
-   ./scripts/kafka-native-setup.sh test
-   ```
+1. Verify stream exists in database
+2. Check stream ID resolution (header vs field)
+3. Ensure payload doesn't exceed `KAFKA_MAX_PAYLOAD_BYTES`
 
-### Container Access Issues
+### High Latency
 
-When using Colima, container networking works differently:
+- Reduce `KAFKA_MAX_IN_FLIGHT` if CPU-bound
+- Increase if I/O-bound and CPU available
+- Check detector manager cache hit rate
 
-1. Use container IPs instead of localhost:
-   ```bash
-   # Get container IP
-   docker inspect <container-name> | grep IPAddress
-   ```
+## Implementation Details
 
-2. Use `colima exec` instead of `docker exec`:
-   ```bash
-   colima exec <container-name> <command>
-   ```
+Source: `crates/driftlock-api/src/kafka.rs`
 
-3. Port forwarding is handled automatically by Colima
-
-### API Container Issues
-
-If API container is running but not responding:
-
-1. Check container logs:
-   ```bash
-   docker logs <container-name>
-   ```
-
-2. Access API using container IP:
-   ```bash
-   # Get container IP
-   IP=$(docker inspect <container-name> | grep IPAddress | awk '{print $2}')
-   curl -s http://$IP:8080/healthz
-   ```
-
-3. The distroless/static image doesn't include curl - use a different base image if needed:
-   ```dockerfile
-   FROM alpine:latest
-   RUN apk add --no-cache curl
-   # ... rest of your Dockerfile
-   ```
-
-## Current Status
-
-✅ **Kafka**: Running with native Homebrew installation
-✅ **Zookeeper**: Running with native Homebrew installation  
-✅ **Kafka Topics**: `otlp-events` and `anomaly-events` created
-✅ **Docker Compose**: Running with Colima (Zookeeper, Kafka, Collector, API)
-⚠️ **API Container**: Running but not responding to requests (networking issue with Colima)
-
-## Next Steps
-
-1. **Fix API Container Networking Issue**:
-   - The API container is using a minimal distroless/static image without curl
-   - Need to either:
-     a) Add curl to the Dockerfile, or
-     b) Use a different base image that includes common utilities
-   - Update the start-stack.sh script to handle container IP addressing
-
-2. **Test Kafka Integration**:
-   - Send test OTLP events to the collector
-   - Verify events are published to Kafka topics
-   - Check if anomaly detection is working
-
-3. **Implement Kafka Consumer**:
-   - Create a consumer service to read from `anomaly-events` topic
-   - Build a simple web UI to display detected anomalies
-   - Add real-time streaming of anomaly events
-
-4. **Documentation Updates**:
-   - Update API documentation with correct endpoints
-   - Add examples of sending OTLP data to the collector
-   - Document the complete data flow from collector → Kafka → consumer → UI
+Key components:
+- `spawn_kafka_consumer()`: Spawns async consumer task
+- `run_consumer()`: Main consume loop with backpressure
+- `handle_message()`: Process single message through CBAD
+- `resolve_stream_id()`: Extract stream ID from message

@@ -22,7 +22,6 @@
             <router-link to="/docs" class="text-sm font-bold font-sans uppercase tracking-widest hover:underline underline-offset-4 decoration-1">Docs</router-link>
             <a href="/#features" class="text-sm font-bold font-sans uppercase tracking-widest hover:underline underline-offset-4 decoration-1">Features</a>
             <a href="/#pricing" class="text-sm font-bold font-sans uppercase tracking-widest hover:underline underline-offset-4 decoration-1">Pricing</a>
-            <router-link to="/playground" class="text-sm font-bold font-sans uppercase tracking-widest hover:underline underline-offset-4 decoration-1">Playground</router-link>
 
             <router-link v-if="!authStore.isAuthenticated" to="/login" class="brutalist-button">
               Sign In
@@ -51,7 +50,6 @@
           <router-link to="/docs" class="text-lg font-bold font-sans uppercase border-b border-gray-200 py-2" @click="isMobileMenuOpen = false">Docs</router-link>
           <a href="/#features" class="text-lg font-bold font-sans uppercase border-b border-gray-200 py-2" @click="isMobileMenuOpen = false">Features</a>
           <a href="/#pricing" class="text-lg font-bold font-sans uppercase border-b border-gray-200 py-2" @click="isMobileMenuOpen = false">Pricing</a>
-          <router-link to="/playground" class="text-lg font-bold font-sans uppercase border-b border-gray-200 py-2" @click="isMobileMenuOpen = false">Playground</router-link>
           <router-link v-if="!authStore.isAuthenticated" to="/login" class="brutalist-button text-center w-full" @click="isMobileMenuOpen = false">Sign In</router-link>
           <router-link v-else to="/dashboard" class="brutalist-button text-center w-full" @click="isMobileMenuOpen = false">Dashboard</router-link>
         </div>
@@ -89,8 +87,8 @@
                 <div class="flex flex-col md:flex-row gap-8 md:gap-16">
                     <div class="flex flex-col space-y-2">
                         <h4 class="font-bold font-sans uppercase tracking-widest text-sm border-b border-black pb-1 mb-2">Product</h4>
-                        <a href="#showcase" class="text-sm font-serif hover:underline underline-offset-2">Radar</a>
-                        <a href="#pricing" class="text-sm font-serif hover:underline underline-offset-2">Pricing</a>
+                        <a href="/#features" class="text-sm font-serif hover:underline underline-offset-2">Features</a>
+                        <a href="/#pricing" class="text-sm font-serif hover:underline underline-offset-2">Pricing</a>
                         <router-link to="/docs" class="text-sm font-serif hover:underline underline-offset-2">Documentation</router-link>
                     </div>
                     <div class="flex flex-col space-y-2">

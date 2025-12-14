@@ -1,0 +1,18 @@
+run = "./scripts/start-replit.sh"
+entrypoint = "crates/driftlock-api/src/main.rs"
+
+[nix]
+channel = "stable-24_05"
+
+[env]
+RUST_LOG = "info"
+PORT = "8080"
+NODE_ENV = "production"
+
+[deployment]
+run = ["sh", "-c", "./scripts/start-replit.sh"]
+deploymentTarget = "cloudrun"
+
+[[ports]]
+localPort = 8080
+externalPort = 80

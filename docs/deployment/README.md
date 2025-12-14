@@ -2,6 +2,28 @@
 
 This directory contains deployment guides for Driftlock on various cloud platforms and environments.
 
+## Ingestion Guides
+
+- **[Kafka Integration](./KAFKA_INTEGRATION.md)** - High-throughput streaming via Kafka consumer
+- **[OTLP Ingestion](./OTLP_INGESTION.md)** - Native OpenTelemetry Protocol gRPC server
+- **[Kafka Setup](./KAFKA_SETUP.md)** - Local Kafka/Zookeeper setup
+
+## Build Features
+
+```bash
+# HTTP only (default)
+cargo build -p driftlock-api --release
+
+# With Kafka consumer
+cargo build -p driftlock-api --features kafka --release
+
+# With OTLP gRPC server
+cargo build -p driftlock-api --features otlp --release
+
+# All features
+cargo build -p driftlock-api --features kafka,otlp,webhooks --release
+```
+
 ## Overview
 
 Driftlock can be deployed in multiple environments:

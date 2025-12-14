@@ -8,8 +8,8 @@ use std::io::Write;
 
 /// Zstd compression adapter (fallback)
 ///
-/// TODO: Implement actual zstd compression using the `zstd` crate
-/// For now, this is a placeholder that shows the interface
+/// Uses the `zstd` crate for general-purpose compression when OpenZL
+/// is not selected.
 pub struct ZstdAdapter {
     level: i32,
 }
@@ -67,9 +67,7 @@ impl CompressionAdapter for ZstdAdapter {
     }
 }
 
-/// Lz4 compression adapter (fallback)
-///
-/// TODO: Implement actual lz4 compression using the `lz4` crate
+/// Lz4 compression adapter (fallback) using the `lz4` crate
 pub struct Lz4Adapter;
 
 impl Default for Lz4Adapter {
@@ -129,9 +127,7 @@ impl CompressionAdapter for Lz4Adapter {
     }
 }
 
-/// Gzip compression adapter (fallback)
-///
-/// TODO: Implement actual gzip compression using the `flate2` crate
+/// Gzip compression adapter (fallback) using the `flate2` crate
 pub struct GzipAdapter;
 
 impl Default for GzipAdapter {

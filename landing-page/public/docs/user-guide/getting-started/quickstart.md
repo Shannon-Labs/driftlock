@@ -4,7 +4,7 @@ Run your first Driftlock detection in minutes. This guide covers signup, API key
 
 ## 1) Get an API key
 
-- Sign up at [https://driftlock.net/#signup](https://driftlock.net/#signup) (Pilot plan: 10k events/month free).
+- Sign up at [https://driftlock.net/#signup](https://driftlock.net/#signup) (Free plan: 10k events/month).
 - Open **Dashboard → API Keys → Create key** and copy it. Treat it like a secret.
 - No signup? Use the public demo endpoint: [POST /v1/demo/detect](../api/endpoints/demo.md) (rate-limited, no persistence).
 

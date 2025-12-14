@@ -4,10 +4,46 @@
 //! metrics computation to provide end-to-end anomaly detection with
 //! configurable thresholds and statistical significance testing.
 
+// Re-export calibration types for backward compatibility
+pub use crate::calibration::{CalibrationMethod, CalibrationState, CompositeWeights};
+
 use crate::compression::CompressionAdapter;
 use crate::metrics::{self, AnomalyMetrics};
+use crate::stats::SimpleQuantile;
+use crate::tokenizer::{Tokenizer, TokenizerConfig, TokenizerStats};
 use crate::window::{DataEvent, ThreadSafeSlidingWindow, WindowConfig};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::sync::Mutex;
+
+#[derive(Debug)]
+struct AdaptiveCompositeThreshold {
+    seen: u64,
+    history: SimpleQuantile,
+}
+
+impl AdaptiveCompositeThreshold {
+    fn new(capacity: usize) -> Self {
+        Self {
+            seen: 0,
+            history: SimpleQuantile::new_with_cap(capacity.max(32)),
+        }
+    }
+
+    fn observe(&mut self, score: f64) {
+        self.seen = self.seen.saturating_add(1);
+        self.history.add(score);
+    }
+
+    fn seen(&self) -> u64 {
+        self.seen
+    }
+
+    fn threshold(&self, target_fpr: f64) -> Option<f64> {
+        let fpr = target_fpr.clamp(1e-6, 0.5);
+        self.history.quantile(1.0 - fpr)
+    }
+}
 
 /// Configuration for anomaly detection
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -24,6 +60,13 @@ pub struct AnomalyConfig {
     /// NCD threshold for anomaly detection (typically 0.3)
     pub ncd_threshold: f64,
 
+    /// Conditional novelty threshold for baseline+window comparisons.
+    ///
+    /// Defined as (C(baseline+window)-C(baseline)) / C(window).
+    /// Higher values indicate that most of the window is not explained by baseline.
+    #[serde(default = "default_conditional_novelty_threshold")]
+    pub conditional_novelty_threshold: f64,
+
     /// Minimum compression ratio drop (as a positive fraction) to flag anomaly
     /// e.g. 0.15 => 15% drop vs baseline
     pub compression_ratio_drop_threshold: f64,
@@ -34,6 +77,37 @@ pub struct AnomalyConfig {
     /// Composite score threshold combining NCD, p-value, and compression ratio
     pub composite_threshold: f64,
 
+    /// Weights for composite score calculation.
+    ///
+    /// Controls how NCD, p-value, and compression signals are blended.
+    /// Default weights (0.5, 0.25, 0.25) validated on PaySim dataset.
+    #[serde(default)]
+    pub composite_weights: CompositeWeights,
+
+    /// Enable adaptive thresholding based on recent composite-score distribution.
+    ///
+    /// When enabled, the effective composite threshold is set to a high quantile
+    /// of recent scores (approximately bounding false positive rate for stable streams).
+    #[serde(default)]
+    pub adaptive_composite_threshold: bool,
+
+    /// Target false positive rate for adaptive composite thresholding.
+    ///
+    /// Example: 0.01 targets ~1% of recent windows crossing the threshold.
+    #[serde(default = "default_adaptive_target_fpr")]
+    pub adaptive_target_fpr: f64,
+
+    /// How many initial analysis cycles to treat as calibration.
+    ///
+    /// During warmup, the detector still flags strong (NCD+p-value) anomalies,
+    /// but composite thresholding is deferred until enough history is accumulated.
+    #[serde(default = "default_adaptive_warmup_windows")]
+    pub adaptive_warmup_windows: u64,
+
+    /// Maximum number of recent composite scores to retain for quantile estimation.
+    #[serde(default = "default_adaptive_history_cap")]
+    pub adaptive_history_cap: usize,
+
     /// Number of permutations for statistical testing
     pub permutation_count: usize,
 
@@ -42,6 +116,29 @@ pub struct AnomalyConfig {
 
     /// Whether to require statistical significance for anomaly detection
     pub require_statistical_significance: bool,
+
+    /// Optional tokenizer configuration for type-agnostic detection
+    ///
+    /// When enabled, high-entropy fields (UUIDs, hashes, JWTs, Base64) are
+    /// replaced with fixed tokens before compression analysis. This improves
+    /// detection accuracy across different data types without manual configuration.
+    #[serde(default)]
+    pub tokenizer_config: Option<TokenizerConfig>,
+
+    /// Calibration method for auto-tuning thresholds during warmup.
+    ///
+    /// When set, the detector will collect scores during warmup and
+    /// auto-calibrate the composite threshold.
+    #[serde(default)]
+    pub calibration_method: Option<CalibrationMethod>,
+
+    /// Minimum samples required before auto-calibration triggers.
+    #[serde(default = "default_calibration_min_samples")]
+    pub calibration_min_samples: usize,
+}
+
+fn default_calibration_min_samples() -> usize {
+    100
 }
 
 impl Default for AnomalyConfig {
@@ -51,14 +148,39 @@ impl Default for AnomalyConfig {
             compression_algorithm: crate::compression::CompressionAlgorithm::Zstd, // Use zstd as default due to OpenZL issues
             p_value_threshold: 0.05,
             ncd_threshold: 0.3,
+            conditional_novelty_threshold: default_conditional_novelty_threshold(),
             compression_ratio_drop_threshold: 0.15,
             entropy_change_threshold: 0.2,
             composite_threshold: 0.6,
+            composite_weights: CompositeWeights::default(),
+            adaptive_composite_threshold: false,
+            adaptive_target_fpr: default_adaptive_target_fpr(),
+            adaptive_warmup_windows: default_adaptive_warmup_windows(),
+            adaptive_history_cap: default_adaptive_history_cap(),
             permutation_count: 1000,
             seed: 42,
             require_statistical_significance: true,
+            tokenizer_config: Some(TokenizerConfig::default()), // Enable high-entropy normalization for improved detection
+            calibration_method: None,
+            calibration_min_samples: default_calibration_min_samples(),
         }
     }
+}
+
+fn default_adaptive_target_fpr() -> f64 {
+    0.01
+}
+
+fn default_conditional_novelty_threshold() -> f64 {
+    1.10
+}
+
+fn default_adaptive_warmup_windows() -> u64 {
+    200
+}
+
+fn default_adaptive_history_cap() -> usize {
+    2000
 }
 
 /// Anomaly detection result
@@ -119,6 +241,9 @@ pub struct AnomalyDetector {
     config: AnomalyConfig,
     window: ThreadSafeSlidingWindow,
     adapter: Box<dyn CompressionAdapter>,
+    tokenizer: Option<Tokenizer>,
+    adaptive: Mutex<AdaptiveCompositeThreshold>,
+    calibration: Mutex<CalibrationState>,
 }
 
 impl AnomalyDetector {
@@ -126,11 +251,24 @@ impl AnomalyDetector {
     pub fn new(config: AnomalyConfig) -> Result<Self, crate::compression::CompressionError> {
         let adapter = crate::compression::create_adapter(config.compression_algorithm)?;
         let window = ThreadSafeSlidingWindow::new(config.window_config.clone());
+        let tokenizer = config.tokenizer_config.clone().map(Tokenizer::new);
+
+        let adaptive = Mutex::new(AdaptiveCompositeThreshold::new(config.adaptive_history_cap));
+
+        // Initialize calibration state if a method is configured
+        let calibration_state = match &config.calibration_method {
+            Some(method) => CalibrationState::new(method.clone(), config.calibration_min_samples),
+            None => CalibrationState::default(),
+        };
+        let calibration = Mutex::new(calibration_state);
 
         Ok(Self {
             config,
             window,
             adapter,
+            tokenizer,
+            adaptive,
+            calibration,
         })
     }
 
@@ -165,6 +303,7 @@ impl AnomalyDetector {
     ///
     /// Returns None if there isn't enough data for analysis.
     /// Returns AnomalyResult with complete metrics and explanation if analysis succeeds.
+    #[cfg_attr(feature = "tracing", tracing::instrument(skip(self)))]
     pub fn detect_anomaly(
         &self,
     ) -> Result<Option<AnomalyResult>, Box<dyn std::error::Error + Send + Sync>> {
@@ -179,13 +318,14 @@ impl AnomalyDetector {
             None => return Ok(None),
         };
 
-        // Compute metrics using the compression adapter
-        let metrics = metrics::compute_metrics(
+        // Compute metrics using the compression adapter (with optional tokenization)
+        let metrics = metrics::compute_metrics_with_tokenizer(
             &baseline,
             &window,
             self.adapter.as_ref(),
             self.config.permutation_count,
             self.config.seed,
+            self.tokenizer.as_ref(),
         )
         .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)?;
 
@@ -196,22 +336,64 @@ impl AnomalyDetector {
             metrics.compression_ratio_change <= -self.config.compression_ratio_drop_threshold;
         let entropy_jump = metrics.entropy_change >= self.config.entropy_change_threshold;
 
+        let novelty_pass = metrics.conditional_novelty >= self.config.conditional_novelty_threshold;
+
         // Composite score blends NCD, confidence (1 - p), and compression drop signal
-        let compression_signal = (-metrics.compression_ratio_change).max(0.0);
-        let composite_score =
-            0.5 * metrics.ncd + 0.25 * (1.0 - metrics.p_value) + 0.25 * compression_signal;
-        let composite_pass = composite_score >= self.config.composite_threshold;
+        let composite_score = metrics.composite_score;
+        let mut effective_composite_threshold = self.config.composite_threshold;
+        let mut composite_pass = composite_score >= effective_composite_threshold;
+
+        if self.config.adaptive_composite_threshold {
+            if let Ok(mut adaptive) = self.adaptive.lock() {
+                adaptive.observe(composite_score);
+
+                if adaptive.seen() > self.config.adaptive_warmup_windows {
+                    if let Some(q) = adaptive.threshold(self.config.adaptive_target_fpr) {
+                        effective_composite_threshold = effective_composite_threshold.max(q);
+                        composite_pass = composite_score >= effective_composite_threshold;
+                    }
+                } else {
+                    // During warmup, avoid composite-driven flags; still allow strong statistical flags.
+                    composite_pass = false;
+                }
+            }
+        }
+
+        let strong_pass = ncd_pass && p_pass;
+        let secondary_votes =
+            (compression_drop as u8)
+                + (entropy_jump as u8)
+                + (composite_pass as u8)
+                + (novelty_pass as u8);
+        let dual_support = (compression_drop && entropy_jump)
+            || (composite_pass && (compression_drop || entropy_jump));
 
         let is_anomaly = if self.config.require_statistical_significance {
-            ncd_pass && p_pass
+            // Require statistical backing, but allow multi-signal consensus (compression+entropy) to lift clear anomalies.
+            strong_pass
+                || (composite_pass && (secondary_votes >= 2 || ncd_pass))
+                || (novelty_pass && (secondary_votes >= 2 || strong_pass))
         } else {
-            (ncd_pass && p_pass) || compression_drop || entropy_jump || composite_pass
+            // Heuristic mode: demand at least two corroborating signals to avoid flagging every window.
+            strong_pass
+                || (secondary_votes >= 2)
+                || (composite_pass && (ncd_pass || p_pass || dual_support))
         };
 
         // Create result with adjusted anomaly flag
         let mut result_metrics = metrics;
         result_metrics.is_anomaly = is_anomaly;
         result_metrics.generate_explanation();
+
+        if self.config.adaptive_composite_threshold {
+            result_metrics.explanation.push_str(&format!(
+                "\nEFFECTIVE COMPOSITE THRESHOLD: {:.3} (target_fpr={:.4}, warmup_windows={})\n",
+                effective_composite_threshold,
+                self.config.adaptive_target_fpr,
+                self.config.adaptive_warmup_windows
+            ));
+        }
+
         result_metrics.apply_recommendations(
             self.config.ncd_threshold,
             self.config.window_config.window_size,
@@ -241,6 +423,123 @@ impl AnomalyDetector {
     pub fn reset(&self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         self.window.clear()?;
         Ok(())
+    }
+
+    /// Inspect the current configuration.
+    pub fn config(&self) -> &AnomalyConfig {
+        &self.config
+    }
+
+    /// Mutate thresholds/configuration in-place (used for auto-tuning).
+    pub fn update_config(&mut self, config: AnomalyConfig) {
+        self.config = config;
+    }
+
+    /// Surface tokenizer stats for observability.
+    pub fn tokenizer_stats(&self) -> Option<TokenizerStats> {
+        self.tokenizer.as_ref().map(|t| t.stats())
+    }
+
+    pub(crate) fn window(&self) -> &ThreadSafeSlidingWindow {
+        &self.window
+    }
+
+    // ==================== CALIBRATION METHODS ====================
+
+    /// Record a composite score for calibration purposes.
+    ///
+    /// Call this after each detection to build up calibration data.
+    /// If a label is provided, it will be used for F1-based calibration.
+    pub fn record_calibration_score(
+        &self,
+        score: f64,
+        label: Option<bool>,
+        stream_key: Option<&str>,
+    ) {
+        if let Ok(mut cal) = self.calibration.lock() {
+            cal.record_score(score, label, stream_key);
+        }
+    }
+
+    /// Check if the detector is ready for calibration.
+    pub fn ready_for_calibration(&self) -> bool {
+        self.calibration
+            .lock()
+            .map(|cal| cal.ready_for_calibration())
+            .unwrap_or(false)
+    }
+
+    /// Check if calibration has already been performed.
+    pub fn is_calibrated(&self) -> bool {
+        self.calibration
+            .lock()
+            .map(|cal| cal.is_calibrated)
+            .unwrap_or(false)
+    }
+
+    /// Perform calibration and return the calibrated threshold.
+    ///
+    /// This will update the internal calibration state and return
+    /// the threshold that should be used for detection.
+    pub fn calibrate(&self) -> Option<f64> {
+        if let Ok(mut cal) = self.calibration.lock() {
+            cal.calibrate()
+        } else {
+            None
+        }
+    }
+
+    /// Calibrate per-stream thresholds using FPR targeting.
+    ///
+    /// Returns a map of stream_key -> threshold.
+    pub fn calibrate_streams(&self, target_fpr: f64) -> HashMap<String, f64> {
+        if let Ok(mut cal) = self.calibration.lock() {
+            cal.calibrate_streams(target_fpr)
+        } else {
+            HashMap::new()
+        }
+    }
+
+    /// Get the current calibration state.
+    pub fn get_calibration_state(&self) -> Option<CalibrationState> {
+        self.calibration.lock().ok().map(|cal| cal.clone())
+    }
+
+    /// Apply a calibrated threshold to the detector configuration.
+    ///
+    /// This updates the composite_threshold in the config.
+    pub fn apply_calibrated_threshold(&mut self, threshold: f64) {
+        self.config.composite_threshold = threshold;
+    }
+
+    /// Get the effective composite threshold (calibrated or configured).
+    pub fn effective_composite_threshold(&self) -> f64 {
+        self.calibration
+            .lock()
+            .ok()
+            .and_then(|cal| cal.calibrated_threshold)
+            .unwrap_or(self.config.composite_threshold)
+    }
+
+    /// Get the stream-specific threshold, falling back to global.
+    pub fn stream_threshold(&self, stream_key: &str) -> f64 {
+        self.calibration
+            .lock()
+            .ok()
+            .and_then(|cal| cal.stream_thresholds.get(stream_key).copied())
+            .unwrap_or_else(|| self.effective_composite_threshold())
+    }
+
+    /// Reset calibration state (e.g., for recalibration).
+    pub fn reset_calibration(&self) {
+        if let Ok(mut cal) = self.calibration.lock() {
+            cal.reset();
+        }
+    }
+
+    /// Get the composite weights from config.
+    pub fn composite_weights(&self) -> &CompositeWeights {
+        &self.config.composite_weights
     }
 }
 

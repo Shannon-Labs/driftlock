@@ -201,12 +201,12 @@ paths:
                   minLength: 1
                 plan:
                   type: string
-                  enum: [trial, pulse, radar, tensor, orbit]
-                  default: trial
+                  enum: [free, starter, pro, team, scale, enterprise]
+                  default: free
             example:
               email: dev@example.com
               company_name: Acme Corp
-              plan: trial
+              plan: free
       responses:
         '200':
           description: Signup successful - check email for verification
@@ -853,7 +853,7 @@ paths:
       description: Create a Stripe checkout session to upgrade your plan.
       operationId: createCheckout
       security:
-        - ApiKeyAuth: []
+        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -864,7 +864,10 @@ paths:
               properties:
                 plan:
                   type: string
-                  enum: [radar, tensor, orbit]
+                  enum: [starter, pro, team, scale, enterprise]
+                price_id:
+                  type: string
+                  description: Optional legacy/advanced override; prefer `plan`.
                 success_url:
                   type: string
                   format: uri
@@ -879,7 +882,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  checkout_url:
+                  url:
                     type: string
                     format: uri
                   session_id:
@@ -903,7 +906,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  portal_url:
+                  url:
                     type: string
                     format: uri
         '401':
@@ -1602,20 +1605,37 @@ components:
       properties:
         status:
           type: string
-          enum: [active, trialing, past_due, canceled, grace_period]
+          enum: [free, active, trialing, grace_period]
         plan:
           type: string
-          enum: [pulse, radar, tensor, orbit]
+          enum: [free, starter, pro, team, scale, enterprise]
+        stripe_status:
+          type: string
+          nullable: true
+        stripe_customer_id:
+          type: string
+          nullable: true
+        trial_ends_at:
+          type: string
+          format: date-time
+          nullable: true
         trial_days_remaining:
           type: integer
-          description: Days left in trial (null if not trialing)
+          nullable: true
+          description: Days left in trial (null if not trialing or not on a trial).
         grace_period_ends_at:
           type: string
           format: date-time
-          description: When grace period ends (null if not in grace period)
+          nullable: true
+          description: When grace period ends (null if not in grace period).
         current_period_end:
           type: string
           format: date-time
+          nullable: true
+        events_limit:
+          type: integer
+        events_used:
+          type: integer
 
     FeedbackRequest:
       type: object

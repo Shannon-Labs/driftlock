@@ -6,6 +6,15 @@
       "env": {
         "DATABASE_URL": "postgresql://postgres:postgres@localhost:7543/driftlock"
       }
+    },
+    "stripe": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@stripe/mcp",
+        "--tools=all",
+        "--api-key=${STRIPE_SECRET_KEY}"
+      ]
     }
   }
 }

@@ -2,34 +2,32 @@
 
 > **For AI Assistants:** Start here! This section tracks what's done, what's next, and how to continue development.
 
-## Current Status: 100% Launch Ready ✅
+## Current Status: 100% Rust Migration Complete
 
-**Last Updated:** 2025-12-07
-**Target:** Public launch with self-serve signup, working billing, demo/playground, API access
+**Last Updated:** 2025-12-11
+**Target:** Replit deployment with pure Rust backend
 
 ### What's Done
-- All backend features implemented and tested
-- All frontend features implemented
-- Documentation updated
-- E2E tests written
-- Security audit passed (no SQL injection, all endpoints auth-protected)
-- **[2025-12-04] AI Agent Integration Complete:**
-  - Fixed Firebase→Cloud Run routing (service name + /api prefix)
-  - Complete OpenAPI 3.0 spec with all 20+ endpoints
-  - AI agent integration guide (`/docs/ai-agents/INTEGRATION.md`)
-  - Use case documentation (`/docs/use-cases/general-anomaly-detection.md`)
-- **[2025-12-07] Production Deployment Verified:**
-  - Mock AI provider deployed (commit: 32c691a)
-  - Cloud Run service healthy
-  - All core endpoints verified working
-- **[2025-12-07] Adaptive Sliding Scales (commit: 0c72c43):**
-  - Detection profiles: sensitive, balanced, strict, custom
-  - Auto-tuning: threshold adjustment based on user feedback
-  - Adaptive windowing: automatic window sizing per stream
-  - Feedback endpoint: mark false positives to improve detection
+- All backend features migrated from Go to Rust (Axum/Tokio)
+- All 28+ API routes implemented
+- Database layer complete (sqlx with PostgreSQL)
+- Authentication: Firebase JWT + API keys
+- Stripe billing integration
+- Prometheus metrics endpoint
+- Detection profiles and auto-tuning
+- Stream anchors for drift detection
+- Rate limiting (IP-based for demo endpoint)
+
+### Tech Stack (Rust)
+- **Framework:** Axum 0.7 with Tower middleware
+- **Runtime:** Tokio async runtime
+- **Database:** sqlx with PostgreSQL
+- **Auth:** Firebase JWT (jsonwebtoken), API keys (Argon2)
+- **Billing:** stripe-rust
+- **Metrics:** metrics + metrics-exporter-prometheus
 
 ### Production URLs
-- **API**: https://driftlock-api-o6kjgrsowq-uc.a.run.app
+- **API**: Replit deployment (pending)
 - **Website**: https://driftlock.net
 
 ---
@@ -58,74 +56,91 @@
 
 ---
 
-## Launch Checklist
+## API Routes Summary
 
-### Phase 1: User Onboarding (COMPLETE)
+### Health & Metrics (Public)
+- [x] `GET /healthz` - Liveness check
+- [x] `GET /readyz` - Readiness check
+- [x] `GET /v1/version` - Version info
+- [x] `GET /metrics` - Prometheus metrics
 
-- [x] Database migration for verification flow
-- [x] Email verification backend
-- [x] Verify endpoint implementation
-- [x] API key regeneration/create/revoke endpoints
-- [x] SignupForm.vue - pending verification state
-- [x] VerifyEmailView.vue - verification landing page
-- [x] Router update for `/verify` route
+### Demo (IP Rate Limited)
+- [x] `POST /v1/demo/detect` - Anonymous demo detection
+- [x] `POST /v1/waitlist` - Email capture
 
-### Phase 2: Stripe Billing (COMPLETE)
+### Authentication (Firebase)
+- [x] `POST /v1/auth/signup` - Firebase signup
+- [x] `GET /v1/auth/me` - Get current user
 
-- [x] 14-day trial to checkout
-- [x] Complete webhook handlers (trial_will_end, payment_failed, payment_succeeded)
-- [x] Grace period logic (7-day after payment failure)
-- [x] Billing status endpoint
-- [x] Frontend billing UI (trial banners, grace period warning)
-- [x] Pricing page checkout
+### Detection (API Key Required)
+- [x] `POST /v1/detect` - Authenticated detection
+- [x] `GET /v1/anomalies` - List anomalies
+- [x] `GET /v1/anomalies/:id` - Get anomaly details
+- [x] `POST /v1/anomalies/:id/feedback` - Submit feedback
 
-### Phase 3: Developer Experience (COMPLETE)
+### Streams (API Key Required)
+- [x] `GET /v1/streams` - List streams
+- [x] `POST /v1/streams` - Create stream
+- [x] `GET /v1/streams/:id` - Get stream
+- [x] `GET /v1/streams/:id/profile` - Get detection profile
+- [x] `PATCH /v1/streams/:id/profile` - Update profile
+- [x] `GET /v1/streams/:id/tuning` - Tuning history
 
-- [x] Anonymous demo endpoint (`POST /v1/demo/detect`)
-- [x] Playground demo mode
-- [x] Usage dashboard with charts
+### Anchors (API Key Required)
+- [x] `GET /v1/streams/:id/anchor` - Get anchor settings
+- [x] `GET /v1/streams/:id/anchor/details` - Full anchor data
+- [x] `POST /v1/streams/:id/reset-anchor` - Create new anchor
+- [x] `DELETE /v1/streams/:id/anchor` - Deactivate anchor
 
-### Phase 4: Polish & Testing (COMPLETE)
+### Account (API Key Required)
+- [x] `GET /v1/account` - Get account info
+- [x] `PATCH /v1/account` - Update account
+- [x] `GET /v1/account/usage` - Usage summary
 
-- [x] E2E test: signup → verify → detect → anomaly
-- [x] E2E test: trial → checkout → subscription
-- [x] Error code reference page
-- [ ] Load test Cloud Run deployment (optional)
-- [x] Production deployment verification
+### API Keys (API Key Required)
+- [x] `GET /v1/api-keys` - List keys
+- [x] `POST /v1/api-keys` - Create key
+- [x] `DELETE /v1/api-keys/:id` - Revoke key
+- [x] `POST /v1/api-keys/:id/regenerate` - Regenerate key
 
-### Phase 5: AI Agent Integration (COMPLETE)
+### Billing (API Key Required)
+- [x] `POST /v1/billing/checkout` - Create checkout session
+- [x] `POST /v1/billing/portal` - Create portal session
+- [x] `POST /v1/billing/webhook` - Stripe webhooks
+- [x] `GET /v1/me/billing` - Billing status
+- [x] `GET /v1/me/usage/details` - Daily usage
+- [x] `GET /v1/me/usage/ai` - AI usage (stub)
+- [x] `GET /v1/me/ai/config` - AI config (stub)
 
-- [x] Firebase routing fix
-- [x] Path prefix middleware
-- [x] Complete OpenAPI 3.0 spec
-- [x] AI agent integration guide
-- [x] Use case documentation
-
-### Phase 6: Adaptive Detection (COMPLETE)
-
-- [x] Detection profiles (sensitive/balanced/strict/custom)
-- [x] Auto-tuning algorithm with feedback loop
-- [x] Adaptive windowing based on stream characteristics
-- [x] Feedback endpoint for false positive marking
-- [x] Tuning history and statistics endpoints
+### Profiles (API Key Required)
+- [x] `GET /v1/profiles` - List detection profiles
 
 ---
 
-## Next Priority Tasks
+## Useful Commands
 
-### Immediate (if deployment not verified)
-1. Check build status: `gcloud builds list --limit=1 --project=driftlock`
-2. Verify production: `curl https://driftlock.net/api/healthz`
-3. Test demo endpoint
+```bash
+# Build and run Rust API
+cargo build -p driftlock-api --release
+cargo run -p driftlock-api --release
 
-### Pre-Launch Verification
-4. Run E2E tests: `go test ./collector-processor/cmd/driftlock-http/... -v`
-5. Verify Stripe webhooks: `stripe listen`
-6. Test full flow: Signup → Verify → Detect → Dashboard
+# Run tests
+cargo test -p driftlock-api
 
-### Optional Enhancements
-7. Load testing
-8. Redis rate limiting for multi-instance
+# Frontend
+cd landing-page && npm run dev
+
+# Database (sqlx)
+sqlx migrate run --database-url "$DATABASE_URL"
+
+# Testing detection
+curl -X POST http://localhost:8080/v1/demo/detect \
+  -H "Content-Type: application/json" \
+  -d '{"events": ["test event 1", "test event 2"]}'
+
+# Stripe webhooks (local)
+stripe listen --forward-to localhost:8080/v1/billing/webhook
+```
 
 ---
 
@@ -140,28 +155,22 @@
 
 ---
 
-## Useful Commands
+## Crate Structure
 
-```bash
-# Local development
-docker compose up -d
-cd collector-processor && go run ./cmd/driftlock-http
-
-# Frontend
-cd landing-page && npm run dev
-
-# Database
-goose -dir api/migrations postgres "$DATABASE_URL" up
-
-# Testing
-curl -X POST http://localhost:8080/api/v1/onboard/signup \
-  -H "Content-Type: application/json" \
-  -d '{"email":"test@example.com","company_name":"Test Co","plan":"trial"}'
-
-# Stripe webhooks
-stripe listen --forward-to localhost:8080/api/v1/billing/webhook
+```
+driftlock/
+├── Cargo.toml           # Workspace root
+├── cbad-core/           # CBAD algorithms
+├── crates/
+│   ├── driftlock-api/   # Axum HTTP server
+│   ├── driftlock-db/    # sqlx models/repos
+│   ├── driftlock-auth/  # Firebase + API keys
+│   ├── driftlock-billing/ # Stripe integration
+│   └── driftlock-email/ # SendGrid service
+├── landing-page/        # Vue frontend
+└── archive/go-backend/  # Legacy Go (reference)
 ```
 
 ---
 
-**Last updated:** 2025-12-07
+**Last updated:** 2025-12-11
